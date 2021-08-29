@@ -1,0 +1,15 @@
+GEM
+  specs:
+    rake (13.0.3)
+
+PLATFORMS
+  arm64-darwin-20
+
+DEPENDENCIES
+  rake
+
+RUBY VERSION
+   ruby 3.0.1p64
+
+BUNDLED WITH
+   2.2.24
