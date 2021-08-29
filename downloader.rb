@@ -11,8 +11,7 @@ class Downloader
 		@jira_api_token = config['api_token']
 	end
 
-	def download_issues
-		output_file_prefix = 'foo'
+	def download_issues output_file_prefix
 		jql = CGI.escape 'project=SP'
 		max_results = 100
 		start_at = 0
@@ -65,5 +64,7 @@ class Downloader
     end
 end
 
-Downloader.new.download_columns 'foo', 1
+downloader = Downloader.new
+downloader.download_columns 'foo', 1
+downloader.download_issues 'foo'
 
