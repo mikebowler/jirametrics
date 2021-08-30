@@ -37,10 +37,8 @@ class ChangeItem
 	def flagged?  = (field == 'Flagged')
 	def priority? = (field == 'priority')
 
-	def to_s = "ChangeItem(field=#{field()}, value=#{value()} time=#{@created_at})"
-
-	def equal?(other) = self == other
-	def eql?(other) = self == other
+	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@created_at.to_s}')"
+	def inspect = to_s
 
 	def == other
 		field.eql?(other.field) && value.eql?(other.value) && created_at.to_s.eql?(other.created_at.to_s)
