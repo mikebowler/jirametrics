@@ -12,7 +12,7 @@ class Issue
 		@raw['changelog']['histories'].each do |history|
 			created_at = DateTime.parse history['created']
 			history['items'].each do |item|
-				@changes << ChangeItem.new(item, created_at)
+				@changes << ChangeItem.new(raw: item, time: created_at)
 			end
 		end
 	end
@@ -23,16 +23,18 @@ class Issue
 end
 
 class ChangeItem
-	attr_reader :created_at
-	def initialize raw, created_at
+	attr_accessor :time, :field, :value
+	attr_reader :raw
+
+	def initialize raw: nil, time:, field: raw['field'], value: raw['toString']
+		# raw will only ever be nil in a test and in that case field and value should be passed in
 		@raw = raw
-		@created_at = created_at
+		@time = time
+		@field = field || @raw['field']
+		@value = value || @raw['toString']
 	end
 
 	# This is the new 'endless' method syntax in ruby 3. Still undecided if I like it.
-	def field     = @raw['field']
-	def value     = @raw['toString']
-
 	def status?   = (field == 'status')
 	def flagged?  = (field == 'Flagged')
 	def priority? = (field == 'priority')
@@ -41,7 +43,7 @@ class ChangeItem
 	def inspect = to_s
 
 	def == other
-		field.eql?(other.field) && value.eql?(other.value) && created_at.to_s.eql?(other.created_at.to_s)
+		field.eql?(other.field) && value.eql?(other.value) && time.to_s.eql?(other.time.to_s)
 	end
 end
 
