@@ -15,6 +15,7 @@ class Issue
 				@changes << ChangeItem.new(raw: item, time: created_at)
 			end
 		end
+		@changes.reverse!
 	end
 
 	def key
