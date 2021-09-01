@@ -15,11 +15,22 @@ class Issue
 				@changes << ChangeItem.new(raw: item, time: created_at)
 			end
 		end
+
+		# Initial creation isn't considered a change so Jira doesn't create an entry for that
+		@changes << createFakeChangeForCreation
+
 		@changes.reverse!
 	end
 
-	def key
-		@raw['key']
+	def key = @raw['key']
+
+	def createFakeChangeForCreation
+		created_at = DateTime.parse @raw['fields']['created']
+		first_status = '--CREATED--'
+		unless @changes.empty?
+			first_status = @changes[-1].raw['fromString']
+		end
+		ChangeItem.new time: created_at, field: 'status', value: first_status
 	end
 end
 
@@ -31,6 +42,7 @@ class ChangeItem
 		# raw will only ever be nil in a test and in that case field and value should be passed in
 		@raw = raw
 		@time = time
+		@time = DateTime.parse(time) if time.is_a? String
 		@field = field || @raw['field']
 		@value = value || @raw['toString']
 	end
@@ -40,7 +52,7 @@ class ChangeItem
 	def flagged?  = (field == 'Flagged')
 	def priority? = (field == 'priority')
 
-	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@created_at.to_s}')"
+	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@time.to_s}')"
 	def inspect = to_s
 
 	def == other
