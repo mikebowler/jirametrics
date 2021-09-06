@@ -4,7 +4,7 @@ require_all 'lib'
 class Config < ConfigBase
 	target_path 'target/'
 
-	export file_prefix: 'foo', project: 'SP' do
+	export file_prefix: 'sample', project: 'SP' do
 		issues.each do |issue|
 			# Remove specific changes that we want to ignore
 		end
@@ -17,8 +17,4 @@ class Config < ConfigBase
 		    string 'Summary', summary
 		end
 	end
-end
-
-if __FILE__ == $0
-	Config.instances.each { |config| config.run }
 end
