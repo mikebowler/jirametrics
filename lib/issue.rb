@@ -38,10 +38,17 @@ class Issue
 		@changes.find { |change| change.field == 'status' && status_names.include?(change.value) == false }&.time
 	end
 
-	# first_time_for_any_status_change
-	# first_time_in_status(...)
-	# first_time_not_in_status(...)
-	# last_time_in_status(...)
+	def last_time_in_status *status_names
+		@changes.reverse.find { |change| change.field == 'status' && status_names.include?(change.value) }&.time
+	end
+
+	def first_time_for_any_status_change
+		if @changes.size >= 2
+			@changes[1].time
+		else
+			nil
+		end
+	end
 	# last_time_not_in_status(...)
 	# first_time_in_status_category(...)
 	# last_time_in_status_category(...)
