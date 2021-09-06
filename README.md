@@ -8,21 +8,21 @@ Create a config.rb file and put a configuration in it like the one below.
 
 ```ruby
 class Config < ConfigBase
-	target_path 'target/'
+  target_path 'target/'
 
-	export file_prefix: 'sample', project: 'SP' do
-		issues.each do |issue|
-			# Remove specific changes that we want to ignore
-		end
-
-		columns write_headers: true do
-			date 'Start', first_time_not_in_status('Backlog')
-		    date 'Done', last_time_in_status('Done')
-		    string 'Type', type
-		    string 'Key', key
-		    string 'Summary', summary
-		end
+  export file_prefix: 'sample', project: 'SP' do
+    issues.each do |issue|
+	  # Remove specific changes that we want to ignore
 	end
+
+    columns write_headers: true do
+      date 'Start', first_time_not_in_status('Backlog')
+      date 'Done', last_time_in_status('Done')
+      string 'Type', type
+      string 'Key', key
+      string 'Summary', summary
+    end
+  end
 end
 ```
 
