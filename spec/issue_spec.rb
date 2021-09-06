@@ -1,4 +1,5 @@
-require './extract_cycle_times.rb'
+require 'require_all'
+require_all 'lib'
 
 def load_issue key
   Issue.new(JSON.parse(File.read("spec/#{key}.json")))

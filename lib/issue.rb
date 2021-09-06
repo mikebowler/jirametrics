@@ -30,14 +30,6 @@ class Issue
 		ChangeItem.new time: created_time, field: 'status', value: first_status
 	end
 
-	def first_time_not_in_status *args
-		Date.today
-	end
-
-	def last_time_in_status *args
-		Date.today
-	end
-
 	def first_time_in_status *status_names
 		@changes.find { |change| change.field == 'status' && status_names.include?(change.value) }&.time
 	end
@@ -46,13 +38,14 @@ class Issue
 		@changes.find { |change| change.field == 'status' && status_names.include?(change.value) == false }&.time
 	end
 
-	# first_status_change
+	# first_time_for_any_status_change
 	# first_time_in_status(...)
 	# first_time_not_in_status(...)
 	# last_time_in_status(...)
 	# last_time_not_in_status(...)
 	# first_time_in_status_category(...)
 	# last_time_in_status_category(...)
+	# first_time_on_board (looking at the board config)
 
 
 end
