@@ -11,6 +11,10 @@ class Downloader
 		@jira_api_token = config['api_token']
 	end
 
+    def call_command command
+        puts '----', command.gsub(/\s+/, ''), ''
+        `#{command}`
+    end
 	def download_issues output_file_prefix
 		jql = CGI.escape 'project=SP'
 		max_results = 100
@@ -23,9 +27,8 @@ class Downloader
                 --user #{ @jira_email }:#{ @jira_api_token } \
                 --header "Accept: application/json"
             COMMAND
-            puts "About to call curl"
-            puts command
-            json = JSON.parse `#{command}`
+
+            json = JSON.parse call_command(command)
             if json['errorMessages']
             	puts JSON.pretty_generate(json)
             	exit 1
@@ -46,10 +49,10 @@ class Downloader
 			curl --request GET \
             --url #{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration \
             --user #{@jira_email}:#{@jira_api_token} \
-            --header Accept: application/json
+            --header "Accept: application/json"
          COMMAND
 
-        json = JSON.parse `#{command}`
+        json = JSON.parse call_command(command)
         if json['errorMessages']
         	puts JSON.pretty_generate(json)
         	exit 1
