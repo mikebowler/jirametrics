@@ -5,18 +5,26 @@ class Downloader
 	OUTPUT_PATH = 'target/'
 
 	def initialize
-		config = JSON.parse File.read('jira_config.json')
-		@jira_url = config['url']
-		@jira_email = config['email']
-		@jira_api_token = config['api_token']
+        load_jira_config
+        Config.instances.each do |config|
+            download_issues config
+        end
+    end
+
+    def load_jira_config
+		jira_config = JSON.parse File.read('jira_config.json')
+		@jira_url = jira_config['url']
+		@jira_email = jira_config['email']
+		@jira_api_token = jira_config['api_token']
 	end
 
     def call_command command
         puts '----', command.gsub(/\s+/, ''), ''
         `#{command}`
     end
-	def download_issues output_file_prefix
-		jql = CGI.escape 'project=SP'
+	def download_issues config
+        output_file_prefix = config.file_prefix
+		jql = CGI.escape config.jql
 		max_results = 100
 		start_at = 0
 		total = 1
@@ -67,8 +75,8 @@ class Downloader
     end
 end
 
-if __FILE__ == $0
-    downloader = Downloader.new
-    downloader.download_columns 'foo', 1
-    downloader.download_issues 'foo'
-end
+# if __FILE__ == $0
+#     downloader = Downloader.new
+#     downloader.download_columns 'foo', 1
+#     downloader.download_issues 'foo'
+# end

@@ -21,21 +21,32 @@ class ConfigBase
 		end
 	end
 
-	attr_reader :issues
+	attr_reader :issues, :file_prefix, :jql
+	@@target_path = 'target/'
 	@@configs = []
 
-	def self.export prefix:, project: nil, filter: nil, jql: nil, &block
-		instance = ConfigBase.new prefix: prefix, project: project, filter: filter, jql: jql, export_config_block: block
+	def self.export file_prefix:, project: nil, filter: nil, jql: nil, &block
+		instance = ConfigBase.new(
+			file_prefix: file_prefix, project: project, filter: filter, jql: jql, export_config_block: block
+		)
 		@@configs << instance
 	end
 
 	def self.target_path(path) = @@target_path = path
 	def self.instances = @@configs
 
-	def initialize prefix:, project:, filter:, jql:, export_config_block:
-		@prefix = prefix
-		@csv_filename = "#{@@target_path}/#{prefix}.csv"
+	def initialize file_prefix:, project: nil, filter: nil, jql: nil, export_config_block: nil
+		@file_prefix = file_prefix
+		@csv_filename = "#{@@target_path}/#{file_prefix}.csv"
 		@export_config_block = export_config_block
+		@jql = make_jql project: project, filter: filter, jql: jql
+	end
+
+	def make_jql project:, filter:, jql:
+		return jql unless jql.nil?
+		return "project=#{project.inspect}" unless project.nil?
+		return "filter=#{filter.inspect}" unless filter.nil?
+		raise "Everything was nil"
 	end
 
 	def columns write_headers: true, &block
@@ -45,7 +56,7 @@ class ConfigBase
 	end
 
 	def run
-		@issues = Extractor.new(@prefix, @@target_path).run
+		@issues = Extractor.new(@file_prefix, @@target_path).run
 		self.instance_eval &@export_config_block
 
 		File.open(@csv_filename, 'w') do |file|
