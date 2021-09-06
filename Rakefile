@@ -2,7 +2,6 @@ require 'rspec/core/rake_task'
 require 'require_all'
 require_all 'lib'
 require './config'
-require './downloader'
 
 task :default => [:download, :extract]
 
