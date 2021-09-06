@@ -1,5 +1,13 @@
 require 'rspec/core/rake_task'
 
-RSpec::Core::RakeTask.new(:spec)
+task :default => [:download, :extract]
 
-task :default => :spec
+task :download do 
+	puts 'download'
+end
+
+task :extract do 
+	puts 'extract'
+end
+
+RSpec::Core::RakeTask.new(:spec)

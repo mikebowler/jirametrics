@@ -67,7 +67,8 @@ class Downloader
     end
 end
 
-downloader = Downloader.new
-downloader.download_columns 'foo', 1
-downloader.download_issues 'foo'
-
+if __FILE__ == $0
+    downloader = Downloader.new
+    downloader.download_columns 'foo', 1
+    downloader.download_issues 'foo'
+end

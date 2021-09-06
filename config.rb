@@ -19,3 +19,6 @@ class Config < ConfigBase
 	end
 end
 
+if __FILE__ == $0
+	Config.instances.each { |config| config.run }
+end

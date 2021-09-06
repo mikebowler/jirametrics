@@ -22,31 +22,40 @@ class ConfigBase
 	end
 
 	attr_reader :issues
+	@@configs = []
 
 	def self.export prefix:, project: nil, filter: nil, jql: nil, &block
-		instance = ConfigBase.new prefix: prefix, project: project, filter: filter, jql: jql
-		instance.instance_eval &block
+		instance = ConfigBase.new prefix: prefix, project: project, filter: filter, jql: jql, export_config_block: block
+		@@configs << instance
 	end
 
 	def self.target_path(path) = @@target_path = path
+	def self.instances = @@configs
 
-	def initialize prefix:, project:, filter:, jql:, &block
+	def initialize prefix:, project:, filter:, jql:, export_config_block:
+		@prefix = prefix
 		@csv_filename = "#{@@target_path}/#{prefix}.csv"
-		@issues = Extractor.new(prefix, @@target_path).run
+		@export_config_block = export_config_block
 	end
 
 	def columns write_headers: true, &block
-		columns = ExportColumns.new
-		columns.instance_eval &block
+		@export_columns = ExportColumns.new
+		@export_columns.instance_eval &block
+		@write_headers = write_headers
+	end
+
+	def run
+		@issues = Extractor.new(@prefix, @@target_path).run
+		self.instance_eval &@export_config_block
 
 		File.open(@csv_filename, 'w') do |file|
-			if write_headers
-				line = columns.columns.collect { |type, label, proc| label }
+			if @write_headers
+				line = @export_columns.columns.collect { |type, label, proc| label }
 				file.puts CSV.generate_line(line)
 			end
-			issues.each do |issue|
+			@issues.each do |issue|
 				line = []
-				columns.columns.each do |type, name, block|
+				@export_columns.columns.each do |type, name, block|
 					# Invoke the block that will retrieve the result from Issue
 					result = instance_exec(issue, &block)
 					# Convert that result to the appropriate type
@@ -59,7 +68,7 @@ class ConfigBase
 
 	# TODO: to_date needs to know which timezone we're converting to.
 	def to_date object
-		object.to_date
+		object&.to_date
 	end
 
 	def to_string object
