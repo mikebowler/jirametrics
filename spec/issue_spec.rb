@@ -32,8 +32,23 @@ describe Issue do
     expect(issue.changes).to eq changes
   end
 
-  it "calculates cycle time" do 
+  it "first time in status" do
     issue = load_issue 'SP-10'
+    expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29T18:06:55+00:00'
+  end
 
+  it "first time in status that doesn't match any" do
+    issue = load_issue 'SP-10'
+    expect(issue.first_time_in_status('NoStatus')).to be_nil
+  end
+
+  it "first time not in status" do
+    issue = load_issue 'SP-10'
+    expect(issue.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29T18:06:28+00:00'
+  end
+
+  it "first time not in status that doesn't match any" do
+    issue = load_issue 'SP-10'
+    expect(issue.first_time_in_status('NoStatus')).to be_nil
   end
 end

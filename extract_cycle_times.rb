@@ -10,9 +10,9 @@ class Issue
 		@raw = raw_data
 		@changes = []
 		@raw['changelog']['histories'].each do |history|
-			created_at = DateTime.parse history['created']
+			created = history['created']
 			history['items'].each do |item|
-				@changes << ChangeItem.new(raw: item, time: created_at)
+				@changes << ChangeItem.new(raw: item, time: created)
 			end
 		end
 
@@ -23,15 +23,43 @@ class Issue
 	end
 
 	def key = @raw['key']
+	def type = @raw['fields']['issuetype']['name']
+	def summary = @raw['fields']['summary']
 
 	def createFakeChangeForCreation
-		created_at = DateTime.parse @raw['fields']['created']
+		created_time = @raw['fields']['created']
 		first_status = '--CREATED--'
 		unless @changes.empty?
 			first_status = @changes[-1].raw['fromString']
 		end
-		ChangeItem.new time: created_at, field: 'status', value: first_status
+		ChangeItem.new time: created_time, field: 'status', value: first_status
 	end
+
+	def first_time_not_in_status *args
+		Date.today
+	end
+
+	def last_time_in_status *args
+		Date.today
+	end
+
+	def first_time_in_status *status_names
+		@changes.find { |change| change.field == 'status' && status_names.include?(change.value) }&.time
+	end
+
+	def first_time_not_in_status *status_names
+		@changes.find { |change| change.field == 'status' && status_names.include?(change.value) == false }&.time
+	end
+
+	# first_status_change
+	# first_time_in_status(...)
+	# first_time_not_in_status(...)
+	# last_time_in_status(...)
+	# last_time_not_in_status(...)
+	# first_time_in_status_category(...)
+	# last_time_in_status_category(...)
+
+
 end
 
 class ChangeItem
@@ -41,18 +69,16 @@ class ChangeItem
 	def initialize raw: nil, time:, field: raw['field'], value: raw['toString']
 		# raw will only ever be nil in a test and in that case field and value should be passed in
 		@raw = raw
-		@time = time
-		@time = DateTime.parse(time) if time.is_a? String
+		@time = DateTime.parse(time)
 		@field = field || @raw['field']
 		@value = value || @raw['toString']
 	end
 
-	# This is the new 'endless' method syntax in ruby 3. Still undecided if I like it.
 	def status?   = (field == 'status')
 	def flagged?  = (field == 'Flagged')
 	def priority? = (field == 'priority')
 
-	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@time.to_s}')"
+	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@time}')"
 	def inspect = to_s
 
 	def == other
@@ -73,6 +99,7 @@ class Extractor
 				content['issues'].each { |issue| issues << Issue.new(issue) }
 			end
 		end
+		issues
 	end
 end
 
