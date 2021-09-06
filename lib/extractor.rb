@@ -1,18 +1,17 @@
 require 'json'
 require 'date'
 
-OUTPUT_PATH = 'target/'
-
 class Extractor
-	def initialize file_prefix
+	def initialize file_prefix, target_path
 		@file_prefix = file_prefix
+		@target_path = target_path
 	end
 
 	def run
 		issues = []
-		Dir.foreach(OUTPUT_PATH) do |filename|
+		Dir.foreach(@target_path) do |filename|
 			if filename =~ /#{@file_prefix}_\d+\.json/
-				content = JSON.parse File.read("#{OUTPUT_PATH}#{filename}")
+				content = JSON.parse File.read("#{@target_path}#{filename}")
 				content['issues'].each { |issue| issues << Issue.new(issue) }
 			end
 		end

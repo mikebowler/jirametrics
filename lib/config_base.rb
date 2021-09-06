@@ -28,9 +28,11 @@ class ConfigBase
 		instance.instance_eval &block
 	end
 
+	def self.target_path(path) = @@target_path = path
+
 	def initialize prefix:, project:, filter:, jql:, &block
-		@csv_filename = "target/#{prefix}.csv"
-		@issues = Extractor.new(prefix).run
+		@csv_filename = "#{@@target_path}/#{prefix}.csv"
+		@issues = Extractor.new(prefix, @@target_path).run
 	end
 
 	def columns write_headers: true, &block

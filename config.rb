@@ -2,6 +2,8 @@ require 'require_all'
 require_all 'lib'
 
 class Config < ConfigBase
+	target_path 'target/'
+
 	export prefix: 'foo', project: 'SP' do
 		issues.each do |issue|
 			# Remove specific changes that we want to ignore
