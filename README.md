@@ -12,8 +12,9 @@ class Config < ConfigBase
 
   export file_prefix: 'sample', project: 'SP' do
     issues.each do |issue|
-	  # Remove specific changes that we want to ignore
-	end
+      # If you want to make any changes to the history before 
+      # extracting the data then this is the place to do it.
+    end
 
     columns write_headers: true do
       date 'Start', first_time_not_in_status('Backlog')
