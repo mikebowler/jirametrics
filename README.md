@@ -6,7 +6,7 @@ You can copy the default_jira.config and put your own values in it.
 
 Create a config.rb file and put a configuration in it like the one below.
 
-{% highlight ruby %}
+```ruby
 class Config < ConfigBase
 	target_path 'target/'
 
@@ -24,7 +24,7 @@ class Config < ConfigBase
 		end
 	end
 end
-{% endhighlight %}
+```
 
 # Step 3: Install the gems you'll need
 
