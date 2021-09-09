@@ -1,5 +1,4 @@
-require 'require_all'
-require_all 'lib'
+require './spec/spec_helper'
 
 def load_issue key
   Issue.new(JSON.parse(File.read("spec/#{key}.json")))

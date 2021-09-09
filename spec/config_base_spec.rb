@@ -1,5 +1,4 @@
-require 'require_all'
-require_all 'lib'
+require './spec/spec_helper'
 
 describe ConfigBase do
   context 'jql' do
