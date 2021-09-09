@@ -1,15 +1,18 @@
 require 'rspec/core/rake_task'
 require 'require_all'
-require_all 'lib'
-require './config'
 
 task :default => [:download, :extract]
 
-task :download do
+task :initialize_config do 
+	require_all 'lib'
+	require './config'
+end
+
+task :download => [:initialize_config] do
 	Downloader.new 
 end
 
-task :extract do
+task :extract => [:initialize_config] do
 	Config.instances.each { |config| config.run }
 end
 
