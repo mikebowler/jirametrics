@@ -1,3 +1,4 @@
 target/
 jira_config.json
 coverage/
+.DS_Store
