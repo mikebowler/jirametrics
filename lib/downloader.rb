@@ -16,10 +16,11 @@ class Downloader
 		@jira_url = jira_config['url']
 		@jira_email = jira_config['email']
 		@jira_api_token = jira_config['api_token']
+        @cookies = jira_config['cookies'].collect { |key, value| "#{key}=#{value}" }.join(';')
 	end
 
     def call_command command
-        puts '----', command.gsub(/\s+/, ''), ''
+        puts '----', command.gsub(/\s+/, ' '), ''
         `#{command}`
     end
 	def download_issues config
@@ -28,11 +29,13 @@ class Downloader
 		max_results = 100
 		start_at = 0
 		total = 1
+        # --user #{ @jira_email }:#{ @jira_api_token } \
         while start_at < total
             command = <<-COMMAND
-            	curl --request GET \
+            	curl \
+                --cookie #{@cookies.inspect} \
+                --request GET \
             	--url "#{ @jira_url }/rest/api/2/search?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog" \
-                --user #{ @jira_email }:#{ @jira_api_token } \
                 --header "Accept: application/json"
             COMMAND
 
@@ -74,3 +77,4 @@ class Downloader
         puts command
     end
 end
+
