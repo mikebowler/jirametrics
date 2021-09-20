@@ -25,7 +25,7 @@ class Issue
 		created_time = @raw['fields']['created']
 		first_status = '--CREATED--'
 		unless @changes.empty?
-			first_status = @changes[-1].raw['fromString']
+			first_status = @changes[-1].raw['fromString'] || first_status
 		end
 		ChangeItem.new time: created_time, field: 'status', value: first_status
 	end
