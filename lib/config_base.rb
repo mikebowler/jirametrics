@@ -32,6 +32,10 @@ class ConfigBase
 		@@configs << instance
 	end
 
+	# Does nothing. An easy way to comment out a project
+	def self.xexport *args
+	end
+
 	def self.target_path(path) = @@target_path = path
 	def self.instances = @@configs
 
