@@ -31,13 +31,12 @@ class Downloader
 		total = 1
         # --user #{ @jira_email }:#{ @jira_api_token } \
         while start_at < total
-            command = <<-COMMAND
-            	curl \
-                --cookie #{@cookies.inspect} \
-                --request GET \
-            	--url "#{ @jira_url }/rest/api/2/search?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog" \
-                --header "Accept: application/json"
-            COMMAND
+            command = "curl"
+            command += " --cookie #{@cookies.inspect} " if @cookies
+            command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
+            command += ' --request GET'
+            command += " --url #{ @jira_url }/rest/api/2/search"
+            command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog" \
 
             json = JSON.parse call_command(command)
             if json['errorMessages']
