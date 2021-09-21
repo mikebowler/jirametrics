@@ -1,7 +1,8 @@
 GEM
+  remote: https://rubygems.org/
   specs:
     docile (1.4.0)
-    rake (13.0.3)
+    rake (13.0.6)
     require_all (3.0.0)
     simplecov (0.21.2)
       docile (~> 1.1)
