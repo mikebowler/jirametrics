@@ -21,7 +21,7 @@ class ConfigBase
 		end
 	end
 
-	attr_reader :issues, :file_prefix, :jql
+	attr_reader :issues, :file_prefix, :jql, :project_key
 	@@target_path = 'target/'
 	@@configs = []
 
@@ -44,6 +44,7 @@ class ConfigBase
 		@csv_filename = "#{@@target_path}/#{file_prefix}.csv"
 		@export_config_block = export_config_block
 		@jql = make_jql project: project, filter: filter, jql: jql
+		@project_key = project
 	end
 
 	def make_jql project:, filter:, jql:
