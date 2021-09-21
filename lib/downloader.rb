@@ -35,8 +35,8 @@ class Downloader
             command += " --cookie #{@cookies.inspect} " if @cookies
             command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
             command += ' --request GET'
-            command += " --url #{ @jira_url }/rest/api/2/search"
-            command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog" \
+            command += " --url \"#{ @jira_url }/rest/api/2/search"
+            command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog\"" \
 
             json = JSON.parse call_command(command)
             if json['errorMessages']

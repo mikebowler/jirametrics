@@ -4,10 +4,14 @@ class Issue
 	def initialize raw_data
 		@raw = raw_data
 		@changes = []
-		@raw['changelog']['histories'].each do |history|
-			created = history['created']
-			history['items'].each do |item|
-				@changes << ChangeItem.new(raw: item, time: created)
+		if @raw['changelog'].nil?
+			raise "No changelog found in issue #{@raw['key']}"
+		else
+			@raw['changelog']['histories'].each do |history|
+				created = history['created']
+				history['items'].each do |item|
+					@changes << ChangeItem.new(raw: item, time: created)
+				end
 			end
 		end
 
