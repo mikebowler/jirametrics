@@ -35,27 +35,31 @@ class Issue
     end
 
     def first_time_in_status *status_names
-        @changes.find { |change| change.field == 'status' && status_names.include?(change.value) }&.time
+        @changes.find { |change| change.status? && status_names.include?(change.value) }&.time
     end
 
     def first_time_not_in_status *status_names
-        @changes.find { |change| change.field == 'status' && status_names.include?(change.value) == false }&.time
+        @changes.find { |change| change.status? && status_names.include?(change.value) == false }&.time
     end
 
     def last_time_in_status *status_names
-        @changes.reverse.find { |change| change.field == 'status' && status_names.include?(change.value) }&.time
+        @changes.reverse.find { |change| change.status? && status_names.include?(change.value) }&.time
     end
 
     def first_time_for_any_status_change
-        if @changes.size >= 2
-            @changes[1].time
-        else
-            nil
-        end
+        @changes[1..].find { |change| change.status? }&.time
     end
 
     def first_time_in_status_category config, *category_names
-        # puts "config=#{config.class} category_names=#{category_names}"
+        @changes.each do | change |
+            next unless change.status?
+
+            config.status_category_mappings.find do |type, value| 
+                status, category = *value
+                return change.time if category_names.include? category
+            end
+        end
+        nil
     end
 
     # last_time_not_in_status(...)
