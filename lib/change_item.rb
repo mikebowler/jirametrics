@@ -13,6 +13,7 @@ class ChangeItem
 	def status?   = (field == 'status')
 	def flagged?  = (field == 'Flagged')
 	def priority? = (field == 'priority')
+	def resolution? = (field == 'resolution')
 
 	def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@time}')"
 	def inspect = to_s

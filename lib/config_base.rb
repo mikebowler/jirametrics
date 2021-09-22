@@ -115,17 +115,16 @@ class ConfigBase
 
         if File.exists? filename
             JSON.parse(File.read(filename)).each do |type_config|
-                issue_type = type_config['name'] # Epic
+                issue_type = type_config['name'] 
+                @status_category_mappings[issue_type] = {}
                 type_config['statuses'].each do |status_config|
-                    status = status_config['name'] # Discovering
-                    category = status_config['statusCategory']['name'] # To Do
-
-                    @status_category_mappings[issue_type] = [status, category]
+                    status = status_config['name']
+                    category = status_config['statusCategory']['name']
+                    @status_category_mappings[issue_type][status] = category
                 end
             end
         end
         raise "categories file not found" unless File.exists? filename
-
     end
 
     # TODO: to_date needs to know which timezone we're converting to.

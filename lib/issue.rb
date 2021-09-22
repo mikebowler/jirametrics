@@ -15,11 +15,19 @@ class Issue
             end
         end
 
+
         # Initial creation isn't considered a change so Jira doesn't create an entry for that
         @changes << createFakeChangeForCreation
 
-        @changes.reverse!
+        @changes.sort! do |a,b| 
+            # It's common that a resolved will happen at the same time as a status change. Put them in a defined order
+            compare = a.time <=> b.time
+            compare = 1 if compare == 0 && a.resolution?
+            compare
+        end
     end
+
+    def debug? =  key == 'CCDRAPTORS-4584'
 
     def key = @raw['key']
     def type = @raw['fields']['issuetype']['name']
@@ -53,11 +61,8 @@ class Issue
     def first_time_in_status_category config, *category_names
         @changes.each do | change |
             next unless change.status?
-
-            config.status_category_mappings.find do |type, value| 
-                status, category = *value
-                return change.time if category_names.include? category
-            end
+            category = config.status_category_mappings[self.type][change.value]
+            return change.time if category_names.include? category
         end
         nil
     end
