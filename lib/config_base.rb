@@ -45,7 +45,7 @@ end
 # objects easy to read so the tricky (specifically meta programming) parts 
 # are all in here. Be cautious when changing this file.
 class ConfigBase
-    attr_reader :issues, :file_prefix, :jql, :project_key
+    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings
     @@target_path = 'target/'
     @@configs = []
 
@@ -85,6 +85,8 @@ class ConfigBase
     end
 
     def run
+        load_status_category_mappings
+
         @issues = Extractor.new(@file_prefix, @@target_path).run
         self.instance_eval &@export_config_block
 
@@ -104,6 +106,26 @@ class ConfigBase
                 file.puts CSV.generate_line(line)
             end
         end
+
+    end
+
+    def load_status_category_mappings
+        filename = "#{@@target_path}/#{file_prefix}_statuses.json"
+        @status_category_mappings = {}
+
+        if File.exists? filename
+            JSON.parse(File.read(filename)).each do |type_config|
+                issue_type = type_config['name'] # Epic
+                type_config['statuses'].each do |status_config|
+                    status = status_config['name'] # Discovering
+                    category = status_config['statusCategory']['name'] # To Do
+
+                    @status_category_mappings[issue_type] = [status, category]
+                end
+            end
+        end
+        raise "categories file not found" unless File.exists? filename
+
     end
 
     # TODO: to_date needs to know which timezone we're converting to.
