@@ -1,5 +1,5 @@
 class ChangeItem
-	attr_accessor :time, :field, :value
+	attr_accessor :time, :field, :value, :old_value
 	attr_reader :raw
 
 	def initialize raw: nil, time:, field: raw['field'], value: raw['toString']
@@ -8,6 +8,7 @@ class ChangeItem
 		@time = DateTime.parse(time)
 		@field = field || @raw['field']
 		@value = value || @raw['toString']
+		@old_value = @raw['fromString'] if @raw
 	end
 
 	def status?   = (field == 'status')

@@ -12,6 +12,7 @@ describe Issue do
 
   it "gets simple history with a single status" do
     issue = load_issue 'SP-2'
+
     changes = [
       ChangeItem.new(field: "status", value: "Backlog", time: '2021-06-18T18:41:37.804+0000'),
       ChangeItem.new(field: "status", value: "Selected for Development", time: '2021-06-18T18:43:38+00:00')
