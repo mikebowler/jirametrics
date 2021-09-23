@@ -3,24 +3,31 @@ class Issue
 
     def initialize raw_data
         @raw = raw_data
-        @changes = []
-        if @raw['changelog'].nil?
-            raise "No changelog found in issue #{@raw['key']}"
-        else
-            @raw['changelog']['histories'].each do |history|
-                created = history['created']
-                history['items'].each do |item|
-                    @changes << ChangeItem.new(raw: item, time: created)
-                end
+        changes = []
+
+        # If the changelog isn't in the json then nothing else is going to work. This would likely
+        # be because we didn't specify expand=changelog in the request to the Jira API.
+        raise "No changelog found in issue #{@raw['key']}" if @raw['changelog'].nil?
+            
+        @raw['changelog']['histories'].each do |history|
+            created = history['created']
+            history['items'].each do |item|
+                changes << ChangeItem.new(raw: item, time: created)
             end
         end
 
-
         # Initial creation isn't considered a change so Jira doesn't create an entry for that
-        @changes << createFakeChangeForCreation
+        changes << createFakeChangeForCreation(changes)
 
-        @changes.sort! do |a,b| 
-            # It's common that a resolved will happen at the same time as a status change. Put them in a defined order
+        # It might appear that Jira already returns these in order but we've found different
+        # versions of Server/Cloud return the changelog in different orders so we sort them.
+        @changes = sort_changes changes
+    end
+
+    def sort_changes changes
+        changes.sort do |a,b| 
+            # It's common that a resolved will happen at the same time as a status change. 
+            # Put them in a defined order so tests can be deterministic.
             compare = a.time <=> b.time
             compare = 1 if compare == 0 && a.resolution?
             compare
@@ -33,11 +40,11 @@ class Issue
     def type = @raw['fields']['issuetype']['name']
     def summary = @raw['fields']['summary']
 
-    def createFakeChangeForCreation
+    def createFakeChangeForCreation existing_changes
         created_time = @raw['fields']['created']
         first_status = '--CREATED--'
-        unless @changes.empty?
-            first_status = @changes[-1].raw['fromString'] || first_status
+        unless existing_changes.empty?
+            first_status = existing_changes[-1].raw['fromString'] || first_status
         end
         ChangeItem.new time: created_time, field: 'status', value: first_status
     end
@@ -54,7 +61,7 @@ class Issue
         @changes.reverse.find { |change| change.status? && status_names.include?(change.value) }&.time
     end
 
-    def first_time_for_any_status_change
+    def first_status_change_after_created
         @changes[1..].find { |change| change.status? }&.time
     end
 
