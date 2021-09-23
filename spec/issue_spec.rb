@@ -72,6 +72,6 @@ describe Issue do
 
   it "first time for any status change - created doens't count as status change" do 
     issue = load_issue 'SP-10'
-    expect(issue.first_time_for_any_status_change.to_s).to eql '2021-08-29T18:06:28+00:00'
+    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29T18:06:28+00:00'
   end
 end
