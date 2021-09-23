@@ -128,7 +128,21 @@ class ConfigBase
 
     def category_for type:, status:
         category = @status_category_mappings[type][status]
-        raise "Category not found for type: #{type} and status #{status}" if category.nil?
+        if category.nil?
+            message = "Could not determine a category for type: #{type} and status #{status}. If you" \
+                " specify a project: then we'll ask Jira for those mappings. If you've done that " \
+                " and we still don't have the right mapping, which is possible, then use the " \
+                " 'status_category_mapping' declaration in your config to manually add one." \
+                " The mappings we do know about are below:"
+            @status_category_mappings.each do |type, hash|
+                message << "\n  " << type
+                hash.each do |status, category|
+                    message << "\n    '#{status}'' => '#{category}'"
+                end
+            end
+
+            raise message
+        end
         category
     end
 
@@ -139,6 +153,13 @@ class ConfigBase
 
     def to_string object
         object.to_s
+    end
+
+    def status_category_mapping type:, status:, category:
+        mappings = self.status_category_mappings
+        mappings[type] = {} unless mappings[type]
+        mappings[type][status] = {} unless mappings[type][status]
+        mappings[type][status] = category
     end
 
 end
