@@ -17,3 +17,5 @@ task :extract => [:initialize_config] do
 end
 
 RSpec::Core::RakeTask.new(:spec)
+
+task :test => [:spec]
