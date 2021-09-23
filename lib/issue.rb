@@ -34,8 +34,6 @@ class Issue
         end
     end
 
-    def debug? =  key == 'CCDRAPTORS-4584'
-
     def key = @raw['key']
     def type = @raw['fields']['issuetype']['name']
     def summary = @raw['fields']['summary']
