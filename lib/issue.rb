@@ -55,8 +55,35 @@ class Issue
         @changes.find { |change| change.status? && status_names.include?(change.value) == false }&.time
     end
 
-    def last_time_in_status *status_names
-        @changes.reverse.find { |change| change.status? && status_names.include?(change.value) }&.time
+    def still_in
+        time = nil
+        @changes.each do |change|
+            next unless change.status?
+            current_status_matched = yield change
+
+            if current_status_matched && time.nil?
+                time = change.time
+            elsif !current_status_matched && time
+                time = nil
+            end
+        end
+        time
+    end
+    private :still_in
+
+    # If it ever entered one of these statuses and it's still there then what was the last time it entered
+    def still_in_status *status_names
+        still_in do |change|
+            status_names.include?(change.value)
+        end
+    end
+
+    # If it ever entered one of these categories and it's still there then what was the last time it entered
+    def still_in_status_category config, *category_names
+        still_in do |change|
+            category = config.category_for type: type, status: change.value
+            category_names.include? category
+        end
     end
 
     def first_status_change_after_created
@@ -66,7 +93,8 @@ class Issue
     def first_time_in_status_category config, *category_names
         @changes.each do | change |
             next unless change.status?
-            category = config.status_category_mappings[self.type][change.value]
+            category = config.category_for type: type, status: change.value
+            # category = config.status_category_mappings[self.type][change.value]
             return change.time if category_names.include? category
         end
         nil

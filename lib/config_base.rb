@@ -69,6 +69,7 @@ class ConfigBase
         @export_config_block = export_config_block
         @jql = make_jql project: project, filter: filter, jql: jql
         @project_key = project
+        @status_category_mappings = {}
     end
 
     def make_jql project:, filter:, jql:
@@ -111,8 +112,6 @@ class ConfigBase
 
     def load_status_category_mappings
         filename = "#{@@target_path}/#{file_prefix}_statuses.json"
-        @status_category_mappings = {}
-
         if File.exists? filename
             JSON.parse(File.read(filename)).each do |type_config|
                 issue_type = type_config['name'] 
@@ -125,6 +124,12 @@ class ConfigBase
             end
         end
         raise "categories file not found" unless File.exists? filename
+    end
+
+    def category_for type:, status:
+        category = @status_category_mappings[type][status]
+        raise "Category not found for type: #{type} and status #{status}" if category.nil?
+        category
     end
 
     # TODO: to_date needs to know which timezone we're converting to.
