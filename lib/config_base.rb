@@ -127,7 +127,7 @@ class ConfigBase
     end
 
     def category_for type:, status:
-        category = @status_category_mappings[type][status]
+        category = @status_category_mappings[type]&.[](status)
         if category.nil?
             message = "Could not determine a category for type: #{type} and status #{status}. If you" \
                 " specify a project: then we'll ask Jira for those mappings. If you've done that " \
