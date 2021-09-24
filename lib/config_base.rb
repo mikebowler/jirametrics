@@ -8,8 +8,9 @@ class ConfigBase
     attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config
     @@target_path = 'target/'
     @@configs = []
+    @@jira_config = 'jira_config.json'
 
-    def self.export file_prefix:, project: nil, filter: nil, jql: nil, &block
+    def self.project file_prefix:, project: nil, filter: nil, jql: nil, &block
         instance = ConfigBase.new(
             file_prefix: file_prefix, project: project, filter: filter, jql: jql, export_config_block: block
         )
@@ -17,7 +18,7 @@ class ConfigBase
     end
 
     # Does nothing. An easy way to comment out a project
-    def self.xexport *args
+    def self.xproject *args
     end
 
     def self.target_path(path) = @@target_path = path
