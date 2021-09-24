@@ -95,15 +95,11 @@ class Issue
         @changes.each do | change |
             next unless change.status?
             category = config.category_for type: type, status: change.value
-            # category = config.status_category_mappings[self.type][change.value]
             return change.time if category_names.include? category
         end
         nil
     end
 
-    # last_time_not_in_status(...)
-    # first_time_in_status_category(...)
-    # last_time_in_status_category(...)
     # first_time_on_board (looking at the board config)
 
 
