@@ -4,16 +4,20 @@ require 'json'
 class Downloader
     OUTPUT_PATH = 'target/'
 
-    def initialize
-        Config.instances.each do |config|
-            load_jira_config config
+    def initialize instances = Config.instances, json_file_loader = JsonFileLoader.new
+        @config_instances = instances
+        @json_file_loader = json_file_loader
+    end
+
+    def run
+        @config_instances.each do |config|
+            load_jira_config( @json_file_loader.load("jira_config_#{config.jira_config}.json") )
             download_issues config
             download_statuses(config) unless config.project_key.nil?
         end
     end
 
-    def load_jira_config config
-        jira_config = JSON.parse File.read("jira_config_#{config.jira_config}.json")
+    def load_jira_config jira_config
         @jira_url = jira_config['url']
         @jira_email = jira_config['email']
         @jira_api_token = jira_config['api_token']
@@ -24,6 +28,17 @@ class Downloader
         puts '----', command.gsub(/\s+/, ' '), ''
         `#{command}`
     end
+
+    def make_curl_command url:
+        command = "curl"
+        command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
+        command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
+        command += ' --request GET'
+        command += ' --header "Accept: application/json"'
+        command += " --url \"#{url}\""
+        command
+    end
+
     def download_issues config
         output_file_prefix = config.file_prefix
         jql = CGI.escape config.jql
@@ -31,13 +46,15 @@ class Downloader
         start_at = 0
         total = 1
         while start_at < total
-            command = "curl"
-            command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
-            command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
-            command += ' --request GET'
-            command += ' --header "Accept: application/json"'
-            command += " --url \"#{ @jira_url }/rest/api/2/search"
-            command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog\"" \
+            # command = "curl"
+            # command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
+            # command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
+            # command += ' --request GET'
+            # command += ' --header "Accept: application/json"'
+            # command += " --url \"#{ @jira_url }/rest/api/2/search"
+            # command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog\"" \
+            command = make_curl_command url: "#{ @jira_url }/rest/api/2/search" \
+                "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
 
             json = JSON.parse call_command(command)
             # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.

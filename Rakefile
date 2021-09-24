@@ -9,7 +9,7 @@ task :initialize_config do
 end
 
 task :download => [:initialize_config] do
-	Downloader.new 
+	Downloader.new.run
 end
 
 task :extract => [:initialize_config] do
