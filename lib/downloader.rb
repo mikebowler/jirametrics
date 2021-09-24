@@ -32,7 +32,7 @@ class Downloader
         total = 1
         while start_at < total
             command = "curl"
-            command += " --cookie #{@cookies.inspect} " if @cookies
+            command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
             command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
             command += ' --request GET'
             command += ' --header "Accept: application/json"'
@@ -58,7 +58,7 @@ class Downloader
 
     def download_statuses config
         command = "curl"
-        command += " --cookie #{@cookies.inspect} " if @cookies
+        command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
         command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
         command += ' --request GET'
         command += " --url \"#{ @jira_url }/rest/api/2/project/#{ config.project_key }/statuses\""
