@@ -5,7 +5,7 @@ require 'csv'
 # objects easy to read so the tricky (specifically meta programming) parts 
 # are all in here. Be cautious when changing this file.
 class ConfigBase
-    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings
+    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config
     @@target_path = 'target/'
     @@configs = []
 
@@ -21,6 +21,7 @@ class ConfigBase
     end
 
     def self.target_path(path) = @@target_path = path
+    def self.jira_config(file_prefix) = @@jira_config = file_prefix
     def self.instances = @@configs
 
     def initialize file_prefix:, project: nil, filter: nil, jql: nil, export_config_block: nil
@@ -30,6 +31,7 @@ class ConfigBase
         @jql = make_jql project: project, filter: filter, jql: jql
         @project_key = project
         @status_category_mappings = {}
+        @jira_config = @@jira_config
     end
 
     def make_jql project:, filter:, jql:

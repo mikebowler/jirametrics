@@ -5,19 +5,19 @@ class Downloader
     OUTPUT_PATH = 'target/'
 
     def initialize
-        load_jira_config
         Config.instances.each do |config|
+            load_jira_config config
             download_issues config
             download_statuses(config) unless config.project_key.nil?
         end
     end
 
-    def load_jira_config
-        jira_config = JSON.parse File.read('jira_config.json')
+    def load_jira_config config
+        jira_config = JSON.parse File.read("jira_config_#{config.jira_config}.json")
         @jira_url = jira_config['url']
         @jira_email = jira_config['email']
         @jira_api_token = jira_config['api_token']
-        @cookies = jira_config['cookies'].collect { |key, value| "#{key}=#{value}" }.join(';')
+        @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
     end
 
     def call_command command
@@ -30,17 +30,18 @@ class Downloader
         max_results = 100
         start_at = 0
         total = 1
-        # --user #{ @jira_email }:#{ @jira_api_token } \
         while start_at < total
             command = "curl"
             command += " --cookie #{@cookies.inspect} " if @cookies
             command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
             command += ' --request GET'
+            command += ' --header "Accept: application/json"'
             command += " --url \"#{ @jira_url }/rest/api/2/search"
             command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog\"" \
 
             json = JSON.parse call_command(command)
-            if json['errorMessages']
+            # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
+            if json['errorMessages'] || json['errorMessage']
                 puts JSON.pretty_generate(json)
                 exit 1
             end

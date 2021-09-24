@@ -1,5 +1,5 @@
 target/
-jira_config.json
+jira_config*.json
 config.rb
 coverage/
 .DS_Store
