@@ -11,7 +11,7 @@ class ConfigBase
     @@jira_config = 'jira_config.json'
 
     def self.project file_prefix:, project: nil, filter: nil, jql: nil, &block
-        instance = ConfigBase.new(
+        instance = new(
             file_prefix: file_prefix, project: project, filter: filter, jql: jql, export_config_block: block
         )
         @@configs << instance
