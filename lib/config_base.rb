@@ -48,7 +48,7 @@ class ConfigBase
         @write_headers = write_headers
     end
 
-    def extract file_prefix:, target_path:
+    def load_all_issues file_prefix:, target_path:
         issues = []
         Dir.foreach(target_path) do |filename|
             if filename =~ /#{file_prefix}_\d+\.json/
@@ -62,7 +62,7 @@ class ConfigBase
     def run
         load_status_category_mappings
 
-        @issues = extract file_prefix: @file_prefix, target_path: @@target_path
+        @issues = load_all_issues file_prefix: @file_prefix, target_path: @@target_path
         self.instance_eval &@export_config_block
 
         all_lines = @issues.collect do |issue|
