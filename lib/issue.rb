@@ -5,9 +5,11 @@ class Issue
         @raw = raw_data
         @changes = []
 
-        # If the changelog isn't in the json then nothing else is going to work. This would likely
-        # be because we didn't specify expand=changelog in the request to the Jira API.
-        raise "No changelog found in issue #{@raw['key']}" if @raw['changelog'].nil?
+        if @raw['changelog'].nil?
+            raise "No changelog found in issue #{@raw['key']}. This is likely because when we pulled the data" \
+            " from Jira, we didn't specifiy expand=changelog. Without that changelog, nothing else is going to" \
+            " work so stopping now."
+        end 
             
         @raw['changelog']['histories'].each do |history|
             created = history['created']
@@ -41,10 +43,7 @@ class Issue
 
     def createFakeChangeForCreation existing_changes
         created_time = @raw['fields']['created']
-        first_status = '--CREATED--'
-        unless existing_changes.empty?
-            first_status = existing_changes.find {|change| change.status?}&.old_value || first_status
-        end
+        first_status = existing_changes.find {|change| change.status?}&.old_value || '--CREATED--'
         ChangeItem.new time: created_time, field: 'status', value: first_status
     end
 

@@ -41,6 +41,23 @@ describe Issue do
     expect(issue.changes).to eq changes
   end
 
+  it "should default the first status if there really hasn't been any yet" do 
+    raw = { 
+      'key' => 'SP-1', 
+      'changelog' => { 'histories' => [] },
+      'fields' => { 'created' => '2021-08-29T18:00:00+00:00' }
+    }
+    issue = Issue.new raw
+    expect(issue.changes).to eq [ 
+      ChangeItem.new(field: "status", value: "--CREATED--", time: '2021-08-29T18:00:00+00:00')
+    ]
+  end
+
+  it "should give a reasonable error if the changelog isn't present" do 
+    raw = {  'key' => 'SP-1' }
+    expect { Issue.new raw }.to raise_error(/^No changelog found in issue/)
+  end
+
   it "first time in status" do
     issue = load_issue 'SP-10'
     expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29T18:06:55+00:00'
