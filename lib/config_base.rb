@@ -54,23 +54,42 @@ class ConfigBase
         @issues = Extractor.new(@file_prefix, @@target_path).run
         self.instance_eval &@export_config_block
 
+        all_lines = @issues.collect do |issue|
+            line = []
+            @export_columns.columns.each do |type, name, block|
+                # Invoke the block that will retrieve the result from Issue
+                result = instance_exec(issue, &block)
+                # Convert that result to the appropriate type
+                line << __send__(:"to_#{type}", result)
+            end
+            line
+        end
+
         File.open(@csv_filename, 'w') do |file|
             if @write_headers
                 line = @export_columns.columns.collect { |type, label, proc| label }
                 file.puts CSV.generate_line(line)
             end
-            @issues.each do |issue|
-                line = []
-                @export_columns.columns.each do |type, name, block|
-                    # Invoke the block that will retrieve the result from Issue
-                    result = instance_exec(issue, &block)
-                    # Convert that result to the appropriate type
-                    line << __send__(:"to_#{type}", result)
-                end
+            sort_output(all_lines).each do |line|
                 file.puts CSV.generate_line(line)
             end
         end
 
+    end
+
+    # We'll probably make sorting configurable at some point but for now it's hard coded for our
+    # most common usecase - the Team Dashboard from FocusedObjective.com. The rule for that one 
+    # is that all empty values in the first column should be at the bottom.
+    def sort_output all_lines
+        all_lines.sort do |a, b| 
+            if a[0].nil?
+                1
+            elsif b[0].nil?
+                -1
+            else
+                a[0] <=> b[0]
+            end
+        end
     end
 
     def load_status_category_mappings
