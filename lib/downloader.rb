@@ -50,15 +50,9 @@ class Downloader
                 "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
 
             json = JSON.parse call_command(command)
-            # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
-            if json['errorMessages'] || json['errorMessage']
-                puts JSON.pretty_generate(json)
-                exit 1
-            end
-            output_file = "#{OUTPUT_PATH}#{output_file_prefix}_#{start_at}.json"
-            File.open(output_file, 'w') do |file|
-                file.write(JSON.pretty_generate(json))
-            end
+            exit_if_call_failed json
+
+            write_json json, "#{OUTPUT_PATH}#{output_file_prefix}_#{start_at}.json"
             total = json['total'].to_i
             max_results = json['maxResults']
             start_at += json['issues'].size
@@ -66,41 +60,33 @@ class Downloader
         # self.create_meta_json(output_file_prefix, meta_data)
     end
 
-    def download_statuses config
-        command = "curl"
-        command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
-        command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
-        command += ' --request GET'
-        command += " --url \"#{ @jira_url }/rest/api/2/project/#{ config.project_key }/statuses\""
-
-        json = JSON.parse call_command(command)
-
-        output_file = "#{OUTPUT_PATH}#{config.file_prefix}_statuses.json"
-        File.open(output_file, 'w') do |file|
-            file.write(JSON.pretty_generate(json))
-        end
-    end
-
-    def download_columns output_file_prefix, board_id
-        command = <<-COMMAND
-            curl --request GET \
-            --url #{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration \
-            --user #{@jira_email}:#{@jira_api_token} \
-            --header "Accept: application/json"
-         COMMAND
-
-        json = JSON.parse call_command(command)
-        if json['errorMessages']
+    def exit_if_call_failed json
+        # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.        puts "json.class=#{json.class} json=#{json}"
+        if json['errorMessages'] || json['errorMessage']
             puts JSON.pretty_generate(json)
             exit 1
         end
+    end
 
-        output_file = "#{OUTPUT_PATH}#{output_file_prefix}_configuration.json"
-        File.open(output_file, 'w') do |file|
+    def download_statuses config
+        command = make_curl_command url: "\"#{ @jira_url }/rest/api/2/project/#{ config.project_key }/statuses\""
+        json = JSON.parse call_command(command)
+
+        write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_statuses.json"
+    end
+
+    def download_columns output_file_prefix, board_id
+        command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+        json = JSON.parse call_command(command)
+        exit_if_call_failed json
+
+        write_json json, "#{OUTPUT_PATH}#{output_file_prefix}_configuration.json"
+    end
+
+    def write_json json, filename
+        File.open(filename, 'w') do |file|
             file.write(JSON.pretty_generate(json))
         end
-
-        puts command
     end
 end
 
