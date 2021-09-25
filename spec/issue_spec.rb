@@ -1,7 +1,7 @@
 require './spec/spec_helper'
 
 def load_issue key
-  Issue.new(JSON.parse(File.read("spec/#{key}.json")))
+  Issue.new(JSON.parse(File.read("spec/testdata/#{key}.json")))
 end
 
 def mock_config
