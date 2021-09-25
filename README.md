@@ -1,6 +1,34 @@
 # Step 1: Create a jira_config.json document
 
-You can copy the default_jira.config and put your own values in it.
+You can copy the default_jira.config and put your own values in it. The code currently only supports two authentication mechanisms with Jira. If you're using Jira cloud then we recommend using the API Token. If you're in Jira Server then you'll have to use the cookie approach.
+
+## Authentication with the API Token ##
+
+Navigate to https://id.atlassian.com/manage-profile/security/api-tokens and create an API token. Insert that token in the jira.config like this:
+
+```json
+{
+  "url": "https://improvingflow.atlassian.net",
+  "email": "<your email>",
+  "api_token": "<your_api_key>",
+}
+```
+
+Note that API Tokens only work with Jira cloud at this time. If you're using Jira Server, you're out of luck.
+
+Theoretically you could replace the token with your password but we haven't tested that.
+
+## Authentication with cookies ##
+
+Once you've logged in with your web browser, your browser will now have authentication cookies saved. If you go into the settings for your brower and copy them, this code can use those cookies for authentication. Yes, this is extremely ugly but it's been the only way we could get authentication working in some cases. Generally Jira will set three different cookies and you need them all.
+
+```json
+{
+  "cookies": {
+    "<key>": "<value>"
+  }
+}
+```
 
 # Step 2: Create your configuration in config.rb
 
@@ -41,6 +69,6 @@ From the command line, "rake download" will pull the data from Jira and store it
 
 ----
 
-# Configuring authentication with Jira #
+
 
 # Configuring the project #
