@@ -8,22 +8,22 @@ Create a config.rb file and put a configuration in it like the one below.
 
 ```ruby
 class Config < ConfigBase
-  target_path 'target/'
+    target_path 'target/'
+    jira_config 'improvingflow'
 
-  export file_prefix: 'sample', project: 'SP' do
-    issues.each do |issue|
-      # If you want to make any changes to the history before 
-      # extracting the data then this is the place to do it.
-    end
+    project file_prefix: 'sample', project: 'SP' do
+        issues.reject! do |issue|
+            ['Sub-task', 'Epic'].include? issue.type
+        end
 
-    columns write_headers: true do
-      date 'Start', first_time_not_in_status('Backlog')
-      date 'Done', last_time_in_status('Done')
-      string 'Type', type
-      string 'Key', key
-      string 'Summary', summary
+        columns write_headers: true do
+            date 'Done', still_in_status_category('Done')
+            date 'Start', first_time_in_status_category('In Progress')
+            string 'Type', type
+            string 'Key', key
+            string 'Summary', summary
+        end
     end
-  end
 end
 ```
 
@@ -38,3 +38,9 @@ From the command line, "rake download" will pull the data from Jira and store it
 "rake extract" will take those files you already downloaded and will generate CSV files from it. Those CSV's will also be in the target directory.
 
 "rake" with no parameters will do a download followed by an extract.
+
+----
+
+# Configuring authentication with Jira #
+
+# Configuring the project #
