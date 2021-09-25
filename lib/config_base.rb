@@ -119,10 +119,11 @@ class ConfigBase
         raise "categories file not found" unless File.exists? filename
     end
 
-    def category_for type:, status:
+    def category_for type:, status:, issue_id:
         category = @status_category_mappings[type]&.[](status)
         if category.nil?
-            message = "Could not determine a category for type: #{type} and status #{status}. If you" \
+            message = "Could not determine a category for type: #{type} and status #{status} on " \
+                " issue #{issue_id}. If you" \
                 " specify a project: then we'll ask Jira for those mappings. If you've done that " \
                 " and we still don't have the right mapping, which is possible, then use the " \
                 " 'status_category_mapping' declaration in your config to manually add one." \

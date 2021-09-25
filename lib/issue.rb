@@ -82,7 +82,7 @@ class Issue
     def still_in_status_category config, *category_names
         still_in do |change|
             # puts key
-            category = config.category_for type: type, status: change.value
+            category = config.category_for type: type, status: change.value, issue_id: key
             category_names.include? category
         end
     end
@@ -94,7 +94,7 @@ class Issue
     def first_time_in_status_category config, *category_names
         @changes.each do | change |
             next unless change.status?
-            category = config.category_for type: type, status: change.value
+            category = config.category_for type: type, status: change.value, issue_id: key
             return change.time if category_names.include? category
         end
         nil
