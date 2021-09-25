@@ -31,7 +31,7 @@ class Downloader
 
     def make_curl_command url:
         command = "curl"
-        command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
+        command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
         command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
         command += ' --request GET'
         command += ' --header "Accept: application/json"'
@@ -46,13 +46,6 @@ class Downloader
         start_at = 0
         total = 1
         while start_at < total
-            # command = "curl"
-            # command += " --cookie #{@cookies.inspect} " unless @cookies.empty?
-            # command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
-            # command += ' --request GET'
-            # command += ' --header "Accept: application/json"'
-            # command += " --url \"#{ @jira_url }/rest/api/2/search"
-            # command += "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog\"" \
             command = make_curl_command url: "#{ @jira_url }/rest/api/2/search" \
                 "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
 
