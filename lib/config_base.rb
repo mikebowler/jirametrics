@@ -35,7 +35,7 @@ class ConfigBase
         @jira_config = @@jira_config
     end
 
-    def make_jql project:, filter:, jql:
+    def make_jql project: nil, filter: nil, jql: nil
         return jql unless jql.nil?
         return "project=#{project.inspect}" unless project.nil?
         return "filter=#{filter.inspect}" unless filter.nil?

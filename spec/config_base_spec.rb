@@ -2,23 +2,22 @@ require './spec/spec_helper'
 
 describe ConfigBase do
   context 'jql' do
+    config = ConfigBase.new file_prefix: 'foo', jql: ''
+
     it "makes from project" do
-      config = ConfigBase.new file_prefix: 'foo', project: 'a'
-      expect(config.jql).to eql 'project="a"'
+      expect(config.make_jql project: 'a').to eql 'project="a"'
     end
 
     it "makes from filter" do
-      config = ConfigBase.new file_prefix: 'foo', filter: 'a'
-      expect(config.jql).to eql 'filter="a"'
+      expect(config.make_jql filter: 'a').to eql 'filter="a"'
     end
 
     it "makes from jql" do
-      config = ConfigBase.new file_prefix: 'foo', jql: 'foo=bar'
-      expect(config.jql).to eql 'foo=bar'
+      expect(config.make_jql jql: 'foo=bar').to eql 'foo=bar'
     end
 
     it 'throws exception when everything nil' do
-      expect { ConfigBase.new file_prefix: 'foo' }.to raise_error(/Everything was nil/)
+      expect { config.make_jql }.to raise_error(/Everything was nil/)
     end
   end
 
