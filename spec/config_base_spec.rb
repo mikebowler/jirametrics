@@ -8,6 +8,12 @@ describe ConfigBase do
       expect(config.make_jql project: 'a').to eql 'project="a"'
     end
 
+    it "makes from project and rolling date count" do
+      today = DateTime.parse('2021-08-01')
+      expected = %(project="a" AND status changed DURING ("2021-05-03 00:00","2021-08-01"))
+      expect(config.make_jql project: 'a', rolling_date_count: 90, today: today).to eql expected
+    end
+
     it "makes from filter" do
       expect(config.make_jql filter: 'a').to eql 'filter="a"'
     end

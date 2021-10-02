@@ -1,5 +1,5 @@
 require 'csv'
-
+require 'date'
 
 # The goal was to make both the configuration itself and the issue/loader
 # objects easy to read so the tricky (specifically meta programming) parts 
@@ -25,21 +25,27 @@ class ConfigBase
     def self.jira_config(file_prefix) = @@jira_config = file_prefix
     def self.instances = @@configs
 
-    def initialize file_prefix:, project: nil, filter: nil, jql: nil, export_config_block: nil
+    def initialize file_prefix:, project: nil, filter: nil, jql: nil, rolling_date_count: nil, export_config_block: nil
         @file_prefix = file_prefix
         @csv_filename = "#{@@target_path}/#{file_prefix}.csv"
         @export_config_block = export_config_block
-        @jql = make_jql project: project, filter: filter, jql: jql
+        @jql = make_jql project: project, filter: filter, jql: jql, rolling_date_count: rolling_date_count
         @project_key = project
         @status_category_mappings = {}
         @jira_config = @@jira_config
     end
 
-    def make_jql project: nil, filter: nil, jql: nil
-        return jql unless jql.nil?
-        return "project=#{project.inspect}" unless project.nil?
-        return "filter=#{filter.inspect}" unless filter.nil?
-        raise "Everything was nil"
+    def make_jql project: nil, filter: nil, jql: nil, rolling_date_count: nil, today: Date.today
+        segments = []
+        segments << "project=#{project.inspect}" unless project.nil?
+        segments << "filter=#{filter.inspect}" unless filter.nil?
+        unless rolling_date_count.nil?
+            start_date = today - rolling_date_count
+            segments << %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'}")) 
+        end
+        segments << jql unless jql.nil?
+        raise "Everything was nil" if segments.empty?
+        segments.join ' AND '
     end
 
     def columns write_headers: true, &block
