@@ -1,5 +1,5 @@
 class Issue
-    attr_reader :changes
+    attr_reader :changes, :raw
 
     def initialize raw_data
         @raw = raw_data
@@ -98,6 +98,10 @@ class Issue
             return change.time if category_names.include? category
         end
         nil
+    end
+
+    def time_created
+        DateTime.parse @raw['fields']['created']
     end
 
     # first_time_on_board (looking at the board config)
