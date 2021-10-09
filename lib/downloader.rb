@@ -14,6 +14,7 @@ class Downloader
             load_jira_config( @json_file_loader.load("jira_config_#{config.jira_config}.json") )
             download_issues config
             download_statuses(config) unless config.project_key.nil?
+            download_board_configuration(config) unless config.board_id.nil?
         end
     end
 
@@ -61,7 +62,7 @@ class Downloader
     end
 
     def exit_if_call_failed json
-        # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.        puts "json.class=#{json.class} json=#{json}"
+        # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
         if json['errorMessages'] || json['errorMessage']
             puts JSON.pretty_generate(json)
             exit 1
@@ -75,12 +76,12 @@ class Downloader
         write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_statuses.json"
     end
 
-    def download_columns output_file_prefix, board_id
-        command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+    def download_board_configuration config
+        command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{config.board_id}/configuration"
         json = JSON.parse call_command(command)
         exit_if_call_failed json
 
-        write_json json, "#{OUTPUT_PATH}#{output_file_prefix}_configuration.json"
+        write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_board_configuration.json"
     end
 
     def write_json json, filename

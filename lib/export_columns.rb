@@ -14,6 +14,9 @@ class ExportColumns < BasicObject
         @columns << [:string, label, proc]
     end
 
+    def column_entry_times
+    end
+    
     # Why is this here? Because I keep forgetting that puts() will be caught by method_missing and
     # that makes me spin through a debug cycle. So I make it do the expected thing.
     def puts *args

@@ -5,14 +5,20 @@ require 'date'
 # objects easy to read so the tricky (specifically meta programming) parts 
 # are all in here. Be cautious when changing this file.
 class ConfigBase
-    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config
+    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config, :board_id
+
     @@target_path = 'target/'
     @@configs = []
     @@jira_config = 'jira_config.json'
 
-    def self.project file_prefix:, project: nil, filter: nil, jql: nil, &block
+    def self.project file_prefix:, project: nil, filter: nil, jql: nil, board_id: nil, &block
         instance = new(
-            file_prefix: file_prefix, project: project, filter: filter, jql: jql, export_config_block: block
+            file_prefix: file_prefix, 
+            project: project, 
+            filter: filter, 
+            jql: jql, 
+            board_id: board_id, 
+            export_config_block: block
         )
         @@configs << instance
     end
@@ -25,7 +31,7 @@ class ConfigBase
     def self.jira_config(file_prefix) = @@jira_config = file_prefix
     def self.instances = @@configs
 
-    def initialize file_prefix:, project: nil, filter: nil, jql: nil, rolling_date_count: nil, export_config_block: nil
+    def initialize file_prefix:, project: nil, filter: nil, jql: nil, rolling_date_count: nil, board_id: nil, export_config_block: nil
         @file_prefix = file_prefix
         @csv_filename = "#{@@target_path}/#{file_prefix}.csv"
         @export_config_block = export_config_block
@@ -33,6 +39,7 @@ class ConfigBase
         @project_key = project
         @status_category_mappings = {}
         @jira_config = @@jira_config
+        @board_id = board_id
     end
 
     def make_jql project: nil, filter: nil, jql: nil, rolling_date_count: nil, today: Date.today
