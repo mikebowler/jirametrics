@@ -1,17 +1,25 @@
 require './spec/spec_helper'
 
-describe ConfigBase do
-  context 'method_missing' do
-    issue = Object.new
-    def issue.one config
+class Issue
+    def one config
       "one-#{config}"
     end
-    def issue.two config, arg1
+    def two config, arg1
       "two-#{config}"
     end
-    def issue.three arg1
+    def three arg1
       'three'
     end
+end
+
+describe ConfigBase do
+  context 'method_missing' do
+    issue = Issue.new( {
+      'changelog' => { 
+        'histories' => []
+      },
+      'fields' => {'created' => '2021-01-01'} 
+    })
 
     it 'should call a method with config but no args' do
       columns = ExportColumns.new "config"
@@ -35,6 +43,11 @@ describe ConfigBase do
 
       expect(proc).to be_a Proc
       expect(proc.call(issue)).to eql 'three'
+    end
+
+    it "should fail when calling a method that doesn't exist anywhere" do
+      columns = ExportColumns.new "config"
+      expect { columns.method_that_does_not_exist }.to raise_error "method_that_does_not_exist isn't a method on Issue or ExportColumns"
     end
   end
 end

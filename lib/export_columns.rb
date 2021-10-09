@@ -26,6 +26,12 @@ class ExportColumns < BasicObject
         # object and at that point @config won't be referencing a variable from the right object.
         config = @config
 
+        # The odd syntax for throwing an exception is because we're in a BasicObject and therefore don't
+        # have access to raise()
+        unless ::Issue.method_defined? method_name.to_sym
+            ::Object.send(:raise, "#{method_name} isn't a method on Issue or ExportColumns")
+        end
+
         -> (issue) do
             parameters = issue.method(method_name.to_sym).parameters
             # Is the first parameter called config?
@@ -35,6 +41,6 @@ class ExportColumns < BasicObject
             else
                 issue.__send__ method_name, *args 
             end
-        end # *([config] + args) }
+        end 
     end
 end
