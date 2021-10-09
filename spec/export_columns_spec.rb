@@ -14,12 +14,7 @@ end
 
 describe ConfigBase do
   context 'method_missing' do
-    issue = Issue.new( {
-      'changelog' => { 
-        'histories' => []
-      },
-      'fields' => {'created' => '2021-01-01'} 
-    })
+    issue = load_issue 'SP-2'
 
     it 'should call a method with config but no args' do
       columns = ExportColumns.new "config"

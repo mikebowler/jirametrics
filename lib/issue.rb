@@ -23,7 +23,7 @@ class Issue
         sort_changes!
 
         # Initial creation isn't considered a change so Jira doesn't create an entry for that
-        @changes.insert 0, createFakeChangeForCreation(@changes)
+        @changes.insert 0, create_fake_change_for_creation(@changes)
 
     end
 
@@ -50,10 +50,25 @@ class Issue
         end
     end
 
-    def createFakeChangeForCreation existing_changes
+    def create_fake_change_for_creation existing_changes
         created_time = @raw['fields']['created']
-        first_status = existing_changes.find {|change| change.status?}&.old_value || '--CREATED--'
-        ChangeItem.new time: created_time, field: 'status', value: first_status
+        first_change = existing_changes.find {|change| change.status?}
+        if first_change.nil?
+            # There have been no status changes yet so we have to look at the current status
+            first_status = @raw['fields']['status']['name']
+            first_status_id = @raw['fields']['status']['id'].to_i
+        else
+            # Otherwise, we look at what the first status had changed away from.
+            first_status = first_change.old_value
+            first_status_id = first_change.old_value_id
+        end
+        ChangeItem.new time: created_time, raw: {
+            'field' => 'status',
+            "to" => first_status_id.to_s,
+            "toString" => first_status
+        }
+    # rescue => e
+    #     puts e, e.backtrace
     end
 
     def first_time_in_status *status_names

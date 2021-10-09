@@ -1,15 +1,16 @@
 class ChangeItem
-  attr_accessor :time, :field, :value, :old_value
+  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id
   attr_reader :raw
 
-  def initialize raw: nil, time:, field: raw['field'], value: raw['toString']
+  def initialize raw:, time: #, field: raw['field'], value: raw['toString']
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = DateTime.parse(time)
     @field = field || @raw['field']
     @value = value || @raw['toString']
-    @value_id = @raw&.[]('to').to_i
-    @old_value = @raw['fromString'] if @raw
+    @value_id = @raw['to'].to_i
+    @old_value = @raw['fromString']
+    @old_value_id = @raw['from']&.to_i
   end
 
   def status?   = (field == 'status')

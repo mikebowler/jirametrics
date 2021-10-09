@@ -11,3 +11,7 @@ require_all 'lib'
 def make_test_filename basename
   "spec/tmp/#{basename}"
 end
+
+def load_issue key
+  Issue.new(JSON.parse(File.read("spec/testdata/#{key}.json")))
+end
