@@ -22,6 +22,11 @@ describe Issue do
     expect(issue.key).to eql 'SP-2'
   end
 
+  it 'gets url' do
+    issue = load_issue 'SP-2'
+    expect(issue.url).to eql 'https://improvingflow.atlassian.net/browse/SP-2'
+  end
+
   it "gets simple history with a single status" do
     issue = load_issue 'SP-2'
 

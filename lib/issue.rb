@@ -41,6 +41,15 @@ class Issue
     def type = @raw['fields']['issuetype']['name']
     def summary = @raw['fields']['summary']
 
+    def url
+        # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
+        if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
+            "#{$1}/browse/#{key}"
+        else
+            ''
+        end
+    end
+
     def createFakeChangeForCreation existing_changes
         created_time = @raw['fields']['created']
         first_status = existing_changes.find {|change| change.status?}&.old_value || '--CREATED--'
