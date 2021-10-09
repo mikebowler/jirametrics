@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class BoardColumn
   attr_reader :name, :status_ids, :min, :max
 

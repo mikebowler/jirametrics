@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class ExportColumns < BasicObject
   attr_reader :columns
 
