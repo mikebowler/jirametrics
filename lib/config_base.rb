@@ -5,7 +5,8 @@ require 'date'
 # objects easy to read so the tricky (specifically meta programming) parts 
 # are all in here. Be cautious when changing this file.
 class ConfigBase
-    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config, :board_id
+    attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config
+    attr_reader :board_id, :board_columns
 
     @@target_path = 'target/'
     @@configs = []
@@ -74,6 +75,7 @@ class ConfigBase
 
     def run
         load_status_category_mappings
+        load_board_configuration
 
         @issues = load_all_issues file_prefix: @file_prefix, target_path: @@target_path
         self.instance_eval &@export_config_block
@@ -130,6 +132,16 @@ class ConfigBase
             end
         end
         raise "categories file not found" unless File.exists? filename
+    end
+
+    def load_board_configuration
+        filename = "#{@@target_path}/#{file_prefix}_board_configuration.json"
+        if File.exists? filename
+            json = JSON.parse(File.read(filename))
+            @board_columns = json['columnConfig']['columns'].collect do |column|
+                BoardColumn.new column
+            end
+        end
     end
 
     def category_for type:, status:, issue_id:

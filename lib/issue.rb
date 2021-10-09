@@ -57,7 +57,7 @@ class Issue
     end
 
     def first_time_in_status *status_names
-        @changes.find { |change| change.status? && status_names.include?(change.value) }&.time
+        @changes.find { |change| change.matches_status status_names }&.time
     end
 
     def first_time_not_in_status *status_names

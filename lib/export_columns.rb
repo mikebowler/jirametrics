@@ -15,6 +15,10 @@ class ExportColumns < BasicObject
     end
 
     def column_entry_times
+        puts "Skipping column #{@config.board_columns[0].name} as the first one always seems to be artificially created by Jira and not really visible on the board"
+        @config.board_columns[1..].each do |column|
+            date column.name, first_time_in_status(*column.status_ids)
+        end
     end
     
     # Why is this here? Because I keep forgetting that puts() will be caught by method_missing and
