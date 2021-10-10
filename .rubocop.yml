@@ -1,0 +1,11 @@
+AllCops:
+  NewCops: enable
+
+Style/MethodDefParentheses:
+  Enabled: false
+
+Layout/FirstArrayElementIndentation:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false

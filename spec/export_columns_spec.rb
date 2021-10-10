@@ -1,16 +1,19 @@
 # frozen_string_literal: true
+
 require './spec/spec_helper'
 
 class Issue
-    def one config
-      "one-#{config}"
-    end
-    def two config, arg1
-      "two-#{config}"
-    end
-    def three arg1
-      'three'
-    end
+  def one config
+    "one-#{config}"
+  end
+
+  def two config, _arg1
+    "two-#{config}"
+  end
+
+  def three _arg1
+    'three'
+  end
 end
 
 describe ConfigBase do
@@ -18,7 +21,7 @@ describe ConfigBase do
     issue = load_issue 'SP-2'
 
     it 'should call a method with config but no args' do
-      columns = ExportColumns.new "config"
+      columns = ExportColumns.new 'config'
       proc = columns.one
 
       expect(proc).to be_a Proc
@@ -26,7 +29,7 @@ describe ConfigBase do
     end
 
     it 'should call a method with config and args' do
-      columns = ExportColumns.new "config"
+      columns = ExportColumns.new 'config'
       proc = columns.two 2
 
       expect(proc).to be_a Proc
@@ -34,7 +37,7 @@ describe ConfigBase do
     end
 
     it 'should call a method without config and no args' do
-      columns = ExportColumns.new "config"
+      columns = ExportColumns.new 'config'
       proc = columns.three 3
 
       expect(proc).to be_a Proc
@@ -42,8 +45,9 @@ describe ConfigBase do
     end
 
     it "should fail when calling a method that doesn't exist anywhere" do
-      columns = ExportColumns.new "config"
-      expect { columns.method_that_does_not_exist }.to raise_error "method_that_does_not_exist isn't a method on Issue or ExportColumns"
+      columns = ExportColumns.new 'config'
+      expect { columns.method_that_does_not_exist }
+        .to raise_error "method_that_does_not_exist isn't a method on Issue or ExportColumns"
     end
   end
 end

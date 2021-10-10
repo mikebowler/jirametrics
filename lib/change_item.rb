@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class ChangeItem
   attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id
   attr_reader :raw
