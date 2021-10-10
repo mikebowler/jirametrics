@@ -25,7 +25,7 @@ class ExportColumns < BasicObject
   # Why is this here? Because I keep forgetting that puts() will be caught by method_missing and
   # that makes me spin through a debug cycle. So I make it do the expected thing.
   def puts *args
-    $stdout.puts *args
+    $stdout.puts(*args)
   end
 
   def method_missing method_name, *args, &block
@@ -40,15 +40,19 @@ class ExportColumns < BasicObject
       ::Object.send(:raise, "#{method_name} isn't a method on Issue or ExportColumns")
     end
 
-    -> (issue) do
+    ->(issue) do # rubocop:disable Style/Lambda
       parameters = issue.method(method_name.to_sym).parameters
       # Is the first parameter called config?
       if parameters.empty? == false && parameters[0][1] == :config
         new_args = [config] + args
-        issue.__send__ method_name, *new_args
+        issue.__send__ method_name, *new_args, &block
       else
-        issue.__send__ method_name, *args 
+        issue.__send__ method_name, *args, &block
       end
-    end 
+    end
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    ::Issue.method_defined?(method_name.to_sym) || super
   end
 end

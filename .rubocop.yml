@@ -27,3 +27,23 @@ Style/RegexpLiteral:
 
 Style/PerlBackrefs:
   Enabled: false
+
+Style/SymbolProc:
+  Enabled: false
+
+# Although I generally agree that these are a bad practice, we're making an exception in order
+# to create a DSL
+Style/ClassVars:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Layout/ArgumentAlignment:
+  Enabled: false
+
+Layout/ParameterAlignment:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false

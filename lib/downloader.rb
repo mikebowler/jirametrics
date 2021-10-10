@@ -13,7 +13,7 @@ class Downloader
 
   def run
     @config_instances.each do |config|
-      load_jira_config( @json_file_loader.load("jira_config_#{config.jira_config}.json") )
+      load_jira_config(@json_file_loader.load("jira_config_#{config.jira_config}.json"))
       download_issues config
       download_statuses(config) unless config.project_key.nil?
       download_board_configuration(config) unless config.board_id.nil?
@@ -33,9 +33,9 @@ class Downloader
   end
 
   def make_curl_command url:
-    command = "curl"
+    command = 'curl'
     command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
-    command += " --user #{ @jira_email }:#{ @jira_api_token }" if @jira_email
+    command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_email
     command += ' --request GET'
     command += ' --header "Accept: application/json"'
     command += " --url \"#{url}\""
@@ -49,8 +49,8 @@ class Downloader
     start_at = 0
     total = 1
     while start_at < total
-      command = make_curl_command url: "#{ @jira_url }/rest/api/2/search" \
-        "?jql=#{ jql }&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
+      command = make_curl_command url: "#{@jira_url}/rest/api/2/search" \
+        "?jql=#{jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
 
       json = JSON.parse call_command(command)
       exit_if_call_failed json
@@ -65,14 +65,14 @@ class Downloader
 
   def exit_if_call_failed json
     # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
-    if json['errorMessages'] || json['errorMessage']
-      puts JSON.pretty_generate(json)
-      exit 1
-    end
+    return unless json['errorMessages'] || json['errorMessage']
+
+    puts JSON.pretty_generate(json)
+    exit 1
   end
 
   def download_statuses config
-    command = make_curl_command url: "\"#{ @jira_url }/rest/api/2/project/#{ config.project_key }/statuses\""
+    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{config.project_key}/statuses\""
     json = JSON.parse call_command(command)
 
     write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_statuses.json"
@@ -92,4 +92,3 @@ class Downloader
     end
   end
 end
-

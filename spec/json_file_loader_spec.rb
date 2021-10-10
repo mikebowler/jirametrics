@@ -5,7 +5,7 @@ require './spec/spec_helper'
 describe JsonFileLoader do
   it 'should load json' do
     filename = make_test_filename 'jsonfileloader'
-    begin 
+    begin
       File.open(filename, 'w') do |file|
         file.write('{"a": "b"}')
       end

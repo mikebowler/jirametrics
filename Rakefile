@@ -1,21 +1,23 @@
+# frozen_string_literal: true
+
 require 'rspec/core/rake_task'
 require 'require_all'
 
-task :default => [:download, :extract]
+task default: %i[download extract]
 
-task :initialize_config do 
-	require_all 'lib'
-	require './config'
+task :initialize_config do
+  require_all 'lib'
+  require './config'
 end
 
-task :download => [:initialize_config] do
-	Downloader.new.run
+task download: %i[initialize_config] do
+  Downloader.new.run
 end
 
-task :extract => [:initialize_config] do
-	Config.instances.each { |config| config.run }
+task extract: [:initialize_config] do
+  Config.instances.each { |config| config.run }
 end
 
 RSpec::Core::RakeTask.new(:spec)
 
-task :test => [:spec]
+task test: [:spec]

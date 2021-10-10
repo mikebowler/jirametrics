@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id
-  attr_reader :raw
+  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id, :raw
 
-  def initialize raw:, time: #, field: raw['field'], value: raw['toString']
+  def initialize raw:, time:
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = DateTime.parse(time)
@@ -16,11 +15,17 @@ class ChangeItem
   end
 
   def status?   = (field == 'status')
+
   def flagged?  = (field == 'Flagged')
+
   def priority? = (field == 'priority')
+
   def resolution? = (field == 'resolution')
 
-  def to_s = "ChangeItem(field: #{field.inspect}, value: #{value().inspect}, time: '#{@time}')"
+  def to_s
+    "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: '#{@time}')"
+  end
+
   def inspect = to_s
 
   def == other
@@ -30,9 +35,8 @@ class ChangeItem
   def matches_status status_names_or_ids
     return false unless status?
 
-    status_names_or_ids.each do |name_or_id|
-      return true if @value == name_or_id || @value_id == name_or_id
+    status_names_or_ids.any? do |name_or_id|
+      @value == name_or_id || @value_id == name_or_id # rubocop:disable Style/MultipleComparison
     end
-    return false
   end
 end
