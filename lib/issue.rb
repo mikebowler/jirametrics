@@ -9,10 +9,10 @@ class Issue
 
     if @raw['changelog'].nil?
       raise "No changelog found in issue #{@raw['key']}. This is likely because when we pulled the data" \
-      " from Jira, we didn't specifiy expand=changelog. Without that changelog, nothing else is going to" \
-      " work so stopping now."
-    end 
-        
+      ' from Jira, we didn\'t specify expand=changelog. Without that changelog, nothing else is going to' \
+      ' work so stopping now.'
+    end
+
     @raw['changelog']['histories'].each do |history|
       created = history['created']
       history['items'].each do |item|
@@ -26,21 +26,22 @@ class Issue
 
     # Initial creation isn't considered a change so Jira doesn't create an entry for that
     @changes.insert 0, create_fake_change_for_creation(@changes)
-
   end
 
   def sort_changes!
-    @changes.sort! do |a,b| 
-      # It's common that a resolved will happen at the same time as a status change. 
+    @changes.sort! do |a, b|
+      # It's common that a resolved will happen at the same time as a status change.
       # Put them in a defined order so tests can be deterministic.
       compare = a.time <=> b.time
-      compare = 1 if compare == 0 && a.resolution?
+      compare = 1 if compare.zero? && a.resolution?
       compare
     end
   end
 
   def key = @raw['key']
+
   def type = @raw['fields']['issuetype']['name']
+
   def summary = @raw['fields']['summary']
 
   def url
@@ -54,7 +55,7 @@ class Issue
 
   def create_fake_change_for_creation existing_changes
     created_time = @raw['fields']['created']
-    first_change = existing_changes.find {|change| change.status?}
+    first_change = existing_changes.find { |change| change.status? }
     if first_change.nil?
       # There have been no status changes yet so we have to look at the current status
       first_status = @raw['fields']['status']['name']
@@ -66,8 +67,8 @@ class Issue
     end
     ChangeItem.new time: created_time, raw: {
       'field' => 'status',
-      "to" => first_status_id.to_s,
-      "toString" => first_status
+      'to' => first_status_id.to_s,
+      'toString' => first_status
     }
   end
 
@@ -83,6 +84,7 @@ class Issue
     time = nil
     @changes.each do |change|
       next unless change.status?
+
       current_status_matched = yield change
 
       if current_status_matched && time.nil?
@@ -116,8 +118,9 @@ class Issue
   end
 
   def first_time_in_status_category config, *category_names
-    @changes.each do | change |
+    @changes.each do |change|
       next unless change.status?
+
       category = config.category_for type: type, status: change.value, issue_id: key
       return change.time if category_names.include? category
     end
