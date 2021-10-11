@@ -17,6 +17,8 @@ class ExportColumns < BasicObject
   end
 
   def column_entry_times
+    ::Object.send(:raise, "Did you set a board_id? Unable to find configuration.") if @config.board_columns.nil?
+    
     @config.board_columns.each do |column|
       date column.name, first_time_in_status(*column.status_ids)
     end
