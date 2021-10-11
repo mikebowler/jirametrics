@@ -14,14 +14,15 @@ class ConfigBase
   @@configs = []
   @@jira_config = 'jira_config.json'
 
-  def self.project file_prefix:, project: nil, filter: nil, jql: nil, board_id: nil, &block
+  def self.project file_prefix:, project: nil, filter: nil, jql: nil, board_id: nil, rolling_date_count: nil, &block
     instance = new(
       file_prefix: file_prefix,
       project: project,
       filter: filter,
       jql: jql,
       board_id: board_id,
-      export_config_block: block
+      export_config_block: block,
+      rolling_date_count: rolling_date_count
     )
     @@configs << instance
   end
@@ -54,7 +55,8 @@ class ConfigBase
     segments << "filter=#{filter.inspect}" unless filter.nil?
     unless rolling_date_count.nil?
       start_date = today - rolling_date_count
-      segments << %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'}"))
+      status_changed_jql = %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'}"))
+      segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))
     end
     segments << jql unless jql.nil?
     return segments.join ' AND ' unless segments.empty?
