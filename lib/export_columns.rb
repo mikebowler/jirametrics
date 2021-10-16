@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ExportColumns < BasicObject
+class ExportColumns 
   attr_reader :columns
 
   def initialize file:, block:
@@ -28,30 +28,21 @@ class ExportColumns < BasicObject
 
   def column_entry_times
     board_columns = @file.project.board_columns
-    ::Object.send(:raise, 'Did you set a board_id? Unable to find configuration.') if board_columns.nil?
+    raise 'Did you set a board_id? Unable to find configuration.' if board_columns.nil?
 
     board_columns.each do |column|
       date column.name, first_time_in_status(*column.status_ids)
     end
   end
 
-  # Why is this here? Because I keep forgetting that puts() will be caught by method_missing and
-  # that makes me spin through a debug cycle. So I make it do the expected thing.
-  def puts *args
-    $stdout.puts(*args)
-  end
-
   def method_missing method_name, *args, &block
+    raise "#{method_name} isn't a method on Issue or ExportColumns" unless ::Issue.method_defined? method_name.to_sym
+
     # Have to reference config outside the lambda so that it's accessible inside.
     # When the lambda is executed for real, it will be running inside the context of an Issue
     # object and at that point @config won't be referencing a variable from the right object.
-    config = @file
-
-    # The odd syntax for throwing an exception is because we're in a BasicObject and therefore don't
-    # have access to raise()
-    unless ::Issue.method_defined? method_name.to_sym
-      ::Object.send(:raise, "#{method_name} isn't a method on Issue or ExportColumns")
-    end
+    config = self
+    puts "self=#{self.class}"
 
     ->(issue) do # rubocop:disable Style/Lambda
       parameters = issue.method(method_name.to_sym).parameters

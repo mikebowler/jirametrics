@@ -6,7 +6,7 @@ require 'date'
 # The goal was to make both the configuration itself and the issue/loader
 # objects easy to read so the tricky (specifically meta programming) parts
 # are all in here. Be cautious when changing this file.
-class ConfigBase
+class ConfigBase2
   attr_reader :issues, :file_prefix, :jql, :project_key, :status_category_mappings, :jira_config,
     :board_id, :board_columns
 

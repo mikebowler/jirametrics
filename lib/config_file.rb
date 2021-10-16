@@ -3,7 +3,7 @@
 class ConfigFile
   attr_reader :project
 
-  def initialize project, block
+  def initialize project:, block:
     @project = project
     @block = block
     @columns = nil

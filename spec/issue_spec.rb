@@ -3,15 +3,16 @@
 require './spec/spec_helper'
 
 def mock_config
-  config = ConfigBase.new file_prefix: nil, jql: ''
-  config.status_category_mappings['Story'] = {
+  project = ConfigProject.new exporter: nil, target_path: nil, block: nil
+  file = ConfigFile.new project: project, block: nil
+  project.status_category_mappings['Story'] = {
     'Backlog' => 'ready',
     'Selected for Development' => 'ready',
     'In Progress' => 'in-flight',
     'Review' => 'in-flight',
     'Done' => 'finished'
   }
-  config
+  file
 end
 
 def mock_change field:, value:, time:
