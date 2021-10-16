@@ -3,9 +3,19 @@
 class ExportColumns < BasicObject
   attr_reader :columns
 
-  def initialize config
+  def initialize file:, block:
     @columns = []
-    @config = config
+    @file = file
+    @block = block
+  end
+
+  def run
+    instance_eval(&@block)
+  end
+
+  def write_headers *arg
+    @write_headers = arg[0] unless arg.empty?
+    @write_headers
   end
 
   def date label, proc
@@ -17,9 +27,10 @@ class ExportColumns < BasicObject
   end
 
   def column_entry_times
-    ::Object.send(:raise, "Did you set a board_id? Unable to find configuration.") if @config.board_columns.nil?
-    
-    @config.board_columns.each do |column|
+    board_columns = @file.project.board_columns
+    ::Object.send(:raise, 'Did you set a board_id? Unable to find configuration.') if board_columns.nil?
+
+    board_columns.each do |column|
       date column.name, first_time_in_status(*column.status_ids)
     end
   end
@@ -34,7 +45,7 @@ class ExportColumns < BasicObject
     # Have to reference config outside the lambda so that it's accessible inside.
     # When the lambda is executed for real, it will be running inside the context of an Issue
     # object and at that point @config won't be referencing a variable from the right object.
-    config = @config
+    config = @file
 
     # The odd syntax for throwing an exception is because we're in a BasicObject and therefore don't
     # have access to raise()

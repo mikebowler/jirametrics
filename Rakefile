@@ -18,6 +18,10 @@ task extract: [:initialize_config] do
   Config.instances.each { |config| config.run }
 end
 
+task export: [:initialize_config] do
+  Exporter.instance.export
+end
+
 RSpec::Core::RakeTask.new(:spec)
 
 task test: [:spec]

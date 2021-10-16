@@ -108,7 +108,7 @@ class Issue
   def still_in_status_category config, *category_names
     still_in do |change|
       # puts key
-      category = config.category_for type: type, status: change.value, issue_id: key
+      category = config.project.category_for type: type, status: change.value, issue_id: key
       category_names.include? category
     end
   end
