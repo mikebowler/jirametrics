@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'csv'
+
 class FileConfig
   attr_reader :project_config
 

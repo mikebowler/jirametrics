@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'date'
+
 class DownloadConfig
   attr_reader :project_config
   attr_writer :jql
