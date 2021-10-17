@@ -76,7 +76,7 @@ class FileConfig
   def columns &block
     raise 'Can only have one columns declaration inside a file' if @column
 
-    @columns = ExportColumns.new file: self, block: block
+    @columns = ColumnsConfig.new file_config: self, block: block
   end
 
   # TODO: to_date needs to know which timezone we're converting to.

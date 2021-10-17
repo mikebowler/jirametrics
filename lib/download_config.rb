@@ -10,7 +10,6 @@ class DownloadConfig
   end
 
   def run
-    puts @block.inspect
     instance_eval(&@block)
   end
 

@@ -12,7 +12,7 @@ def mock_config
     'Done' => 'finished'
   }
   file = FileConfig.new project_config: project, block: nil
-  ExportColumns.new file: file, block: nil
+  ColumnsConfig.new file_config: file, block: nil
 end
 
 def mock_change field:, value:, time:

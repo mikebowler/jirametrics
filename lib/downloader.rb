@@ -11,7 +11,6 @@ class Downloader
   end
 
   def run
-    puts "jira_config in Downloader: #{@download_config.project_config.inspect}"
     load_jira_config(@json_file_loader.load("jira_config_#{@download_config.project_config.jira_config}.json"))
     download_issues
     download_statuses unless @download_config.project_key.nil?

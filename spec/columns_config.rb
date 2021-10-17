@@ -16,29 +16,29 @@ class Issue
   end
 end
 
-describe ExportColumns do
+describe ColumnsConfig do
   context 'method_missing' do
     issue = load_issue 'SP-2'
     file = FileConfig.new project_config: nil, block: nil
 
     it 'should call a method with config but no args' do
-      columns = ExportColumns.new file: file, block: nil
+      columns = ColumnsConfig.new file_config: file, block: nil
       proc = columns.one
 
       expect(proc).to be_a Proc
-      expect(proc.call(issue)).to eql 'one-ExportColumns'
+      expect(proc.call(issue)).to eql 'one-ColumnsConfig'
     end
 
     it 'should call a method with config and args' do
-      columns = ExportColumns.new file: file, block: nil
+      columns = ColumnsConfig.new file_config: file, block: nil
       proc = columns.two 2
 
       expect(proc).to be_a Proc
-      expect(proc.call(issue)).to eql 'two-ExportColumns-2'
+      expect(proc.call(issue)).to eql 'two-ColumnsConfig-2'
     end
 
     it 'should call a method without config and no args' do
-      columns = ExportColumns.new file: file, block: nil
+      columns = ColumnsConfig.new file_config: file, block: nil
       proc = columns.three 3
 
       expect(proc).to be_a Proc
@@ -46,9 +46,9 @@ describe ExportColumns do
     end
 
     it "should fail when calling a method that doesn't exist anywhere" do
-      columns = ExportColumns.new file: file, block: nil
+      columns = ColumnsConfig.new file_config: file, block: nil
       expect { columns.method_that_does_not_exist }
-        .to raise_error "method_that_does_not_exist isn't a method on Issue or ExportColumns"
+        .to raise_error "method_that_does_not_exist isn't a method on Issue or ColumnsConfig"
     end
   end
 end

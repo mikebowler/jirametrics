@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-class ExportColumns 
-  attr_reader :columns, :file
+class ColumnsConfig
+  attr_reader :columns, :file_config
 
-  def initialize file:, block:
+  def initialize file_config:, block:
     @columns = []
-    @file = file
+    @file_config = file_config
     @block = block
   end
 
@@ -27,7 +27,7 @@ class ExportColumns
   end
 
   def column_entry_times
-    board_columns = @file.project_config.board_columns
+    board_columns = @file_config.project_config.board_columns
     raise 'Did you set a board_id? Unable to find configuration.' if board_columns.nil?
 
     board_columns.each do |column|
@@ -36,7 +36,7 @@ class ExportColumns
   end
 
   def method_missing method_name, *args, &block
-    raise "#{method_name} isn't a method on Issue or ExportColumns" unless ::Issue.method_defined? method_name.to_sym
+    raise "#{method_name} isn't a method on Issue or ColumnsConfig" unless ::Issue.method_defined? method_name.to_sym
 
     # Have to reference config outside the lambda so that it's accessible inside.
     # When the lambda is executed for real, it will be running inside the context of an Issue
