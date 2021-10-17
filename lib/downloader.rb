@@ -4,20 +4,18 @@ require 'cgi'
 require 'json'
 
 class Downloader
-  OUTPUT_PATH = 'target/'
-
-  def initialize instances = Config.instances, json_file_loader = JsonFileLoader.new
-    @config_instances = instances
+  def initialize download_config:, json_file_loader: JsonFileLoader.new
+    @download_config = download_config
+    @target_path = @download_config.project.target_path
     @json_file_loader = json_file_loader
   end
 
   def run
-    @config_instances.each do |config|
-      load_jira_config(@json_file_loader.load("jira_config_#{config.jira_config}.json"))
-      download_issues config
-      download_statuses(config) unless config.project_key.nil?
-      download_board_configuration(config) unless config.board_id.nil?
-    end
+    puts "jira_config in Downloader: #{@download_config.project.inspect}"
+    load_jira_config(@json_file_loader.load("jira_config_#{@download_config.project.jira_config}.json"))
+    download_issues
+    download_statuses unless @download_config.project_key.nil?
+    download_board_configuration unless @download_config.board_id.nil?
   end
 
   def load_jira_config jira_config
@@ -42,9 +40,8 @@ class Downloader
     command
   end
 
-  def download_issues config
-    output_file_prefix = config.file_prefix
-    jql = CGI.escape config.jql
+  def download_issues
+    jql = CGI.escape @download_config.jql
     max_results = 100
     start_at = 0
     total = 1
@@ -55,12 +52,11 @@ class Downloader
       json = JSON.parse call_command(command)
       exit_if_call_failed json
 
-      write_json json, "#{OUTPUT_PATH}#{output_file_prefix}_#{start_at}.json"
+      write_json json, "#{@target_path}#{@download_config.project.file_prefix}_#{start_at}.json"
       total = json['total'].to_i
       max_results = json['maxResults']
       start_at += json['issues'].size
     end
-    # self.create_meta_json(output_file_prefix, meta_data)
   end
 
   def exit_if_call_failed json
@@ -71,19 +67,19 @@ class Downloader
     exit 1
   end
 
-  def download_statuses config
-    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{config.project_key}/statuses\""
+  def download_statuses 
+    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{@download_config.project_key}/statuses\""
     json = JSON.parse call_command(command)
 
-    write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_statuses.json"
+    write_json json, "#{@target_path}#{@download_config.project.file_prefix}_statuses.json"
   end
 
-  def download_board_configuration config
-    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{config.board_id}/configuration"
+  def download_board_configuration
+    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{@download_config.board_id}/configuration"
     json = JSON.parse call_command(command)
     exit_if_call_failed json
 
-    write_json json, "#{OUTPUT_PATH}#{config.file_prefix}_board_configuration.json"
+    write_json json, "#{@target_path}#{@download_config.project.file_prefix}_board_configuration.json"
   end
 
   def write_json json, filename

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Exporter
-  # attr_accessor :target_path, :jira_config
-
   def self.configure &block
     exporter = Exporter.new
     exporter.instance_eval(&block)
@@ -18,13 +16,24 @@ class Exporter
 
   def export
     @projects.each do |project|
+      project.evaluate_next_level
       project.run
+    end
+  end
+
+  def download
+    @projects.each do |project|
+      project.evaluate_next_level
+      project.download_config.run
+      Downloader.new(download_config: project.download_config).run
     end
   end
 
   def project &block
     raise 'target_path was never set!' if @target_path.nil?
-    @projects << ConfigProject.new(exporter: self, target_path: @target_path, block: block)
+    raise 'jira_config not set' if @jira_config.nil?
+
+    @projects << ConfigProject.new(exporter: self, target_path: @target_path, jira_config: @jira_config, block: block)
   end
 
   def xproject *args; end

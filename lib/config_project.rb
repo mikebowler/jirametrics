@@ -1,19 +1,23 @@
 # frozen_string_literal: true
 
 class ConfigProject
-  attr_reader :target_path, :board_columns, :status_category_mappings
+  attr_reader :target_path, :jira_config, :board_columns, :status_category_mappings, :download_config
 
-  def initialize exporter:, target_path:, block:
+  def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
     @block = block
     @files = []
-    @download = nil
+    @download_config = nil
     @target_path = target_path
+    @jira_config = jira_config
     @status_category_mappings = {}
   end
 
-  def run
+  def evaluate_next_level
     instance_eval(&@block)
+  end
+
+  def run
     load_board_configuration
     load_status_category_mappings
     @files.each do |file|
@@ -23,8 +27,9 @@ class ConfigProject
 
   def download &block
     raise 'Not allowed to have multiple download blocks in one project' if @download
+    raise 'If using a download block, some parameters must be set' if block.nil?
 
-    @download = ConfigDownload.new self, block
+    @download_config = ConfigDownload.new project: self, block: block
   end
 
   def file &block

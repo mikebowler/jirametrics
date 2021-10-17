@@ -3,8 +3,7 @@
 require './spec/spec_helper'
 
 def mock_config
-  project = ConfigProject.new exporter: nil, target_path: nil, block: nil
-  file = ConfigFile.new project: project, block: nil
+  project = ConfigProject.new exporter: nil, target_path: nil, jira_config: nil, block: nil
   project.status_category_mappings['Story'] = {
     'Backlog' => 'ready',
     'Selected for Development' => 'ready',
@@ -12,7 +11,8 @@ def mock_config
     'Review' => 'in-flight',
     'Done' => 'finished'
   }
-  file
+  file = ConfigFile.new project: project, block: nil
+  ExportColumns.new file: file, block: nil
 end
 
 def mock_change field:, value:, time:

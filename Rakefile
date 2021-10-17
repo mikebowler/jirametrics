@@ -11,7 +11,7 @@ task :initialize_config do
 end
 
 task download: %i[initialize_config] do
-  Downloader.new.run
+  Exporter.instance.download
 end
 
 task extract: [:initialize_config] do

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ExportColumns 
-  attr_reader :columns
+  attr_reader :columns, :file
 
   def initialize file:, block:
     @columns = []
@@ -42,7 +42,6 @@ class ExportColumns
     # When the lambda is executed for real, it will be running inside the context of an Issue
     # object and at that point @config won't be referencing a variable from the right object.
     config = self
-    puts "self=#{self.class}"
 
     ->(issue) do # rubocop:disable Style/Lambda
       parameters = issue.method(method_name.to_sym).parameters
