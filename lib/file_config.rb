@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class ConfigFile
-  attr_reader :project
+class FileConfig
+  attr_reader :project_config
 
-  def initialize project:, block:
-    @project = project
+  def initialize project_config:, block:
+    @project_config = project_config
     @block = block
     @columns = nil
   end
@@ -12,9 +12,6 @@ class ConfigFile
   def run
     instance_eval(&@block)
     @columns.run
-
-    # @issues = load_all_issues file_prefix: @file_prefix, target_path: @@target_path
-    # instance_eval(&@export_config_block)
 
     all_lines = issues.collect do |issue|
       line = []
@@ -40,9 +37,9 @@ class ConfigFile
 
   def output_filename
     segments = []
-    segments << project.target_path
-    segments << project.file_prefix
-    segments << @file_suffix || '.csv'
+    segments << project_config.target_path
+    segments << project_config.file_prefix
+    segments << (@file_suffix || '.csv')
     segments.join
   end
 
@@ -64,9 +61,9 @@ class ConfigFile
   def issues
     unless @issues
       issues = []
-      Dir.foreach(@project.target_path) do |filename|
-        if filename =~ /#{@project.file_prefix}_\d+\.json/
-          content = JSON.parse File.read("#{@project.target_path}#{filename}")
+      Dir.foreach(@project_config.target_path) do |filename|
+        if filename =~ /#{@project_config.file_prefix}_\d+\.json/
+          content = JSON.parse File.read("#{@project_config.target_path}#{filename}")
           content['issues'].each { |issue| issues << Issue.new(issue) }
         end
       end

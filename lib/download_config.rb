@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-class ConfigDownload
-  attr_reader :project
+class DownloadConfig
+  attr_reader :project_config
   attr_writer :jql
 
-  def initialize project:, block:
-    @project = project
+  def initialize project_config:, block:
+    @project_config = project_config
     @block = block
   end
 

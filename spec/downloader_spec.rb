@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 def mock_file_config
-  project = ConfigProject.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+  project = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
   project.status_category_mappings['Story'] = {
     'Backlog' => 'ready',
     'Selected for Development' => 'ready',
@@ -11,7 +11,7 @@ def mock_file_config
     'Review' => 'in-flight',
     'Done' => 'finished'
   }
-  ConfigFile.new project: project, block: nil
+  FileConfig.new project_config: project, block: nil
 end
 
 describe Downloader do

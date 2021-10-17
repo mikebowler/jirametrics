@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ConfigProject
+class ProjectConfig
   attr_reader :target_path, :jira_config, :board_columns, :status_category_mappings, :download_config
 
   def initialize exporter:, target_path:, jira_config:, block:
@@ -29,11 +29,11 @@ class ConfigProject
     raise 'Not allowed to have multiple download blocks in one project' if @download
     raise 'If using a download block, some parameters must be set' if block.nil?
 
-    @download_config = ConfigDownload.new project: self, block: block
+    @download_config = DownloadConfig.new project_config: self, block: block
   end
 
   def file &block
-    @files << ConfigFile.new( project: self, block: block)
+    @files << FileConfig.new( project_config: self, block: block)
   end
 
   def file_prefix *arg

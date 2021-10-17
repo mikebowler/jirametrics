@@ -33,7 +33,7 @@ class Exporter
     raise 'target_path was never set!' if @target_path.nil?
     raise 'jira_config not set' if @jira_config.nil?
 
-    @projects << ConfigProject.new(exporter: self, target_path: @target_path, jira_config: @jira_config, block: block)
+    @projects << ProjectConfig.new(exporter: self, target_path: @target_path, jira_config: @jira_config, block: block)
   end
 
   def xproject *args; end

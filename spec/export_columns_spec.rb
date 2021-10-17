@@ -19,7 +19,7 @@ end
 describe ExportColumns do
   context 'method_missing' do
     issue = load_issue 'SP-2'
-    file = ConfigFile.new project: nil, block: nil
+    file = FileConfig.new project_config: nil, block: nil
 
     it 'should call a method with config but no args' do
       columns = ExportColumns.new file: file, block: nil

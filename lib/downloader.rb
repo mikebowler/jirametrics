@@ -6,13 +6,13 @@ require 'json'
 class Downloader
   def initialize download_config:, json_file_loader: JsonFileLoader.new
     @download_config = download_config
-    @target_path = @download_config.project.target_path
+    @target_path = @download_config.project_config.target_path
     @json_file_loader = json_file_loader
   end
 
   def run
-    puts "jira_config in Downloader: #{@download_config.project.inspect}"
-    load_jira_config(@json_file_loader.load("jira_config_#{@download_config.project.jira_config}.json"))
+    puts "jira_config in Downloader: #{@download_config.project_config.inspect}"
+    load_jira_config(@json_file_loader.load("jira_config_#{@download_config.project_config.jira_config}.json"))
     download_issues
     download_statuses unless @download_config.project_key.nil?
     download_board_configuration unless @download_config.board_id.nil?
@@ -52,7 +52,7 @@ class Downloader
       json = JSON.parse call_command(command)
       exit_if_call_failed json
 
-      write_json json, "#{@target_path}#{@download_config.project.file_prefix}_#{start_at}.json"
+      write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_#{start_at}.json"
       total = json['total'].to_i
       max_results = json['maxResults']
       start_at += json['issues'].size
@@ -71,7 +71,7 @@ class Downloader
     command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{@download_config.project_key}/statuses\""
     json = JSON.parse call_command(command)
 
-    write_json json, "#{@target_path}#{@download_config.project.file_prefix}_statuses.json"
+    write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
   end
 
   def download_board_configuration
@@ -79,7 +79,7 @@ class Downloader
     json = JSON.parse call_command(command)
     exit_if_call_failed json
 
-    write_json json, "#{@target_path}#{@download_config.project.file_prefix}_board_configuration.json"
+    write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_board_configuration.json"
   end
 
   def write_json json, filename

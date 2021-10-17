@@ -27,7 +27,7 @@ class ExportColumns
   end
 
   def column_entry_times
-    board_columns = @file.project.board_columns
+    board_columns = @file.project_config.board_columns
     raise 'Did you set a board_id? Unable to find configuration.' if board_columns.nil?
 
     board_columns.each do |column|
