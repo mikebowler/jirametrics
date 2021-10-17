@@ -33,7 +33,7 @@ class ProjectConfig
   end
 
   def file &block
-    @files << FileConfig.new( project_config: self, block: block)
+    @files << FileConfig.new(project_config: self, block: block)
   end
 
   def file_prefix *arg

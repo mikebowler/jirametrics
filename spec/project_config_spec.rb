@@ -2,7 +2,7 @@
 
 require './spec/spec_helper'
 
-describe ProjectConfig do 
+describe ProjectConfig do
   context 'category_for' do
     it "where mapping doesn't exist" do
       config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil

@@ -66,7 +66,7 @@ class Downloader
     exit 1
   end
 
-  def download_statuses 
+  def download_statuses
     command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{@download_config.project_key}/statuses\""
     json = JSON.parse call_command(command)
 

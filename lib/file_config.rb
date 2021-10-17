@@ -115,5 +115,4 @@ class FileConfig
     end
     category
   end
-
 end
