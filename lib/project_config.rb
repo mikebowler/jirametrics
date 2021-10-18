@@ -69,7 +69,7 @@ class ProjectConfig
       @status_category_mappings.each do |issue_type, hash|
         message << "\n  " << issue_type
         hash.each do |issue_status, issue_category|
-          message << "\n    '#{issue_status}'' => '#{issue_category}'"
+          message << "\n    '#{issue_status}' => '#{issue_category}'"
         end
       end
 
@@ -85,7 +85,7 @@ class ProjectConfig
 
     JSON.parse(File.read(filename)).each do |type_config|
       issue_type = type_config['name']
-      @status_category_mappings[issue_type] = {}
+      @status_category_mappings[issue_type] = {} unless @status_category_mappings[issue_type]
       type_config['statuses'].each do |status_config|
         status = status_config['name']
         category = status_config['statusCategory']['name']
