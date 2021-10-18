@@ -82,7 +82,8 @@ class Downloader
   end
 
   def write_json json, filename
-    FileUtils.mkdir_p @target_path unless File.exists?(@target_path)
+    file_path = File.dirname(filename)
+    FileUtils.mkdir_p file_path unless File.exists?(file_path)
 
     File.open(filename, 'w') do |file|
       file.write(JSON.pretty_generate(json))
