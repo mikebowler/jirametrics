@@ -14,10 +14,6 @@ task download: %i[initialize_config] do
   Exporter.instance.download
 end
 
-task extract: [:initialize_config] do
-  Config.instances.each { |config| config.run }
-end
-
 task export: [:initialize_config] do
   Exporter.instance.export
 end
