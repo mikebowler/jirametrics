@@ -135,9 +135,10 @@ class Issue
     started = started.call self
     finished = finished.call self
 
+    return '' if started.nil? || finished.nil?
+
     total_blocked_time = 0
     blocked_start = nil
-    # first_time_in_time_range = true
 
     @changes.each do |change|
       next unless change.flagged?
@@ -145,10 +146,13 @@ class Issue
       if change.value == 'Blocked'
         blocked_start = change.time
       else
+        # It shouldn't be possible to get an unblock without first being blocked but we've
+        # seen it in production so we have to handle it. Data integrity FTW.
+        next if blocked_start.nil?
+
         blocked_start = started if blocked_start < started
-        blocked_end = change.time
-        blocked_end = finished if blocked_end > finished
-        elapsed_hours = (blocked_end.to_time - blocked_start.to_time)
+        blocked_end = [change.time, finished].min
+        elapsed_hours = blocked_end.to_time - blocked_start.to_time
         total_blocked_time += elapsed_hours
         blocked_start = nil
       end
