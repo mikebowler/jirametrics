@@ -132,7 +132,6 @@ class Issue
   end
 
   def blocked_percentage started, finished
-    puts 'blocked_percentage'
     started = started.call self
     finished = finished.call self
 
@@ -143,18 +142,13 @@ class Issue
     @changes.each do |change|
       next unless change.flagged?
 
-      # in_time_range = change.time.between?(started, finished)
-      # if first_time_in_time_range == false and in_time_range
-      #   first_time_in_time_range = false
-      #   blocked_start = change.time if blocked_start.nil?
-      # end
-      # blocked =  change.time.between?(started, finished)
-
       if change.value == 'Blocked'
         blocked_start = change.time
       else
         blocked_start = started if blocked_start < started
-        elapsed_hours = (change.time.to_time - blocked_start.to_time)
+        blocked_end = change.time
+        blocked_end = finished if blocked_end > finished
+        elapsed_hours = (blocked_end.to_time - blocked_start.to_time)
         total_blocked_time += elapsed_hours
         blocked_start = nil
       end
