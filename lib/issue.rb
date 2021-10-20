@@ -151,9 +151,13 @@ class Issue
         next if blocked_start.nil?
 
         blocked_start = started if blocked_start < started
-        blocked_end = [change.time, finished].min
-        elapsed_hours = blocked_end.to_time - blocked_start.to_time
-        total_blocked_time += elapsed_hours
+        blocked_end = change.time
+        blocked_end =  finished if blocked_end > finished
+        if blocked_end < blocked_start
+          puts "===== started=#{started} finished=#{finished} change=#{change.time}"
+          puts "      blocked_start=#{blocked_start} blocked_end=#{blocked_end}"
+        end
+        total_blocked_time += (blocked_end.to_time - blocked_start.to_time)
         blocked_start = nil
       end
     end

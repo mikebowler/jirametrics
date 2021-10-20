@@ -265,6 +265,22 @@ describe Issue do
       )
       expect(percentage).to eq 50.0
     end
-    # still blocked after 'done'
+
+    it 'should handle being in and out of flagged multiple times' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-04T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-05T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-06T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'Done',        time: '2021-10-07T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-08T00:00:00+00:00')
+
+      percentage = issue.blocked_percentage(
+        ->(i) { i.first_time_in_status('In Progress') },
+        ->(i) { i.first_time_in_status('Done') }
+      )
+      expect(percentage).to eq 40.0
+    end
   end
 end
