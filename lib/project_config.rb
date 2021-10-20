@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class ProjectConfig
-  attr_reader :target_path, :jira_config, :board_columns, :status_category_mappings, :download_config
+  attr_reader :target_path, :jira_config, :board_columns, :status_category_mappings, :download_config, :file_configs
 
   def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
     @block = block
-    @files = []
+    @file_configs = []
     @download_config = nil
     @target_path = target_path
     @jira_config = jira_config
@@ -20,8 +20,8 @@ class ProjectConfig
   def run
     load_board_configuration
     load_status_category_mappings
-    @files.each do |file|
-      file.run
+    @file_configs.each do |file_config|
+      file_config.run
     end
   end
 
@@ -33,7 +33,7 @@ class ProjectConfig
   end
 
   def file &block
-    @files << FileConfig.new(project_config: self, block: block)
+    @file_configs << FileConfig.new(project_config: self, block: block)
   end
 
   def file_prefix *arg

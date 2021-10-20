@@ -23,6 +23,22 @@ def mock_change field:, value:, time:
   }
 end
 
+def empty_issue created:
+  Issue.new(
+    {
+      'key' => 'SP-1',
+      'changelog' => { 'histories' => [] },
+      'fields' => {
+        'created' => created,
+        'status' => {
+          'name' => 'BrandNew!',
+          'id' => '999'
+        }
+      }
+    }
+  )
+end
+
 describe Issue do
   it 'gets key' do
     issue = load_issue 'SP-2'
@@ -66,18 +82,7 @@ describe Issue do
   end
 
   it "should default the first status if there really hasn't been any yet" do
-    raw = {
-      'key' => 'SP-1',
-      'changelog' => { 'histories' => [] },
-      'fields' => {
-        'created' => '2021-08-29T18:00:00+00:00',
-        'status' => {
-          'name' => 'BrandNew!',
-          'id' => '999'
-        }
-      }
-    }
-    issue = Issue.new raw
+    issue = empty_issue created: '2021-08-29T18:00:00+00:00'
     expect(issue.changes).to eq [
       mock_change(field: 'status', value: 'BrandNew!', time: '2021-08-29T18:00:00+00:00')
     ]
@@ -204,5 +209,49 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
       expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02T00:00:00+00:00'
     end
+  end
+
+  context 'blocked_percentage' do
+    it 'should be zero if never blocked' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
+
+      percentage = issue.blocked_percentage(
+        ->(i) { i.first_time_in_status('In Progress') },
+        ->(i) { i.first_time_in_status('Done') }
+      )
+      expect(percentage).to eq 0
+    end
+
+    it 'should handle being blocked and unblocked within the window' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-02T12:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T12:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'Done',        time: '2021-10-04T00:00:00+00:00')
+
+      percentage = issue.blocked_percentage(
+        ->(i) { i.first_time_in_status('In Progress') },
+        ->(i) { i.first_time_in_status('Done') }
+      )
+      expect(percentage).to eq 50.0
+    end
+
+    it 'should handle starting blocked and later unblocked within the window' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-01T12:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'Done',        time: '2021-10-04T00:00:00+00:00')
+
+      percentage = issue.blocked_percentage(
+        ->(i) { i.first_time_in_status('In Progress') },
+        ->(i) { i.first_time_in_status('Done') }
+      )
+      expect(percentage).to eq 50.0
+    end
+    # blocked starts before 'started'
+    # still blocked after 'done'
   end
 end

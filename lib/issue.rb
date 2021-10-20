@@ -130,4 +130,37 @@ class Issue
   def time_created
     DateTime.parse @raw['fields']['created']
   end
+
+  def blocked_percentage started, finished
+    puts 'blocked_percentage'
+    started = started.call self
+    finished = finished.call self
+
+    total_blocked_time = 0
+    blocked_start = nil
+    # first_time_in_time_range = true
+
+    @changes.each do |change|
+      next unless change.flagged?
+
+      # in_time_range = change.time.between?(started, finished)
+      # if first_time_in_time_range == false and in_time_range
+      #   first_time_in_time_range = false
+      #   blocked_start = change.time if blocked_start.nil?
+      # end
+      # blocked =  change.time.between?(started, finished)
+
+      if change.value == 'Blocked'
+        blocked_start = change.time
+      else
+        blocked_start = started if blocked_start < started
+        elapsed_hours = (change.time.to_time - blocked_start.to_time)
+        total_blocked_time += elapsed_hours
+        blocked_start = nil
+      end
+    end
+
+    total_time = (finished.to_time - started.to_time)
+    total_blocked_time * 100.0 / total_time
+  end
 end
