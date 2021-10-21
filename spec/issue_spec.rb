@@ -252,6 +252,20 @@ describe Issue do
       expect(percentage).to eq 50.0
     end
 
+    it 'should handle blocked and unblocked before the start time' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-01T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-02T12:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-03T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status',  value: 'Done',        time: '2021-10-04T00:00:00+00:00')
+
+      percentage = issue.blocked_percentage(
+        ->(i) { i.first_time_in_status('In Progress') },
+        ->(i) { i.first_time_in_status('Done') }
+      )
+      expect(percentage).to eq 0.0
+    end
+
     it 'should handle still being blocked at done' do
       issue = empty_issue created: '2021-10-01T00:00:00+00:00'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
