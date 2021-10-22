@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProjectConfig
-  attr_reader :target_path, :jira_config, :board_columns, :status_category_mappings, :download_config, :file_configs
+  attr_reader :target_path, :jira_config, :all_board_columns, :status_category_mappings, :download_config, :file_configs
 
   def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
@@ -11,6 +11,7 @@ class ProjectConfig
     @target_path = target_path
     @jira_config = jira_config
     @status_category_mappings = {}
+    @all_board_columns = {}
   end
 
   def evaluate_next_level
@@ -48,12 +49,14 @@ class ProjectConfig
   end
 
   def load_board_configuration
-    filename = "#{@target_path}/#{@file_prefix}_board_configuration.json"
-    return unless File.exist? filename
+    Dir.foreach(@target_path) do |file|
+      next unless file =~ /^#{@file_prefix}_board_(\d+)_configuration\.json$/
 
-    json = JSON.parse(File.read(filename))
-    @board_columns = json['columnConfig']['columns'].collect do |column|
-      BoardColumn.new column
+      board_id = $1
+      json = JSON.parse(File.read("#{@target_path}#{file}"))
+      @all_board_columns[board_id] = json['columnConfig']['columns'].collect do |column|
+        BoardColumn.new column
+      end
     end
   end
 

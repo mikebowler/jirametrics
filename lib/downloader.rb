@@ -74,11 +74,13 @@ class Downloader
   end
 
   def download_board_configuration
-    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{@download_config.board_id}/configuration"
+    board_id = @download_config.board_id
+    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
     json = JSON.parse call_command(command)
     exit_if_call_failed json
 
-    write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_board_configuration.json"
+    file_prefix = @download_config.project_config.file_prefix
+    write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
   end
 
   def write_json json, filename

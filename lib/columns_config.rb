@@ -26,9 +26,18 @@ class ColumnsConfig
     @columns << [:string, label, proc]
   end
 
-  def column_entry_times
-    board_columns = @file_config.project_config.board_columns
-    raise 'Did you set a board_id? Unable to find configuration.' if board_columns.nil?
+  def column_entry_times board_id: nil
+    all_board_columns = @file_config.project_config.all_board_columns
+    if board_id.nil?
+      unless all_board_columns.size == 1
+        raise "For board_id to not be set, there must be exactly one board defined: #{all_board_columns}"
+      end
+
+      board_id = all_board_columns.keys[0]
+    end
+    board_columns = all_board_columns[board_id]
+
+    raise "Unable to find configuration for board_id: #{board_id}" if board_columns.nil?
 
     board_columns.each do |column|
       date column.name, first_time_in_status(*column.status_ids)
