@@ -40,6 +40,8 @@ class Exporter
 
   def target_path *arg
     @target_path = arg[0] unless arg.empty?
+    @target_path += File::SEPARATOR unless @target_path.end_with? File::SEPARATOR
+    FileUtils.mkdir_p @target_path unless arg.empty?
     @target_path
   end
 
