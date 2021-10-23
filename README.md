@@ -16,11 +16,15 @@ Navigate to https://id.atlassian.com/manage-profile/security/api-tokens and crea
 
 Note that API Tokens only work with Jira cloud at this time. If you're using Jira Server, you're out of luck.
 
-Theoretically you could replace the token with your password but we haven't tested that.
+Theoretically you could replace the token with your password for a Jira Server installation but we don't have an environment to test that in. Let us know if you've done this and it works.
 
 ## Authentication with cookies ##
 
-Once you've logged in with your web browser, your browser will now have authentication cookies saved. If you go into the settings for your brower and copy them, this code can use those cookies for authentication. Yes, this is extremely ugly but it's been the only way we could get authentication working in some cases. Generally Jira will set three different cookies and you need them all.
+This next option is fairly ugly but it does work for Jira Server installations. This is what we usually use for Jira Server.
+
+Once you've logged in with your web browser, your browser will now have authentication cookies saved. If you go into the settings for your brower and copy them, this code can use those cookies for authentication. Generally Jira will set three different cookies and you need them all.
+
+You'll need to refresh the cookies periodically (daily?) so it's annoying but does work.
 
 ```json
 {
@@ -36,21 +40,42 @@ Create a config.rb file and put a configuration in it like the one below.
 
 ```ruby
 Exporter.configure do
+  # target_path sets the directory that all generated files will end up in.
   target_path 'target'
-  jira_config 'improvingflow'
 
-    project file_prefix: 'sample', project: 'SP' do
-        issues.reject! do |issue|
-            ['Sub-task', 'Epic'].include? issue.type
-        end
+  # jira_config sets the name of the configuration file with jira specific authentication
+  jira_config 'improvingflow.json'
 
-        columns write_headers: true do
-            date 'Done', still_in_status_category('Done')
-            date 'Start', first_time_in_status_category('In Progress')
-            string 'Type', type
-            string 'Key', key
-            string 'Summary', summary
-        end
+  project do
+    # the prefix that will be used for all generated files
+    file_prefix 'sample'
+
+    # All the jira specific configuration for this project is in this block. 
+    # It will apply to all file sections.
+    download do
+      project_key 'SP'
+      board_id 1
+    end
+
+    # All the configuration for one specific output file. There may be multiple file sections.
+    file do
+      file_suffix '.csv'
+
+      # This is where we massage the data before export. If we want to remove all epics
+      # and sub-tasks, do it here. If 
+      issues.reject! do |issue|
+        %w[Sub-task Epic].include? issue.type
+      end
+
+      columns do
+        write_headers true
+
+        date 'Done', still_in_status_category('Done')
+        date 'Start', first_time_in_status_category('In Progress')
+        string 'Type', type
+        string 'Key', key
+        string 'Summary', summary
+      end
     end
 end
 ```
