@@ -11,7 +11,7 @@ class Downloader
   end
 
   def run
-    load_jira_config(@json_file_loader.load("jira_config_#{@download_config.project_config.jira_config}.json"))
+    load_jira_config(@download_config.project_config.jira_config)
     download_issues
     download_statuses unless @download_config.project_key.nil?
     download_board_configuration unless @download_config.board_id.nil?
@@ -85,7 +85,7 @@ class Downloader
 
   def write_json json, filename
     file_path = File.dirname(filename)
-    FileUtils.mkdir_p file_path unless File.exists?(file_path)
+    FileUtils.mkdir_p file_path unless File.exist?(file_path)
 
     File.open(filename, 'w') do |file|
       file.write(JSON.pretty_generate(json))

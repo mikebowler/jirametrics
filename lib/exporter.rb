@@ -47,8 +47,8 @@ class Exporter
     @target_path
   end
 
-  def jira_config *arg
-    @jira_config = arg[0] unless arg.empty?
+  def jira_config filename = nil
+    @jira_config = JsonFileLoader.new.load(filename) unless filename.nil?
     @jira_config
   end
 end

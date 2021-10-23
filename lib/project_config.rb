@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ProjectConfig
-  attr_reader :target_path, :jira_config, :all_board_columns, :status_category_mappings, :download_config, :file_configs
+  attr_reader :target_path, :jira_config, :all_board_columns, :status_category_mappings,
+    :download_config, :file_configs, :exporter
 
   def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
