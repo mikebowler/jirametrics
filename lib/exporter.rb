@@ -38,10 +38,12 @@ class Exporter
 
   def xproject *args; end
 
-  def target_path *arg
-    @target_path = arg[0] unless arg.empty?
-    @target_path += File::SEPARATOR unless @target_path.end_with? File::SEPARATOR
-    FileUtils.mkdir_p @target_path unless arg.empty?
+  def target_path path = nil
+    unless path.nil?
+      @target_path = path
+      @target_path += File::SEPARATOR unless @target_path.end_with? File::SEPARATOR
+      FileUtils.mkdir_p @target_path
+    end
     @target_path
   end
 

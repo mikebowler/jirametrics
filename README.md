@@ -35,9 +35,9 @@ Once you've logged in with your web browser, your browser will now have authenti
 Create a config.rb file and put a configuration in it like the one below.
 
 ```ruby
-class Config < ConfigBase
-    target_path 'target/'
-    jira_config 'improvingflow'
+Exporter.configure do
+  target_path 'target'
+  jira_config 'improvingflow'
 
     project file_prefix: 'sample', project: 'SP' do
         issues.reject! do |issue|

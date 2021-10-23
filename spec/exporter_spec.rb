@@ -21,8 +21,5 @@ describe Exporter do
       expect(exporter.target_path).to eq "#{TARGET_PATH}/"
       expect(Dir).to exist(TARGET_PATH)
     end
-
-    # actually create target_path
-    # works when path already exists
   end
 end
