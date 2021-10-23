@@ -4,7 +4,9 @@ require 'simplecov'
 SimpleCov.start do
   enable_coverage :branch
   add_filter '/spec/'
-  add_filter 'config.rb'
+  SimpleCov.add_filter do |src_file|
+    File.basename(src_file.filename) == 'config.rb'
+  end
 end
 
 require 'require_all'
