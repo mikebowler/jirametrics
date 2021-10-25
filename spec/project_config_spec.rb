@@ -19,24 +19,79 @@ describe ProjectConfig do
     end
   end
 
-  it 'board_configuration' do
-    config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
-    config.file_prefix 'sample'
-    config.load_all_board_configurations
-    expect(config.all_board_columns.keys).to eq ['1']
+  context 'board_configuration' do
+    it 'should load' do
+      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config.file_prefix 'sample'
+      config.load_all_board_configurations
+      expect(config.all_board_columns.keys).to eq ['1']
 
-    contents = config.all_board_columns['1'].collect do |column|
-      [column.name, column.status_ids, column.min, column.max]
+      contents = config.all_board_columns['1'].collect do |column|
+        [column.name, column.status_ids, column.min, column.max]
+      end
+
+      # rubocop:disable Layout/ExtraSpacing
+      expect(contents).to eq [
+        ['Backlog',     [10_000], nil, nil],
+        ['Ready',       [10_001],   1,   4],
+        ['In Progress',      [3], nil,   3],
+        ['Review',      [10_011], nil,   3],
+        ['Done',        [10_002], nil, nil]
+      ]
+      # rubocop:enable Layout/ExtraSpacing
+    end
+  end
+
+  context 'status_category_mappings' do
+    it 'should degrade gracefully when mappings not found' do
+      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config.load_status_category_mappings
+      expect(config.status_category_mappings).to be_empty
     end
 
-    # rubocop:disable Layout/ExtraSpacing
-    expect(contents).to eq [
-      ['Backlog',     [10_000], nil, nil],
-      ['Ready',       [10_001],   1,   4],
-      ['In Progress',      [3], nil,   3],
-      ['Review',      [10_011], nil,   3],
-      ['Done',        [10_002], nil, nil]
-    ]
-    # rubocop:enable Layout/ExtraSpacing
+    it 'should load' do
+      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config.file_prefix 'sample'
+      config.load_status_category_mappings
+      expect(config.status_category_mappings).to eq(
+        {
+          'Bug' => {
+            'Backlog' => 'To Do',
+            'Done' => 'Done',
+            'In Progress' => 'In Progress',
+            'Review' => 'In Progress',
+            'Selected for Development' => 'In Progress'
+          },
+          'Epic' => {
+            'Backlog' => 'To Do',
+            'Done' => 'Done',
+            'In Progress' => 'In Progress',
+            'Review' => 'In Progress',
+            'Selected for Development' => 'In Progress'
+          },
+          'Story' => {
+            'Backlog' => 'To Do',
+            'Done' => 'Done',
+            'In Progress' => 'In Progress',
+            'Review' => 'In Progress',
+            'Selected for Development' => 'In Progress'
+          },
+          'Sub-task' => {
+            'Backlog' => 'To Do',
+            'Done' => 'Done',
+            'In Progress' => 'In Progress',
+            'Review' => 'In Progress',
+            'Selected for Development' => 'In Progress'
+          },
+          'Task' => {
+            'Backlog' => 'To Do',
+            'Done' => 'Done',
+            'In Progress' => 'In Progress',
+            'Review' => 'In Progress',
+            'Selected for Development' => 'In Progress'
+          }
+        }
+      )
+    end
   end
 end
