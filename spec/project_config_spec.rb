@@ -22,7 +22,7 @@ describe ProjectConfig do
   it 'board_configuration' do
     config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
     config.file_prefix 'sample'
-    config.load_board_configuration
+    config.load_all_board_configurations
     expect(config.all_board_columns.keys).to eq ['1']
 
     contents = config.all_board_columns['1'].collect do |column|

@@ -20,7 +20,7 @@ class ProjectConfig
   end
 
   def run
-    load_board_configuration
+    load_all_board_configurations
     load_status_category_mappings
     @file_configs.each do |file_config|
       file_config.run
@@ -49,15 +49,19 @@ class ProjectConfig
     mappings[type][status] = category
   end
 
-  def load_board_configuration
+  def load_all_board_configurations
     Dir.foreach(@target_path) do |file|
       next unless file =~ /^#{@file_prefix}_board_(\d+)_configuration\.json$/
 
       board_id = $1
-      json = JSON.parse(File.read("#{@target_path}#{file}"))
-      @all_board_columns[board_id] = json['columnConfig']['columns'].collect do |column|
-        BoardColumn.new column
-      end
+      load_board_configuration board_id: board_id, filename: "#{@target_path}#{file}"
+    end
+  end
+
+  def load_board_configuration board_id:, filename:
+    json = JSON.parse(File.read(filename))
+    @all_board_columns[board_id] = json['columnConfig']['columns'].collect do |column|
+      BoardColumn.new column
     end
   end
 
