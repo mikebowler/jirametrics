@@ -90,29 +90,8 @@ class FileConfig
     object.to_s
   end
 
-  def file_suffix *arg
-    @file_suffix = arg[0] unless arg.empty?
+  def file_suffix suffix = nil
+    @file_suffix = suffix unless suffix.nil?
     @file_suffix
-  end
-
-  def category_for type:, status:, issue_id:
-    category = project.status_category_mappings[type]&.[](status)
-    if category.nil?
-      message = "Could not determine a category for type: #{type.inspect} and" \
-        " status: #{status.inspect} on issue: #{issue_id}. If you" \
-        ' specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
-        ' and we still don\'t have the right mapping, which is possible, then use the' \
-        ' "status_category_mapping" declaration in your config to manually add one.' \
-        ' The mappings we do know about are below:'
-      @status_category_mappings.each do |issue_type, hash|
-        message << "\n  " << issue_type
-        hash.each do |issue_status, issue_category|
-          message << "\n    '#{issue_status}'' => '#{issue_category}'"
-        end
-      end
-
-      raise message
-    end
-    category
   end
 end

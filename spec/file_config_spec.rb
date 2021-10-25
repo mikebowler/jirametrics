@@ -28,4 +28,12 @@ describe FileConfig do
       expect(config.sort_output(input)).to eq expected
     end
   end
+
+  context 'category_for' do
+    it 'should fail when no mapping found' do
+      # config = FileConfig.new project_config: nil, block: nil
+      # expect { config.category_for 'no_type' }.to raise_error 'foo'
+
+    end
+  end
 end
