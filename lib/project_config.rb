@@ -28,8 +28,7 @@ class ProjectConfig
   end
 
   def download &block
-    raise 'Not allowed to have multiple download blocks in one project' if @download
-    raise 'If using a download block, some parameters must be set' if block.nil?
+    raise 'Not allowed to have multiple download blocks in one project' if @download_config
 
     @download_config = DownloadConfig.new project_config: self, block: block
   end

@@ -94,4 +94,18 @@ describe ProjectConfig do
       )
     end
   end
+
+  context 'download config' do
+    it 'should fail if a second download is set' do
+      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config.download do
+        file_suffix 'a'
+      end
+      expect { config.download { file_suffix 'a' } }.to raise_error(
+        'Not allowed to have multiple download blocks in one project'
+      )
+    end
+  end
 end
+
+# If using a download block, some parameters must be set
