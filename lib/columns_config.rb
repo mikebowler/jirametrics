@@ -13,8 +13,8 @@ class ColumnsConfig
     instance_eval(&@block)
   end
 
-  def write_headers *arg
-    @write_headers = arg[0] unless arg.empty?
+  def write_headers headers = nil
+    @write_headers = headers unless headers.nil?
     @write_headers
   end
 
@@ -66,7 +66,7 @@ class ColumnsConfig
     end
   end
 
-  def respond_to_missing?(method_name, include_private = false)
+  def respond_to_missing?(method_name, include_all = false)
     ::Issue.method_defined?(method_name.to_sym) || super
   end
 end
