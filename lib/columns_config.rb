@@ -30,7 +30,9 @@ class ColumnsConfig
     all_board_columns = @file_config.project_config.all_board_columns
     if board_id.nil?
       unless all_board_columns.size == 1
-        raise "For board_id to not be set, there must be exactly one board defined: #{all_board_columns}"
+        raise "If the board_id isn't set then we look for all board configurations in the target" \
+          ' directory. If there is only one, we use that. In this case we found configurations for' \
+          " the following board ids and this is ambiguous: #{all_board_columns}"
       end
 
       board_id = all_board_columns.keys[0]
