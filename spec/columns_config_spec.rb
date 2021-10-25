@@ -51,4 +51,11 @@ describe ColumnsConfig do
         .to raise_error "method_that_does_not_exist isn't a method on Issue or ColumnsConfig"
     end
   end
+
+  context 'run' do
+    it 'should execute the original block that had been passed in, in its own context' do
+      columns = ColumnsConfig.new file_config: nil, block: ->(_) { self.class.to_s }
+      expect(columns.run).to eq('ColumnsConfig')
+    end
+  end
 end
