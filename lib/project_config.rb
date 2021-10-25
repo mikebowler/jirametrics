@@ -92,11 +92,10 @@ class ProjectConfig
 
     JSON.parse(File.read(filename)).each do |type_config|
       issue_type = type_config['name']
-      @status_category_mappings[issue_type] = {} unless @status_category_mappings[issue_type]
       type_config['statuses'].each do |status_config|
         status = status_config['name']
         category = status_config['statusCategory']['name']
-        @status_category_mappings[issue_type][status] = category
+        (@status_category_mappings[issue_type] ||= {})[status] = category
       end
     end
   end

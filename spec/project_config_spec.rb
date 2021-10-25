@@ -53,43 +53,20 @@ describe ProjectConfig do
       config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
       config.file_prefix 'sample'
       config.load_status_category_mappings
+      status_to_category = {
+        'Backlog' => 'To Do',
+        'Done' => 'Done',
+        'In Progress' => 'In Progress',
+        'Review' => 'In Progress',
+        'Selected for Development' => 'In Progress'
+      }
       expect(config.status_category_mappings).to eq(
         {
-          'Bug' => {
-            'Backlog' => 'To Do',
-            'Done' => 'Done',
-            'In Progress' => 'In Progress',
-            'Review' => 'In Progress',
-            'Selected for Development' => 'In Progress'
-          },
-          'Epic' => {
-            'Backlog' => 'To Do',
-            'Done' => 'Done',
-            'In Progress' => 'In Progress',
-            'Review' => 'In Progress',
-            'Selected for Development' => 'In Progress'
-          },
-          'Story' => {
-            'Backlog' => 'To Do',
-            'Done' => 'Done',
-            'In Progress' => 'In Progress',
-            'Review' => 'In Progress',
-            'Selected for Development' => 'In Progress'
-          },
-          'Sub-task' => {
-            'Backlog' => 'To Do',
-            'Done' => 'Done',
-            'In Progress' => 'In Progress',
-            'Review' => 'In Progress',
-            'Selected for Development' => 'In Progress'
-          },
-          'Task' => {
-            'Backlog' => 'To Do',
-            'Done' => 'Done',
-            'In Progress' => 'In Progress',
-            'Review' => 'In Progress',
-            'Selected for Development' => 'In Progress'
-          }
+          'Bug' => status_to_category,
+          'Epic' => status_to_category,
+          'Story' => status_to_category,
+          'Sub-task' => status_to_category,
+          'Task' => status_to_category
         }
       )
     end
@@ -107,5 +84,3 @@ describe ProjectConfig do
     end
   end
 end
-
-# If using a download block, some parameters must be set
