@@ -33,23 +33,23 @@ class DownloadConfig
     raise 'Everything was nil'
   end
 
-  def project_key *arg
-    @project_key = arg[0] unless arg.empty?
+  def project_key key = nil
+    @project_key = key unless key.nil?
     @project_key
   end
 
-  def board_id *arg
-    @board_id = arg[0] unless arg.empty?
+  def board_id id = nil
+    @board_id = id unless id.nil?
     @board_id
   end
 
-  def filter_name *arg
-    @filter_name = arg[0] unless arg.empty?
+  def filter_name filter = nil
+    @filter_name = filter unless filter.nil?
     @filter_name
   end
 
-  def rolling_date_count *arg
-    @rolling_date_count = arg[0] unless arg.empty?
+  def rolling_date_count count = nil
+    @rolling_date_count = count unless count.nil?
     @rolling_date_count
   end
 end
