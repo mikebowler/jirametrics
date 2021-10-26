@@ -28,4 +28,13 @@ describe FileConfig do
       expect(config.sort_output(input)).to eq expected
     end
   end
+
+  context 'output_filename' do
+    it 'should create filename' do
+      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      project_config.file_prefix 'foo'
+      config = FileConfig.new project_config: project_config, block: nil
+      expect(config.output_filename).to eq 'data/foo.csv'
+    end
+  end
 end

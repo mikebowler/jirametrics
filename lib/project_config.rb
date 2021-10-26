@@ -37,8 +37,8 @@ class ProjectConfig
     @file_configs << FileConfig.new(project_config: self, block: block)
   end
 
-  def file_prefix *arg
-    @file_prefix = arg[0] unless arg.empty?
+  def file_prefix prefix = nil
+    @file_prefix = prefix unless prefix.nil?
     @file_prefix
   end
 
