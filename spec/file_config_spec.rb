@@ -74,13 +74,32 @@ describe FileConfig do
         ['SP-10', 'Check in people at an event']
       ])
     end
+
+    it 'should prepare grid only_use_row_if' do
+      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      file_config = FileConfig.new project_config: project_config, block: nil
+      file_config.only_use_row_if do |row|
+        row[1] !~ /Create/
+      end
+      file_config.columns do
+        string 'id', key
+        string 'summary', summary
+      end
+
+      issues = [load_issue('SP-1'), load_issue('SP-10')]
+      file_config.instance_variable_set '@issues', issues
+
+      expect(file_config.prepare_grid).to eq([
+        ['SP-10', 'Check in people at an event']
+      ])
+    end
   end
 
   context 'columns' do
     it 'should raise error if multiples are set' do
       file_config = FileConfig.new project_config: nil, block: nil
-      file_config.columns {'a'}
-      expect { file_config.columns {'a'} }.to raise_error /Can only have one/
+      file_config.columns { 'a' }
+      expect { file_config.columns { 'a' } }.to raise_error /Can only have one/
     end
   end
 end

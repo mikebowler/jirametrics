@@ -17,11 +17,6 @@ class FileConfig
     all_lines = prepare_grid
 
     File.open(output_filename, 'w') do |file|
-      # if @columns.write_headers
-      #   line = @columns.columns.collect { |_type, label, _proc| label }
-      #   file.puts CSV.generate_line(line)
-      # end
-      # sort_output(all_lines).each do |output_line|
       all_lines.each do |output_line|
         file.puts CSV.generate_line(output_line)
       end
@@ -42,6 +37,7 @@ class FileConfig
       line
     end
 
+    all_lines = all_lines.select(&@only_use_row_if) if @only_use_row_if
     all_lines = sort_output(all_lines)
 
     if @columns.write_headers
@@ -50,7 +46,6 @@ class FileConfig
     end
 
     all_lines
-
   end
 
   def output_filename
@@ -95,6 +90,10 @@ class FileConfig
     raise 'Can only have one columns declaration inside a file' if @columns
 
     @columns = ColumnsConfig.new file_config: self, block: block
+  end
+
+  def only_use_row_if &block
+    @only_use_row_if = block
   end
 
   # TODO: to_date needs to know which timezone we're converting to.
