@@ -13,6 +13,22 @@ class FileConfig
 
   def run
     instance_eval(&@block)
+
+    all_lines = prepare_grid
+
+    File.open(output_filename, 'w') do |file|
+      # if @columns.write_headers
+      #   line = @columns.columns.collect { |_type, label, _proc| label }
+      #   file.puts CSV.generate_line(line)
+      # end
+      # sort_output(all_lines).each do |output_line|
+      all_lines.each do |output_line|
+        file.puts CSV.generate_line(output_line)
+      end
+    end
+  end
+
+  def prepare_grid
     @columns.run
 
     all_lines = issues.collect do |issue|
@@ -26,15 +42,15 @@ class FileConfig
       line
     end
 
-    File.open(output_filename, 'w') do |file|
-      if @columns.write_headers
-        line = @columns.columns.collect { |_type, label, _proc| label }
-        file.puts CSV.generate_line(line)
-      end
-      sort_output(all_lines).each do |output_line|
-        file.puts CSV.generate_line(output_line)
-      end
+    all_lines = sort_output(all_lines)
+
+    if @columns.write_headers
+      line = @columns.columns.collect { |_type, label, _proc| label }
+      all_lines.insert 0, line
     end
+
+    all_lines
+
   end
 
   def output_filename

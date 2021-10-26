@@ -37,4 +37,42 @@ describe FileConfig do
       expect(config.output_filename).to eq 'data/foo.csv'
     end
   end
+
+  context 'prepare_grid' do
+    it 'should prepare grid without headers' do
+      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      file_config = FileConfig.new project_config: project_config, block: nil
+      file_config.columns do
+        string 'id', key
+        string 'summary', summary
+      end
+
+      issues = [load_issue('SP-1'), load_issue('SP-10')]
+      file_config.instance_variable_set '@issues', issues
+
+      expect(file_config.prepare_grid).to eq([
+        ['SP-1', 'Create new draft event'],
+        ['SP-10', 'Check in people at an event']
+      ])
+    end
+
+    it 'should prepare grid with headers' do
+      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      file_config = FileConfig.new project_config: project_config, block: nil
+      file_config.columns do
+        write_headers true
+        string 'id', key
+        string 'summary', summary
+      end
+
+      issues = [load_issue('SP-1'), load_issue('SP-10')]
+      file_config.instance_variable_set '@issues', issues
+
+      expect(file_config.prepare_grid).to eq([
+        %w[id summary],
+        ['SP-1', 'Create new draft event'],
+        ['SP-10', 'Check in people at an event']
+      ])
+    end
+  end
 end
