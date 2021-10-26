@@ -92,7 +92,7 @@ class FileConfig
   end
 
   def columns &block
-    raise 'Can only have one columns declaration inside a file' if @column
+    raise 'Can only have one columns declaration inside a file' if @columns
 
     @columns = ColumnsConfig.new file_config: self, block: block
   end

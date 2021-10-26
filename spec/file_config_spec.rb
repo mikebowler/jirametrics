@@ -75,4 +75,12 @@ describe FileConfig do
       ])
     end
   end
+
+  context 'columns' do
+    it 'should raise error if multiples are set' do
+      file_config = FileConfig.new project_config: nil, block: nil
+      file_config.columns {'a'}
+      expect { file_config.columns {'a'} }.to raise_error /Can only have one/
+    end
+  end
 end
