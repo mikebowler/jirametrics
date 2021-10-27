@@ -3,7 +3,7 @@
 class ChangeItem
   attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id, :raw
 
-  def initialize raw:, time:
+  def initialize raw:, time:, artificial: false
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = DateTime.parse(time)
@@ -12,6 +12,7 @@ class ChangeItem
     @value_id = @raw['to'].to_i
     @old_value = @raw['fromString']
     @old_value_id = @raw['from']&.to_i
+    @artificial = artificial
   end
 
   def status?   = (field == 'status')
@@ -22,8 +23,13 @@ class ChangeItem
 
   def resolution? = (field == 'resolution')
 
+  def artificial? = @artificial
+
   def to_s
-    "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: '#{@time}')"
+    message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: \"#{@time}\""
+    message += ', artificial' if artificial?
+    message += ')'
+    message
   end
 
   def inspect = to_s
