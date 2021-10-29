@@ -205,7 +205,7 @@ end
 
 ## Columns config ##
 
-'write_headers' indicates whether we want a header row in the output or not. The default is false.
+**write_headers** indicates whether we want a header row in the output or not. The default is false.
 
 The date and string lines will output one of those data types into a column in the output file. The first parameter that they're passed is the name of the column and the second is a method that will be called on the Issue class. Each of those latter options are described below.
 
@@ -221,4 +221,12 @@ columns do
 end
 ```
 
+* **first_time_in_status** takes a list of status names and returns the timestamp of the first time the issue entered any of these statuses.
+* **first_time_not_in_status** takes a list of status names and returns the timestamp of the first time that the issue is NOT in one of these statuses. Commonly used if there are a couple of columns at the beginning of the board that we don't want to consider for the purposes of calculating cycletime.
+* **still_in_status** Takes a list of status names. If an issue has ever been in one of these statuses AND is still in one of these statuses then was was the last time it entered one? This is useful for tracking cases where an item moves forward on the board, then backwards, then forward again. We're tracking the last time it entered the named status.
+* **first_time_in_status_category** Same as first_time_in_status except that it's checking status categories.
+* **still_in_status_category** Same as still_in_status except that it's checking status categories.
+* **first_status_change_after_created** Returns the timestamp of the first status change after the issue was created.
+* **time_created** Returns the creation timestamp of the issue
+* **blocked_percentage** Takes two of the above methods (first for the start time and second for the end time) and then calculates the percentage of time that this issue was marked as blocked (flagged in Jira parlance).
 
