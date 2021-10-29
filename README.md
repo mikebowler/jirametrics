@@ -1,6 +1,20 @@
-# Step 1: Create a jira_config.json document
+# Overview
 
-You can copy the default_jira.config and put your own values in it. The code currently only supports two authentication mechanisms with Jira. If you're using Jira cloud then we recommend using the API Token. If you're in Jira Server then you'll have to use the cookie approach.
+At a high level, the steps to use this are as follows.
+
+1. Run "bundle install" to install all the appropriate gems for this code.
+2. Create a file with [Jira connection details](#jira-connection-details)
+3. Create a file with all the configuration details. What projects, etc.
+4. Run "rake download" to pull all the data out of Jira.
+5. Run "rake export" to create CSV files from the data that we already got from Jira.
+
+-----
+
+# Jira connection details
+
+Create a file such as "jira.config". The actual name doesn't matter at this point because the main configuration file will contain a reference to it. What goes into this file depends on the type of authentication that you use with your Jira instance.
+
+The code currently only supports two authentication mechanisms with Jira. If you're using Jira cloud then we recommend using the API Token. If you're in Jira Server then you'll have to use the cookie approach.
 
 ## Authentication with the API Token ##
 
@@ -86,7 +100,7 @@ Run "bundle install" to install all the gems you'll need. You'll need to be on a
 
 # Step 4: Run it
 
-From the command line, "rake download" will pull the data from Jira and store it in the target path specified. If you didn't specify a path then it defauls to "target/".
+From the command line, "rake download" will pull the data from Jira and store it in the target path specified. If you didn't specify a path then it defaults to "target/".
 
 "rake extract" will take those files you already downloaded and will generate CSV files from it. Those CSV's will also be in the target directory.
 
