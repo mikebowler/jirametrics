@@ -2,9 +2,9 @@
 
 At a high level, the steps to use this are as follows.
 
-1. Run "bundle install" to install all the appropriate gems for this code.
+1. Run "bundle install" to install all the appropriate gems for this code. Note that you'll need to be on at least ruby 3.0.0.
 2. Create a file with [Jira connection details](#jira-connection-details)
-3. Create a file with all the configuration details. What projects, etc.
+3. Create a file with all the [configuration details](create-your-project-configuration). What projects, etc.
 4. Run "rake download" to pull all the data out of Jira.
 5. Run "rake export" to create CSV files from the data that we already got from Jira.
 
@@ -48,9 +48,9 @@ You'll need to refresh the cookies periodically (daily?) so it's annoying but do
 }
 ```
 
-# Step 2: Create your configuration in config.rb
+# Create your project configuration
 
-Create a config.rb file and put a configuration in it like the one below.
+Create the file config.rb file and put a configuration in it like the one below.
 
 ```ruby
 Exporter.configure do
@@ -94,20 +94,3 @@ Exporter.configure do
 end
 ```
 
-# Step 3: Install the gems you'll need
-
-Run "bundle install" to install all the gems you'll need. You'll need to be on at least Ruby 3.0.0.
-
-# Step 4: Run it
-
-From the command line, "rake download" will pull the data from Jira and store it in the target path specified. If you didn't specify a path then it defaults to "target/".
-
-"rake extract" will take those files you already downloaded and will generate CSV files from it. Those CSV's will also be in the target directory.
-
-"rake" with no parameters will do a download followed by an extract.
-
-----
-
-
-
-# Configuring the project #
