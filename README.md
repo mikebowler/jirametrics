@@ -228,5 +228,10 @@ end
 * **still_in_status_category** Same as still_in_status except that it's checking status categories.
 * **first_status_change_after_created** Returns the timestamp of the first status change after the issue was created.
 * **time_created** Returns the creation timestamp of the issue
-* **blocked_percentage** Takes two of the above methods (first for the start time and second for the end time) and then calculates the percentage of time that this issue was marked as blocked (flagged in Jira parlance).
+* **key** The Jira issue number
+* **type** The issue type
+* **summary** The issue description
+* **url** The issue URL. Note that this is not actually found in the data that Jira provides us so we fabricate it from information we do have. It's possible that the URL we generate won't work although it has in all the cases we've tested.
+* **blocked_percentage** Takes two of the above date methods (first for the start time and second for the end time) and then calculates the percentage of time that this issue was marked as blocked (flagged in Jira parlance).
+
 
