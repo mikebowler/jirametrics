@@ -94,3 +94,131 @@ Exporter.configure do
 end
 ```
 
+## Top level config ##
+
+In the top level of the config file, you can have multiple projects and can set the locations of the target path and jira configuration file.
+
+Putting an x in front of project will cause that project to be ignored.
+
+```ruby
+Exporter.configure do
+  target_path 'target'
+  jira_config 'improvingflow.json'
+
+  project do
+    # ... project 1 ...
+  end
+
+  project do
+    # ... project 2 ...
+  end
+
+  xproject do
+    # ... ignored project ...
+  end
+end
+```
+
+What if you need to have different target paths or jira config for different projects? Each project will find the preceeding settings and use those so you can redefine them at any time and the subsequent projects will use the new settings.
+
+```ruby
+Exporter.configure do
+  target_path 'target'
+  jira_config 'improvingflow.json'
+
+  project do
+    # ... project 1 ...
+  end
+
+  target_path 'target2'
+  jira_config 'other.json'
+
+  project do
+    # ... project 2 using different target and jira config ...
+  end
+end
+```
+
+## Project configuration ##
+
+```ruby
+project do
+  # The file prefix that will be used in all files created during download or used during export
+  file_prefix 'sample'
+
+  download do
+    # Information specific to the download. 
+    # There can only be one of these sections
+  end
+
+  file do
+    # Information specific to the output file generated during export
+    # There can be multiple file sections
+  end
+end
+```
+
+## Download configuration ##
+
+If you specify one or more of project_key, filter, or rolling_date_count then the program will generate a JQL statement for you and will use that. If you pass in a JQL statement then it will ignore all of the previous values and use only that.
+
+It's unlikely that you would want to specify both a project_key and a filter although you can, if you really want.
+
+The rolling_date_count indicates how many days back we're looking for files. For example, if we say "rolling_date_count 90" then we're retrieving any items that have closed in the last 90 days. We always return items that are still open, regardless of date. If this field isn't specified then we retrieve all issues that have ever been in this project and that's usually undesirable.
+
+If you specify a board id then we do an extra request to Jira to query information about that board. This is neccessary if you want to work with status categories, for example.
+
+```ruby
+download do
+  project_key 'SP'
+  filter 'filtername'
+  rolling_date_count 90
+  board_id 1
+end
+```
+
+## File configuration ##
+
+This section contains information about a specific file that we want to export.
+
+file_suffix specifies the suffix that will be used for the generated file. If not specified, it defaults to '.csv'
+
+The columns block provides information about the actual data that will be exported.
+
+"only_use_row_if" is a bit of a hack to exclude rows that we don't want to see in the export. For example, sometimes we only want to write a row if it has either a start date or an end date or both. We could use this to exclude the row unless one of those values is present.
+
+The full list of issues is made available in the 'issues' variable so it's possible to do things like exclude issues we don't want. The sample below is excluding any issues that are either epics or sub-tasks. We'll often use it to exclude specific issues that we know have bad data.
+
+```ruby
+file do
+  file_suffix '.csv'
+
+  issues.reject! do |issue|
+    %w[Sub-task Epic].include? issue.type
+  end
+
+  only_use_row_if do |row|
+    row[0] || row[1]
+  end
+end
+```
+
+## Columns config ##
+
+'write_headers' indicates whether we want a header row in the output or not. The default is false.
+
+The date and string lines will output one of those data types into a column in the output file. The first parameter that they're passed is the name of the column and the second is a method that will be called on the Issue class. Each of those latter options are described below.
+
+```ruby
+columns do
+  write_headers true
+
+  date 'Done', still_in_status_category('Done')
+  date 'Start', first_time_in_status_category('In Progress')
+  string 'Type', type
+  string 'Key', key
+  string 'Summary', summary
+end
+```
+
+
