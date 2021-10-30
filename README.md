@@ -22,7 +22,7 @@ Navigate to https://id.atlassian.com/manage-profile/security/api-tokens and crea
 
 ```json
 {
-  "url": "https://improvingflow.atlassian.net",
+  "url": "https://<your_url>",
   "email": "<your email>",
   "api_token": "<your_api_key>",
 }
@@ -141,32 +141,35 @@ end
 
 ## Project configuration ##
 
+The **file_prefix** will be used in the filenames of all files created during download or during the export.
+
+The **download** section contains all the information specific to the project in Jira. There can only be one of these.
+
+The **file** section contains information specific to the output file we're going to create. There can be multiples of these, if we're generating multiple different files.
+
 ```ruby
 project do
-  # The file prefix that will be used in all files created during download or used during export
   file_prefix 'sample'
 
   download do
-    # Information specific to the download. 
-    # There can only be one of these sections
+    # ...
   end
 
   file do
-    # Information specific to the output file generated during export
-    # There can be multiple file sections
+    # ...
   end
 end
 ```
 
 ## Download configuration ##
 
-If you specify one or more of project_key, filter, or rolling_date_count then the program will generate a JQL statement for you and will use that. If you pass in a JQL statement then it will ignore all of the previous values and use only that.
+If you specify one or more of **project_key**, **filter**, or **rolling_date_count** then the program will generate a JQL statement for you and will use that. If you pass in a JQL statement then it will ignore all of the previous values and use only that.
 
-It's unlikely that you would want to specify both a project_key and a filter although you can, if you really want.
+It's unlikely that you would want to specify both a **project_key** and a **filter** although you can, if you really want.
 
-The rolling_date_count indicates how many days back we're looking for files. For example, if we say "rolling_date_count 90" then we're retrieving any items that have closed in the last 90 days. We always return items that are still open, regardless of date. If this field isn't specified then we retrieve all issues that have ever been in this project and that's usually undesirable.
+The **rolling_date_count** indicates how many days back we're looking for files. For example, if we say "rolling_date_count 90" then we're retrieving any items that have closed in the last 90 days. We always return items that are still open, regardless of date. If this field isn't specified then we retrieve all issues that have ever been in this project and that's usually undesirable.
 
-If you specify a board id then we do an extra request to Jira to query information about that board. This is neccessary if you want to work with status categories, for example.
+If you specify a **board_id** then we do an extra request to Jira to query information about that board. This is neccessary if you want to work with status categories, for example.
 
 ```ruby
 download do
@@ -181,13 +184,13 @@ end
 
 This section contains information about a specific file that we want to export.
 
-file_suffix specifies the suffix that will be used for the generated file. If not specified, it defaults to '.csv'
+**file_suffix** specifies the suffix that will be used for the generated file. If not specified, it defaults to '.csv'
 
-The columns block provides information about the actual data that will be exported.
+The **columns** block provides information about the actual data that will be exported.
 
-"only_use_row_if" is a bit of a hack to exclude rows that we don't want to see in the export. For example, sometimes we only want to write a row if it has either a start date or an end date or both. We could use this to exclude the row unless one of those values is present.
+**only_use_row_if** is a bit of a hack to exclude rows that we don't want to see in the export. For example, sometimes we only want to write a row if it has either a start date or an end date or both. We could use this to exclude the row unless one of those values is present.
 
-The full list of issues is made available in the 'issues' variable so it's possible to do things like exclude issues we don't want. The sample below is excluding any issues that are either epics or sub-tasks. We'll often use it to exclude specific issues that we know have bad data.
+The full list of issues is made available in the **issues** variable so it's possible to do things like exclude issues we don't want. The sample below is excluding any issues that are either epics or sub-tasks. We'll often use it to exclude specific issues that we know have bad data.
 
 ```ruby
 file do
