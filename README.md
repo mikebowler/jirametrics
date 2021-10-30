@@ -237,4 +237,11 @@ end
 * **url** The issue URL. Note that this is not actually found in the data that Jira provides us so we fabricate it from information we do have. It's possible that the URL we generate won't work although it has in all the cases we've tested.
 * **blocked_percentage** Takes two of the above date methods (first for the start time and second for the end time) and then calculates the percentage of time that this issue was marked as blocked (flagged in Jira parlance).
 
+What if there aren't any built-in methods to extract the piece of data that you want? You can pass in an arbitrary bit of code that will get executed for each issue.
+
+```ruby
+columns do
+  string 'sprint_count', ->(issue) { issue.get_whatever_data_you_want }
+end
+```
 
