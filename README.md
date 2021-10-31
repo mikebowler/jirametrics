@@ -213,7 +213,7 @@ end
 The **date** and **string** lines will output one of those data types into a column in the output file. The first parameter that they're passed is the name of the column and the second is a method that will be called on the Issue class. Each of those latter options are described below.
 
 ```ruby
-# This is a typical configuration for the team dashboard for FocusedObjective.com
+# This is a typical configuration for the team dashboard at FocusedObjective.com
 columns do
   write_headers true
 
