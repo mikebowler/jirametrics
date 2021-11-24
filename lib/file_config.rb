@@ -101,6 +101,10 @@ class FileConfig
     object&.to_date
   end
 
+  def to_datetime object
+    object&.to_datetime
+  end
+  
   def to_string object
     object.to_s
   end

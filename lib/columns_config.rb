@@ -22,6 +22,10 @@ class ColumnsConfig
     @columns << [:date, label, proc]
   end
 
+  def datetime label, proc
+    @columns << [:datetime, label, proc]
+  end
+
   def string label, proc
     @columns << [:string, label, proc]
   end
