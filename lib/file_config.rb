@@ -98,13 +98,17 @@ class FileConfig
 
   # TODO: to_date needs to know which timezone we're converting to.
   def to_date object
-    object&.to_date
+    to_datetime(object)&.to_date
   end
 
   def to_datetime object
-    object&.to_datetime
+    return nil if object.nil?
+
+    object = object.to_datetime
+    object = object.new_offset(@timezone_offset) if @timezone_offset
+    object
   end
-  
+
   def to_string object
     object.to_s
   end
@@ -112,5 +116,9 @@ class FileConfig
   def file_suffix suffix = nil
     @file_suffix = suffix unless suffix.nil?
     @file_suffix
+  end
+
+  def timezone_offset offset = nil
+    @timezone_offset = offset unless offset.nil?
   end
 end
