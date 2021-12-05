@@ -130,6 +130,11 @@ class Issue
   end
 
   def time_created
+    puts 'Issue.time_created is deprecated. Use Issue.created instead.'
+    created
+  end
+
+  def created
     DateTime.parse @raw['fields']['created']
   end
 
