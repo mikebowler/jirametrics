@@ -16,7 +16,7 @@ def mock_config
 end
 
 def mock_change field:, value:, time:
-  ChangeItem.new time: time, raw: {
+  ChangeItem.new time: time, author: 'Tolkien', raw: {
     'field' => field,
     'to' => 2,
     'toString' => value
@@ -33,6 +33,9 @@ def empty_issue created:
         'status' => {
           'name' => 'BrandNew!',
           'id' => '999'
+        },
+        'creator' => {
+          'displayName' => 'Tolkien'
         }
       }
     }
@@ -117,6 +120,9 @@ describe Issue do
         'status' => {
           'name' => 'BrandNew!',
           'id' => '999'
+        },
+        'creator' => {
+          'displayName' => 'Tolkien'
         }
       }
     }
@@ -153,7 +159,11 @@ describe Issue do
         'status' => {
           'name' => 'BrandNew!',
           'id' => '999'
+        },
+        'creator' => {
+          'displayName' => 'Tolkien'
         }
+
       }
     }
     issue = Issue.new raw

@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe ChangeItem do
   it 'should create change' do
-    change = ChangeItem.new time: '2021-09-06T04:33:55.539+0000', raw: {
+    change = ChangeItem.new time: '2021-09-06T04:33:55.539+0000', author: 'Tolkien', raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
       'fieldId' => 'customfield_10021',
@@ -26,7 +26,7 @@ describe ChangeItem do
   end
 
   it 'should support artificial' do
-    change = ChangeItem.new time: '2021-09-06T04:33:55.539+0000', artificial: true, raw: {
+    change = ChangeItem.new time: '2021-09-06T04:33:55.539+0000', artificial: true, author: 'Asimov', raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
       'fieldId' => 'customfield_10021',

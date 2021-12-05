@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id, :raw
+  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id, :raw, :author
 
-  def initialize raw:, time:, artificial: false
+  def initialize raw:, time:, author:, artificial: false
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = DateTime.parse(time)
@@ -13,6 +13,7 @@ class ChangeItem
     @old_value = @raw['fromString']
     @old_value_id = @raw['from']&.to_i
     @artificial = artificial
+    @author = author
   end
 
   def status?   = (field == 'status')

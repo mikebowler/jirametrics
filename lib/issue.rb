@@ -15,8 +15,9 @@ class Issue
 
     @raw['changelog']['histories'].each do |history|
       created = history['created']
+      author = history['author']['displayName'] || history['author']['name']
       history['items'].each do |item|
-        @changes << ChangeItem.new(raw: item, time: created)
+        @changes << ChangeItem.new(raw: item, time: created, author: author)
       end
     end
 
@@ -65,7 +66,8 @@ class Issue
       first_status = first_change.old_value
       first_status_id = first_change.old_value_id
     end
-    ChangeItem.new time: created_time, artificial: true, raw: {
+    author = @raw['fields']['creator']['displayName']
+    ChangeItem.new time: created_time, artificial: true, author: author, raw: {
       'field' => 'status',
       'to' => first_status_id.to_s,
       'toString' => first_status
