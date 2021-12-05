@@ -189,6 +189,7 @@ class HTMLReport
     </script>
     END
   end
+
 end
 
 # ======================== #
