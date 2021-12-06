@@ -14,12 +14,18 @@ class FileConfig
   def run
     instance_eval(&@block)
 
-    all_lines = prepare_grid
+    if @columns
+      all_lines = prepare_grid
 
-    File.open(output_filename, 'w') do |file|
-      all_lines.each do |output_line|
-        file.puts CSV.generate_line(output_line)
+      File.open(output_filename, 'w') do |file|
+        all_lines.each do |output_line|
+          file.puts CSV.generate_line(output_line)
+        end
       end
+    elsif @html_report
+      @html_report.run
+    else
+      raise 'Must specify one of "columns" or "html_report"'
     end
   end
 
@@ -87,9 +93,17 @@ class FileConfig
   end
 
   def columns &block
-    raise 'Can only have one columns declaration inside a file' if @columns
-
+    assert_only_one_filetype_config_set
     @columns = ColumnsConfig.new file_config: self, block: block
+  end
+
+  def html_report &block
+    assert_only_one_filetype_config_set
+    @html_report = HtmlReportConfig.new file_config: self, block: block
+  end
+
+  def assert_only_one_filetype_config_set
+    raise 'Can only have one columns or html_report declaration inside a file' if @columns || @html_report
   end
 
   def only_use_row_if &block
