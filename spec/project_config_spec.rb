@@ -90,4 +90,20 @@ describe ProjectConfig do
       expect(columns.evaluate_next_level).to eq('ProjectConfig')
     end
   end
+
+  context 'board_metadata' do
+    it 'should fail if no board id set and there are no boards' do
+      project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+
+      expect { project_config.board_metadata }.to raise_error %r{we couldn't find any configuration files}
+    end
+
+    it 'should fail if no board id set and there are multiple boards' do
+      project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      project_config.load_board_configuration(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board_configuration(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
+
+      expect { project_config.board_metadata }.to raise_error %r{following board ids and this is ambiguous}
+    end
+  end
 end

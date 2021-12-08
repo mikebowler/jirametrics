@@ -3,4 +3,8 @@
 require './spec/spec_helper'
 
 describe HtmlReportConfig do
+  context '' do
+    it '' do
+    end
+  end
 end

@@ -45,6 +45,10 @@ class Issue
 
   def summary = @raw['fields']['summary']
 
+  def status = @raw['fields']['status']['name']
+
+  def status_id = @raw['fields']['status']['id'].to_i
+
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
     if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
@@ -138,6 +142,7 @@ class Issue
     DateTime.parse @raw['fields']['created']
   end
 
+  # Change to use new cycletime_config
   def blocked_percentage started, finished
     started = started.call self
     finished = finished.call self
