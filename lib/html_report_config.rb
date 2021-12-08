@@ -32,28 +32,20 @@ class HtmlReportConfig
   def aging_work_in_progress_chart
     aging_issues = @file_config.issues.select { |issue| @cycletime.in_progress? issue }
 
-    # puts "Agin fg issues: #{ aging_issues.collect(&:key) }"
     board_metadata = @file_config.project_config.board_metadata
-    # puts board_metadata.inspect
 
     data_sets = []
-    data_sets << {
-      type: 'bar',
-      label: '85%',
-      barPercentage: 1.0,
-      categoryPercentage: 1.0,
-      data: [10, 20, 30, 40, 50, 80, 100]
-    }
     aging_issues.collect(&:type).uniq.each_with_index do |type, index|
       data_sets << {
-        'type' => 'scatter',
+        'type' => 'line',
         'label' => type,
         'data' => aging_issues
           .select { |issue| issue.type == type }
           .collect do |issue|
             age = @cycletime.age(issue)
             { 'y' => @cycletime.age(issue),
-              'x' => (column_index_for issue: issue, board_metadata: board_metadata) * 10,
+              # 'x' => (column_index_for issue: issue, board_metadata: board_metadata) * 10,
+              'x' => (column_for issue: issue, board_metadata: board_metadata).name,
               'title' => ["#{issue.key} : #{age} day#{'s' unless age == 1}", issue.summary]
             }
           end,
@@ -62,6 +54,13 @@ class HtmlReportConfig
         'backgroundColor' => %w[blue green orange yellow gray black][index]
       }
     end
+    data_sets << {
+      type: 'bar',
+      label: '85%',
+      barPercentage: 1.0,
+      categoryPercentage: 1.0,
+      data: [10, 20, 30, 40, 50, 80, 100]
+    }
 
     column_headings = board_metadata.collect(&:name)
     @sections << render(binding)
@@ -76,11 +75,9 @@ class HtmlReportConfig
     erb.result(caller_binding)
   end
 
-  def column_index_for issue:, board_metadata:
-    index = board_metadata.find_index do |board_column|
+  def column_for issue:, board_metadata:
+    board_metadata.find do |board_column|
       board_column.status_ids.include? issue.status_id
     end
-    # puts "#{issue.key}\t#{board_metadata[index].name}\t#{issue.status}\t#{index}"
-    index
   end
 end

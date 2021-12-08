@@ -5,9 +5,10 @@
 <script>
 new Chart(document.getElementById('aging_work_in_progress').getContext('2d'),
 {
+  type: 'bar',
   data: {
-    datasets: <%= JSON.generate(data_sets) %>,
-    labels: [<%= column_headings.collect(&:inspect).join(',') %>]
+    labels: [<%= column_headings.collect(&:inspect).join(',') %>],
+    datasets: <%= JSON.generate(data_sets) %>
   },
   options: {
     title: {
