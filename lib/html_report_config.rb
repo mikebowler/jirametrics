@@ -66,6 +66,33 @@ class HtmlReportConfig
     @sections << render(binding)
   end
 
+  def cycletime_scatterplot
+    cutoff = DateTime.parse('2021-06-01')
+
+    completed_issues = @file_config.issues.select { |issue| @cycletime.done? issue }
+    data_sets = []
+    completed_issues.collect(&:type).uniq.each_with_index do |type, index|
+      data_sets << {
+        'label' => type,
+        'data' => completed_issues
+          .select { |issue| issue.type == type }
+          .collect do |issue|
+            cycle_time = @cycletime.cycletime(issue)
+            puts issue.key if @cycletime.stopped_time(issue) < cutoff
+            { 'y' => cycle_time,
+              'x' => @cycletime.stopped_time(issue),
+              'title' => ["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
+            }
+          end,
+        'fill' => false,
+        'showLine' => false,
+        'backgroundColor' => %w[blue green orange yellow gray black][index]
+      }
+    end
+
+    @sections << render(binding)
+  end
+
   private
 
   def render caller_binding

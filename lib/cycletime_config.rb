@@ -30,6 +30,10 @@ class CycleTimeConfig
     started_time(issue) && stopped_time(issue).nil?
   end
 
+  def done? issue
+    stopped_time(issue)
+  end
+
   def started_time issue
     @start_at.call(issue)
   end
