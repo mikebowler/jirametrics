@@ -37,7 +37,7 @@ class InfoDumper
   end
 
   def dump issue
-    puts "#{issue.key} : #{compact_text issue.summary, 200}"
+    puts "#{issue.key} (#{issue.type}): #{compact_text issue.summary, 200}"
 
     assignee = issue.raw['fields']['assignee']
     puts "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>" unless assignee.nil?
@@ -59,15 +59,17 @@ class InfoDumper
       author = change.author
       author = "(#{author})" if author
       message = "  [change] #{change.time} [#{change.field}] "
-      message << "#{old_value.inspect} -> " unless old_value.nil? || old_value.empty?
-      message << value.inspect
+      message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
+      message << compact_text(value).inspect
       message << " #{author}" if author
       puts message
     end
     puts ''
   end
 
-  def compact_text text, max = 40
+  def compact_text text, max = 60
+    return nil if text.nil?
+
     text = text.gsub(/\s+/, ' ').strip
     text = "#{text[0..max]}..." if text.length > max
     text
