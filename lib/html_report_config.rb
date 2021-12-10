@@ -44,7 +44,6 @@ class HtmlReportConfig
           .collect do |issue|
             age = @cycletime.age(issue)
             { 'y' => @cycletime.age(issue),
-              # 'x' => (column_index_for issue: issue, board_metadata: board_metadata) * 10,
               'x' => (column_for issue: issue, board_metadata: board_metadata).name,
               'title' => ["#{issue.key} : #{age} day#{'s' unless age == 1}", issue.summary]
             }
@@ -59,7 +58,9 @@ class HtmlReportConfig
       label: '85%',
       barPercentage: 1.0,
       categoryPercentage: 1.0,
-      data: [10, 20, 30, 40, 50, 80, 100]
+      data: days_at_percentage_threshold_for_all_columns(
+        percentage: 85, issues: @file_config.issues, columns: board_metadata
+      ).drop(1)
     }
 
     column_headings = board_metadata.collect(&:name)
@@ -67,8 +68,6 @@ class HtmlReportConfig
   end
 
   def cycletime_scatterplot
-    cutoff = DateTime.parse('2021-06-01')
-
     completed_issues = @file_config.issues.select { |issue| @cycletime.done? issue }
     data_sets = []
     completed_issues.collect(&:type).uniq.each_with_index do |type, index|
@@ -78,7 +77,6 @@ class HtmlReportConfig
           .select { |issue| issue.type == type }
           .collect do |issue|
             cycle_time = @cycletime.cycletime(issue)
-            puts issue.key if @cycletime.stopped_time(issue) < cutoff
             { 'y' => cycle_time,
               'x' => @cycletime.stopped_time(issue),
               'title' => ["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
@@ -93,7 +91,42 @@ class HtmlReportConfig
     @sections << render(binding)
   end
 
-  private
+  # private
+
+  def days_at_percentage_threshold_for_all_columns percentage:, issues:, columns:
+    accumulated_status_ids = []
+    columns.reverse.collect do |column|
+      accumulated_status_ids += column.status_ids
+      day_count = date_that_percentage_of_issues_leave_statuses(
+        percentage: percentage, issues: issues, status_ids: accumulated_status_ids
+      )
+
+    end.reverse
+  end
+
+  def date_that_percentage_of_issues_leave_statuses percentage:, issues:, status_ids:
+    days_to_transition = issues.collect do |issue|
+      transition_time = issue.first_time_in_status(*status_ids)
+      if transition_time.nil?
+        # This item has never left this particular column. Exclude it from the
+        # calculation
+        nil
+      else
+        start_time = @cycletime.started_time(issue)
+        if start_time.nil?
+          # This item went straight from created to done so we can't determine the
+          # start time. Exclude this record from the calculation
+          nil
+        else
+          (transition_time - start_time).to_i + 1
+        end
+      end
+    end.compact
+    index = days_to_transition.size * percentage / 100
+    # puts '-',"status_ids=#{status_ids.inspect}"
+    # puts "index=#{index} days_to_transition=#{days_to_transition.sort.inspect}"
+    days_to_transition.sort[index.to_i]
+  end
 
   def render caller_binding
     caller_method_name = caller_locations(1, 1)[0].label
