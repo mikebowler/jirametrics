@@ -10,13 +10,6 @@ def mock_file_config
   project.status_category_mapping type: 'Story', status: 'Review', category: 'in-flight'
   project.status_category_mapping type: 'Story', status: 'Done', category: 'finished'
 
-  # project.status_category_mappings['Story'] = {
-  #   'Backlog' => 'ready',
-  #   'Selected for Development' => 'ready',
-  #   'In Progress' => 'in-flight',
-  #   'Review' => 'in-flight',
-  #   'Done' => 'finished'
-  # }
   FileConfig.new project_config: project, block: nil
 end
 
