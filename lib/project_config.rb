@@ -1,7 +1,19 @@
 # frozen_string_literal: true
 
+class Status
+  attr_reader :name, :id, :type, :category_name, :category_id, :possible_statuses
+
+  def initialize name:, id:, type:, category_name:, category_id:
+    @name = name
+    @id = id
+    @type = type
+    @category_name = category_name
+    @category_id = category_id
+  end
+end
+
 class ProjectConfig
-  attr_reader :target_path, :jira_config, :all_board_columns, :status_category_mappings,
+  attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
     :download_config, :file_configs, :exporter
 
   def initialize exporter:, target_path:, jira_config:, block:
@@ -11,7 +23,7 @@ class ProjectConfig
     @download_config = nil
     @target_path = target_path
     @jira_config = jira_config
-    @status_category_mappings = {}
+    @possible_statuses = []
     @all_board_columns = {}
   end
 
@@ -43,9 +55,15 @@ class ProjectConfig
   end
 
   def status_category_mapping type:, status:, category:
-    mappings = status_category_mappings
-    mappings[type] = {} unless mappings[type]
-    mappings[type][status] = category
+
+    status_object = @possible_statuses.find { |s| s.type == type && s.name == status }
+    if status_object.nil?
+      @possible_statuses << Status.new(name: status, id: nil, type: type, category_name: category, category_id: nil)
+      return
+    end
+
+    # TODO: Raising an exception isn't ideal. Should probably accept it if it doesn't contradict what we already know
+    raise "Status was already present: #{status}"
   end
 
   def load_all_board_configurations
@@ -64,25 +82,22 @@ class ProjectConfig
     end
   end
 
-  def category_for type:, status:, issue_id:
-    category = @status_category_mappings[type]&.[](status)
-    if category.nil?
+  def category_for type:, status_name:, issue_id:
+    status = @possible_statuses.find { |s| s.type == type && s.name == status_name }
+    if status.nil? || status.category_name.nil?
       message = "Could not determine a category for type: #{type.inspect} and" \
-        " status: #{status.inspect} on issue: #{issue_id}. If you" \
+        " status: #{status_name.inspect} on issue: #{issue_id}. If you" \
         ' specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
         ' and we still don\'t have the right mapping, which is possible, then use the' \
         ' "status_category_mapping" declaration in your config to manually add one.' \
         ' The mappings we do know about are below:'
-      @status_category_mappings.each do |issue_type, hash|
-        message << "\n  " << issue_type
-        hash.each do |issue_status, issue_category|
-          message << "\n    '#{issue_status}' => '#{issue_category}'"
-        end
+      @possible_statuses.each do |status|
+        message << "\n  Type: #{status.type.inspect}, Status: #{status.name.inspect}, Category: #{status.category_name.inspect}'"
       end
 
       raise message
     end
-    category
+    status.category_name
   end
 
   def load_status_category_mappings
@@ -93,9 +108,12 @@ class ProjectConfig
     JSON.parse(File.read(filename)).each do |type_config|
       issue_type = type_config['name']
       type_config['statuses'].each do |status_config|
-        status = status_config['name']
-        category = status_config['statusCategory']['name']
-        (@status_category_mappings[issue_type] ||= {})[status] = category
+        category_config = status_config['statusCategory']
+        @possible_statuses << Status.new(
+          type: issue_type,
+          name: status_config['name'], id: status_config['id'],
+          category_name: category_config['name'], category_id: category_config['id']
+        )
       end
     end
   end
@@ -123,5 +141,4 @@ class ProjectConfig
 
     board_columns
   end
-
 end

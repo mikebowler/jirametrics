@@ -8,14 +8,14 @@ describe ProjectConfig do
       config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'In progress'
       config.status_category_mapping type: 'Story', status: 'Done', category: 'Done'
-      expect { config.category_for type: 'Epic', status: 'Foo', issue_id: 'SP-1' }
+      expect { config.category_for type: 'Epic', status_name: 'Foo', issue_id: 'SP-1' }
         .to raise_error(/^Could not determine a category for type/)
     end
 
     it 'where mapping does exist' do
       config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'InProgress'
-      expect(config.category_for(type: 'Story', status: 'Doing', issue_id: 'SP-1')).to eql 'InProgress'
+      expect(config.category_for(type: 'Story', status_name: 'Doing', issue_id: 'SP-1')).to eql 'InProgress'
     end
   end
 
@@ -42,33 +42,36 @@ describe ProjectConfig do
     end
   end
 
-  context 'status_category_mappings' do
+  context 'possible_statuses' do
     it 'should degrade gracefully when mappings not found' do
       config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
       config.load_status_category_mappings
-      expect(config.status_category_mappings).to be_empty
+      expect(config.possible_statuses).to be_empty
     end
 
     it 'should load' do
       config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
       config.file_prefix 'sample'
       config.load_status_category_mappings
-      status_to_category = {
-        'Backlog' => 'To Do',
-        'Done' => 'Done',
-        'In Progress' => 'In Progress',
-        'Review' => 'In Progress',
-        'Selected for Development' => 'In Progress'
-      }
-      expect(config.status_category_mappings).to eq(
+
+      expected = []
+      %w[Bug Epic Story Sub-task Task].collect do |type|
         {
-          'Bug' => status_to_category,
-          'Epic' => status_to_category,
-          'Story' => status_to_category,
-          'Sub-task' => status_to_category,
-          'Task' => status_to_category
-        }
-      )
+          'Backlog' => 'To Do',
+          'Done' => 'Done',
+          'In Progress' => 'In Progress',
+          'Review' => 'In Progress',
+          'Selected for Development' => 'In Progress'
+        }.each do |status_name, category_name|
+          expected << [type, status_name, category_name]
+        end
+      end
+
+      actual = config.possible_statuses.collect do |status|
+        [status.type, status.name, status.category_name]
+      end
+
+      expect(actual.sort).to eq expected.sort
     end
   end
 

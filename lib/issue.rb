@@ -114,7 +114,7 @@ class Issue
   def still_in_status_category config, *category_names
     still_in do |change|
       # puts key
-      category = config.file_config.project_config.category_for type: type, status: change.value, issue_id: key
+      category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
       category_names.include? category
     end
   end
@@ -127,7 +127,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = config.file_config.project_config.category_for type: type, status: change.value, issue_id: key
+      category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
       return change.time if category_names.include? category
     end
     nil

@@ -4,13 +4,19 @@ require './spec/spec_helper'
 
 def mock_file_config
   project = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-  project.status_category_mappings['Story'] = {
-    'Backlog' => 'ready',
-    'Selected for Development' => 'ready',
-    'In Progress' => 'in-flight',
-    'Review' => 'in-flight',
-    'Done' => 'finished'
-  }
+  project.status_category_mapping type: 'Story', status: 'Backlog', category: 'ready'
+  project.status_category_mapping type: 'Story', status: 'Selected for Development', category: 'ready'
+  project.status_category_mapping type: 'Story', status: 'In Progress', category: 'in-flight'
+  project.status_category_mapping type: 'Story', status: 'Review', category: 'in-flight'
+  project.status_category_mapping type: 'Story', status: 'Done', category: 'finished'
+
+  # project.status_category_mappings['Story'] = {
+  #   'Backlog' => 'ready',
+  #   'Selected for Development' => 'ready',
+  #   'In Progress' => 'in-flight',
+  #   'Review' => 'in-flight',
+  #   'Done' => 'finished'
+  # }
   FileConfig.new project_config: project, block: nil
 end
 
