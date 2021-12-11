@@ -34,7 +34,12 @@ new Chart(document.getElementById('aging_work_in_progress').getContext('2d'),
       tooltip: {
         callbacks: {
           label: function(context) {
-            return context.dataset.data[context.dataIndex].title
+            if( typeof(context.dataset.data[context.dataIndex]) == "number" ) {
+              return "85% of the issues, leave this column in "+context.dataset.data[context.dataIndex]+" days";
+            }
+            else {
+              return context.dataset.data[context.dataIndex].title
+            }
           }
         }
       }

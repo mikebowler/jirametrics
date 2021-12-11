@@ -56,6 +56,7 @@ class HtmlReportConfig
     data_sets << {
       type: 'bar',
       label: '85%',
+      title: 'foo',
       barPercentage: 1.0,
       categoryPercentage: 1.0,
       data: days_at_percentage_threshold_for_all_columns(
