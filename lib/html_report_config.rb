@@ -35,7 +35,7 @@ class HtmlReportConfig
     board_metadata = @file_config.project_config.board_metadata
 
     data_sets = []
-    aging_issues.collect(&:type).uniq.each_with_index do |type, index|
+    aging_issues.collect(&:type).uniq.each_with_index do |type|
       data_sets << {
         'type' => 'line',
         'label' => type,
@@ -50,13 +50,12 @@ class HtmlReportConfig
           end,
         'fill' => false,
         'showLine' => false,
-        'backgroundColor' => %w[blue green orange yellow gray black][index]
+        'backgroundColor' => colour_for(type: type)
       }
     end
     data_sets << {
       type: 'bar',
       label: '85%',
-      title: 'foo',
       barPercentage: 1.0,
       categoryPercentage: 1.0,
       data: days_at_percentage_threshold_for_all_columns(
@@ -71,7 +70,7 @@ class HtmlReportConfig
   def cycletime_scatterplot
     completed_issues = @file_config.issues.select { |issue| @cycletime.done? issue }
     data_sets = []
-    completed_issues.collect(&:type).uniq.each_with_index do |type, index|
+    completed_issues.collect(&:type).uniq.each_with_index do |type|
       data_sets << {
         'label' => type,
         'data' => completed_issues
@@ -85,7 +84,7 @@ class HtmlReportConfig
           end,
         'fill' => false,
         'showLine' => false,
-        'backgroundColor' => %w[blue green orange yellow gray black][index]
+        'backgroundColor' => colour_for(type: type)
       }
     end
 
@@ -98,10 +97,9 @@ class HtmlReportConfig
     accumulated_status_ids = []
     columns.reverse.collect do |column|
       accumulated_status_ids += column.status_ids
-      day_count = date_that_percentage_of_issues_leave_statuses(
+      date_that_percentage_of_issues_leave_statuses(
         percentage: percentage, issues: issues, status_ids: accumulated_status_ids
       )
-
     end.reverse
   end
 
@@ -124,8 +122,6 @@ class HtmlReportConfig
       end
     end.compact
     index = days_to_transition.size * percentage / 100
-    # puts '-',"status_ids=#{status_ids.inspect}"
-    # puts "index=#{index} days_to_transition=#{days_to_transition.sort.inspect}"
     days_to_transition.sort[index.to_i]
   end
 
@@ -139,6 +135,16 @@ class HtmlReportConfig
   def column_for issue:, board_metadata:
     board_metadata.find do |board_column|
       board_column.status_ids.include? issue.status_id
+    end
+  end
+
+  def colour_for type:
+    case type.downcase
+    when 'story' then 'green'
+    when 'task' then 'blue'
+    when 'bug', 'defect' then 'orange'
+    when 'spike' then 'gray'
+    else 'black'
     end
   end
 end
