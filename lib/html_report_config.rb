@@ -110,7 +110,7 @@ class HtmlReportConfig
     data_sets = []
     data_sets << {
       'type' => 'bar',
-      'label' => 'Completed',
+      'label' => 'Completed that day',
       'data' => chart_data.collect do |time, _issues, issues_completed|
         if time >= graphable_date_range.begin && time < graphable_date_range.end
           {
@@ -184,7 +184,7 @@ class HtmlReportConfig
       {
         x: date,
         y: included_issues.size,
-        title: [label] + included_issues.collect { |i,age| "#{i.key} : #{i.summary} (#{age})" }
+        title: [label] + included_issues.collect { |i,age| "#{i.key} : #{i.summary} (#{age} days)" }
       } 
     end
   end
