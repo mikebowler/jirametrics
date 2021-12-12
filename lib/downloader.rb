@@ -15,6 +15,7 @@ class Downloader
     download_issues
     download_statuses unless @download_config.project_key.nil?
     download_board_configuration unless @download_config.board_id.nil?
+    save_metadata
   end
 
   def load_jira_config jira_config
@@ -90,5 +91,20 @@ class Downloader
     File.open(filename, 'w') do |file|
       file.write(JSON.pretty_generate(json))
     end
+  end
+
+  def save_metadata
+    date_range = @download_config.date_range
+    json = {
+      'time_start' => date_range.begin.to_datetime,
+      'time_end' => end_of_day(date_range.end.to_datetime)
+    }
+
+    file_prefix = @download_config.project_config.file_prefix
+    write_json json, "#{@target_path}#{file_prefix}_meta.json"
+  end
+
+  def end_of_day date
+    DateTime.new date.year, date.month, date.day, 23, 59, 59
   end
 end

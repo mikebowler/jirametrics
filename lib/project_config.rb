@@ -14,7 +14,7 @@ end
 
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
-    :download_config, :file_configs, :exporter
+    :download_config, :file_configs, :exporter, :date_range
 
   def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
@@ -32,6 +32,7 @@ class ProjectConfig
   end
 
   def run
+    load_project_metadata
     load_all_board_configurations
     load_status_category_mappings
     @file_configs.each do |file_config|
@@ -116,6 +117,12 @@ class ProjectConfig
         )
       end
     end
+  end
+
+  def load_project_metadata
+    filename = "#{@target_path}/#{file_prefix}_meta.json"
+    json = JSON.parse(File.read(filename))
+    @date_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
   end
 
   def board_metadata board_id: nil

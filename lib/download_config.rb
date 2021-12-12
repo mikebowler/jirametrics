@@ -3,7 +3,7 @@
 require 'date'
 
 class DownloadConfig
-  attr_reader :project_config
+  attr_reader :project_config, :date_range
   attr_writer :jql
 
   def initialize project_config:, block:
@@ -23,6 +23,8 @@ class DownloadConfig
     segments << "filter=#{@filter_name.inspect}" unless @filter_name.nil?
     unless @rolling_date_count.nil?
       start_date = today - @rolling_date_count
+      @date_range = (start_date..today)
+
       status_changed_jql =
         %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'}"))
       segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))

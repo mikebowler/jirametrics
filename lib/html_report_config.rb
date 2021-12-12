@@ -105,18 +105,20 @@ class HtmlReportConfig
       end
     end
 
-    today = Date.today
-    graphable_date_range = (today - 90..today)
+    date_range = @file_config.project_config.date_range
+    date_range = (date_range.begin.to_date..date_range.end.to_date)
+    puts "Date range=#{date_range}"
+
     data_sets = []
     data_sets << {
       'type' => 'bar',
       'label' => 'Completed that day',
       'data' => chart_data.collect do |time, _issues, issues_completed|
-        if time >= graphable_date_range.begin && time < graphable_date_range.end
+        if time >= date_range.begin && time < date_range.end
           {
             x: time,
             y: -issues_completed.size,
-            title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }
+            title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
           }
         else
           nil
@@ -124,68 +126,48 @@ class HtmlReportConfig
       end.compact,
       backgroundColor: 'green'
     }
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'More than four weeks',
-      'data' => foo_data_set(chart_data: chart_data, min_age: 29, max_age: nil, label: 'More than four weeks'),
-      'backgroundColor' => 'red'
-    }
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Less than four weeks',
-      'data' => foo_data_set(chart_data: chart_data, min_age: 14, max_age: 28, label: 'Less than four weeks'),
-      'backgroundColor' => 'purple'
-    }
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Less than two weeks',
-      'data' => foo_data_set(chart_data: chart_data, min_age: 0, max_age: 3, label: 'Less than two weeks'),
-      'backgroundColor' => 'brown'
-    }
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Less than a week',
-      'data' => foo_data_set(chart_data: chart_data, min_age: 3, max_age: 8, label: 'Less than a week'),
-      'backgroundColor' => 'gray'
-    }
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Less than two days',
-      'data' => foo_data_set(chart_data: chart_data, min_age: 0, max_age: 3, label: 'Less than two days'),
-      'backgroundColor' => 'lightgray'
-    }
+
+    [
+      [29..nil, 'red', 'More than four weeks'],
+      [15..28, 'purple', 'Four weeks or less'],
+      [8..14, 'brown', 'Two weeks or less'],
+      [2..7, 'gray', 'A week or less'],
+      [nil..1, 'lightgray', 'New today'],
+    ].each do |age_range, color, label|
+      data_sets << {
+        'type' => 'bar',
+        'label' => label,
+        'data' => dataset_by_age(
+          chart_data: chart_data, age_range: age_range, date_range: date_range, label: label
+        ),
+        'backgroundColor' => color
+      }
+    end
+
     @sections << render(binding)
   end
 
-  def foo_data_set chart_data:, min_age:, max_age:, label:
+  def dataset_by_age chart_data:, age_range:, date_range:, label:
     # chart_data is a list of [time, issues, issues_completed] groupings
 
-    today = Date.today
-    graphable_date_range = (today - 90..today)
-    chart_start_date = graphable_date_range.begin
-    chart_end_date = graphable_date_range.end
-    # chart_end_date = Date.today
-    # chart_start_date = chart_end_date - 90 #chart_data.first.first.to_date
-    data = [chart_start_date, [], []]
-    chart_start_date.upto(chart_end_date).collect do |date|
+    data = [date_range.begin, [], []]
+    date_range.collect do |date|
       # Not all days have data. For days that don't, use the previous days data
       data = chart_data.find { |a| a.first == date } || data
-      time, issues, _issues_completed = *data
+      _change_time, issues, _issues_completed = *data
 
       included_issues = issues.collect do |issue|
-        age = (time - @cycletime.started_time(issue)).to_i + 1
-        if age >= min_age && (max_age.nil? || age < max_age)
-          [issue, age]
-        else
-          nil
-        end
+        age = (date - @cycletime.started_time(issue).to_date).to_i + 1
+        [issue, age] if age_range.include? age
       end.compact
 
       {
         x: date,
         y: included_issues.size,
-        title: [label] + included_issues.collect { |i,age| "#{i.key} : #{i.summary} (#{age} days)" }
-      } 
+        title: [label] + included_issues.collect do |i, age|
+          "#{i.key} : #{i.summary} (#{age} day#{'s' unless age == 1})"
+        end
+      }
     end
   end
 
