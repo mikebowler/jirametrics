@@ -125,11 +125,11 @@ class HtmlReportConfig
     }
 
     [
-      [29..nil, '#00264d', 'More than four weeks'],
-      [15..28, '#0059b3', 'Four weeks or less'],
-      [8..14, '#1a8cff', 'Two weeks or less'],
+      [29..nil, '#990000', 'More than four weeks'],
+      [15..28, '#ce6300', 'Four weeks or less'],
+      [8..14, '#ffd700', 'Two weeks or less'],
       [2..7, '#80bfff', 'A week or less'],
-      [nil..1, '#b3d9ff', 'New today']
+      [nil..1, '#aaaaaa', 'New today']
     ].each do |age_range, color, label|
       data_sets << {
         'type' => 'bar',
