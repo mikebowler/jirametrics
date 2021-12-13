@@ -12,6 +12,7 @@ class Downloader
 
   def run
     load_jira_config(@download_config.project_config.jira_config)
+    remove_old_files
     download_issues
     download_statuses unless @download_config.project_key.nil?
     download_board_configuration unless @download_config.board_id.nil?
@@ -106,5 +107,14 @@ class Downloader
 
   def end_of_day date
     DateTime.new date.year, date.month, date.day, 23, 59, 59
+  end
+
+  def remove_old_files
+    file_prefix = @download_config.project_config.file_prefix
+    Dir.foreach @target_path do |file|
+      next unless file.start_with? file_prefix
+
+      File.unlink "#{@target_path}#{file}"
+    end
   end
 end
