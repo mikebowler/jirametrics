@@ -30,7 +30,7 @@ class InfoDumper
     Dir.foreach(target_path) do |filename|
       if filename =~ /#{file_prefix}_\d+\.json/
         content = JSON.parse File.read("#{target_path}#{filename}")
-        content['issues'].each { |issue| issues << Issue.new(issue) }
+        content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: '-05:00') }
       end
     end
     issues
