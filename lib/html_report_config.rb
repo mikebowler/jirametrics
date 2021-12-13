@@ -147,11 +147,18 @@ class HtmlReportConfig
   def dataset_by_age chart_data:, age_range:, date_range:, label:
     # chart_data is a list of [time, issues, issues_completed] groupings
 
+    # Default values in case the first day doesn't have real data.
+    issues_completed = []
     data = [date_range.begin, [], []]
+    issues = nil
+
     date_range.collect do |date|
-      # Not all days have data. For days that don't, use the previous days data
-      data = chart_data.find { |a| a.first == date } || data
-      _change_time, issues, _issues_completed = *data
+      data = chart_data.find { |a| a.first == date }
+
+      # Not all days have data. For days that don't, use the previous days
+      # data minus the completed work
+      data = nil, issues - issues_completed, [] if data.nil?
+      _change_time, issues, issues_completed = *data
 
       included_issues = issues.collect do |issue|
         age = (date - @cycletime.started_time(issue).to_date).to_i + 1
