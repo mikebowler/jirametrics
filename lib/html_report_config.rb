@@ -120,7 +120,7 @@ class HtmlReportConfig
           title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
         }
       end.compact,
-      'backgroundColor' => '009900',
+      'backgroundColor' => '#009900',
       'borderRadius' => '5'
     }
 
@@ -148,9 +148,9 @@ class HtmlReportConfig
     # chart_data is a list of [time, issues, issues_completed] groupings
 
     # Default values in case the first day doesn't have real data.
+    issues = []
     issues_completed = []
     data = [date_range.begin, [], []]
-    issues = nil
 
     date_range.collect do |date|
       data = chart_data.find { |a| a.first == date }
