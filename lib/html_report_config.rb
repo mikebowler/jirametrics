@@ -120,16 +120,16 @@ class HtmlReportConfig
           title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
         }
       end.compact,
-      'backgroundColor' => 'green',
+      'backgroundColor' => '009900',
       'borderRadius' => '5'
     }
 
     [
-      [29..nil, '#1a0900', 'More than four weeks'],
-      [15..28, '#802b00', 'Four weeks or less'],
-      [8..14, '#e64d00', 'Two weeks or less'],
-      [2..7, '#ff884d', 'A week or less'],
-      [nil..1, '#ffbb99', 'New today']
+      [29..nil, '#00264d', 'More than four weeks'],
+      [15..28, '#0059b3', 'Four weeks or less'],
+      [8..14, '#1a8cff', 'Two weeks or less'],
+      [2..7, '#80bfff', 'A week or less'],
+      [nil..1, '#b3d9ff', 'New today']
     ].each do |age_range, color, label|
       data_sets << {
         'type' => 'bar',
