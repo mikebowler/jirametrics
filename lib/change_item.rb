@@ -6,7 +6,8 @@ class ChangeItem
   def initialize raw:, time:, author:, artificial: false
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
-    @time = DateTime.parse(time)
+    @time = time
+    raise "time must be a DateTime in the correct timezone" if @time.is_a? String
     @field = field || @raw['field']
     @value = value || @raw['toString']
     @value_id = @raw['to'].to_i

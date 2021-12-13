@@ -3,8 +3,9 @@
 class Issue
   attr_reader :changes, :raw
 
-  def initialize raw_data
-    @raw = raw_data
+  def initialize raw:, timezone_offset: '00:00'
+    @raw = raw
+    @timezone_offset = timezone_offset
     @changes = []
 
     if @raw['changelog'].nil?
@@ -14,7 +15,7 @@ class Issue
     end
 
     @raw['changelog']['histories'].each do |history|
-      created = history['created']
+      created = parse_datetime(history['created'])
       author = history['author']['displayName'] || history['author']['name']
       history['items'].each do |item|
         @changes << ChangeItem.new(raw: item, time: created, author: author)
@@ -59,7 +60,7 @@ class Issue
   end
 
   def create_fake_change_for_creation existing_changes
-    created_time = @raw['fields']['created']
+    created_time = parse_datetime @raw['fields']['created']
     first_change = existing_changes.find { |change| change.status? }
     if first_change.nil?
       # There have been no status changes yet so we have to look at the current status
@@ -113,7 +114,6 @@ class Issue
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category config, *category_names
     still_in do |change|
-      # puts key
       category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
       category_names.include? category
     end
@@ -138,8 +138,12 @@ class Issue
     created
   end
 
+  def parse_datetime text
+    DateTime.parse(text).new_offset @timezone_offset
+  end
+
   def created
-    DateTime.parse @raw['fields']['created']
+    parse_datetime @raw['fields']['created']
   end
 
   # Change to use new cycletime_config

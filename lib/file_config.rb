@@ -79,11 +79,12 @@ class FileConfig
 
   def issues
     unless @issues
+      timezone_offset = @project_config.exporter.timezone_offset
       issues = []
       Dir.foreach(@project_config.target_path) do |filename|
         if filename =~ /#{@project_config.file_prefix}_\d+\.json/
           content = JSON.parse File.read("#{@project_config.target_path}#{filename}")
-          content['issues'].each { |issue| issues << Issue.new(issue) }
+          content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
         end
       end
       @issues = issues

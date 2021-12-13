@@ -15,6 +15,7 @@ def mock_config
 end
 
 def mock_change field:, value:, time:
+  time = DateTime.parse(time).new_offset("00:00")
   ChangeItem.new time: time, author: 'Tolkien', raw: {
     'field' => field,
     'to' => 2,
@@ -24,7 +25,7 @@ end
 
 def empty_issue created:
   Issue.new(
-    {
+    raw: {
       'key' => 'SP-1',
       'changelog' => { 'histories' => [] },
       'fields' => {
@@ -92,7 +93,7 @@ describe Issue do
 
   it "should give a reasonable error if the changelog isn't present" do
     raw = {  'key' => 'SP-1' }
-    expect { Issue.new raw }.to raise_error(/^No changelog found in issue/)
+    expect { Issue.new raw: raw }.to raise_error(/^No changelog found in issue/)
   end
 
   it 'first time in status' do
@@ -125,7 +126,7 @@ describe Issue do
         }
       }
     }
-    issue = Issue.new raw
+    issue = Issue.new raw: raw
     expect(issue.first_time_not_in_status('BrandNew!')).to be_nil
   end
 
@@ -165,7 +166,7 @@ describe Issue do
 
       }
     }
-    issue = Issue.new raw
+    issue = Issue.new raw: raw
     expect(issue.first_status_change_after_created).to be_nil
   end
 

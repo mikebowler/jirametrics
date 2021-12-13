@@ -81,20 +81,19 @@ class HtmlReportConfig
 
     chart_data = []
 
-    days_issues = []
+    # days_issues = []
     days_issues_completed = []
     list.sort! { |a, b| a.first <=> b.first }
     current_date = list.first.first.to_date
     list.each do |time, action, issue|
       new_date = time.to_date
       unless new_date == current_date
-        chart_data << [current_date, days_issues.uniq, days_issues_completed]
-        days_issues = []
+        all_issues_active_today = (active_issues.dup + days_issues_completed).uniq(&:key).sort {|a,b| a.key<=>b.key}
+        chart_data << [current_date, all_issues_active_today, days_issues_completed]
         days_issues_completed = []
         current_date = new_date
       end
 
-      days_issues << issue
       if action == 'start'
         active_issues << issue
       elsif action == 'stop'
@@ -107,24 +106,22 @@ class HtmlReportConfig
 
     date_range = @file_config.project_config.date_range
     date_range = (date_range.begin.to_date..date_range.end.to_date)
-    puts "Date range=#{date_range}"
 
     data_sets = []
     data_sets << {
       'type' => 'bar',
       'label' => 'Completed that day',
       'data' => chart_data.collect do |time, _issues, issues_completed|
-        if time >= date_range.begin && time < date_range.end
-          {
-            x: time,
-            y: -issues_completed.size,
-            title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
-          }
-        else
-          nil
-        end
+        next unless date_range.include? time.to_date
+
+        {
+          x: time,
+          y: -issues_completed.size,
+          title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
+        }
       end.compact,
-      backgroundColor: 'green'
+      'backgroundColor' => 'green',
+      'borderRadius' => '5'
     }
 
     [
@@ -132,7 +129,7 @@ class HtmlReportConfig
       [15..28, 'purple', 'Four weeks or less'],
       [8..14, 'brown', 'Two weeks or less'],
       [2..7, 'gray', 'A week or less'],
-      [nil..1, 'lightgray', 'New today'],
+      [nil..1, 'lightgray', 'New today']
     ].each do |age_range, color, label|
       data_sets << {
         'type' => 'bar',

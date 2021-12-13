@@ -13,7 +13,7 @@ class Exporter
 
   def initialize
     @project_configs = []
-    # @target_path = 'target/'
+    @timezone_offset = '00:00'
   end
 
   def export
@@ -54,5 +54,10 @@ class Exporter
   def jira_config filename = nil
     @jira_config = JsonFileLoader.new.load(filename) unless filename.nil?
     @jira_config
+  end
+
+  def timezone_offset offset = nil
+    @timezone_offset = offset unless offset.nil?
+    @timezone_offset
   end
 end

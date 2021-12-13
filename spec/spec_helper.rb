@@ -17,5 +17,5 @@ def make_test_filename basename
 end
 
 def load_issue key
-  Issue.new(JSON.parse(File.read("spec/testdata/#{key}.json")))
+  Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")))
 end
