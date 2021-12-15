@@ -1,0 +1,47 @@
+<h1>Throughput Chart</h1>
+<div>This chart shows how many items we completed per unit of time</div>
+<div>
+  <canvas id="throughput_chart" width="800" height="200"></canvas>
+</div>
+<script>
+new Chart(document.getElementById('throughput_chart').getContext('2d'), {
+  type: 'scatter',
+  data: {
+    datasets: <%= JSON.generate(data_sets) %>
+  },
+  options: {
+    title: {
+      display: true,
+      text:    "Throughput Chart"
+    },
+    responsive: true, // If responsive is true then it fills the screen
+    scales: {
+      x: {
+        type: "time",
+        time: {
+            format: 'YYYY-MM-DD'
+        },
+        scaleLabel: {
+          display: true,
+          labelString: 'Date Completed'
+        }
+      },
+      y: {
+        scaleLabel: {
+          display: true,
+          labelString: 'Work items count'
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.data[context.dataIndex].title
+          }
+        }
+      }
+    }
+  }
+});
+</script>

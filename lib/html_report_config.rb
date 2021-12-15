@@ -52,4 +52,12 @@ class HtmlReportConfig
     chart.date_range = @file_config.project_config.date_range
     @sections << chart.run
   end
+
+  def throughput_chart
+    chart = ThroughputChart.new
+    chart.issues = @file_config.issues
+    chart.cycletimes = [@cycletime]
+    chart.date_range = @file_config.project_config.date_range
+    @sections << chart.run
+  end
 end

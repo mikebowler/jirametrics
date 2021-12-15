@@ -12,11 +12,6 @@ def newTotalWipOverTimeChart
   chart
 end
 
-def load_complete_sample_issues
-  json = JSON.parse File.read('spec/complete_sample/sample_0.json')
-  json['issues'].collect { |raw| Issue.new raw: raw }
-end
-
 describe TotalWipOverTimeChart do
   context 'make_start_stop_sequence_for_issues' do
     it 'should handle no issues' do
