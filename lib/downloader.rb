@@ -12,6 +12,7 @@ class Downloader
 
   def run
     load_jira_config(@download_config.project_config.jira_config)
+
     remove_old_files
     download_issues
     download_statuses unless @download_config.project_key.nil?

@@ -26,7 +26,7 @@ class DownloadConfig
       @date_range = (start_date..today)
 
       status_changed_jql =
-        %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'}"))
+        %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
       segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))
     end
     segments << @jql unless @jql.nil?
