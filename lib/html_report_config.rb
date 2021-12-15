@@ -3,7 +3,7 @@
 require 'erb'
 require './lib/self_or_issue_dispatcher'
 
-class HtmlReportConfig 
+class HtmlReportConfig
   include SelfOrIssueDispatcher
 
   attr_reader :file_config
@@ -17,6 +17,7 @@ class HtmlReportConfig
 
   def cycletime label = nil, &block
     raise 'Multiple cycletimes not supported yet' if @cycletime
+
     @cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
   end
 
@@ -30,66 +31,18 @@ class HtmlReportConfig
   end
 
   def aging_work_in_progress_chart
-    aging_issues = @file_config.issues.select { |issue| @cycletime.in_progress? issue }
-
-    board_metadata = @file_config.project_config.board_metadata
-
-    data_sets = []
-    aging_issues.collect(&:type).uniq.each_with_index do |type|
-      data_sets << {
-        'type' => 'line',
-        'label' => type,
-        'data' => aging_issues
-          .select { |issue| issue.type == type }
-          .collect do |issue|
-            age = @cycletime.age(issue)
-            { 'y' => @cycletime.age(issue),
-              'x' => (column_for issue: issue, board_metadata: board_metadata).name,
-              'title' => ["#{issue.key} : #{age} day#{'s' unless age == 1}", issue.summary]
-            }
-          end,
-        'fill' => false,
-        'showLine' => false,
-        'backgroundColor' => colour_for(type: type)
-      }
-    end
-    data_sets << {
-      type: 'bar',
-      label: '85%',
-      barPercentage: 1.0,
-      categoryPercentage: 1.0,
-      data: days_at_percentage_threshold_for_all_columns(
-        percentage: 85, issues: @file_config.issues, columns: board_metadata
-      ).drop(1)
-    }
-
-    column_headings = board_metadata.collect(&:name)
-    @sections << render(binding)
+    chart = AgingWorkInProgressChart.new
+    chart.issues = @file_config.issues
+    chart.board_metadata = @file_config.project_config.board_metadata
+    chart.cycletime = @cycletime
+    @sections << chart.run
   end
 
-
   def cycletime_scatterplot
-    completed_issues = @file_config.issues.select { |issue| @cycletime.done? issue }
-    data_sets = []
-    completed_issues.collect(&:type).uniq.each_with_index do |type|
-      data_sets << {
-        'label' => type,
-        'data' => completed_issues
-          .select { |issue| issue.type == type }
-          .collect do |issue|
-            cycle_time = @cycletime.cycletime(issue)
-            { 'y' => cycle_time,
-              'x' => @cycletime.stopped_time(issue),
-              'title' => ["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
-            }
-          end,
-        'fill' => false,
-        'showLine' => false,
-        'backgroundColor' => colour_for(type: type)
-      }
-    end
-
-    @sections << render(binding)
+    chart = CycletimeScatterplot.new
+    chart.issues = @file_config.issues
+    chart.cycletime = @cycletime
+    @sections << chart.run
   end
 
   def total_wip_over_time_chart
@@ -98,68 +51,5 @@ class HtmlReportConfig
     chart.cycletime = @cycletime
     chart.date_range = @file_config.project_config.date_range
     @sections << chart.run
-  end
-
-
-  # def render_chart chart
-  #   chart.erb_template = caller_locations(1, 1)[0].label
-  #   chart.run
-  # end
-
-  # private
-
-  def days_at_percentage_threshold_for_all_columns percentage:, issues:, columns:
-    accumulated_status_ids = []
-    columns.reverse.collect do |column|
-      accumulated_status_ids += column.status_ids
-      date_that_percentage_of_issues_leave_statuses(
-        percentage: percentage, issues: issues, status_ids: accumulated_status_ids
-      )
-    end.reverse
-  end
-
-  def date_that_percentage_of_issues_leave_statuses percentage:, issues:, status_ids:
-    days_to_transition = issues.collect do |issue|
-      transition_time = issue.first_time_in_status(*status_ids)
-      if transition_time.nil?
-        # This item has never left this particular column. Exclude it from the
-        # calculation
-        nil
-      else
-        start_time = @cycletime.started_time(issue)
-        if start_time.nil?
-          # This item went straight from created to done so we can't determine the
-          # start time. Exclude this record from the calculation
-          nil
-        else
-          (transition_time - start_time).to_i + 1
-        end
-      end
-    end.compact
-    index = days_to_transition.size * percentage / 100
-    days_to_transition.sort[index.to_i]
-  end
-
-  def render caller_binding
-    caller_method_name = caller_locations(1, 1)[0].label
-
-    erb = ERB.new File.read "html/#{caller_method_name}.erb"
-    erb.result(caller_binding)
-  end
-
-  def column_for issue:, board_metadata:
-    board_metadata.find do |board_column|
-      board_column.status_ids.include? issue.status_id
-    end
-  end
-
-  def colour_for type:
-    case type.downcase
-    when 'story' then 'green'
-    when 'task' then 'blue'
-    when 'bug', 'defect' then 'orange'
-    when 'spike' then 'gray'
-    else 'black'
-    end
   end
 end

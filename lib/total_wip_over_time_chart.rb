@@ -1,16 +1,9 @@
+# frozen_string_literal: true
+
 require 'pathname'
 
-class TotalWipOverTimeChart
+class TotalWipOverTimeChart < ChartBase
   attr_accessor :issues, :cycletime, :date_range
-
-  # Extract this to superclass when it's all working.
-  def render caller_binding
-    basename = Pathname.new(File.realpath(__FILE__)).basename.to_s
-    raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
-
-    erb = ERB.new File.read "html/#{$1}.erb"
-    erb.result(caller_binding)
-  end
 
   # Returns a list of tuples [time, action(start or stop), issue] in sorted order
   def make_start_stop_sequence_for_issues
@@ -26,33 +19,43 @@ class TotalWipOverTimeChart
     list.sort { |a, b| a.first <=> b.first }
   end
 
-  def run
-    list = make_start_stop_sequence_for_issues
+  def make_chart_data issue_start_stops:
+    # chart_data is a list of [date, issues, issues_completed] groupings
+    return [] if issue_start_stops.empty?
+
     active_issues = []
-
     chart_data = []
-
-    # days_issues = []
     days_issues_completed = []
-    current_date = list.first.first.to_date
-    list.each do |time, action, issue|
+
+    current_date = issue_start_stops.first.first.to_date
+    issue_start_stops.each do |time, action, issue|
       new_date = time.to_date
       unless new_date == current_date
-        all_issues_active_today = (active_issues.dup + days_issues_completed).uniq(&:key).sort {|a,b| a.key<=>b.key}
+        all_issues_active_today = (active_issues.dup + days_issues_completed).uniq(&:key).sort_by(&:key)
         chart_data << [current_date, all_issues_active_today, days_issues_completed]
         days_issues_completed = []
         current_date = new_date
       end
 
-      if action == 'start'
+      case action
+      when 'start'
         active_issues << issue
-      elsif action == 'stop'
+      when 'stop'
         active_issues.delete(issue)
         days_issues_completed << issue
       else
         raise "Unexpected action #{action}"
       end
     end
+
+    all_issues_active_today = (active_issues.dup + days_issues_completed).uniq(&:key).sort_by(&:key)
+    chart_data << [current_date, all_issues_active_today, days_issues_completed]
+
+    chart_data
+  end
+
+  def run
+    chart_data = make_chart_data issue_start_stops: make_start_stop_sequence_for_issues
 
     date_range = @date_range
     date_range = (date_range.begin.to_date..date_range.end.to_date)
@@ -91,7 +94,7 @@ class TotalWipOverTimeChart
       }
     end
 
-    render(binding)
+    render(binding, __FILE__)
   end
 
   def chart_data_starting_entry chart_data:, date:
