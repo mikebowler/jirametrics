@@ -23,7 +23,7 @@ class TotalWipOverTimeChart
       list << [started, 'start', issue]
       list << [@cycletime.stopped_time(issue), 'stop', issue] unless stopped.nil?
     end
-    list.sort { |a, b| puts "a=#{a.first.class} b=#{b.first.class}"; a.first <=> b.first }
+    list.sort { |a, b| a.first <=> b.first }
   end
 
   def run

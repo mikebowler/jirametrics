@@ -38,5 +38,29 @@ describe TotalWipOverTimeChart do
         [issue.created, 'start', issue]
       ]
     end
+
+    it 'should handle one issue that is not even started' do
+      chart = TotalWipOverTimeChart.new
+      block = lambda do |_|
+        start_at last_resolution # Will be nil since the actual story hasn't finished.
+        stop_at last_resolution
+      end
+      chart.cycletime = CycleTimeConfig.new parent_config: nil, label: nil, block: block
+      chart.issues = [load_issue('SP-1')]
+      expect(chart.make_start_stop_sequence_for_issues).to be_empty
+    end
+
+    it 'should sort items correctly' do
+      chart = newTotalWipOverTimeChart
+      issue1 = load_issue 'SP-1'
+      issue2 = load_issue 'SP-10'
+
+      chart.issues = [issue2, issue1]
+      expect(chart.make_start_stop_sequence_for_issues).to eq [
+        [issue1.created, 'start', issue1],
+        [issue2.created, 'start', issue2],
+        [issue2.last_resolution, 'stop', issue2]
+      ]
+    end
   end
 end
