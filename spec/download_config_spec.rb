@@ -14,7 +14,7 @@ describe DownloadConfig do
       download_config = DownloadConfig.new project_config: nil, block: nil
       download_config.rolling_date_count 90
       today = DateTime.parse('2021-08-01')
-      expected = '((status changed AND resolved = null) OR (status changed DURING ("2021-05-03 00:00","2021-08-01")))'
+      expected = '((status changed AND resolved = null) OR (status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")))'
       expect(download_config.jql(today: today)).to eql expected
     end
 
