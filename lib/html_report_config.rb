@@ -67,113 +67,6 @@ class HtmlReportConfig
     @sections << render(binding)
   end
 
-  def total_wip_over_time_chart
-    list = []
-    active_issues = []
-    @file_config.issues.each do |issue|
-      started = @cycletime.started_time(issue)
-      stopped = @cycletime.stopped_time(issue)
-      next unless started
-
-      list << [started, 'start', issue]
-      list << [@cycletime.stopped_time(issue), 'stop', issue] unless stopped.nil?
-    end
-
-    chart_data = []
-
-    # days_issues = []
-    days_issues_completed = []
-    list.sort! { |a, b| a.first <=> b.first }
-    current_date = list.first.first.to_date
-    list.each do |time, action, issue|
-      new_date = time.to_date
-      unless new_date == current_date
-        all_issues_active_today = (active_issues.dup + days_issues_completed).uniq(&:key).sort {|a,b| a.key<=>b.key}
-        chart_data << [current_date, all_issues_active_today, days_issues_completed]
-        days_issues_completed = []
-        current_date = new_date
-      end
-
-      if action == 'start'
-        active_issues << issue
-      elsif action == 'stop'
-        active_issues.delete(issue)
-        days_issues_completed << issue
-      else
-        raise "Unexpected action #{action}"
-      end
-    end
-
-    date_range = @file_config.project_config.date_range
-    date_range = (date_range.begin.to_date..date_range.end.to_date)
-
-    data_sets = []
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Completed that day',
-      'data' => chart_data.collect do |time, _issues, issues_completed|
-        next unless date_range.include? time.to_date
-
-        {
-          x: time,
-          y: -issues_completed.size,
-          title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
-        }
-      end.compact,
-      'backgroundColor' => '#009900',
-      'borderRadius' => '5'
-    }
-
-    [
-      [29..nil, '#990000', 'More than four weeks'],
-      [15..28, '#ce6300', 'Four weeks or less'],
-      [8..14, '#ffd700', 'Two weeks or less'],
-      [2..7, '#80bfff', 'A week or less'],
-      [nil..1, '#aaaaaa', 'New today']
-    ].each do |age_range, color, label|
-      data_sets << {
-        'type' => 'bar',
-        'label' => label,
-        'data' => dataset_by_age(
-          chart_data: chart_data, age_range: age_range, date_range: date_range, label: label
-        ),
-        'backgroundColor' => color
-      }
-    end
-
-    @sections << render(binding)
-  end
-
-  def dataset_by_age chart_data:, age_range:, date_range:, label:
-    # chart_data is a list of [time, issues, issues_completed] groupings
-
-    # Default values in case the first day doesn't have real data.
-    issues = []
-    issues_completed = []
-    data = [date_range.begin, [], []]
-
-    date_range.collect do |date|
-      data = chart_data.find { |a| a.first == date }
-
-      # Not all days have data. For days that don't, use the previous days
-      # data minus the completed work
-      data = nil, issues - issues_completed, [] if data.nil?
-      _change_time, issues, issues_completed = *data
-
-      included_issues = issues.collect do |issue|
-        age = (date - @cycletime.started_time(issue).to_date).to_i + 1
-        [issue, age] if age_range.include? age
-      end.compact
-
-      {
-        x: date,
-        y: included_issues.size,
-        title: [label] + included_issues.collect do |i, age|
-          "#{i.key} : #{i.summary} (#{age} day#{'s' unless age == 1})"
-        end
-      }
-    end
-  end
 
   def cycletime_scatterplot
     completed_issues = @file_config.issues.select { |issue| @cycletime.done? issue }
@@ -198,6 +91,20 @@ class HtmlReportConfig
 
     @sections << render(binding)
   end
+
+  def total_wip_over_time_chart
+    chart = TotalWipOverTimeChart.new
+    chart.issues = @file_config.issues
+    chart.cycletime = @cycletime
+    chart.date_range = @file_config.project_config.date_range
+    @sections << chart.run
+  end
+
+
+  # def render_chart chart
+  #   chart.erb_template = caller_locations(1, 1)[0].label
+  #   chart.run
+  # end
 
   # private
 
