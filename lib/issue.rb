@@ -146,6 +146,14 @@ class Issue
     parse_datetime @raw['fields']['created']
   end
 
+  def first_resolution
+    @changes.find { |change| change.resolution? }&.time
+  end
+
+  def last_resolution
+    @changes.reverse.find { |change| change.resolution? }&.time
+  end
+
   # Change to use new cycletime_config
   def blocked_percentage started, finished
     started = started.call self
