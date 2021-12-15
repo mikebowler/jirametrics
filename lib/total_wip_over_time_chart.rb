@@ -12,9 +12,9 @@ class TotalWipOverTimeChart
     erb.result(caller_binding)
   end
 
-  def run
+  # Returns a list of tuples [time, action(start or stop), issue] in sorted order
+  def make_start_stop_sequence_for_issues
     list = []
-    active_issues = []
     @issues.each do |issue|
       started = @cycletime.started_time(issue)
       stopped = @cycletime.stopped_time(issue)
@@ -23,12 +23,17 @@ class TotalWipOverTimeChart
       list << [started, 'start', issue]
       list << [@cycletime.stopped_time(issue), 'stop', issue] unless stopped.nil?
     end
+    list.sort { |a, b| puts "a=#{a.first.class} b=#{b.first.class}"; a.first <=> b.first }
+  end
+
+  def run
+    list = make_start_stop_sequence_for_issues
+    active_issues = []
 
     chart_data = []
 
     # days_issues = []
     days_issues_completed = []
-    list.sort! { |a, b| a.first <=> b.first }
     current_date = list.first.first.to_date
     list.each do |time, action, issue|
       new_date = time.to_date
