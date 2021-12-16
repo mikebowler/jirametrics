@@ -4,10 +4,9 @@ class ThroughputChart < ChartBase
   attr_accessor :issues, :cycletime, :date_range
 
   def run
-    time_periods = calculate_time_periods
     data_sets = []
-    data_sets << daily_throughput_dataset(color: 'gray')
-    data_sets << weekly_throughput_dataset(periods: time_periods, color: 'black')
+    data_sets << weekly_throughput_dataset
+    data_sets << daily_throughput_dataset
 
     render(binding, __FILE__)
   end
@@ -31,34 +30,31 @@ class ThroughputChart < ChartBase
     end
   end
 
-  def closed_issues
-    closed_issues = @issues.collect do |issue|
-      stop_date = cycletime.stopped_time(issue)&.to_date
-      [stop_date, issue] unless stop_date.nil?
-    end.compact
-    closed_issues.sort_by(&:first)
+  def daily_throughput_dataset
+    {
+      'label' => 'Daily throughput',
+      'data' => throughput_dataset(periods: date_range.collect { |date| date..date }),
+      'fill' => false,
+      'showLine' => true,
+      'lineTension' => 0.4,
+      'backgroundColor' => 'gray'
+    }
   end
 
-  def daily_throughput_dataset color:
-    hash = closed_issues.group_by(&:first)
-    data = @date_range.collect do |date|
-      next unless hash.has_key? date
-      { 'y' => hash[date].size,
-        'x' => hash[date].first.first,
-        'title' => hash[date].collect {|stop_date, issue| "#{issue.key} : #{issue.summary}"} #'asdf' #["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
-      }
-    end.compact
-      {
-        'label' => 'Daily throughput',
-        'data' => data,
-        'fill' => false,
-        'showLine' => false,
-        'backgroundColor' => color
-      }
+  def weekly_throughput_dataset
+    {
+      'label' => 'Weekly throughput',
+      'data' => throughput_dataset(periods: calculate_time_periods),
+      'fill' => false,
+      'showLine' => true,
+      'borderColor' => 'blue',
+      'lineTension' => 0.4,
+      'backgroundColor' => 'blue'
+    }
   end
 
-  def weekly_throughput_dataset periods:, color:
-    data = periods.collect do |period|
+  def throughput_dataset periods:
+    periods.collect do |period|
       closed_issues = @issues.collect do |issue|
         stop_date = cycletime.stopped_time(issue)&.to_date
         [stop_date, issue] if stop_date && period.include?(stop_date)
@@ -66,16 +62,8 @@ class ThroughputChart < ChartBase
 
       { 'y' => closed_issues.size,
         'x' => period.end,
-        'title' => closed_issues.collect {|stop_date, issue| "#{issue.key} : #{issue.summary}"}
+        'title' => closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
       }
     end
-
-    {
-      'label' => 'Weekly throughput',
-      'data' => data,
-      'fill' => false,
-      'showLine' => true,
-      'backgroundColor' => color
-    }
   end
 end
