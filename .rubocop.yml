@@ -45,5 +45,11 @@ Layout/ArgumentAlignment:
 Layout/ParameterAlignment:
   Enabled: false
 
+Layout/BlockAlignment:
+  Enabled: false
+
+Layout/MultilineHashBraceLayout:
+  Enabled: false
+
 Metrics/ParameterLists:
   Enabled: false
