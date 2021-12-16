@@ -1,16 +1,14 @@
 # frozen_string_literal: true
 
 class ThroughputChart < ChartBase
-  attr_accessor :issues, :cycletimes, :date_range
+  attr_accessor :issues, :cycletime, :date_range
 
   def run
     time_periods = calculate_time_periods
     data_sets = []
-    @cycletimes.each do |cycletime|
-      data_sets << daily_throughput_dataset(cycletime: cycletime, color: 'lightgray')
-      data_sets << weekly_throughput_dataset(cycletime: cycletime, periods: time_periods, color: 'gray')
-    end
-    # puts data_sets.inspect
+    data_sets << daily_throughput_dataset(color: 'gray')
+    data_sets << weekly_throughput_dataset(periods: time_periods, color: 'black')
+
     render(binding, __FILE__)
   end
 
@@ -33,7 +31,7 @@ class ThroughputChart < ChartBase
     end
   end
 
-  def closed_issues cycletime:
+  def closed_issues
     closed_issues = @issues.collect do |issue|
       stop_date = cycletime.stopped_time(issue)&.to_date
       [stop_date, issue] unless stop_date.nil?
@@ -41,8 +39,8 @@ class ThroughputChart < ChartBase
     closed_issues.sort_by(&:first)
   end
 
-  def daily_throughput_dataset cycletime:, color:
-    hash = closed_issues(cycletime: cycletime).group_by(&:first)
+  def daily_throughput_dataset color:
+    hash = closed_issues.group_by(&:first)
     data = @date_range.collect do |date|
       next unless hash.has_key? date
       { 'y' => hash[date].size,
@@ -59,7 +57,7 @@ class ThroughputChart < ChartBase
       }
   end
 
-  def weekly_throughput_dataset cycletime:, periods:, color:
+  def weekly_throughput_dataset periods:, color:
     data = periods.collect do |period|
       closed_issues = @issues.collect do |issue|
         stop_date = cycletime.stopped_time(issue)&.to_date
@@ -68,16 +66,16 @@ class ThroughputChart < ChartBase
 
       { 'y' => closed_issues.size,
         'x' => period.end,
-        'title' => closed_issues.collect {|stop_date, issue| "#{issue.key} : #{issue.summary}"} #'asdf' #["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
+        'title' => closed_issues.collect {|stop_date, issue| "#{issue.key} : #{issue.summary}"}
       }
     end
-      {
-        'label' => 'Weekly throughput',
-        'data' => data,
-        'fill' => false,
-        'showLine' => true,
-        'backgroundColor' => color
-      }
 
+    {
+      'label' => 'Weekly throughput',
+      'data' => data,
+      'fill' => false,
+      'showLine' => true,
+      'backgroundColor' => color
+    }
   end
 end
