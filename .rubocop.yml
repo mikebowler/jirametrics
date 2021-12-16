@@ -51,5 +51,11 @@ Layout/BlockAlignment:
 Layout/MultilineHashBraceLayout:
   Enabled: false
 
+Layout/FirstHashElementIndentation:
+  Enabled: false
+
 Metrics/ParameterLists:
+  Enabled: false
+
+Style/NestedParenthesizedCalls:
   Enabled: false
