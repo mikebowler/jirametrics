@@ -4,11 +4,7 @@ require './spec/spec_helper'
 
 def newTotalWipOverTimeChart
   chart = TotalWipOverTimeChart.new
-  block = lambda do |_|
-    start_at created
-    stop_at last_resolution
-  end
-  chart.cycletime = CycleTimeConfig.new parent_config: nil, label: nil, block: block
+  chart.cycletime = defaultCycletimeConfig
   chart
 end
 

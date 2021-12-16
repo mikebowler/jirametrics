@@ -19,3 +19,11 @@ end
 def load_issue key
   Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")))
 end
+
+def defaultCycletimeConfig
+  block = lambda do |_|
+    start_at created
+    stop_at last_resolution
+  end
+  CycleTimeConfig.new parent_config: nil, label: nil, block: block
+end

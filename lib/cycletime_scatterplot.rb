@@ -4,26 +4,36 @@ class CycletimeScatterplot < ChartBase
   attr_accessor :issues, :cycletime
 
   def run
-    completed_issues = @issues.select { |issue| @cycletime.done? issue }
+    data_sets = create_datasets
+    render(binding, __FILE__)
+  end
+
+  def create_datasets
     data_sets = []
-    completed_issues.collect(&:type).uniq.each_with_index do |type|
+    completed_issues = @issues.select { |issue| @cycletime.done? issue }
+    completed_issues.collect(&:type).uniq.sort.each do |type|
+      completed_issues_by_type = completed_issues.select { |issue| issue.type == type }
       data_sets << {
         'label' => type,
-        'data' => completed_issues
-          .select { |issue| issue.type == type }
-          .collect do |issue|
-            cycle_time = @cycletime.cycletime(issue)
-            { 'y' => cycle_time,
-              'x' => @cycletime.stopped_time(issue),
-              'title' => ["#{issue.key} : #{cycle_time} day#{'s' unless cycle_time == 1}",issue.summary]
-            }
-          end,
+        'data' => completed_issues_by_type.collect { |issue| data_for_issue(issue) },
         'fill' => false,
         'showLine' => false,
         'backgroundColor' => color_for(type: type)
       }
     end
+    data_sets
+  end
 
-    render(binding, __FILE__)
+  def data_for_issue issue
+    cycle_time = @cycletime.cycletime(issue)
+    {
+      'y' => cycle_time,
+      'x' => @cycletime.stopped_time(issue),
+      'title' => ["#{issue.key} : #{label_days(cycle_time)}", issue.summary]
+    }
+  end
+
+  def label_days days
+    "#{days} day#{'s' unless days == 1}"
   end
 end
