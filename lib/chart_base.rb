@@ -18,4 +18,8 @@ class ChartBase
     else 'black'
     end
   end
+
+  def label_days days
+    "#{days} day#{'s' unless days == 1}"
+  end
 end

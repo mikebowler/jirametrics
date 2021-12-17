@@ -8,18 +8,17 @@ class AgingWorkInProgressChart < ChartBase
   def run
     aging_issues = @issues.select { |issue| @cycletime.in_progress? issue }
 
+    percentage = 85
     data_sets = []
-    aging_issues.collect(&:type).uniq.each_with_index do |type|
+    aging_issues.collect(&:type).uniq.each do |type|
       data_sets << {
         'type' => 'line',
         'label' => type,
-        'data' => aging_issues
-          .select { |issue| issue.type == type }
-          .collect do |issue|
+        'data' => aging_issues.select { |issue| issue.type == type }.collect do |issue|
             age = @cycletime.age(issue)
-            { 'y' => @cycletime.age(issue),
-              'x' => (column_for issue: issue, board_metadata: @board_metadata).name,
-              'title' => ["#{issue.key} : #{age} day#{'s' unless age == 1}", issue.summary]
+            { 'y' => age,
+              'x' => (column_for issue: issue).name,
+              'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
           end,
         'fill' => false,
@@ -29,52 +28,46 @@ class AgingWorkInProgressChart < ChartBase
     end
     data_sets << {
       type: 'bar',
-      label: '85%',
+      label: "#{percentage}%",
       barPercentage: 1.0,
       categoryPercentage: 1.0,
-      data: days_at_percentage_threshold_for_all_columns(
-        percentage: 85, issues: @issues, columns: board_metadata
-      ).drop(1)
+      data: days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
     }
 
     column_headings = board_metadata.collect(&:name)
     render(binding, __FILE__)
   end
 
-  def days_at_percentage_threshold_for_all_columns percentage:, issues:, columns:
+  def days_at_percentage_threshold_for_all_columns percentage:, issues:
+    accumulated_status_ids_per_column.collect do |_column, status_ids|
+      ages = ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: status_ids
+      index = ages.size * percentage / 100
+      ages.sort[index.to_i] || 0
+    end
+  end
+
+  def accumulated_status_ids_per_column
     accumulated_status_ids = []
-    columns.reverse.collect do |column|
+    @board_metadata.reverse.collect do |column|
       accumulated_status_ids += column.status_ids
-      date_that_percentage_of_issues_leave_statuses(
-        percentage: percentage, issues: issues, status_ids: accumulated_status_ids
-      )
+      [column.name, accumulated_status_ids.dup]
     end.reverse
   end
 
-  def date_that_percentage_of_issues_leave_statuses percentage:, issues:, status_ids:
-    days_to_transition = issues.collect do |issue|
-      transition_time = issue.first_time_in_status(*status_ids)
-      if transition_time.nil?
-        # This item has never left this particular column. Exclude it from the
-        # calculation
-        nil
-      else
-        start_time = @cycletime.started_time(issue)
-        if start_time.nil?
-          # This item went straight from created to done so we can't determine the
-          # start time. Exclude this record from the calculation
-          nil
-        else
-          (transition_time - start_time).to_i + 1
-        end
-      end
+  def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
+    issues.collect do |issue|
+      stop = issue.first_time_in_status(*status_ids)
+      start = @cycletime.started_time(issue)
+
+      # Skip if either it hasn't crossed the boundary or we can't tell when it started.
+      next if stop.nil? || start.nil?
+
+      (stop - start).to_i + 1
     end.compact
-    index = days_to_transition.size * percentage / 100
-    days_to_transition.sort[index.to_i]
   end
 
-  def column_for issue:, board_metadata:
-    board_metadata.find do |board_column|
+  def column_for issue:
+    @board_metadata.find do |board_column|
       board_column.status_ids.include? issue.status_id
     end
   end

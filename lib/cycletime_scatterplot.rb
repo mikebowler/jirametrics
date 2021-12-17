@@ -32,8 +32,4 @@ class CycletimeScatterplot < ChartBase
       'title' => ["#{issue.key} : #{label_days(cycle_time)}", issue.summary]
     }
   end
-
-  def label_days days
-    "#{days} day#{'s' unless days == 1}"
-  end
 end

@@ -1,0 +1,77 @@
+{
+  "id": 1,
+  "name": "SP board",
+  "type": "kanban",
+  "self": "https://improvingflow.atlassian.net/rest/agile/1.0/board/1/configuration",
+  "location": {
+    "type": "project",
+    "key": "SP",
+    "id": "10000",
+    "self": "https://improvingflow.atlassian.net/rest/api/2/project/10000",
+    "name": "Sample Project"
+  },
+  "filter": {
+    "id": "10000",
+    "self": "https://improvingflow.atlassian.net/rest/api/2/filter/10000"
+  },
+  "subQuery": {
+    "query": "fixVersion in unreleasedVersions() OR fixVersion is EMPTY"
+  },
+  "columnConfig": {
+    "columns": [
+      {
+        "name": "Backlog",
+        "statuses": [
+          {
+            "id": "10000",
+            "self": "https://improvingflow.atlassian.net/rest/api/2/status/10000"
+          }
+        ]
+      },
+      {
+        "name": "Ready",
+        "statuses": [
+          {
+            "id": "10001",
+            "self": "https://improvingflow.atlassian.net/rest/api/2/status/10001"
+          }
+        ],
+        "min": 1,
+        "max": 4
+      },
+      {
+        "name": "In Progress",
+        "statuses": [
+          {
+            "id": "3",
+            "self": "https://improvingflow.atlassian.net/rest/api/2/status/3"
+          }
+        ],
+        "max": 3
+      },
+      {
+        "name": "Review",
+        "statuses": [
+          {
+            "id": "10011",
+            "self": "https://improvingflow.atlassian.net/rest/api/2/status/10011"
+          }
+        ],
+        "max": 3
+      },
+      {
+        "name": "Done",
+        "statuses": [
+          {
+            "id": "10002",
+            "self": "https://improvingflow.atlassian.net/rest/api/2/status/10002"
+          }
+        ]
+      }
+    ],
+    "constraintType": "issueCount"
+  },
+  "ranking": {
+    "rankCustomFieldId": 10019
+  }
+}
