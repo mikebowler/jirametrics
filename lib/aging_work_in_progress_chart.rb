@@ -6,6 +6,12 @@ class AgingWorkInProgressChart < ChartBase
   attr_accessor :issues, :board_metadata, :cycletime
 
   def run
+    data_sets = make_data_sets
+    column_headings = board_metadata.collect(&:name)
+    render(binding, __FILE__)
+  end
+
+  def make_data_sets
     aging_issues = @issues.select { |issue| @cycletime.in_progress? issue }
 
     percentage = 85
@@ -27,15 +33,12 @@ class AgingWorkInProgressChart < ChartBase
       }
     end
     data_sets << {
-      type: 'bar',
-      label: "#{percentage}%",
-      barPercentage: 1.0,
-      categoryPercentage: 1.0,
-      data: days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
+      'type' => 'bar',
+      'label' => "#{percentage}%",
+      'barPercentage' => 1.0,
+      'categoryPercentage' => 1.0,
+      'data' => days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
     }
-
-    column_headings = board_metadata.collect(&:name)
-    render(binding, __FILE__)
   end
 
   def days_at_percentage_threshold_for_all_columns percentage:, issues:

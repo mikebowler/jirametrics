@@ -54,6 +54,12 @@ Layout/MultilineHashBraceLayout:
 Layout/FirstHashElementIndentation:
   Enabled: false
 
+Layout/HashAlignment:
+  Enabled: false
+
+Layout/ArrayAlignment:
+  Enabled: false
+  
 Metrics/ParameterLists:
   Enabled: false
 

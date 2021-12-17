@@ -96,4 +96,55 @@ describe AgingWorkInProgressChart do
       expect(actual).to eq 'Review'
     end
   end
+
+  it 'make_data_sets' do
+    chart = AgingWorkInProgressChart.new
+    chart.board_metadata = complete_sample_board_metadata
+    chart.cycletime = defaultCycletimeConfig
+    chart.issues = complete_sample_issues
+
+    expect(chart.make_data_sets).to eq([
+      {
+        'backgroundColor' => 'green',
+        'data' => [
+          {
+            'title' => ['SP-11 : Report of all orders for an event (182 days)'],
+            'x' => 'Ready',
+            'y' => 182
+          },
+          {
+            'title' => ['SP-8 : Refund ticket for individual order (182 days)'],
+             'x' => 'In Progress',
+             'y' => 182
+          },
+          {
+            'title' => ['SP-7 : Purchase ticket with Apple Pay (182 days)'],
+             'x' => 'Ready',
+             'y' => 182
+          },
+          {
+            'title' => ['SP-2 : Update existing event (182 days)'],
+             'x' => 'Ready',
+             'y' => 182
+          },
+          {
+            'title' => ['SP-1 : Create new draft event (182 days)'],
+            'x' => 'Review',
+            'y' => 182
+          }
+        ],
+       'fill' => false,
+       'label' => 'Story',
+       'showLine' => false,
+       'type' => 'line'
+     },
+     {
+       'barPercentage' => 1.0,
+       'categoryPercentage' => 1.0,
+       'data' => [179, 179, 179, 80],
+       'label' => '85%',
+       'type' => 'bar'
+     }
+    ])
+  end
 end
