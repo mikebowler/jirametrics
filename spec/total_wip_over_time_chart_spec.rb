@@ -11,13 +11,11 @@ describe TotalWipOverTimeChart do
 
   context 'make_start_stop_sequence_for_issues' do
     it 'should handle no issues' do
-      # chart = TotalWipOverTimeChart.new
       chart.issues = []
       expect(chart.make_start_stop_sequence_for_issues).to be_empty
     end
 
     it 'should handle one issue that is done' do
-      # chart = newTotalWipOverTimeChart
       issue = load_issue 'SP-10'
       chart.issues = [issue]
       expect(chart.make_start_stop_sequence_for_issues).to eq [
@@ -27,7 +25,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one issue that isn\'t done' do
-      # chart = newTotalWipOverTimeChart
       issue = load_issue 'SP-1'
       chart.issues = [issue]
       expect(chart.make_start_stop_sequence_for_issues).to eq [
@@ -36,7 +33,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one issue that is not even started' do
-      # chart = TotalWipOverTimeChart.new
       block = lambda do |_|
         start_at last_resolution # Will be nil since the actual story hasn't finished.
         stop_at last_resolution
@@ -47,7 +43,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should sort items correctly' do
-      # chart = newTotalWipOverTimeChart
       issue1 = load_issue 'SP-1'
       issue2 = load_issue 'SP-10'
 
@@ -62,21 +57,18 @@ describe TotalWipOverTimeChart do
 
   context 'make_chart_data' do
     it 'should handle empty list' do
-      # chart = TotalWipOverTimeChart.new
       expect(chart.make_chart_data(issue_start_stops: [])).to be_empty
     end
 
     it 'should handle multiple items starting at once with nothing after' do
       issue1  = load_issue('SP-1')
       issue2  = load_issue('SP-2')
-      issue10 = load_issue('SP-10')
 
       issue_start_stops = [
         [DateTime.parse('2021-10-10'), 'start', issue1],
         [DateTime.parse('2021-10-10'), 'start', issue2]
       ]
 
-      # chart = newTotalWipOverTimeChart
       expect(chart.make_chart_data(issue_start_stops: issue_start_stops)).to eq [
         [DateTime.parse('2021-10-10'), [issue1, issue2], []]
       ]
@@ -95,7 +87,6 @@ describe TotalWipOverTimeChart do
         [DateTime.parse('2021-10-14'), 'stop', issue10]
       ]
 
-      # chart = newTotalWipOverTimeChart
       expect(chart.make_chart_data(issue_start_stops: issue_start_stops)).to eq [
         [DateTime.parse('2021-10-10'), [issue1, issue2], []],
         [DateTime.parse('2021-10-12'), [issue1, issue10, issue2], []],
@@ -109,7 +100,6 @@ describe TotalWipOverTimeChart do
         [DateTime.parse('2021-10-10'), 'foo', issue1]
       ]
 
-      # chart = newTotalWipOverTimeChart
       expect { chart.make_chart_data(issue_start_stops: issue_start_stops) }.to raise_error 'Unexpected action foo'
     end
   end
