@@ -187,4 +187,10 @@ class Issue
     total_time = (finished.to_time - started.to_time)
     total_blocked_time * 100.0 / total_time
   end
+
+  # Many test failures are simply unreadable because the default inspect on this class goes
+  # on for pages. Shorten it up.
+  def inspect
+    "Issue(#{key.inspect})"
+  end
 end
