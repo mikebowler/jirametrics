@@ -6,10 +6,12 @@ require 'date'
 class CycleTimeConfig
   include SelfOrIssueDispatcher
 
-  def initialize parent_config:, label:, block:
+  def initialize parent_config:, label:, block:, today: Date.today
     @parent_config = parent_config
     @label = label
+    @today = today
     instance_eval(&block)
+
   end
 
   def start_at block = nil
@@ -52,7 +54,7 @@ class CycleTimeConfig
 
   def age issue
     start = started_time(issue)
-    stop = Date.today
+    stop = @today || Date.today
     return nil if start.nil? || stop.nil?
 
     (stop - start).to_i + 1

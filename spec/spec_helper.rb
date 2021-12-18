@@ -21,9 +21,11 @@ def load_issue key
 end
 
 def defaultCycletimeConfig
+  today = Date.parse('2021-12-17')
+
   block = lambda do |_|
     start_at created
     stop_at last_resolution
   end
-  CycleTimeConfig.new parent_config: nil, label: nil, block: block
+  CycleTimeConfig.new parent_config: nil, label: nil, block: block, today: today
 end
