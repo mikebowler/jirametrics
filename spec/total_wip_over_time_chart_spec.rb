@@ -103,4 +103,46 @@ describe TotalWipOverTimeChart do
       expect { chart.make_chart_data(issue_start_stops: issue_start_stops) }.to raise_error 'Unexpected action foo'
     end
   end
+
+  context 'chart_data_starting_entry' do
+    let(:issue1)  { load_issue 'SP-1' }
+    let(:issue2)  { load_issue 'SP-2' }
+    let(:issue10) { load_issue 'SP-10' }
+
+    it 'should fabricate an empty line when no chart data' do
+      chart_data = []
+      date = Date.parse('2021-10-10')
+
+      expect(chart.chart_data_starting_entry chart_data: chart_data, date: date).to eq [
+        date, [], []
+      ]
+    end
+
+    it 'return exact data when we have it' do
+      date = Date.parse('2021-10-10')
+      chart_data = [
+        [date - 1, [issue1],  [issue2]],
+        [date,     [issue2],  [issue10]],
+        [date + 1, [issue10], [issue1]]
+      ]
+
+      expect(chart.chart_data_starting_entry chart_data: chart_data, date: date).to eq [
+        date, [issue2], [issue10]
+      ]
+    end
+
+    it 'return an earlier value if no match on the exact date' do
+      date = Date.parse('2021-10-10')
+      chart_data = [
+        [date - 1, [issue1],  [issue2]],
+        [date + 1, [issue2],  [issue10]],
+        [date + 2, [issue10], [issue1]]
+      ]
+
+      expect(chart.chart_data_starting_entry chart_data: chart_data, date: date).to eq [
+        date, [issue1], [issue2]
+      ]
+    end
+
+  end
 end

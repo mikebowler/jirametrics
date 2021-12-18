@@ -57,25 +57,10 @@ class TotalWipOverTimeChart < ChartBase
   def run
     chart_data = make_chart_data issue_start_stops: make_start_stop_sequence_for_issues
 
-    date_range = @date_range
-    date_range = (date_range.begin.to_date..date_range.end.to_date)
+    date_range = (@date_range.begin.to_date..@date_range.end.to_date)
 
     data_sets = []
-    data_sets << {
-      'type' => 'bar',
-      'label' => 'Completed that day',
-      'data' => chart_data.collect do |time, _issues, issues_completed|
-        next unless date_range.include? time.to_date
-
-        {
-          x: time,
-          y: -issues_completed.size,
-          title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
-        }
-      end.compact,
-      'backgroundColor' => '#009900',
-      'borderRadius' => '5'
-    }
+    data_sets << completed_data_set(chart_data: chart_data)
 
     [
       [29..nil, '#990000', 'More than four weeks'],
@@ -97,22 +82,41 @@ class TotalWipOverTimeChart < ChartBase
     render(binding, __FILE__)
   end
 
-  def chart_data_starting_entry chart_data:, date:
-    data = chart_data.find { |a| a.first == date }
-    return data unless data.nil?
+  def completed_data_set chart_data:
+    {
+      'type' => 'bar',
+      'label' => 'Completed that day',
+      'data' => chart_data.collect do |time, _issues, issues_completed|
+        next unless date_range.include? time.to_date
 
+        {
+          x: time,
+          y: -issues_completed.size,
+          title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
+        }
+      end.compact,
+      'backgroundColor' => '#009900',
+      'borderRadius' => '5'
+    }
+  end
+
+  # Return the first chart_data entry that we'll display. This is tricky because there may not be
+  # an entry on the day we want and we might have to fabricate one.
+  def chart_data_starting_entry chart_data:, date:
+    exact_match = chart_data.find { |entry_date, _issues, _issues_completed| entry_date == date }
+    return exact_match unless exact_match.nil?
+
+    # We don't have an entry on the day we care about so look backwards for the last time we did
+    # have data.
     last_data = nil
     chart_data.each do |data|
-      return last_data if last_data && last_data[0] >= date
+      return [date, last_data[1], last_data[2]] if last_data && data.first > date
 
       last_data = data
     end
 
-    if last_data.nil?
-      [date, [], []]
-    else
-      last_data
-    end
+    # We have no way to get real data so assume that nothing was in progress.
+    [date, [], []]
   end
 
   def dataset_by_age chart_data:, age_range:, date_range:, label:
@@ -143,7 +147,7 @@ class TotalWipOverTimeChart < ChartBase
         x: date,
         y: included_issues.size,
         title: [label] + included_issues.collect do |i, age|
-          "#{i.key} : #{i.summary} (#{age} day#{'s' unless age == 1})"
+          "#{i.key} : #{i.summary} (#{age} #{label_days age})"
         end
       }
     end

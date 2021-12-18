@@ -2,10 +2,6 @@
 
 require './spec/spec_helper'
 
-def complete_sample_issues
-  json = JSON.parse(File.read('./spec/complete_sample/sample_0.json'))
-  json['issues'].collect { |raw| Issue.new raw: raw }
-end
 
 def complete_sample_board_metadata
   json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
@@ -17,13 +13,13 @@ describe AgingWorkInProgressChart do
     chart = AgingWorkInProgressChart.new
     chart.board_metadata = complete_sample_board_metadata
     chart.cycletime = defaultCycletimeConfig
-    chart.issues = complete_sample_issues
+    chart.issues = load_complete_sample_issues
     chart
   end
 
   context 'accumulated_status_ids_per_column' do
     it 'should accumulate properly' do
-      chart.issues = complete_sample_issues.select { |issue| chart.cycletime.in_progress? issue }
+      chart.issues = load_complete_sample_issues.select { |issue| chart.cycletime.in_progress? issue }
 
       actual = chart.accumulated_status_ids_per_column
       expect(actual).to eq [

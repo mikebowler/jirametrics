@@ -29,3 +29,8 @@ def defaultCycletimeConfig
   end
   CycleTimeConfig.new parent_config: nil, label: nil, block: block, today: today
 end
+
+def load_complete_sample_issues
+  json = JSON.parse(File.read('./spec/complete_sample/sample_0.json'))
+  json['issues'].collect { |raw| Issue.new raw: raw }
+end
