@@ -72,7 +72,7 @@ class TotalWipOverTimeChart < ChartBase
       data_sets << {
         'type' => 'bar',
         'label' => label,
-        'data' => dataset_by_age(
+        'data' => incomplete_dataset(
           chart_data: chart_data, age_range: age_range, date_range: date_range, label: label
         ),
         'backgroundColor' => color
@@ -119,7 +119,7 @@ class TotalWipOverTimeChart < ChartBase
     [date, [], []]
   end
 
-  def dataset_by_age chart_data:, age_range:, date_range:, label:
+  def incomplete_dataset chart_data:, age_range:, date_range:, label:
     # chart_data is a list of [time, issues, issues_completed] groupings
 
     issues = []

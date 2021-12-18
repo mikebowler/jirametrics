@@ -3,6 +3,10 @@
 require './spec/spec_helper'
 
 describe TotalWipOverTimeChart do
+  let(:issue1)  { load_issue 'SP-1' }
+  let(:issue2)  { load_issue 'SP-2' }
+  let(:issue10) { load_issue 'SP-10' }
+
   let :chart do
     chart = TotalWipOverTimeChart.new
     chart.cycletime = defaultCycletimeConfig
@@ -16,19 +20,17 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one issue that is done' do
-      issue = load_issue 'SP-10'
-      chart.issues = [issue]
+      chart.issues = [issue10]
       expect(chart.make_start_stop_sequence_for_issues).to eq [
-        [issue.created, 'start', issue],
-        [issue.last_resolution, 'stop', issue]
+        [issue10.created, 'start', issue10],
+        [issue10.last_resolution, 'stop', issue10]
       ]
     end
 
     it 'should handle one issue that isn\'t done' do
-      issue = load_issue 'SP-1'
-      chart.issues = [issue]
+      chart.issues = [issue1]
       expect(chart.make_start_stop_sequence_for_issues).to eq [
-        [issue.created, 'start', issue]
+        [issue1.created, 'start', issue1]
       ]
     end
 
@@ -38,19 +40,16 @@ describe TotalWipOverTimeChart do
         stop_at last_resolution
       end
       chart.cycletime = CycleTimeConfig.new parent_config: nil, label: nil, block: block
-      chart.issues = [load_issue('SP-1')]
+      chart.issues = [issue1]
       expect(chart.make_start_stop_sequence_for_issues).to be_empty
     end
 
     it 'should sort items correctly' do
-      issue1 = load_issue 'SP-1'
-      issue2 = load_issue 'SP-10'
-
-      chart.issues = [issue2, issue1]
+      chart.issues = [issue10, issue1]
       expect(chart.make_start_stop_sequence_for_issues).to eq [
         [issue1.created, 'start', issue1],
-        [issue2.created, 'start', issue2],
-        [issue2.last_resolution, 'stop', issue2]
+        [issue10.created, 'start', issue10],
+        [issue10.last_resolution, 'stop', issue10]
       ]
     end
   end
@@ -61,9 +60,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle multiple items starting at once with nothing after' do
-      issue1  = load_issue('SP-1')
-      issue2  = load_issue('SP-2')
-
       issue_start_stops = [
         [DateTime.parse('2021-10-10'), 'start', issue1],
         [DateTime.parse('2021-10-10'), 'start', issue2]
@@ -75,10 +71,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle multiple items' do
-      issue1  = load_issue('SP-1')
-      issue2  = load_issue('SP-2')
-      issue10 = load_issue('SP-10')
-
       issue_start_stops = [
         [DateTime.parse('2021-10-10'), 'start', issue1],
         [DateTime.parse('2021-10-10'), 'start', issue2],
@@ -95,7 +87,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle invalid actions' do
-      issue1 = load_issue('SP-1')
       issue_start_stops = [
         [DateTime.parse('2021-10-10'), 'foo', issue1]
       ]
@@ -105,10 +96,6 @@ describe TotalWipOverTimeChart do
   end
 
   context 'chart_data_starting_entry' do
-    let(:issue1)  { load_issue 'SP-1' }
-    let(:issue2)  { load_issue 'SP-2' }
-    let(:issue10) { load_issue 'SP-10' }
-
     it 'should fabricate an empty line when no chart data' do
       chart_data = []
       date = Date.parse('2021-10-10')
@@ -143,6 +130,6 @@ describe TotalWipOverTimeChart do
         date, [issue1], [issue2]
       ]
     end
-
   end
+
 end
