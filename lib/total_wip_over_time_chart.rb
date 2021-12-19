@@ -60,7 +60,7 @@ class TotalWipOverTimeChart < ChartBase
     date_range = (@date_range.begin.to_date..@date_range.end.to_date)
 
     data_sets = []
-    data_sets << completed_data_set(chart_data: chart_data)
+    data_sets << completed_dataset(chart_data: chart_data)
 
     [
       [29..nil, '#990000', 'More than four weeks'],
@@ -70,24 +70,25 @@ class TotalWipOverTimeChart < ChartBase
       [nil..1, '#aaaaaa', 'New today']
     ].each do |age_range, color, label|
       data_sets << {
-        'type' => 'bar',
-        'label' => label,
-        'data' => incomplete_dataset(
+        type: 'bar',
+        label: label,
+        data: incomplete_dataset(
           chart_data: chart_data, age_range: age_range, date_range: date_range, label: label
         ),
-        'backgroundColor' => color
+        backgroundColor: color
       }
     end
 
     render(binding, __FILE__)
   end
 
-  def completed_data_set chart_data:
+  def completed_dataset chart_data:
     {
-      'type' => 'bar',
-      'label' => 'Completed that day',
-      'data' => chart_data.collect do |time, _issues, issues_completed|
+      type: 'bar',
+      label: 'Completed that day',
+      data: chart_data.collect do |time, _issues, issues_completed|
         next unless date_range.include? time.to_date
+        next if issues_completed.empty?
 
         {
           x: time,
@@ -95,8 +96,8 @@ class TotalWipOverTimeChart < ChartBase
           title: ['Work items completed'] + issues_completed.collect { |i| "#{i.key} : #{i.summary}" }.sort
         }
       end.compact,
-      'backgroundColor' => '#009900',
-      'borderRadius' => '5'
+      backgroundColor: '#009900',
+      borderRadius: '5'
     }
   end
 

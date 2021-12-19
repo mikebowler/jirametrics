@@ -179,5 +179,77 @@ describe TotalWipOverTimeChart do
         }
       ]
     end
+
+    it 'should exclude anything outside the age range' do
+      chart_data = [[october10, [issue1], [issue2]]]
+      age_range = nil..2
+      date_range = october10..october11
+      dataset = chart.incomplete_dataset(
+        chart_data: chart_data, age_range: age_range, date_range: date_range, label: 'foo'
+      )
+
+      expect(dataset).to eq [
+        {
+          title: ['foo'],
+          x: october10,
+          y: 0
+        },
+       {
+          title: ['foo'],
+          x: october11,
+          y: 0
+        }
+      ]
+    end
+  end
+
+  context 'completed_dataset' do
+    let(:october10) { Date.parse('2021-10-10') }
+    let(:october11) { Date.parse('2021-10-11') }
+    let(:october12) { Date.parse('2021-10-12') }
+
+    it 'should handle nothing completed' do
+      chart.date_range = october10..october11
+
+      chart_data = [
+        [october10, [issue1], []], # Nothing completed that day
+        [october12, [issue1], [issue2]] # Out of range
+      ]
+      dataset = chart.completed_dataset(
+        chart_data: chart_data
+      )
+
+      expect(dataset).to eq({
+        backgroundColor: '#009900',
+        borderRadius: '5',
+        data: [],
+        label: 'Completed that day',
+        type: 'bar'
+      })
+    end
+
+    it 'should handle one item completed' do
+      chart.date_range = october10..october11
+
+      chart_data = [[october10, [issue1], [issue2]]]
+      dataset = chart.completed_dataset(
+        chart_data: chart_data
+      )
+
+      expect(dataset).to eq({
+        backgroundColor: '#009900',
+        borderRadius: '5',
+        data: [
+          {
+            title: ['Work items completed', 'SP-2 : Update existing event'],
+            x: october10,
+            y: -1
+          }
+
+        ],
+        label: 'Completed that day',
+        type: 'bar'
+      })
+    end
   end
 end
