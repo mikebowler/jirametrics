@@ -132,4 +132,52 @@ describe TotalWipOverTimeChart do
     end
   end
 
+  context 'incomplete_dataset' do
+    let(:october10) { Date.parse('2021-10-10') }
+    let(:october11) { Date.parse('2021-10-11') }
+
+    it 'should handle empty chart data' do
+      chart_data = []
+      age_range = nil..500
+      date_range = october10..october11
+      dataset = chart.incomplete_dataset(
+        chart_data: chart_data, age_range: age_range, date_range: date_range, label: 'foo'
+      )
+
+      expect(dataset).to eq [
+        {
+          title: ['foo'],
+          x: october10,
+          y: 0
+        },
+        {
+          title: ['foo'],
+          x: october11,
+          y: 0
+        }
+      ]
+    end
+
+    it 'should handle one item of chart data' do
+      chart_data = [[october10, [issue1], [issue2]]]
+      age_range = nil..500
+      date_range = october10..october11
+      dataset = chart.incomplete_dataset(
+        chart_data: chart_data, age_range: age_range, date_range: date_range, label: 'foo'
+      )
+
+      expect(dataset).to eq [
+        {
+          title: ['foo', 'SP-1 : Create new draft event (115 days)'],
+          x: october10,
+          y: 1
+        },
+       {
+          title: ['foo', 'SP-1 : Create new draft event (116 days)'],
+          x: october11,
+          y: 1
+        }
+      ]
+    end
+  end
 end

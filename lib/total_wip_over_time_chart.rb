@@ -147,7 +147,7 @@ class TotalWipOverTimeChart < ChartBase
         x: date,
         y: included_issues.size,
         title: [label] + included_issues.collect do |i, age|
-          "#{i.key} : #{i.summary} (#{age} #{label_days age})"
+          "#{i.key} : #{i.summary} (#{label_days age})"
         end
       }
     end
