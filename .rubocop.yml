@@ -31,6 +31,9 @@ Style/PerlBackrefs:
 Style/SymbolProc:
   Enabled: false
 
+Style/ConditionalAssignment:
+  Enabled: false
+
 # Although I generally agree that these are a bad practice, we're making an exception in order
 # to create a DSL
 Style/ClassVars:
