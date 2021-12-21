@@ -7,15 +7,16 @@ class BlockedStalledChart < ChartBase
   attr_accessor :issues, :cycletime, :date_range
 
   def run
+    stalled_threshold = 5
     @daily_chart_items = DailyChartItemGenerator.new(
       issues: @issues, date_range: @date_range, cycletime: @cycletime
     ).run
 
-    data_sets = make_data_sets
+    data_sets = make_data_sets stalled_threshold: stalled_threshold
     render(binding, __FILE__)
   end
 
-  def make_data_sets
+  def make_data_sets stalled_threshold:
     data_sets = []
 
     blocked_data = []
@@ -25,7 +26,7 @@ class BlockedStalledChart < ChartBase
 
     @daily_chart_items.each do |daily_chart_item|
       blocked = daily_chart_item.active_issues.select { |issue| issue.blocked_on_date? daily_chart_item.date }
-      stalled = daily_chart_item.active_issues.select { |issue| daily_chart_item.date - issue.updated >= 5 }
+      stalled = daily_chart_item.active_issues.select { |issue| daily_chart_item.date - issue.updated >= stalled_threshold }
 
       blocked_data << [daily_chart_item.date, blocked]
       stalled_data << [daily_chart_item.date, stalled]
