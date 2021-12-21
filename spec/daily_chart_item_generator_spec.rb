@@ -106,4 +106,33 @@ describe DailyChartItemGenerator do
     end
   end
 
+  context 'fill_in_gaps' do
+    it 'should handle happy path' do
+      subject = DailyChartItemGenerator.new issues: nil, cycletime: defaultCycletimeConfig, date_range: date_range
+      item = subject.daily_chart_item date: Date.parse('2021-06-17')
+      item.active_issues = [issue1]
+      item.completed_issues = []
+
+      subject.fill_in_gaps
+      expect(subject.to_test).to eq [
+        ['2021-06-17', [issue1], []],
+        ['2021-06-18', [issue1], []],
+        ['2021-06-19', [issue1], []]
+      ]
+    end
+
+    it 'should handle case where there has been no data at the start of the range' do
+      subject = DailyChartItemGenerator.new issues: nil, cycletime: defaultCycletimeConfig, date_range: date_range
+      item = subject.daily_chart_item date: Date.parse('2021-06-19')
+      item.active_issues = [issue1]
+      item.completed_issues = []
+
+      subject.fill_in_gaps
+      expect(subject.to_test).to eq [
+        ['2021-06-17', [], []],
+        ['2021-06-18', [], []],
+        ['2021-06-19', [issue1], []]
+      ]
+    end
+  end
 end

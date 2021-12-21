@@ -50,10 +50,6 @@ class DailyChartItemGenerator
     start_stop_sequence.each do |time, action, issue|
       date = time.to_date
       if @date_range.include?(date) && date != previous_date
-        # If the first time we have a change is after the start of the data range then make an artificial
-        # entry on the first day of the range.
-        previous_date = @date_range.begin if previous_date.nil? && date > @date_range.begin
-
         close_off_previous_date previous_date: previous_date, active_issues: active, completed_issues: completed
         completed = []
       end
@@ -68,7 +64,7 @@ class DailyChartItemGenerator
         raise "Unexpected action: #{action}"
       end
 
-      previous_date = date if @date_range.include? date
+      previous_date = date
     end
     close_off_previous_date previous_date: previous_date, active_issues: active, completed_issues: completed
   end
