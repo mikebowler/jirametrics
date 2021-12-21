@@ -27,7 +27,7 @@ def defaultCycletimeConfig
     start_at created
     stop_at last_resolution
   end
-  CycleTimeConfig.new parent_config: nil, label: nil, block: block, today: today
+  CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
 end
 
 def load_complete_sample_issues

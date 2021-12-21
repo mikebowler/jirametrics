@@ -6,7 +6,7 @@ require './lib/self_or_issue_dispatcher'
 class HtmlReportConfig
   include SelfOrIssueDispatcher
 
-  attr_reader :file_config
+  attr_reader :file_config, :sections
 
   def initialize file_config:, block:
     @file_config = file_config
@@ -31,33 +31,31 @@ class HtmlReportConfig
   end
 
   def aging_work_in_progress_chart
-    chart = AgingWorkInProgressChart.new
-    chart.issues = @file_config.issues
-    chart.board_metadata = @file_config.project_config.board_metadata
-    chart.cycletime = @cycletime
-    @sections << chart.run
+    execute_chart AgingWorkInProgressChart.new
   end
 
   def cycletime_scatterplot
-    chart = CycletimeScatterplot.new
-    chart.issues = @file_config.issues
-    chart.cycletime = @cycletime
-    @sections << chart.run
+    execute_chart CycletimeScatterplot.new
   end
 
   def total_wip_over_time_chart
-    chart = TotalWipOverTimeChart.new
-    chart.issues = @file_config.issues
-    chart.cycletime = @cycletime
-    chart.date_range = @file_config.project_config.date_range
-    @sections << chart.run
+    execute_chart TotalWipOverTimeChart.new
   end
 
   def throughput_chart
-    chart = ThroughputChart.new
-    chart.issues = @file_config.issues
-    chart.cycletime = @cycletime
-    chart.date_range = @file_config.project_config.date_range
+    execute_chart ThroughputChart.new
+  end
+
+  def blocked_stalled_chart
+    execute_chart BlockedStalledChart.new
+  end
+
+  def execute_chart chart
+    chart.issues = @file_config.issues if chart.respond_to? :'issues='
+    chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
+    chart.date_range = @file_config.project_config.date_range if chart.respond_to? :'date_range='
+    chart.board_metadata = @file_config.project_config.board_metadata if chart.respond_to? :'board_metadata='
+
     @sections << chart.run
   end
 end

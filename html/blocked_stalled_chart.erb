@@ -1,0 +1,46 @@
+<h1>Blocked or stalled work</h1>
+<div>This chart highlights work that is blocked or stalled on each given day.
+<div>
+  <canvas id="blocked-stalled" width="800" height="200"></canvas>
+</div>
+<script>
+new Chart(document.getElementById('blocked-stalled').getContext('2d'),
+{
+  type: 'bar',
+  data: {
+    datasets: <%= JSON.generate(data_sets) %>
+  },
+  options: {
+    title: {
+      display: true,
+      text:    "Work that is blocked or stalled"
+    },
+    responsive: true, // If responsive is true then it fills the screen
+    scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'day'
+        },
+        stacked: true
+      },
+      y: {
+        stacked: true,
+        scaleLabel: {
+          display: true,
+          labelString: 'WIP'
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.data[context.dataIndex].title
+          }
+        }
+      }
+    }
+  }
+});
+</script>

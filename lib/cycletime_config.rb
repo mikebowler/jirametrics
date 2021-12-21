@@ -6,12 +6,13 @@ require 'date'
 class CycleTimeConfig
   include SelfOrIssueDispatcher
 
+  attr_reader :label
+  
   def initialize parent_config:, label:, block:, today: Date.today
     @parent_config = parent_config
     @label = label
     @today = today
     instance_eval(&block)
-
   end
 
   def start_at block = nil

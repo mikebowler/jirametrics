@@ -146,6 +146,10 @@ class Issue
     parse_datetime @raw['fields']['created']
   end
 
+  def updated
+    parse_datetime @raw['fields']['updated']
+  end
+
   def first_resolution
     @changes.find { |change| change.resolution? }&.time
   end
@@ -192,5 +196,25 @@ class Issue
   # on for pages. Shorten it up.
   def inspect
     "Issue(#{key.inspect})"
+  end
+
+  def blocked_on_date? date
+    # We've seen cases in production data where an item becomes unblocked before becoming
+    # blocked so this approach here isn't 100% guaranteed to work. It's a good enough
+    # approximation though.
+
+    blocked_start = nil
+    changes.each do |change|
+      next unless change.flagged?
+
+      if blocked_start && change.value.empty?
+        range = blocked_start.to_date..change.time.to_date
+        return true if range.include? date
+
+        blocked_start = nil
+      end
+      blocked_start = change.time if change.value
+    end
+    false
   end
 end

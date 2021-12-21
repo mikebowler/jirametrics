@@ -120,14 +120,12 @@ class ProjectConfig
   end
 
   def load_project_metadata
-    begin
-      filename = "#{@target_path}/#{file_prefix}_meta.json"
-      json = JSON.parse(File.read(filename))
-      @date_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
-    rescue => e
-      puts "== Can't load files from the target directory. Did you forget to download first? =="
-      raise
-    end
+    filename = "#{@target_path}/#{file_prefix}_meta.json"
+    json = JSON.parse(File.read(filename))
+    @date_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
+  rescue Errno::ENOENT
+    puts "== Can't load files from the target directory. Did you forget to download first? =="
+    raise
   end
 
   def board_metadata board_id: nil
