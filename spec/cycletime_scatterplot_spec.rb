@@ -10,7 +10,7 @@ describe CycletimeScatterplot do
       chart = CycletimeScatterplot.new
       chart.cycletime = defaultCycletimeConfig
       expect(chart.data_for_issue issue).to eq({
-        'title' => ['SP-10 : 80 days', 'Check in people at an event'],
+        'title' => ['SP-10 : Check in people at an event (80 days)'],
         'x' => issue.last_resolution,
         'y' => 80
       })
@@ -40,7 +40,7 @@ describe CycletimeScatterplot do
         'backgroundColor' => 'green',
         'data' => [
           {
-            'title' => ['SP-10 : 80 days', 'Check in people at an event'],
+            'title' => ['SP-10 : Check in people at an event (80 days)'],
             'x' => issue.last_resolution,
             'y' => 80
          }

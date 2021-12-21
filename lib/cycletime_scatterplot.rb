@@ -29,7 +29,7 @@ class CycletimeScatterplot < ChartBase
     {
       'y' => cycle_time,
       'x' => @cycletime.stopped_time(issue),
-      'title' => ["#{issue.key} : #{label_days(cycle_time)}", issue.summary]
+      'title' => ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
     }
   end
 end
