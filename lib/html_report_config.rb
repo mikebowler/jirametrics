@@ -53,8 +53,13 @@ class HtmlReportConfig
   def execute_chart chart
     chart.issues = @file_config.issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
-    chart.date_range = @file_config.project_config.date_range if chart.respond_to? :'date_range='
+    chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
     chart.board_metadata = @file_config.project_config.board_metadata if chart.respond_to? :'board_metadata='
+
+    if chart.respond_to? :'date_range='
+      time_range = @file_config.project_config.time_range
+      chart.date_range = time_range.begin.to_date..time_range.end.to_date
+    end
 
     @sections << chart.run
   end

@@ -10,8 +10,6 @@ class TotalWipOverTimeChart < ChartBase
       issues: @issues, date_range: @date_range, cycletime: @cycletime
     ).run
 
-    date_range = (@date_range.begin.to_date..@date_range.end.to_date)
-
     data_sets = []
     date_issues_list = @daily_chart_items.collect do |daily_chart_item|
       [daily_chart_item.date, daily_chart_item.completed_issues]

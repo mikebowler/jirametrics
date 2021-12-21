@@ -14,7 +14,7 @@ end
 
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
-    :download_config, :file_configs, :exporter, :date_range
+    :download_config, :file_configs, :exporter, :time_range
 
   def initialize exporter:, target_path:, jira_config:, block:
     @exporter = exporter
@@ -122,7 +122,7 @@ class ProjectConfig
   def load_project_metadata
     filename = "#{@target_path}/#{file_prefix}_meta.json"
     json = JSON.parse(File.read(filename))
-    @date_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
+    @time_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise
