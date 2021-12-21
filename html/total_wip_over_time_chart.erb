@@ -1,10 +1,10 @@
 <h1>Flow of Daily WIP</h1>
 <div>This chart shows the highest WIP on each given day. The WIP is color coded so you can see how old it is and hovering over the bar will show you exactly which work items it relates to. The green bar underneath, shows how many items completed on that day.
 <div>
-  <canvas id="total_wip" width="800" height="200"></canvas>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
-new Chart(document.getElementById('total_wip').getContext('2d'),
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {
   type: 'bar',
   data: {

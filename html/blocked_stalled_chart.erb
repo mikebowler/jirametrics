@@ -1,10 +1,10 @@
 <h1>Blocked or stalled work</h1>
 <div>This chart highlights work that is blocked or stalled on each given day.
 <div>
-  <canvas id="blocked-stalled" width="800" height="200"></canvas>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
-new Chart(document.getElementById('blocked-stalled').getContext('2d'),
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {
   type: 'bar',
   data: {

@@ -1,10 +1,10 @@
 <h1>Throughput Chart</h1>
 <div>This chart shows how many items we completed per unit of time</div>
 <div>
-  <canvas id="throughput_chart" width="800" height="200"></canvas>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
-new Chart(document.getElementById('throughput_chart').getContext('2d'), {
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   type: 'scatter',
   data: {
     datasets: <%= JSON.generate(data_sets) %>

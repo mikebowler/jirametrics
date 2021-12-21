@@ -2,10 +2,10 @@
 <p>This chart shows only work items that have started but not completed, grouped by the column they're currently in. Hovering over a dot will show you the ID of that work item.</p>
 <p>The gray area indicates the 85% mark for work items that have passed through here - 85% of previous work items left this column while still inside the gray area. Any work items above the gray area are outliers and they are the items that you should pay special attention to.</p>
 <div>
-  <canvas id="aging_work_in_progress" width="800" height="200"></canvas>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
-new Chart(document.getElementById('aging_work_in_progress').getContext('2d'),
+new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
 {
   type: 'bar',
   data: {
