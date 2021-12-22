@@ -133,11 +133,6 @@ class Issue
     nil
   end
 
-  def time_created
-    puts 'Issue.time_created is deprecated. Use Issue.created instead.'
-    created
-  end
-
   def parse_datetime text
     DateTime.parse(text).new_offset @timezone_offset
   end
@@ -158,7 +153,7 @@ class Issue
     @changes.reverse.find { |change| change.resolution? }&.time
   end
 
-  # Change to use new cycletime_config
+  # TODO: Change to use new cycletime_config
   def blocked_percentage started, finished
     started = started.call self
     finished = finished.call self
@@ -213,7 +208,7 @@ class Issue
 
         blocked_start = nil
       end
-      blocked_start = change.time if change.value
+      blocked_start = change.time
     end
     false
   end

@@ -15,7 +15,7 @@ def mock_config
 end
 
 def mock_change field:, value:, time:
-  time = DateTime.parse(time).new_offset("00:00")
+  time = DateTime.parse(time)
   ChangeItem.new time: time, author: 'Tolkien', raw: {
     'field' => field,
     'to' => 2,
@@ -51,6 +51,35 @@ describe Issue do
   it 'gets url' do
     issue = load_issue 'SP-2'
     expect(issue.url).to eql 'https://improvingflow.atlassian.net/browse/SP-2'
+  end
+
+  it 'cannot fabricate url' do
+    issue = load_issue 'SP-2'
+    issue.raw['self'] = nil
+    expect(issue.url).to eq ''
+  end
+
+  it 'gets created and updated' do
+    raw = {
+      'key' => 'SP-1',
+      'changelog' => { 'histories' => [] },
+      'fields' => {
+        'created' => '2021-08-29T18:00:00+00:00',
+        'updated' => '2021-09-29T18:00:00+00:00',
+        'status' => {
+          'name' => 'BrandNew!',
+          'id' => '999'
+        },
+        'creator' => {
+          'displayName' => 'Tolkien'
+        }
+      }
+    }
+    issue = Issue.new raw: raw
+    expect([issue.created, issue.updated]).to eq [
+      DateTime.parse('2021-08-29T18:00:00+00:00'),
+      DateTime.parse('2021-09-29T18:00:00+00:00')
+    ]
   end
 
   it 'gets simple history with a single status' do
@@ -305,6 +334,28 @@ describe Issue do
         ->(i) { i.first_time_in_status('Done') }
       )
       expect(percentage).to eq 40.0
+    end
+  end
+
+  context 'blocked_on_date?' do
+    it 'should work' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T01:00:00+00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T02:00:00+00:00')
+
+      actual = [
+        issue.blocked_on_date?(Date.parse('2021-10-02')),
+        issue.blocked_on_date?(Date.parse('2021-10-03')),
+        issue.blocked_on_date?(Date.parse('2021-10-04'))
+      ]
+      expect(actual).to eq [false, true, false]
+    end
+  end
+
+  context 'inspect' do
+    it 'should return a simplified representation' do
+      expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
     end
   end
 end
