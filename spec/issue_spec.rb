@@ -358,4 +358,26 @@ describe Issue do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
     end
   end
+
+  context 'resolutions' do
+    it 'should find resolutions when they are present' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-03T01:00:00+00:00')
+      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-04T02:00:00+00:00')
+      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-05T01:00:00+00:00')
+      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-06T02:00:00+00:00')
+      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
+
+      expect([issue.first_resolution, issue.last_resolution]).to eq [
+        DateTime.parse('2021-10-03T01:00:00+00:00'),
+        DateTime.parse('2021-10-07T01:00:00+00:00')
+      ]
+    end
+
+    it 'should handle the case where there are no resolutions' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
+    end
+  end
 end
