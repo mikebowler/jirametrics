@@ -56,15 +56,13 @@ class ProjectConfig
   end
 
   def status_category_mapping type:, status:, category:
-
     status_object = @possible_statuses.find { |s| s.type == type && s.name == status }
-    if status_object.nil?
-      @possible_statuses << Status.new(name: status, id: nil, type: type, category_name: category, category_id: nil)
+    if status_object
+      puts "Status/Category mapping was already present. Ignoring redefinition: #{status_object}"
       return
     end
 
-    # TODO: Raising an exception isn't ideal. Should probably accept it if it doesn't contradict what we already know
-    raise "Status was already present: #{status}"
+    @possible_statuses << Status.new(name: status, id: nil, type: type, category_name: category, category_id: nil)
   end
 
   def load_all_board_configurations

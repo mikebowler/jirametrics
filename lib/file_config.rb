@@ -111,7 +111,6 @@ class FileConfig
     @only_use_row_if = block
   end
 
-  # TODO: to_date needs to know which timezone we're converting to.
   def to_date object
     to_datetime(object)&.to_date
   end
