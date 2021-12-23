@@ -35,7 +35,7 @@ describe DataQualityReport do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     subject.initialize_entries
 
-    subject.completed_issues_without_a_start_time
+    subject.scan_for_completed_issues_without_a_start_time
 
     expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-1']
   end
