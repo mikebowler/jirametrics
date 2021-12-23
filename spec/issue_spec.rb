@@ -190,6 +190,21 @@ describe Issue do
     expect(issue.first_status_change_after_created).to be_nil
   end
 
+  context 'currently_in_status' do
+    it 'item moved to done and then back to in progress' do
+      issue = load_issue 'SP-10'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
+      expect(issue.currently_in_status('Done')).to be_nil
+    end
+
+    it 'item moved to done, back to in progress, then to done again' do
+      issue = load_issue 'SP-10'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
+      expect(issue.currently_in_status('Done').to_s).to eql '2021-10-02T00:00:00+00:00'
+    end
+  end
+
   context 'still_in_status' do
     it 'item moved to done and then back to in progress' do
       issue = load_issue 'SP-10'
@@ -215,6 +230,21 @@ describe Issue do
     it "doesn't match any" do
       issue = load_issue 'SP-10'
       expect(issue.still_in_status('NoStatus')).to be_nil
+    end
+  end
+
+  context 'currently_in_status_category' do
+    it 'item moved to done and then back to in progress' do
+      issue = load_issue 'SP-10'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
+      expect(issue.currently_in_status_category(mock_config, 'finished')).to be_nil
+    end
+
+    it 'item moved to done, back to in progress, then to done again' do
+      issue = load_issue 'SP-10'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
+      expect(issue.currently_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02T00:00:00+00:00'
     end
   end
 

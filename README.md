@@ -84,7 +84,7 @@ Exporter.configure do
       columns do
         write_headers true
 
-        date 'Done', still_in_status_category('Done')
+        date 'Done', currently_in_status_category('Done')
         date 'Start', first_time_in_status_category('In Progress')
         string 'Type', type
         string 'Key', key
@@ -217,7 +217,7 @@ The **date** and **string** lines will output one of those data types into a col
 columns do
   write_headers true
 
-  date 'Done', still_in_status_category('Done')
+  date 'Done', currently_in_status_category('Done')
   date 'Start', first_time_in_status_category('In Progress')
   string 'Type', type
   string 'Key', key
@@ -241,11 +241,10 @@ end
 
 ### Methods to retrieve data ###
 
-* **first_time_in_status** takes a list of status names and returns the timestamp of the first time the issue entered any of these statuses.
+* **first_time_in_status** or **first_time_in_status_category** Returns the timestamp of the first time we entered the respective grouping.
 * **first_time_not_in_status** takes a list of status names and returns the timestamp of the first time that the issue is NOT in one of these statuses. Commonly used if there are a couple of columns at the beginning of the board that we don't want to consider for the purposes of calculating cycletime.
-* **still_in_status** Takes a list of status names. If an issue has ever been in one of these statuses AND is still in one of these statuses then was was the last time it entered one? This is useful for tracking cases where an item moves forward on the board, then backwards, then forward again. We're tracking the last time it entered the named status.
-* **first_time_in_status_category** Same as first_time_in_status except that it's checking status categories.
-* **still_in_status_category** Same as still_in_status except that it's checking status categories.
+* **currently_in_status** or **currently_in_status_category** Takes a list of names. If the most recent status change matches the specified condition then return that timestamp.
+* **still_in_status** or **still_in_status_category** Takes a list of names. If an issue has ever been in one of these statuses AND is still in one of these statuses then was was the last time it entered one? This is useful for tracking cases where an item moves forward on the board, then backwards, then forward again. We're tracking the last time it entered the named status. Important: If you have two status changes in a row and both of them return true then this returns the *first* timestamp. There are subtle cases where we want this behaviour although most of the time, you'd be better off using **currently_in[status|status_category**
 * **first_status_change_after_created** Returns the timestamp of the first status change after the issue was created.
 * **time_created** Returns the creation timestamp of the issue
 * **key** The Jira issue number
