@@ -62,6 +62,7 @@ class InfoDumper
       message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
       message << compact_text(value).inspect
       message << " #{author}" if author
+      message << ' <<artificial entry>>' if change.artificial?
       puts message
     end
     puts ''
