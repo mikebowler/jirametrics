@@ -105,6 +105,7 @@ class DataQualityReport
         change.status? && change.time > entry.stopped
       end
 
+      puts "changes_after_done=#{changes_after_done}"
       unless changes_after_done.empty?
         problem = "This item was done on #{entry.stopped} but status changes continued after that."
         changes_after_done.each do |change|

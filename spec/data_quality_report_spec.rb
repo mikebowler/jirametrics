@@ -4,6 +4,7 @@ require './spec/spec_helper'
 
 describe DataQualityReport do
   let(:issue1) { load_issue('SP-1') }
+  let(:issue2) { load_issue('SP-2') }
   let(:issue10) { load_issue('SP-10') }
   let(:subject) do
     subject = DataQualityReport.new
@@ -38,5 +39,25 @@ describe DataQualityReport do
     subject.scan_for_completed_issues_without_a_start_time
 
     expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-1']
+  end
+
+  it 'should detect status changes after done' do
+    # Issue 1 does have a resolution but no status after it.
+    # Issue 2 has no resolutions at all
+    # Issue 10 has a resolution with a status afterwards.
+
+    issue1.changes.clear
+    issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+
+    subject.issues << issue2
+
+    issue10.changes.clear
+    issue10.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
+    subject.initialize_entries
+
+    subject.scan_for_status_change_after_done
+
+    expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-10']
   end
 end
