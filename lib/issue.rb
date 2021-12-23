@@ -50,6 +50,10 @@ class Issue
 
   def status_id = @raw['fields']['status']['id'].to_i
 
+  def labels = @raw['fields']['labels']
+
+  def author = @raw['fields']['creator']['displayName']
+
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
     if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
@@ -71,7 +75,6 @@ class Issue
       first_status = first_change.old_value
       first_status_id = first_change.old_value_id
     end
-    author = @raw['fields']['creator']['displayName']
     ChangeItem.new time: created_time, artificial: true, author: author, raw: {
       'field' => 'status',
       'to' => first_status_id.to_s,
@@ -120,7 +123,7 @@ class Issue
   end
 
   def first_status_change_after_created
-    @changes[1..].find { |change| change.status? }&.time
+    @changes.find { |change| change.status? && change.artificial? == false }&.time
   end
 
   def first_time_in_status_category config, *category_names

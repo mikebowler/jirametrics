@@ -50,6 +50,10 @@ class HtmlReportConfig
     execute_chart BlockedStalledChart.new
   end
 
+  def data_quality_report
+    execute_chart DataQualityReport.new
+  end
+
   def execute_chart chart
     chart.issues = @file_config.issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='

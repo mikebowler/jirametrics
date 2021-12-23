@@ -34,3 +34,12 @@ def load_complete_sample_issues
   json = JSON.parse(File.read('./spec/complete_sample/sample_0.json'))
   json['issues'].collect { |raw| Issue.new raw: raw }
 end
+
+def mock_change field:, value:, time:
+  time = DateTime.parse(time)
+  ChangeItem.new time: time, author: 'Tolkien', raw: {
+    'field' => field,
+    'to' => 2,
+    'toString' => value
+  }
+end

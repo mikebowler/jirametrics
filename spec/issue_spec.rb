@@ -14,15 +14,6 @@ def mock_config
   ColumnsConfig.new file_config: file, block: nil
 end
 
-def mock_change field:, value:, time:
-  time = DateTime.parse(time)
-  ChangeItem.new time: time, author: 'Tolkien', raw: {
-    'field' => field,
-    'to' => 2,
-    'toString' => value
-  }
-end
-
 def empty_issue created:
   Issue.new(
     raw: {
