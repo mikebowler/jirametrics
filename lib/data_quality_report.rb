@@ -135,7 +135,9 @@ class DataQualityReport
       next unless change.status?
 
       index = @board_metadata.find_index { |column| column.status_ids.include? change.value_id }
-      if index.nil?
+      if change.old_value.nil?
+        # Do nothing
+      elsif index.nil?
         entry.report(
           problem: "The issue changed to a status that isn't visible on the board: #{change.value}",
           impact: 'The issue may be on the wrong board or may be missing'

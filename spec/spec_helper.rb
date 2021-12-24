@@ -35,11 +35,38 @@ def load_complete_sample_issues
   json['issues'].collect { |raw| Issue.new raw: raw }
 end
 
-def mock_change field:, value:, time:
+def load_complete_sample_columns
+  json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
+  json['columnConfig']['columns'].collect do |column|
+    BoardColumn.new column
+  end
+end
+
+def load_complete_sample_statuses
+  statuses = []
+
+  json = JSON.parse(File.read('./spec/complete_sample/sample_statuses.json'))
+  json.each do |type_config|
+    issue_type = type_config['name']
+    type_config['statuses'].each do |status_config|
+      category_config = status_config['statusCategory']
+      statuses << Status.new(
+        type: issue_type,
+        name: status_config['name'], id: status_config['id'],
+        category_name: category_config['name'], category_id: category_config['id']
+      )
+    end
+  end
+  statuses
+end
+
+def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil
   time = DateTime.parse(time)
   ChangeItem.new time: time, author: 'Tolkien', raw: {
     'field' => field,
-    'to' => 2,
-    'toString' => value
+    'to' => value_id,
+    'toString' => value,
+    'from' => old_value_id,
+    'fromString' => old_value
   }
 end

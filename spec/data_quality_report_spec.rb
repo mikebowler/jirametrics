@@ -60,4 +60,48 @@ describe DataQualityReport do
 
     expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-10']
   end
+
+  describe 'backwards movement' do
+    it 'should detect backwards status' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
+      issue1.changes << mock_change(
+        field: 'status', value: 'Selected for Development', old_value: 'In Progress',
+        time: '2021-09-06', value_id: 10_001
+      )
+
+      subject.scan_for_backwards_movement entry: entry
+
+      expect(entry.problems.size).to eq 1
+      _problem, impact = *entry.problems.first
+      expect(impact).to match 'Backwards movement across statuses'
+    end
+
+    it 'should detect backwards status category' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
+      issue1.changes << mock_change(
+        field: 'status', value: 'In Progress', old_value: 'Done',
+        time: '2021-09-06', value_id: 3
+      )
+
+      subject.scan_for_backwards_movement entry: entry
+
+      expect(entry.problems.size).to eq 1
+      _problem, impact = *entry.problems.first
+      expect(impact).to match 'Backwards movement across status categories'
+    end
+  end
 end
