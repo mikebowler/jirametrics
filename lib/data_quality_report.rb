@@ -36,13 +36,6 @@ class DataQualityReport
     @entries.collect { |entry| [entry.started.to_s, entry.stopped.to_s, entry.issue] }
   end
 
-  def testable_problems
-    @entries.collect do |entry|
-      [entry.issue.key, problems.inspect]
-    end
-    # @entries.collect { |entry| [entry.started.to_s, entry.stopped.to_s, entry.issue] }
-  end
-
   def entries_with_problems
     @entries.reject { |entry| entry.problems.empty? }
   end
@@ -135,13 +128,13 @@ class DataQualityReport
       next unless change.status?
 
       index = @board_metadata.find_index { |column| column.status_ids.include? change.value_id }
-      if change.old_value.nil?
-        # Do nothing
-      elsif index.nil?
+      if index.nil?
         entry.report(
           problem: "The issue changed to a status that isn't visible on the board: #{change.value}",
           impact: 'The issue may be on the wrong board or may be missing'
         )
+      elsif change.old_value.nil?
+        # Do nothing
       elsif index < last_index
         new_category = category_name_for(type: issue.type, status_name: change.value)
         old_category = category_name_for(type: issue.type, status_name: change.old_value)

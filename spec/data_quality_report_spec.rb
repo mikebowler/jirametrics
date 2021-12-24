@@ -91,6 +91,8 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
+      # Rank is there just to ensure that it gets skipped appropriately
+      issue1.changes << mock_change(field: 'rank', value: 'more', time: '2021-09-04', value_id: 10_002)
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
       issue1.changes << mock_change(
         field: 'status', value: 'In Progress', old_value: 'Done',
@@ -102,6 +104,23 @@ describe DataQualityReport do
       expect(entry.problems.size).to eq 1
       _problem, impact = *entry.problems.first
       expect(impact).to match 'Backwards movement across status categories'
+    end
+
+    it 'should detect statuses that just aren\'t on the board' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
+
+      subject.scan_for_backwards_movement entry: entry
+
+      expect(entry.problems.size).to eq 1
+      problem, _impact = *entry.problems.first
+      expect(problem).to match "changed to a status that isn't visible"
     end
   end
 end
