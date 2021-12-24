@@ -21,9 +21,9 @@ class DataQualityReport
   def run
     initialize_entries
 
-    scan_for_status_change_after_done
     @entries.each do |entry|
       scan_for_completed_issues_without_a_start_time entry: entry
+      scan_for_status_change_after_done entry: entry
       scan_for_backwards_movement entry: entry
       scan_for_issues_not_created_in_the_right_status entry: entry
     end
@@ -95,26 +95,24 @@ class DataQualityReport
     )
   end
 
-  def scan_for_status_change_after_done
-    @entries.each do |entry|
-      next unless entry.stopped
+  def scan_for_status_change_after_done entry:
+    return unless entry.stopped
 
-      changes_after_done = entry.issue.changes.select do |change|
-        change.status? && change.time > entry.stopped
-      end
-
-      next if changes_after_done.empty?
-
-      problem = "This item was done on #{entry.stopped} but status changes continued after that."
-      changes_after_done.each do |change|
-        problem << " Status change to #{change.value} on #{change.time}."
-      end
-      entry.report(
-        problem: problem,
-        impact: '<span class="highlight">This likely indicates an incorrect end date and will' \
-          ' impact cycletime and WIP calculations</span>'
-      )
+    changes_after_done = entry.issue.changes.select do |change|
+      change.status? && change.time > entry.stopped
     end
+
+    return if changes_after_done.empty?
+
+    problem = "This item was done on #{entry.stopped} but status changes continued after that."
+    changes_after_done.each do |change|
+      problem << " Status change to #{change.value} on #{change.time}."
+    end
+    entry.report(
+      problem: problem,
+      impact: '<span class="highlight">This likely indicates an incorrect end date and will' \
+        ' impact cycletime and WIP calculations</span>'
+    )
   end
 
   def scan_for_backwards_movement entry:

@@ -59,9 +59,14 @@ describe DataQualityReport do
     issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
     subject.initialize_entries
 
-    subject.scan_for_status_change_after_done
+    entry = DataQualityReport::Entry.new(
+      started: nil, stopped: DateTime.parse('2021-09-06T04:34:26+00:00'), issue: issue10
+    )
+    subject.scan_for_status_change_after_done entry: entry
 
-    expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-10']
+    expect(entry.problems.size).to eq 1
+    problem, _impact = *entry.problems.first
+    expect(problem).to match 'but status changes continued after that'
   end
 
   describe 'backwards movement' do
