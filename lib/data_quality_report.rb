@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DataQualityReport
-  attr_accessor :issues, :cycletime
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
 
   class Entry
     attr_reader :started, :stopped, :issue, :problems
@@ -23,7 +23,10 @@ class DataQualityReport
 
     scan_for_completed_issues_without_a_start_time
     scan_for_status_change_after_done
-    scan_for_backwards_movement
+    @entries.each do |entry|
+      scan_for_backwards_movement entry: entry
+      scan_for_issues_not_created_in_the_right_status entry: entry
+    end
 
     create_results_html
   end
@@ -66,6 +69,10 @@ class DataQualityReport
     result
   end
 
+  def category_name_for type:, status_name:
+    @possible_statuses.find { |status| status.type == type && status.name == status_name}&.category_name
+  end
+
   def initialize_entries
     @entries = @issues.collect do |issue|
       Entry.new(
@@ -91,7 +98,7 @@ class DataQualityReport
       next unless entry.stopped && entry.started.nil?
 
       entry.report(
-        problem: 'Item has finished but no start time can be found',
+        problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
         impact: 'Item will not show up in cycletime or WIP calculations'
       )
     end
@@ -105,20 +112,70 @@ class DataQualityReport
         change.status? && change.time > entry.stopped
       end
 
-      puts "changes_after_done=#{changes_after_done}"
-      unless changes_after_done.empty?
-        problem = "This item was done on #{entry.stopped} but status changes continued after that."
-        changes_after_done.each do |change|
-          problem << " Status change to #{change.value} on #{change.time}."
-        end
-        entry.report(
-          problem: problem,
-          impact: 'This likely indicates an incorrect end date and will impact cycletime and WIP calculations'
-        )
+      next if changes_after_done.empty?
+
+      problem = "This item was done on #{entry.stopped} but status changes continued after that."
+      changes_after_done.each do |change|
+        problem << " Status change to #{change.value} on #{change.time}."
       end
+      entry.report(
+        problem: problem,
+        impact: '<span class="highlight">This likely indicates an incorrect end date and will' \
+          ' impact cycletime and WIP calculations</span>'
+      )
     end
   end
 
-  def scan_for_backwards_movement
+  def scan_for_backwards_movement entry:
+    issue = entry.issue
+
+    # Moving backwards through statuses is bad. Moving backwards through status categories is almost always worse.
+    last_index = -1
+    issue.changes.each do |change|
+      next unless change.status?
+
+      index = @board_metadata.find_index { |column| column.status_ids.include? change.value_id }
+      if index.nil?
+        entry.report(
+          problem: "The issue changed to a status that isn't visible on the board: #{change.value}",
+          impact: 'The issue may be on the wrong board or may be missing'
+        )
+      elsif index < last_index
+        new_category = category_name_for(type: issue.type, status_name: change.value)
+        old_category = category_name_for(type: issue.type, status_name: change.old_value)
+
+        if new_category == old_category
+          entry.report(
+            problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+              " on #{change.time.to_date}",
+            impact: 'Backwards movement across statuses may result in incorrect cycletimes or WIP.'
+          )
+        else
+          entry.report(
+            problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+              " on #{change.time.to_date}, " \
+              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}.",
+            impact: '<span class="highlight">Backwards movement across status categories will usually result' \
+              ' in incorrect cycletimes or WIP.</span>'
+          )
+        end
+      end
+      last_index = index
+    end
+  end
+
+  def scan_for_issues_not_created_in_the_right_status entry:
+    valid_initial_status_ids = @board_metadata[0].status_ids
+    creation_change = entry.issue.changes.find { |issue| issue.status? }
+
+    return if valid_initial_status_ids.include? creation_change.value_id
+
+    entry.report(
+      problem: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
+      impact: '<span class="highlight">Issues not created in the first column are an indication of corrupted or' \
+        ' invalid data</span>. It might be' \
+        ' the result of a migration from another system or project. Start times, and therefore cycletimes, we' \
+        ' determine from this record will almost certainly be wrong.'
+    )
   end
 end
