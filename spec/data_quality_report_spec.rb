@@ -36,9 +36,12 @@ describe DataQualityReport do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     subject.initialize_entries
 
-    subject.scan_for_completed_issues_without_a_start_time
+    entry = DataQualityReport::Entry.new started: nil, stopped: DateTime.parse('2021-12-25'), issue: issue1
+    subject.scan_for_completed_issues_without_a_start_time entry: entry
 
-    expect(subject.entries_with_problems.collect { |entry| entry.issue.key }).to eq ['SP-1']
+    expect(entry.problems.size).to eq 1
+    problem, _impact = *entry.problems.first
+    expect(problem).to match 'finished but no start time can be found'
   end
 
   it 'should detect status changes after done' do

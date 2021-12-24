@@ -21,9 +21,9 @@ class DataQualityReport
   def run
     initialize_entries
 
-    scan_for_completed_issues_without_a_start_time
     scan_for_status_change_after_done
     @entries.each do |entry|
+      scan_for_completed_issues_without_a_start_time entry: entry
       scan_for_backwards_movement entry: entry
       scan_for_issues_not_created_in_the_right_status entry: entry
     end
@@ -86,15 +86,13 @@ class DataQualityReport
     end
   end
 
-  def scan_for_completed_issues_without_a_start_time
-    @entries.each do |entry|
-      next unless entry.stopped && entry.started.nil?
+  def scan_for_completed_issues_without_a_start_time entry:
+    return unless entry.stopped && entry.started.nil?
 
-      entry.report(
-        problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
-        impact: 'Item will not show up in cycletime or WIP calculations'
-      )
-    end
+    entry.report(
+      problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
+      impact: 'Item will not show up in cycletime or WIP calculations'
+    )
   end
 
   def scan_for_status_change_after_done
