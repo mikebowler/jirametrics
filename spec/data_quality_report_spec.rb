@@ -122,5 +122,58 @@ describe DataQualityReport do
       problem, _impact = *entry.problems.first
       expect(problem).to match "changed to a status that isn't visible"
     end
+
+    it 'should detect skip past changes that are moving right' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(
+        field: 'status', value: 'Selected for Development', old_value: 'In Progress',
+        time: '2021-09-05', value_id: 10_001
+      )
+      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
+
+      subject.scan_for_backwards_movement entry: entry
+
+      expect(entry.problems).to be_empty
+    end
+  end
+
+  describe 'scan_for_issues_not_created_in_the_right_status' do
+    it 'should catch invalid starting status' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
+
+      subject.scan_for_issues_not_created_in_the_right_status entry: entry
+
+      expect(entry.problems.size).to eq 1
+      _problem, impact = *entry.problems.first
+      expect(impact).to match 'Issues not created in the first column'
+    end
+
+    it 'should skip past valid status' do
+      subject.board_metadata = load_complete_sample_columns
+      subject.possible_statuses = load_complete_sample_statuses
+      subject.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
+
+      subject.scan_for_issues_not_created_in_the_right_status entry: entry
+
+      expect(entry.problems).to be_empty
+    end
   end
 end
