@@ -47,8 +47,13 @@ class DataQualityReport
     result = String.new
     result << '<h1>Data Quality issues</h1>'
     percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
-    result << "Out of a total of #{@entries.size} issues, #{entries_with_problems.size} have one"
-    result << " or more problems related to data quality (#{percentage}%). Do you trust this data?"
+    result << "<p>Out of a total of #{@entries.size} issues, #{entries_with_problems.size} have one"
+    result << " or more problems related to data quality (#{percentage}%)."
+    result << ' <span class="highlight">Do you trust this data?</span>' if percentage >= 25
+    result << '</p>'
+    result << '<p>Items <span class="highlight">highlighted like this</span> will almost certainly'
+    result << ' skew the data. Items that are not highlighted are still important but may not adversely'
+    result << ' affect the results.</p>'
     result << '<ol>'
     entries_with_problems.each do |entry|
       result << '<li><b>' << entry.issue.key << ':</b> <i>' << entry.issue.summary << '</i>'
@@ -91,7 +96,7 @@ class DataQualityReport
 
     entry.report(
       problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
-      impact: 'Item will not show up in cycletime or WIP calculations'
+      impact: 'Item will not show up in cycletime, aging, or WIP calculations'
     )
   end
 
@@ -163,10 +168,10 @@ class DataQualityReport
 
     entry.report(
       problem: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
-      impact: '<span class="highlight">Issues not created in the first column are an indication of corrupted or' \
-        ' invalid data</span>. It might be' \
-        ' the result of a migration from another system or project. Start times, and therefore cycletimes, we' \
-        ' determine from this record will almost certainly be wrong.'
+      impact: '<span class="highlight">Issues not created in the first column (backlog) are an indication' \
+        '  of corrupted or invalid data</span>. It might be' \
+        ' the result of a migration from another system or project. Start times, and therefore cycletimes, aging,' \
+        '  and WIP, will almost certainly be wrong.'
     )
   end
 end
