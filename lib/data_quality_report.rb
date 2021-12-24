@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DataQualityReport
+class DataQualityReport < ChartBase
   attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
 
   class Entry
@@ -28,7 +28,11 @@ class DataQualityReport
       scan_for_issues_not_created_in_the_right_status entry: entry
     end
 
-    create_results_html
+    entries_with_problems = entries_with_problems()
+    return '' if entries_with_problems.empty?
+
+    percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
+    render(binding, __FILE__)
   end
 
   # Return a format that's easier to assert against
@@ -38,33 +42,6 @@ class DataQualityReport
 
   def entries_with_problems
     @entries.reject { |entry| entry.problems.empty? }
-  end
-
-  def create_results_html
-    entries_with_problems = entries_with_problems()
-    return '' if entries_with_problems.empty?
-
-    result = String.new
-    result << '<h1>Data Quality issues</h1>'
-    percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
-    result << "<p>Out of a total of #{@entries.size} issues, #{entries_with_problems.size} have one"
-    result << " or more problems related to data quality (#{percentage}%)."
-    result << ' <span class="highlight">Do you trust this data?</span>' if percentage >= 25
-    result << '</p>'
-    result << '<p>Items <span class="highlight">highlighted like this</span> will almost certainly'
-    result << ' skew the data. Items that are not highlighted are still important but may not adversely'
-    result << ' affect the results.</p>'
-    result << '<ol>'
-    entries_with_problems.each do |entry|
-      result << '<li><b>' << entry.issue.key << ':</b> <i>' << entry.issue.summary << '</i>'
-      result << '<dl>'
-      entry.problems.each do |problem, impact|
-        result << "<dt>Problem: #{problem}</dt><dd>Impact: #{impact}</dd>"
-      end
-      result << '</dl></li>'
-    end
-    result << '</ol>'
-    result
   end
 
   def category_name_for type:, status_name:

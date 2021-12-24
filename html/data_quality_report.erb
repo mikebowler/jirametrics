@@ -1,0 +1,24 @@
+<h1>Data Quality issues</h1>
+
+<p>
+  Out of a total of <%= @entries.size %> issues, <%= entries_with_problems.size %> have one
+  or more problems related to data quality (<%= percentage %>%).
+</p>
+<p>
+  Items <span class="highlight">highlighted like this</span> will almost certainly
+  skew the data. Items that are not highlighted are still important but may not adversely
+  affect the results.
+</p>
+<ol>
+  <% entries_with_problems.each do |entry| %>
+    <li>
+      <b><%= entry.issue.key %>:</b> <i><%= entry.issue.summary %></i>
+      <dl>
+        <% entry.problems.each do |problem, impact| %>
+          <dt>Problem: <%= problem %></dt>
+          <dd>Impact: <%= impact %></dd>
+        <% end %>
+      </dl>
+    </li>
+  <% end %>
+</ol>
