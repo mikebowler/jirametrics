@@ -8,68 +8,47 @@ class BlockedStalledChart < ChartBase
 
   def run
     stalled_threshold = 5
-    @daily_chart_items = DailyChartItemGenerator.new(
+    daily_chart_items = DailyChartItemGenerator.new(
       issues: @issues, date_range: @date_range, cycletime: @cycletime
     ).run
 
-    data_sets = make_data_sets stalled_threshold: stalled_threshold
+    data_sets = make_data_sets daily_chart_items: daily_chart_items, stalled_threshold: stalled_threshold
     render(binding, __FILE__)
   end
 
-  def make_data_sets stalled_threshold:
-    data_sets = []
-
+  def make_data_sets daily_chart_items:, stalled_threshold:
     blocked_data = []
     stalled_data = []
     active_data = []
     completed_data = []
 
-    @daily_chart_items.each do |daily_chart_item|
-      blocked = daily_chart_item.active_issues.select { |issue| issue.blocked_on_date? daily_chart_item.date }
-      stalled = daily_chart_item.active_issues.select { |issue| daily_chart_item.date - issue.updated >= stalled_threshold }
+    daily_chart_items.each do |item|
+      blocked, stalled = blocked_stalled(
+        date: item.date, issues: item.active_issues, stalled_threshold: stalled_threshold
+      )
 
-      blocked_data << [daily_chart_item.date, blocked]
-      stalled_data << [daily_chart_item.date, stalled]
-      completed_data << [daily_chart_item.date, daily_chart_item.completed_issues]
-      active_data << [daily_chart_item.date, daily_chart_item.active_issues - blocked - stalled]
+      blocked_data << [item.date, blocked]
+      stalled_data << [item.date, stalled]
+      completed_data << [item.date, item.completed_issues]
+      active_data << [item.date, item.active_issues - blocked - stalled]
     end
 
-    data_sets << active_dataset(date_issues_list: blocked_data, color: 'red', label: 'blocked')
-    data_sets << active_dataset(date_issues_list: stalled_data, color: 'orange', label: 'stalled')
-    data_sets << active_dataset(date_issues_list: active_data, color: 'lightgray', label: 'active')
-    data_sets << completed_dataset(date_issues_list: completed_data, color: '#009900', label: 'completed')
+    data_sets = []
+    data_sets << daily_chart_dataset(date_issues_list: blocked_data, color: 'red', label: 'blocked')
+    data_sets << daily_chart_dataset(date_issues_list: stalled_data, color: 'orange', label: 'stalled')
+    data_sets << daily_chart_dataset(date_issues_list: active_data, color: 'lightgray', label: 'active')
+
+    data_sets << daily_chart_dataset(
+      date_issues_list: completed_data, color: '#009900', label: 'completed', positive: false
+    )
 
     data_sets
   end
 
-  def active_dataset date_issues_list:, color:, label:
-    {
-      type: 'bar',
-      label: label,
-      data: date_issues_list.collect do |date, issues|
-        {
-          x: date,
-          y: issues.size,
-          title: [label] + issues.collect { |i| "#{i.key} : #{i.summary}" }.sort
-        }
-      end,
-      backgroundColor: color
-    }
-  end
-
-  def completed_dataset date_issues_list:, color:, label:
-    {
-      type: 'bar',
-      label: label,
-      data: date_issues_list.collect do |date, issues|
-        {
-          x: date,
-          y: -issues.size,
-          title: [label] + issues.collect { |i| "#{i.key} : #{i.summary}" }.sort
-        }
-      end,
-      backgroundColor: color,
-      borderRadius: 5
-    }
+  def blocked_stalled date:, issues:, stalled_threshold:
+    # If an item is both blocked and stalled, it should show up only in the blocked list.
+    blocked = issues.select { |issue| issue.blocked_on_date? date }
+    stalled = issues.select { |issue| (date - issue.updated) >= stalled_threshold } - blocked
+    [blocked, stalled]
   end
 end

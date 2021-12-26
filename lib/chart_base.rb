@@ -27,4 +27,20 @@ class ChartBase
   def label_days days
     "#{days} day#{'s' unless days == 1}"
   end
+
+  def daily_chart_dataset date_issues_list:, color:, label:, positive: true
+    {
+      type: 'bar',
+      label: label,
+      data: date_issues_list.collect do |date, issues|
+        {
+          x: date,
+          y: positive ? issues.size : -issues.size,
+          title: [label] + issues.collect { |i| "#{i.key} : #{i.summary}#{yield date, i if block_given?}" }.sort
+        }
+      end,
+      backgroundColor: color,
+      borderRadius: positive ? 0 : 5
+    }
+  end
 end

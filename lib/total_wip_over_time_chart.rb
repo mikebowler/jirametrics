@@ -14,7 +14,9 @@ class TotalWipOverTimeChart < ChartBase
     date_issues_list = @daily_chart_items.collect do |daily_chart_item|
       [daily_chart_item.date, daily_chart_item.completed_issues]
     end
-    data_sets << completed_dataset(date_issues_list: date_issues_list, color: '#009900', label: 'Completed')
+    data_sets << daily_chart_dataset(
+      date_issues_list: date_issues_list, color: '#009900', label: 'Completed', positive: false
+    )
 
     [
       [29..nil, '#990000', 'More than four weeks'],
@@ -31,42 +33,11 @@ class TotalWipOverTimeChart < ChartBase
         [daily_chart_item.date, issues]
       end
 
-      data_sets << active_dataset(date_issues_list: date_issues_list, color: color, label: label)
+      data_sets << daily_chart_dataset(date_issues_list: date_issues_list, color: color, label: label) do |date, issue|
+        "(age: #{label_days (date - @cycletime.started_time(issue)).to_i + 1})"
+      end
     end
 
     render(binding, __FILE__)
-  end
-
-  def active_dataset date_issues_list:, color:, label:
-    {
-      type: 'bar',
-      label: label,
-      data: date_issues_list.collect do |date, issues|
-        {
-          x: date,
-          y: issues.size,
-          title: [label] + issues.collect do |i|
-            "#{i.key} : #{i.summary} (age: #{label_days (date - @cycletime.started_time(i)).to_i + 1})"
-          end.sort
-        }
-      end,
-      backgroundColor: color
-    }
-  end
-
-  def completed_dataset date_issues_list:, color:, label:
-    {
-      type: 'bar',
-      label: label,
-      data: date_issues_list.collect do |date, issues|
-        {
-          x: date,
-          y: -issues.size,
-          title: [label] + issues.collect { |i| "#{i.key} : #{i.summary}" }.sort
-        }
-      end,
-      backgroundColor: color,
-      borderRadius: 5
-    }
   end
 end

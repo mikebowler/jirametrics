@@ -5,10 +5,10 @@ class DailyChartItemGenerator
     attr_reader :date
     attr_accessor :active_issues, :completed_issues, :cycletime
 
-    def initialize date
+    def initialize date:, active_issues: nil, completed_issues: nil
       @date = date
-      @active_issues = nil
-      @completed_issues = nil
+      @active_issues = active_issues
+      @completed_issues = completed_issues
     end
   end
 
@@ -21,7 +21,7 @@ class DailyChartItemGenerator
     @cycletime = cycletime
 
     @daily_chart_items = @date_range.collect do |date|
-      DailyChartItem.new(date)
+      DailyChartItem.new(date: date)
     end
   end
 
