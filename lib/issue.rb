@@ -214,22 +214,29 @@ class Issue
   end
 
   def blocked_on_date? date
-    # We've seen cases in production data where an item becomes unblocked before becoming
-    # blocked so this approach here isn't 100% guaranteed to work. It's a good enough
-    # approximation though.
-
     blocked_start = nil
     changes.each do |change|
       next unless change.flagged?
 
-      if blocked_start && change.value.empty?
+      if change.value == '' # Flag is turning off
+        # It's theoretically impossible for us to get a flag turning off *before* it gets
+        # turned on and yet, we've seen this exact scenario in a production system so we
+        # have to handle it.
+        next if blocked_start.nil?
+
         range = blocked_start.to_date..change.time.to_date
         return true if range.include? date
 
         blocked_start = nil
+      else # Flag is turning on
+        blocked_start = change.time
       end
-      blocked_start = change.time
     end
-    false
+
+    if blocked_start
+      date >= blocked_start
+    else
+      false
+    end
   end
 end

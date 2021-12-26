@@ -359,11 +359,11 @@ describe Issue do
   end
 
   context 'blocked_on_date?' do
-    it 'should work' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02T00:00:00+00:00')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T01:00:00+00:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T02:00:00+00:00')
+    it 'should work when blocked and unblocked on same day' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
 
       actual = [
         issue.blocked_on_date?(Date.parse('2021-10-02')),
@@ -371,6 +371,19 @@ describe Issue do
         issue.blocked_on_date?(Date.parse('2021-10-04'))
       ]
       expect(actual).to eq [false, true, false]
+    end
+
+    it 'should still be blocked the day after' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03')
+
+      actual = [
+        issue.blocked_on_date?(Date.parse('2021-10-02')),
+        issue.blocked_on_date?(Date.parse('2021-10-03')),
+        issue.blocked_on_date?(Date.parse('2021-10-04'))
+      ]
+      expect(actual).to eq [false, true, true]
     end
   end
 
