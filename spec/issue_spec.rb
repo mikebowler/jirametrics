@@ -385,6 +385,21 @@ describe Issue do
       ]
       expect(actual).to eq [false, true, true]
     end
+
+    it 'should handle the case where the issue is unblocked before ever becoming blocked' do
+      # Why are we testing this? Because we've seen it in production and need to ensure it doesn't
+      # blow up.
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03')
+
+      actual = [
+        issue.blocked_on_date?(Date.parse('2021-10-02')),
+        issue.blocked_on_date?(Date.parse('2021-10-03')),
+        issue.blocked_on_date?(Date.parse('2021-10-04'))
+      ]
+      expect(actual).to eq [false, false, false]
+    end
   end
 
   context 'inspect' do

@@ -228,7 +228,9 @@ class Issue
         return true if range.include? date
 
         blocked_start = nil
-      else # Flag is turning on
+      else
+        # Flag is turning on. Note that Jira may pass in a variety of different values here
+        # but all we care about is that it isn't an empty string.
         blocked_start = change.time
       end
     end
