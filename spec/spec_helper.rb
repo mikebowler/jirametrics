@@ -60,9 +60,13 @@ def load_complete_sample_statuses
   statuses
 end
 
-def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil
+def load_complete_sample_date_range
+  DateTime.parse('2021-09-14T00:00:00+00:00')..DateTime.parse('2021-12-13T23:59:59+00:00')
+end
+
+def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil, artificial: false
   time = DateTime.parse(time)
-  ChangeItem.new time: time, author: 'Tolkien', raw: {
+  ChangeItem.new time: time, author: 'Tolkien', artificial: artificial, raw: {
     'field' => field,
     'to' => value_id,
     'toString' => value,
