@@ -3,6 +3,16 @@
 class ChartBase
   @@chart_counter = 0
 
+  def initialize
+    @chart_colors = {
+      'Story' => 'green',
+      'Task' => 'blue',
+      'Bug' => 'orange',
+      'Defect' => 'orange',
+      'Spike' => 'gray'
+    }
+  end
+
   def render caller_binding, file
     basename = Pathname.new(File.realpath(file)).basename.to_s
     raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
@@ -15,13 +25,7 @@ class ChartBase
   end
 
   def color_for type:
-    case type.downcase
-    when 'story' then 'green'
-    when 'task' then 'blue'
-    when 'bug', 'defect' then 'orange'
-    when 'spike' then 'gray'
-    else 'black'
-    end
+    @chart_colors[type] || 'black'
   end
 
   def label_days days

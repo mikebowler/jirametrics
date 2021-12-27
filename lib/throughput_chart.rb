@@ -32,24 +32,24 @@ class ThroughputChart < ChartBase
 
   def daily_throughput_dataset
     {
-      'label' => 'Daily throughput',
-      'data' => throughput_dataset(periods: date_range.collect { |date| date..date }),
-      'fill' => false,
-      'showLine' => true,
-      'lineTension' => 0.4,
-      'backgroundColor' => 'gray'
+      label: 'Daily throughput',
+      data: throughput_dataset(periods: date_range.collect { |date| date..date }),
+      fill: false,
+      showLine: true,
+      lineTension: 0.4,
+      backgroundColor: 'gray'
     }
   end
 
   def weekly_throughput_dataset
     {
-      'label' => 'Weekly throughput',
-      'data' => throughput_dataset(periods: calculate_time_periods),
-      'fill' => false,
-      'showLine' => true,
-      'borderColor' => 'blue',
-      'lineTension' => 0.4,
-      'backgroundColor' => 'blue'
+      label: 'Weekly throughput',
+      data: throughput_dataset(periods: calculate_time_periods),
+      fill: false,
+      showLine: true,
+      borderColor: 'blue',
+      lineTension: 0.4,
+      backgroundColor: 'blue'
     }
   end
 
@@ -60,9 +60,9 @@ class ThroughputChart < ChartBase
         [stop_date, issue] if stop_date && period.include?(stop_date)
       end.compact
 
-      { 'y' => closed_issues.size,
-        'x' => period.end,
-        'title' => closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
+      { y: closed_issues.size,
+        x: period.end,
+        title: closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
       }
     end
   end
