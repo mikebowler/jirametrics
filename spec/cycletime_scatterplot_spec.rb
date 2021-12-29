@@ -35,7 +35,7 @@ describe CycletimeScatterplot do
     chart = CycletimeScatterplot.new
     chart.cycletime = defaultCycletimeConfig
     chart.issues = [issue]
-    expect(chart.create_datasets).to eq([
+    expect(chart.create_datasets [issue]).to eq([
       {
         'backgroundColor' => 'green',
         'data' => [
