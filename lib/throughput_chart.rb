@@ -62,7 +62,7 @@ class ThroughputChart < ChartBase
 
       { y: closed_issues.size,
         x: period.end,
-        title: closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
+        title: ["#{closed_issues.size} items completed"] + closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
       }
     end
   end

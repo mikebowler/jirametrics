@@ -40,7 +40,7 @@ describe DataQualityReport do
     subject.scan_for_completed_issues_without_a_start_time entry: entry
 
     expect(entry.problems.size).to eq 1
-    problem, _impact = *entry.problems.first
+    _problem_key, _detail, problem, _impact = *entry.problems.first
     expect(problem).to match 'finished but no start time can be found'
   end
 
@@ -65,7 +65,7 @@ describe DataQualityReport do
     subject.scan_for_status_change_after_done entry: entry
 
     expect(entry.problems.size).to eq 1
-    problem, _impact = *entry.problems.first
+    _problem_key, _detail, problem, _impact = *entry.problems.first
     expect(problem).to match 'but status changes continued after that'
   end
 
@@ -87,7 +87,7 @@ describe DataQualityReport do
       subject.scan_for_backwards_movement entry: entry
 
       expect(entry.problems.size).to eq 1
-      _problem, impact = *entry.problems.first
+      _problem_key, _detail, _problem, impact = *entry.problems.first
       expect(impact).to match 'Backwards movement across statuses'
     end
 
@@ -110,7 +110,7 @@ describe DataQualityReport do
       subject.scan_for_backwards_movement entry: entry
 
       expect(entry.problems.size).to eq 1
-      _problem, impact = *entry.problems.first
+      _problem_key, _detail, _problem, impact = *entry.problems.first
       expect(impact).to match 'Backwards movement across status categories'
     end
 
@@ -127,7 +127,7 @@ describe DataQualityReport do
       subject.scan_for_backwards_movement entry: entry
 
       expect(entry.problems.size).to eq 1
-      problem, _impact = *entry.problems.first
+      _problem_key, _detail, problem, _impact = *entry.problems.first
       expect(problem).to match "changed to a status that isn't visible"
     end
 
@@ -165,7 +165,7 @@ describe DataQualityReport do
       subject.scan_for_issues_not_created_in_the_right_status entry: entry
 
       expect(entry.problems.size).to eq 1
-      _problem, impact = *entry.problems.first
+      _problem_key, _detail, _problem, impact = *entry.problems.first
       expect(impact).to match 'Issues not created in the first column'
     end
 

@@ -8,7 +8,7 @@ class CycletimeScatterplot < ChartBase
 
     data_sets = create_datasets completed_issues
     percent_line = calculate_percent_line completed_issues
-    stopped_but_not_started_count = @issues.count do |issue|
+    stopped_but_not_started = @issues.select do |issue|
       @cycletime.stopped_time(issue) && @cycletime.started_time(issue).nil?
     end
 
@@ -44,5 +44,24 @@ class CycletimeScatterplot < ChartBase
     times = completed_issues.collect { |issue| @cycletime.cycletime(issue) }
     index = times.size * 85 / 100
     times.sort[index]
+  end
+
+  def link_to_issue issue
+    "<a href='#{issue.url}'>#{issue.key}</a>"
+  end
+
+  def collapable_issues_panel issues
+    link_id = next_id
+    issues_id = next_id
+
+    result = String.new
+    result << "[<a id=#{link_id.inspect} href='#'' onclick='expand_collapse(\"#{link_id}\", \"#{issues_id}\");"
+    result << " return false;'>Show details</a>]"
+    result << "<ul id=#{issues_id.inspect} style='display: none'>"
+    issues.each do |issue|
+      result << "<li><a href='#{issue.url}'>#{issue.key}</a> <i>#{issue.summary}</i></li>"
+    end
+    result << '</ul>'
+    result
   end
 end

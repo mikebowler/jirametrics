@@ -13,8 +13,8 @@ class DataQualityReport < ChartBase
       @problems = []
     end
 
-    def report problem:, impact:
-      @problems << [problem, impact]
+    def report problem_key: nil, detail: nil, problem: nil, impact: nil
+      @problems << [problem_key, detail, problem, impact]
     end
   end
 
@@ -71,7 +71,17 @@ class DataQualityReport < ChartBase
   def scan_for_completed_issues_without_a_start_time entry:
     return unless entry.stopped && entry.started.nil?
 
+    changes = entry.issue.changes.select { |change| change.status? && change.time == entry.stopped }
+    detail = 'No status changes found at the time that this item was marked completed.'
+    unless changes.empty?
+      detail = changes.collect do |change|
+        "Status changed from [#{change.old_value}] to [#{change.value}] on [#{change.time}]."
+      end.join ' '
+    end
+
     entry.report(
+      problem_key: :completed_but_not_started,
+      detail: detail,
       problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
       impact: 'Item will not show up in cycletime, aging, or WIP calculations'
     )
@@ -91,6 +101,8 @@ class DataQualityReport < ChartBase
       problem << " Status change to #{change.value} on #{change.time}."
     end
     entry.report(
+      problem_key: :status_changes_after_done,
+      detail: problem,
       problem: problem,
       impact: '<span class="highlight">This likely indicates an incorrect end date and will' \
         ' impact cycletime and WIP calculations</span>'
@@ -119,12 +131,21 @@ class DataQualityReport < ChartBase
 
         if new_category == old_category
           entry.report(
+            problem_key: :backwords_through_statuses,
+            detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+              " on #{change.time.to_date}",
+
             problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
               " on #{change.time.to_date}",
             impact: 'Backwards movement across statuses may result in incorrect cycletimes or WIP.'
           )
         else
           entry.report(
+            problem_key: :backwards_through_status_categories,
+            detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+              " on #{change.time.to_date}, " \
+              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}.",
+
             problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
               " on #{change.time.to_date}, " \
               " crossing status categories from #{old_category.inspect} to #{new_category.inspect}.",
@@ -144,6 +165,9 @@ class DataQualityReport < ChartBase
     return if valid_initial_status_ids.include? creation_change.value_id
 
     entry.report(
+      problem_key: :created_in_wrong_status,
+      detail: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
+
       problem: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
       impact: '<span class="highlight">Issues not created in the first column (backlog) are an indication' \
         '  of corrupted or invalid data</span>. It might be' \

@@ -402,6 +402,35 @@ describe Issue do
     end
   end
 
+  context 'stalled_on_date?' do
+    it 'should show stalled if the updated date is within the threshold' do
+      issue = empty_issue created: '2021-10-01'
+      issue.raw['fields']['updated'] = '2021-10-01T00:00:00'
+
+      expect(issue.stalled_on_date? Date.parse('2021-12-01')).to be_truthy
+      expect(issue.stalled_on_date? Date.parse('2021-10-02')).to be_falsey
+    end
+
+    it 'should be stalled after a gap' do
+      issue = empty_issue created: '2021-10-01'
+      issue.raw['fields']['updated'] = '2021-10-01T00:00:00'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-11-02')
+
+      expect(issue.stalled_on_date? Date.parse('2021-11-01')).to be_truthy
+      expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
+    end
+
+    it 'should be stalled before the updated time' do
+      puts '======'
+      issue = empty_issue created: '2021-10-01'
+      issue.raw['fields']['updated'] = '2021-11-02T00:00:00'
+      # issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-11-02')
+
+      expect(issue.stalled_on_date? Date.parse('2021-11-01')).to be_truthy
+      expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
+    end
+  end
+
   context 'inspect' do
     it 'should return a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'

@@ -4,7 +4,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.2.2/chartjs-plugin-annotation.min.js" integrity="sha512-HycvvBSFvDEVyJ0tjE2rPmymkt6XqsP/Zo96XgLRjXwn6SecQqsn+6V/7KYev66OshZZ9+f9AttCGmYqmzytiw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="text/javascript">
+      function expand_collapse(link_id, issues_id)  {
+        //document.getElementById(issues_id).style.display = 'block'
+        link_text = document.getElementById(link_id).textContent
+        if( link_text == 'Show details') {
+          document.getElementById(link_id).textContent = 'Hide details'
+          document.getElementById(issues_id).style.display = 'block'
+        }
+        else {
+          document.getElementById(link_id).textContent = 'Show details'
+          document.getElementById(issues_id).style.display = 'none'
+        }
+        //alert(link_text)
+      }
+    </script>
     <style>
+      h1 {
+        border: 1px solid black;
+        background: lightgray;
+        padding-left: 0.2em;
+      }
       dl, dd, dt {
         padding: 0;
         margin: 0;

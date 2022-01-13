@@ -18,12 +18,16 @@ class ChartBase
     raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
 
     # Insert a 'random' chart_id so that all the chart names on the page are unique
-    caller_binding.eval "chart_id='chart#{@@chart_counter += 1}'"
+    caller_binding.eval "chart_id='chart#{next_id}'"
 
     erb = ERB.new File.read "html/#{$1}.erb"
     erb.result(caller_binding)
   end
 
+  def next_id
+    @@chart_counter += 1
+  end
+  
   def color_for type:
     @chart_colors[type] || 'black'
   end

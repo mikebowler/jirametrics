@@ -14,9 +14,14 @@
     <li>
       <b><%= entry.issue.key %>:</b> <i><%= entry.issue.summary %></i>
       <dl>
-        <% entry.problems.each do |problem, impact| %>
-          <dt>Problem: <%= problem %></dt>
-          <dd>Impact: <%= impact %></dd>
+        <% entry.problems.each do |problem_key, detail, problem, impact| %>
+          <% if problem_key %>
+            <dt>Problem key: <%= problem_key %></dt>
+            <dd>details: <%= detail %></dd>
+          <% else %>
+            <dt>Problem: <%= problem %></dt>
+            <dd>Impact: <%= impact %></dd>
+          <% end %>
         <% end %>
       </dl>
     </li>

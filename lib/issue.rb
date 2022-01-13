@@ -54,6 +54,8 @@ class Issue
 
   def author = @raw['fields']['creator']['displayName']
 
+  def resolution = @raw['fields']['resolution']['name']
+
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
     if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
@@ -240,5 +242,19 @@ class Issue
     else
       false
     end
+  end
+
+  def stalled_on_date? date, stalled_threshold = 5
+    changes.each do |change|
+      change_date = change.time.to_date
+      next if change_date > date
+
+      return false if (date - change_date).to_i < stalled_threshold
+    end
+
+    updated_date = updated.to_date
+    return true if date < updated_date
+
+    date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 end

@@ -38,17 +38,13 @@ class BlockedStalledChart < ChartBase
     data_sets << daily_chart_dataset(date_issues_list: stalled_data, color: 'orange', label: 'stalled')
     data_sets << daily_chart_dataset(date_issues_list: active_data, color: 'lightgray', label: 'active')
 
-    data_sets << daily_chart_dataset(
-      date_issues_list: completed_data, color: '#009900', label: 'completed', positive: false
-    )
-
     data_sets
   end
 
   def blocked_stalled date:, issues:, stalled_threshold:
     # If an item is both blocked and stalled, it should show up only in the blocked list.
     blocked = issues.select { |issue| issue.blocked_on_date? date }
-    stalled = issues.select { |issue| (date - issue.updated) >= stalled_threshold } - blocked
+    stalled = issues.select { |issue| issue.stalled_on_date? date, stalled_threshold } - blocked
     [blocked, stalled]
   end
 end

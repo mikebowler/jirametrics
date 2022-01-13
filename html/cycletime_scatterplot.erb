@@ -5,12 +5,6 @@
 <p>
   The red line indicates the 85th percentile (<%= percent_line %> days). 85% of all items on this chart fall on or below the line and the remaining 15% are above the line. 85% is a reasonable proxy for "most" so that we can say that based on this data set, we can predict that most work of this type will complete in <%= percent_line %> days or less.
 </p>
-<% unless stopped_but_not_started_count.zero? %>
-  <p>
-    <b>Data quality note:</b> <%= stopped_but_not_started_count %> items were discarded from this data set. Although they did complete in the time period shown here, we were unable to determine a starting time and therefore couldn't calculate cycle time. Most likely, these items moved directly from Created to Done.
-  </p>
-<% end %>
-
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
@@ -29,9 +23,6 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     scales: {
       x: {
         type: "time",
-        // time: {
-        //     format: 'YYYY-MM-DD'
-        // },
         scaleLabel: {
           display: true,
           labelString: 'Date Completed'
@@ -60,7 +51,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             yMin: <%= percent_line %>,
             yMax: <%= percent_line %>,
             borderColor: 'rgb(255, 99, 132)',
-            borderWidth: 2
+            borderWidth: 1
           }
         }
       }
@@ -68,3 +59,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   }
 });
 </script>
+<% unless stopped_but_not_started.empty? %>
+  <p>
+    <b>Data quality note:</b> <%= stopped_but_not_started.size %> items were discarded from this data set. Although they did complete in the time period shown here, we were unable to determine when they started and therefore couldn't calculate cycle time. Most likely, these items moved directly from Created to Done.
+    <%= collapable_issues_panel stopped_but_not_started %>
+  </p>
+<% end %>
+
