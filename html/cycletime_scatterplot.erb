@@ -62,7 +62,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 <% unless stopped_but_not_started.empty? %>
   <p>
     <b>Data quality note:</b> <%= stopped_but_not_started.size %> items were discarded from this data set. Although they did complete in the time period shown here, we were unable to determine when they started and therefore couldn't calculate cycle time. Most likely, these items moved directly from Created to Done.
-    <%= collapable_issues_panel stopped_but_not_started %>
+    <%= collapsible_issues_panel stopped_but_not_started %>
   </p>
 <% end %>
 

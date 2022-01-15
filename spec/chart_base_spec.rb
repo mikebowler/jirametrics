@@ -31,7 +31,7 @@ describe ChartBase do
         label: 'MyChart',
         data: [
           {
-            title: ['MyChart', 'SP-1 : Create new draft event'],
+            title: ['MyChart (1 issue)', 'SP-1 : Create new draft event'],
             x: Date.parse('2021-10-10'),
             y: 1
           }
@@ -49,14 +49,14 @@ describe ChartBase do
       ]
       dataset = subject.daily_chart_dataset(
         date_issues_list: date_issues_list, color: 'red', label: 'MyChart', positive: true
-      ) { |_date, _issue| ' (dynamic content!)'}
+      ) { |_date, _issue| '(dynamic content!)'}
 
       expect(dataset).to eq({
         type: 'bar',
         label: 'MyChart',
         data: [
           {
-            title: ['MyChart', 'SP-1 : Create new draft event (dynamic content!)'],
+            title: ['MyChart (1 issue)', 'SP-1 : Create new draft event (dynamic content!)'],
             x: Date.parse('2021-10-10'),
             y: 1
           }
@@ -81,7 +81,7 @@ describe ChartBase do
         label: 'MyChart',
         data: [
           {
-            title: ['MyChart', 'SP-1 : Create new draft event'],
+            title: ['MyChart (1 issue)', 'SP-1 : Create new draft event'],
             x: Date.parse('2021-10-10'),
             y: -1
           }

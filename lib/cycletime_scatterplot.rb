@@ -8,9 +8,10 @@ class CycletimeScatterplot < ChartBase
 
     data_sets = create_datasets completed_issues
     percent_line = calculate_percent_line completed_issues
-    stopped_but_not_started = @issues.select do |issue|
-      @cycletime.stopped_time(issue) && @cycletime.started_time(issue).nil?
-    end
+    stopped_but_not_started = @issues.collect do |issue|
+      stopped_time = @cycletime.stopped_time(issue)
+      [issue, "Completed on #{stopped_time.to_date}"] if stopped_time && @cycletime.started_time(issue).nil?
+    end.compact
 
     render(binding, __FILE__)
   end
@@ -50,7 +51,7 @@ class CycletimeScatterplot < ChartBase
     "<a href='#{issue.url}'>#{issue.key}</a>"
   end
 
-  def collapable_issues_panel issues
+  def collapsible_issues_panel issue_descriptions
     link_id = next_id
     issues_id = next_id
 
@@ -58,8 +59,8 @@ class CycletimeScatterplot < ChartBase
     result << "[<a id=#{link_id.inspect} href='#'' onclick='expand_collapse(\"#{link_id}\", \"#{issues_id}\");"
     result << " return false;'>Show details</a>]"
     result << "<ul id=#{issues_id.inspect} style='display: none'>"
-    issues.each do |issue|
-      result << "<li><a href='#{issue.url}'>#{issue.key}</a> <i>#{issue.summary}</i></li>"
+    issue_descriptions.sort { |a, b| a[0].key_as_i <=> b[0].key_as_i }.each do |issue, description|
+      result << "<li><a href='#{issue.url}'>#{issue.key}</a> <i>#{issue.summary.inspect}</i> #{description}</li>"
     end
     result << '</ul>'
     result

@@ -27,7 +27,7 @@ class ChartBase
   def next_id
     @@chart_counter += 1
   end
-  
+
   def color_for type:
     @chart_colors[type] || 'black'
   end
@@ -36,15 +36,21 @@ class ChartBase
     "#{days} day#{'s' unless days == 1}"
   end
 
+  def label_issues count
+    "#{count} issue#{'s' unless count == 1}"
+  end
+
   def daily_chart_dataset date_issues_list:, color:, label:, positive: true
     {
       type: 'bar',
       label: label,
       data: date_issues_list.collect do |date, issues|
+        issues.sort! { |a, b| a.key_as_i <=> b.key_as_i }
+        title = "#{label} (#{label_issues issues.size})"
         {
           x: date,
           y: positive ? issues.size : -issues.size,
-          title: [label] + issues.collect { |i| "#{i.key} : #{i.summary}#{yield date, i if block_given?}" }.sort
+          title: [title] + issues.collect { |i| "#{i.key} : #{i.summary.strip}#{" #{yield date, i}" if block_given?}" }
         }
       end,
       backgroundColor: color,

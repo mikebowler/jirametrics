@@ -65,6 +65,10 @@ class Issue
     end
   end
 
+  def key_as_i
+    $1.to_i if key =~ /\-(\d+)$/
+  end
+
   def create_fake_change_for_creation existing_changes
     created_time = parse_datetime @raw['fields']['created']
     first_change = existing_changes.find { |change| change.status? }
