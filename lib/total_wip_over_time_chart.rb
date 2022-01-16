@@ -3,7 +3,7 @@
 require 'pathname'
 
 class TotalWipOverTimeChart < ChartBase
-  attr_accessor :issues, :cycletime, :date_range
+  attr_accessor :issues, :cycletime, :date_range, :board_metadata, :possible_statuses
 
   def run
     @daily_chart_items = DailyChartItemGenerator.new(
@@ -37,6 +37,8 @@ class TotalWipOverTimeChart < ChartBase
         "(age: #{label_days (date - @cycletime.started_time(issue)).to_i + 1})"
       end
     end
+
+    data_quality = scan_data_quality @issues
 
     render(binding, __FILE__)
   end

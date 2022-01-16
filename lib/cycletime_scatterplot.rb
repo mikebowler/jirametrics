@@ -9,14 +9,7 @@ class CycletimeScatterplot < ChartBase
     data_sets = create_datasets completed_issues
     percent_line = calculate_percent_line completed_issues
 
-    data_quality = scan_data_quality(
-      issues: issues, cycletime: cycletime, board_metadata: board_metadata, possible_statuses: possible_statuses
-    )
-
-    # stopped_but_not_started = @issues.collect do |issue|
-    #   stopped_time = @cycletime.stopped_time(issue)
-    #   [issue, "Completed on #{stopped_time.to_date}"] if stopped_time && @cycletime.started_time(issue).nil?
-    # end.compact
+    data_quality = scan_data_quality completed_issues
 
     render(binding, __FILE__)
   end

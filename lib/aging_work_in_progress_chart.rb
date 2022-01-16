@@ -3,11 +3,14 @@
 require './lib/chart_base'
 
 class AgingWorkInProgressChart < ChartBase
-  attr_accessor :issues, :board_metadata, :cycletime
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
 
   def run
     data_sets = make_data_sets
     column_headings = board_metadata.collect(&:name)
+
+    data_quality = scan_data_quality @issues
+
     render(binding, __FILE__)
   end
 

@@ -49,3 +49,76 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
   }
 });
 </script>
+
+<% 
+  problems = data_quality.problems_for :completed_but_not_started
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_changes_after_done
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwords_through_statuses
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board. This may have messed up timings so start time or end time or both, could be wrong. This impacts whether the item is correctly shows as being in progress or not.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwards_through_status_categories
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted start and/or end times so items will incorrectly be showing as in progress or not at the wrong times.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :created_in_wrong_status
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items were created in the wrong status. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_not_on_board
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+

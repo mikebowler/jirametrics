@@ -45,3 +45,52 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   }
 });
 </script>
+
+<% 
+  problems = data_quality.problems_for :status_changes_after_done
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwords_through_statuses
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board. This may have messed up timings so end time could be wrong.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwards_through_status_categories
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the end times are often taken at status category boundaries. You should assume that any measurements for this item are wrong.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_not_on_board
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+

@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 class ThroughputChart < ChartBase
-  attr_accessor :issues, :cycletime, :date_range
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
 
   def run
+    completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) }
+
     data_sets = []
-    data_sets << weekly_throughput_dataset
-    data_sets << daily_throughput_dataset
+    data_sets << weekly_throughput_dataset(completed_issues: completed_issues)
+    data_sets << daily_throughput_dataset(completed_issues: completed_issues)
+
+    data_quality = scan_data_quality completed_issues
 
     render(binding, __FILE__)
   end
@@ -30,10 +34,10 @@ class ThroughputChart < ChartBase
     end
   end
 
-  def daily_throughput_dataset
+  def daily_throughput_dataset completed_issues:
     {
       label: 'Daily throughput',
-      data: throughput_dataset(periods: date_range.collect { |date| date..date }),
+      data: throughput_dataset(periods: date_range.collect { |date| date..date }, completed_issues: completed_issues),
       fill: false,
       showLine: true,
       lineTension: 0.4,
@@ -41,10 +45,10 @@ class ThroughputChart < ChartBase
     }
   end
 
-  def weekly_throughput_dataset
+  def weekly_throughput_dataset completed_issues:
     {
       label: 'Weekly throughput',
-      data: throughput_dataset(periods: calculate_time_periods),
+      data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues),
       fill: false,
       showLine: true,
       borderColor: 'blue',
@@ -53,9 +57,9 @@ class ThroughputChart < ChartBase
     }
   end
 
-  def throughput_dataset periods:
+  def throughput_dataset periods:, completed_issues:
     periods.collect do |period|
-      closed_issues = @issues.collect do |issue|
+      closed_issues = completed_issues.collect do |issue|
         stop_date = cycletime.stopped_time(issue)&.to_date
         [stop_date, issue] if stop_date && period.include?(stop_date)
       end.compact

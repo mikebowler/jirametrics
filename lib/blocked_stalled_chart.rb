@@ -4,7 +4,7 @@ require './lib/chart_base'
 require './lib/daily_chart_item_generator'
 
 class BlockedStalledChart < ChartBase
-  attr_accessor :issues, :cycletime, :date_range
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
 
   def run
     stalled_threshold = 5
@@ -13,6 +13,8 @@ class BlockedStalledChart < ChartBase
     ).run
 
     data_sets = make_data_sets daily_chart_items: daily_chart_items, stalled_threshold: stalled_threshold
+    data_quality = scan_data_quality @issues
+
     render(binding, __FILE__)
   end
 

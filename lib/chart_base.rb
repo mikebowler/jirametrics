@@ -77,7 +77,7 @@ class ChartBase
     result
   end
 
-  def scan_data_quality issues:, cycletime:, board_metadata:, possible_statuses:
+  def scan_data_quality issues
     checker = DataQualityReport.new
     checker.issues = issues
     checker.cycletime = cycletime

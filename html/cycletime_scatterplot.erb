@@ -84,18 +84,6 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 %>
 
 <% 
-  problems = data_quality.problems_for :status_changes_after_done
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-<% 
   problems = data_quality.problems_for :backwords_through_statuses
   unless problems.empty? 
 %>
@@ -112,7 +100,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   unless problems.empty? 
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, crossing status categories. This will almost certainly have impacted timings as the start or end times are often taken at status category boundaries. You should assume that any cycletime measurements for this item are wrong.
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the start or end times are often taken at status category boundaries. You should assume that any cycletime measurements for this item are wrong.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 

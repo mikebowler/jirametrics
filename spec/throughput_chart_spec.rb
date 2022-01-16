@@ -60,7 +60,10 @@ describe ThroughputChart do
 
       puts subject.cycletime.stopped_time(issue1)
       puts subject.cycletime.stopped_time(issue2)
-      dataset = subject.throughput_dataset periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')]
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
+        completed_issues: [issue1, issue2]
+      )
       expect(dataset).to eq [
         {
           title: ['2 items completed', 'SP-1 : Create new draft event', 'SP-2 : Update existing event'],
