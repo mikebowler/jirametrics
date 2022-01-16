@@ -1,5 +1,10 @@
 <h1>Blocked or stalled work</h1>
-<div>This chart highlights work that is blocked or stalled on each given day. In Jira terms, blocked means that the issue has been "flagged". Stalled indicates that the item hasn't had any updates in <%= stalled_threshold %> days.</div>
+<p>
+  This chart highlights work that is blocked or stalled on each given day. In Jira terms, blocked means that the issue has been "flagged". Stalled indicates that the item hasn't had any updates in <%= stalled_threshold %> days.
+</p>
+<p>
+  Note that if an item tracks as both blocked and stalled, it will only show up in the flagged totals. It will not be double counted.
+</p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>

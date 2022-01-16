@@ -1,17 +1,22 @@
 # frozen_string_literal: true
 
 class CycletimeScatterplot < ChartBase
-  attr_accessor :issues, :cycletime
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
 
   def run
     completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) && @cycletime.started_time(issue) }
 
     data_sets = create_datasets completed_issues
     percent_line = calculate_percent_line completed_issues
-    stopped_but_not_started = @issues.collect do |issue|
-      stopped_time = @cycletime.stopped_time(issue)
-      [issue, "Completed on #{stopped_time.to_date}"] if stopped_time && @cycletime.started_time(issue).nil?
-    end.compact
+
+    data_quality = scan_data_quality(
+      issues: issues, cycletime: cycletime, board_metadata: board_metadata, possible_statuses: possible_statuses
+    )
+
+    # stopped_but_not_started = @issues.collect do |issue|
+    #   stopped_time = @cycletime.stopped_time(issue)
+    #   [issue, "Completed on #{stopped_time.to_date}"] if stopped_time && @cycletime.started_time(issue).nil?
+    # end.compact
 
     render(binding, __FILE__)
   end
@@ -45,24 +50,5 @@ class CycletimeScatterplot < ChartBase
     times = completed_issues.collect { |issue| @cycletime.cycletime(issue) }
     index = times.size * 85 / 100
     times.sort[index]
-  end
-
-  def link_to_issue issue
-    "<a href='#{issue.url}'>#{issue.key}</a>"
-  end
-
-  def collapsible_issues_panel issue_descriptions
-    link_id = next_id
-    issues_id = next_id
-
-    result = String.new
-    result << "[<a id=#{link_id.inspect} href='#'' onclick='expand_collapse(\"#{link_id}\", \"#{issues_id}\");"
-    result << " return false;'>Show details</a>]"
-    result << "<ul id=#{issues_id.inspect} style='display: none'>"
-    issue_descriptions.sort { |a, b| a[0].key_as_i <=> b[0].key_as_i }.each do |issue, description|
-      result << "<li><a href='#{issue.url}'>#{issue.key}</a> <i>#{issue.summary.inspect}</i> #{description}</li>"
-    end
-    result << '</ul>'
-    result
   end
 end

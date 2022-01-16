@@ -31,8 +31,18 @@ class DataQualityReport < ChartBase
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
 
-    percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
-    render(binding, __FILE__)
+    # percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
+    # render(binding, __FILE__)
+  end
+
+  def problems_for key
+    result = []
+    @entries.each do |entry|
+      entry.problems.each do |problem_key, detail, problem, impact|
+        result << [entry.issue, detail] if problem_key == key
+      end
+    end
+    result
   end
 
   # Return a format that's easier to assert against
@@ -120,6 +130,9 @@ class DataQualityReport < ChartBase
       index = @board_metadata.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         entry.report(
+          problem_key: :status_not_on_board,
+          detail: "Status [#{change.value}] is not on the board",
+
           problem: "The issue changed to a status that isn't visible on the board: #{change.value}",
           impact: 'The issue may be on the wrong board or may be missing'
         )

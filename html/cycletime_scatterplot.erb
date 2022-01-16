@@ -59,10 +59,88 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   }
 });
 </script>
-<% unless stopped_but_not_started.empty? %>
+<% 
+  problems = data_quality.problems_for :completed_but_not_started
+  unless problems.empty? 
+%>
   <p>
-    <b>Data quality note:</b> <%= stopped_but_not_started.size %> items were discarded from this data set. Although they did complete in the time period shown here, we were unable to determine when they started and therefore couldn't calculate cycle time. Most likely, these items moved directly from Created to Done.
-    <%= collapsible_issues_panel stopped_but_not_started %>
+    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set. Although they did complete in the time period shown here, we were unable to determine when they started and therefore couldn't calculate cycle time. Most likely, these items moved directly from Created to Done.
+    <%= collapsible_issues_panel problems %>
   </p>
-<% end %>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_changes_after_done
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_changes_after_done
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwords_through_statuses
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board. This may have messed up timings so start time or end time or both, could be wrong.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :backwards_through_status_categories
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, crossing status categories. This will almost certainly have impacted timings as the start or end times are often taken at status category boundaries. You should assume that any cycletime measurements for this item are wrong.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :created_in_wrong_status
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items were created in the wrong status. This will impact the measurement of start times and will therefore impact any cycletime calculations. It's possible that these items were part of a migration from a different system.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
+  problems = data_quality.problems_for :status_not_on_board
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
 
