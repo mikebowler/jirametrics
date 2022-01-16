@@ -35,7 +35,7 @@ class DataQualityChecker
   def problems_for key
     result = []
     @entries.each do |entry|
-      entry.problems.each do |problem_key, detail, problem, impact|
+      entry.problems.each do |problem_key, detail|
         result << [entry.issue, detail] if problem_key == key
       end
     end
@@ -88,9 +88,7 @@ class DataQualityChecker
 
     entry.report(
       problem_key: :completed_but_not_started,
-      detail: detail,
-      problem: 'Item has finished but no start time can be found. Likely it went directly from "created" to "done"',
-      impact: 'Item will not show up in cycletime, aging, or WIP calculations'
+      detail: detail
     )
   end
 
@@ -109,10 +107,7 @@ class DataQualityChecker
     end
     entry.report(
       problem_key: :status_changes_after_done,
-      detail: problem,
-      problem: problem,
-      impact: '<span class="highlight">This likely indicates an incorrect end date and will' \
-        ' impact cycletime and WIP calculations</span>'
+      detail: problem
     )
   end
 
@@ -128,10 +123,7 @@ class DataQualityChecker
       if index.nil?
         entry.report(
           problem_key: :status_not_on_board,
-          detail: "Status [#{change.value}] is not on the board",
-
-          problem: "The issue changed to a status that isn't visible on the board: #{change.value}",
-          impact: 'The issue may be on the wrong board or may be missing'
+          detail: "Status [#{change.value}] is not on the board"
         )
       elsif change.old_value.nil?
         # Do nothing
@@ -143,24 +135,14 @@ class DataQualityChecker
           entry.report(
             problem_key: :backwords_through_statuses,
             detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
-              " on #{change.time.to_date}",
-
-            problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
-              " on #{change.time.to_date}",
-            impact: 'Backwards movement across statuses may result in incorrect cycletimes or WIP.'
+              " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
             detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
               " on #{change.time.to_date}, " \
-              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}.",
-
-            problem: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
-              " on #{change.time.to_date}, " \
-              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}.",
-            impact: '<span class="highlight">Backwards movement across status categories will usually result' \
-              ' in incorrect cycletimes or WIP.</span>'
+              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}."
           )
         end
       end
@@ -176,13 +158,7 @@ class DataQualityChecker
 
     entry.report(
       problem_key: :created_in_wrong_status,
-      detail: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
-
-      problem: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}",
-      impact: '<span class="highlight">Issues not created in the first column (backlog) are an indication' \
-        '  of corrupted or invalid data</span>. It might be' \
-        ' the result of a migration from another system or project. Start times, and therefore cycletimes, aging,' \
-        '  and WIP, will almost certainly be wrong.'
+      detail: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}"
     )
   end
 end
