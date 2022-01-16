@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DataQualityReport < ChartBase
+class DataQualityChecker
   attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
 
   class Entry
@@ -30,9 +30,6 @@ class DataQualityReport < ChartBase
 
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
-
-    # percentage = (entries_with_problems.size * 100.0 / @entries.size).round(1)
-    # render(binding, __FILE__)
   end
 
   def problems_for key

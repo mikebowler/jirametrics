@@ -2,12 +2,12 @@
 
 require './spec/spec_helper'
 
-describe DataQualityReport do
+describe DataQualityChecker do
   let(:issue1) { load_issue('SP-1') }
   let(:issue2) { load_issue('SP-2') }
   let(:issue10) { load_issue('SP-10') }
   let(:subject) do
-    subject = DataQualityReport.new
+    subject = DataQualityChecker.new
     subject.issues = [issue10, issue1]
 
     today = Date.parse('2021-12-17')
@@ -36,7 +36,7 @@ describe DataQualityReport do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     subject.initialize_entries
 
-    entry = DataQualityReport::Entry.new started: nil, stopped: DateTime.parse('2021-12-25'), issue: issue1
+    entry = DataQualityChecker::Entry.new started: nil, stopped: DateTime.parse('2021-12-25'), issue: issue1
     subject.scan_for_completed_issues_without_a_start_time entry: entry
 
     expect(entry.problems.size).to eq 1
@@ -59,7 +59,7 @@ describe DataQualityReport do
     issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
     subject.initialize_entries
 
-    entry = DataQualityReport::Entry.new(
+    entry = DataQualityChecker::Entry.new(
       started: nil, stopped: DateTime.parse('2021-09-06T04:34:26+00:00'), issue: issue10
     )
     subject.scan_for_status_change_after_done entry: entry
@@ -75,7 +75,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
@@ -96,7 +96,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       # Rank is there just to ensure that it gets skipped appropriately
@@ -119,7 +119,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
@@ -136,7 +136,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(
@@ -157,7 +157,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
@@ -174,7 +174,7 @@ describe DataQualityReport do
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
-      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
