@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CycletimeScatterplot < ChartBase
-  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
+  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
 
   def run
     completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) && @cycletime.started_time(issue) }
