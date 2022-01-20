@@ -15,8 +15,8 @@ class ExpeditedChart < ChartBase
     end
 
     data_sets = []
-    data_sets << make_start_points_data_set(expedited_issues)
-    data_sets << make_complete_points_data_set(expedited_issues)
+    # data_sets << make_start_points_data_set(expedited_issues)
+    # data_sets << make_complete_points_data_set(expedited_issues)
     expedited_issues.each do |issue|
       data_sets << make_expedite_lines_data_set(issue: issue)
     end
@@ -83,6 +83,14 @@ class ExpeditedChart < ChartBase
     [a, b].max
   end
 
+  def make_point issue:, time:, label:
+    {
+      y: (time.to_date - issue.created.to_date).to_i + 1,
+      x: time.to_date.to_s,
+      title: ["#{issue.key} #{label} : #{issue.summary}"]
+    }
+  end
+
   def make_expedite_lines_data_set issue:
     started_time = @cycletime.started_time(issue)
     stopped_time = @cycletime.stopped_time(issue)
@@ -93,55 +101,37 @@ class ExpeditedChart < ChartBase
 
     started = nil
     issue.changes.each do |change|
-      if change.time == started_time
-        data << {
-          y: (change.time.to_date - issue.created.to_date).to_i + 1,
-          x: change.time.to_date.to_s,
-          title: ["#{issue.key} Started : #{issue.summary}"]
-        }
-        colors << 'black'
+      if change.time == started_time || change.time == stopped_time
+        label = 'Started'
+        label = 'Stopped' if change.time == stopped_time
+
+        data << make_point(issue: issue, time: change.time, label: label)
+        colors << 'orange'
         point_styles << 'rect'
       end
       next unless change.priority?
 
-      # puts "#{issue.key} time=#{change.time} value=#{change.value}"
       if change.value == expedited_label
         started = change.time
-        time = later_date(date_range.begin, change.time)
-        # puts "time=#{time} issue_started=#{started_time} change.time=#{change.time}"
-        data << {
-          y: (time.to_date - issue.created.to_date).to_i + 1,
-          x: time.to_date.to_s,
-          title: ["#{issue.key} Expedited : #{issue.summary}"]
-        }
+
+        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: label)
         colors << 'red'
         point_styles << 'dash'
       elsif started
-        time = later_date(date_range.begin, change.time)
-        data << {
-          y: (time.to_date - issue.created.to_date).to_i + 1,
-          x: time.to_date.to_s,
-          title: ["#{issue.key} Not expedited : #{issue.summary}"]
-        }
+        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: label)
         colors << 'black'
         point_styles << 'circle'
         started = nil
       end
     end
 
-    if started
-      stop = earliest_date(date_range.end, stopped_time)
-      data << {
-        y: (stop - issue.created.to_date).to_i + 1,
-        x: stop.to_s,
-        title: ["#{issue.key} End of data set : #{issue.summary}"]
-      }
+    if started && (stopped_time.nil? || (stopped_time && started > stopped_time))
+      data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing')
       colors << 'green'
       point_styles << 'rect'
       started = nil
     end
 
-    # puts data
     {
       'type' => 'line',
       'label' => issue.key,
