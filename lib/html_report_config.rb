@@ -50,8 +50,8 @@ class HtmlReportConfig
     execute_chart BlockedStalledChart.new
   end
 
-  def data_quality_report
-    execute_chart DataQualityReport.new
+  def expedited_chart
+    execute_chart ExpeditedChart.new
   end
 
   def execute_chart chart

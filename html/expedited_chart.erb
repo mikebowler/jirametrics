@@ -1,0 +1,52 @@
+<h1>Expedited Report</h1>
+<p>
+  The lines indicate time that this issue was expedited. Orange dots indicate the date the work was started and green dots represent the completion date. Start and completion times outside this date range are not shown.
+</p>
+<p>
+  The vertical height of the lines/dots indicates how long it's been since this issue was created.
+</p>
+<div>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
+</div>
+<script>
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
+  type: 'scatter',
+  data: {
+    datasets: <%= JSON.generate(data_sets) %>
+  },
+  options: {
+    title: {
+      display: true,
+      text: "Cycletime Scatterplot"
+    },
+    responsive: true, // If responsive is true then it fills the screen
+    scales: {
+      x: {
+        type: "time",
+        scaleLabel: {
+          display: true,
+          labelString: 'Date Completed'
+        },
+        min: "<%= date_range.begin.to_s %>",
+        max: "<%= date_range.end.to_s %>"
+      },
+      y: {
+        scaleLabel: {
+          display: true,
+          labelString: 'Days'
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.data[context.dataIndex].title
+          }
+        }
+      },
+      autocolors: false
+    }
+  }
+});
+</script>
