@@ -84,6 +84,7 @@ class ExpeditedChart < ChartBase
   end
 
   def make_point issue:, time:, label:
+    raise issue.key if label.nil? || label.empty?
     {
       y: (time.to_date - issue.created.to_date).to_i + 1,
       x: time.to_date.to_s,
@@ -102,11 +103,13 @@ class ExpeditedChart < ChartBase
     started = nil
     issue.changes.each do |change|
       if change.time == started_time || change.time == stopped_time
-        label = 'Started'
-        label = 'Stopped' if change.time == stopped_time
-
-        data << make_point(issue: issue, time: change.time, label: label)
-        colors << 'orange'
+        if change.time == started_time
+          data << make_point(issue: issue, time: change.time, label: 'Started')
+          colors << 'orange'
+        else
+          data << make_point(issue: issue, time: change.time, label: 'Completed')
+          colors << 'green'
+        end
         point_styles << 'rect'
       end
       next unless change.priority?
@@ -114,12 +117,12 @@ class ExpeditedChart < ChartBase
       if change.value == expedited_label
         started = change.time
 
-        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: label)
+        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: 'Started')
         colors << 'red'
         point_styles << 'dash'
       elsif started
-        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: label)
-        colors << 'black'
+        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: 'Expedited')
+        colors << 'gray'
         point_styles << 'circle'
         started = nil
       end
@@ -138,7 +141,7 @@ class ExpeditedChart < ChartBase
       'data' => data,
       'fill' => false,
       'showLine' => true,
-      'backgroundColor' => colors,
+      'backgroundColor' => colors[1..],
       'borderColor' => colors,
       'pointStyle' => point_styles
     }
