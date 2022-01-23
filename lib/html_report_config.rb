@@ -50,8 +50,8 @@ class HtmlReportConfig
     execute_chart BlockedStalledChart.new
   end
 
-  def expedited_chart
-    execute_chart ExpeditedChart.new
+  def expedited_chart priority_name = 'Highest'
+    execute_chart ExpeditedChart.new(priority_name)
   end
 
   def execute_chart chart
