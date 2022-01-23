@@ -1,5 +1,10 @@
 <h1>Flow of Daily WIP</h1>
-<div>This chart shows the highest WIP on each given day. The WIP is color coded so you can see how old it is and hovering over the bar will show you exactly which work items it relates to. The green bar underneath, shows how many items completed on that day.
+<p>
+  This chart shows the highest WIP on each given day. The WIP is color coded so you can see how old it is and hovering over the bar will show you exactly which work items it relates to. The green bar underneath, shows how many items completed on that day.
+</p>
+<p>
+  "Completed without being started" reflects the fact that while we know that it completed that day, we were unable to determine when it had started. These items will not show up in the aging portion because we don't know when they started.
+</p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
