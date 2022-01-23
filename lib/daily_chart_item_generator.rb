@@ -16,8 +16,7 @@ class DailyChartItemGenerator
 
   def initialize issues:, date_range:, cycletime:
     @issues = issues
-    # Remove once dependency injection fixed. It should be inserting Date range not DateTime range
-    @date_range = (date_range.begin.to_date..date_range.end.to_date)
+    @date_range = date_range
     @cycletime = cycletime
 
     @daily_chart_items = @date_range.collect do |date|
