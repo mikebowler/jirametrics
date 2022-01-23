@@ -421,10 +421,8 @@ describe Issue do
     end
 
     it 'should be stalled before the updated time' do
-      puts '======'
       issue = empty_issue created: '2021-10-01'
       issue.raw['fields']['updated'] = '2021-11-02T00:00:00'
-      # issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-11-02')
 
       expect(issue.stalled_on_date? Date.parse('2021-11-01')).to be_truthy
       expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
