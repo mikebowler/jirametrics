@@ -5,6 +5,23 @@ require 'pathname'
 class TotalWipOverTimeChart < ChartBase
   attr_accessor :issues, :cycletime, :date_range, :board_metadata, :possible_statuses
 
+  def completed_but_not_started_dataset
+    hash = {}
+    @issues.each do |issue|
+      stopped = cycletime.stopped_time(issue)&.to_date
+      if cycletime.started_time(issue).nil? && stopped
+        (hash[stopped] ||= []) << issue
+      end
+    end
+
+    date_issues_list = hash.keys.sort.collect do |key|
+      [key, hash[key]]
+    end
+    daily_chart_dataset(
+      date_issues_list: date_issues_list, color: '#66FF66', label: 'Completed without having been started', positive: false
+    )
+  end
+
   def run
     @daily_chart_items = DailyChartItemGenerator.new(
       issues: @issues, date_range: @date_range, cycletime: @cycletime
@@ -17,6 +34,9 @@ class TotalWipOverTimeChart < ChartBase
     data_sets << daily_chart_dataset(
       date_issues_list: date_issues_list, color: '#009900', label: 'Completed', positive: false
     )
+
+    data_sets << completed_but_not_started_dataset
+    # completed_but_not_started_dataset
 
     [
       [29..nil, '#990000', 'More than four weeks'],
