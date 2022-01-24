@@ -3,17 +3,31 @@
 require './lib/chart_base'
 
 class ExpeditedChart < ChartBase
+  class ExpeditedSegment
+    def to_json *_args
+      <<-SNIPPET
+{
+  borderColor: ctx => expedited(ctx, 'red') || notExpedited(ctx, 'gray'),
+  borderDash: ctx => notExpedited(ctx, [6, 6])
+}
+      SNIPPET
+    end
+  end
+
   attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
   attr_reader :expedited_label
 
   def initialize priority_name
+    super()
     @expedited_label = priority_name
   end
 
   def run
     expedited_issues = @issues.select do |issue|
-      issue.changes.any? { |change| change.priority? && change.value == expedited_label }
+      expedited_during_date_range? issue
     end
+
+    expedited_issues.sort! { |a, b| a.key_as_i <=> b.key_as_i }
 
     data_sets = []
     expedited_issues.each do |issue|
@@ -23,6 +37,34 @@ class ExpeditedChart < ChartBase
     render(binding, __FILE__)
   end
 
+  def prepare_expedite_data issue
+    expedite_start = nil
+    result = []
+
+    issue.changes.each do |change|
+      next unless change.priority?
+
+      if change.value == expedited_label
+        expedite_start = change.time
+        result << [expedite_start, :expedite_start]
+      elsif expedite_start
+        if date_range.include?(expedite_start.to_date) || date_range.include?(change.time.to_date)
+          expedite_start = nil
+          result << [change.time, :expedite_stop]
+        end
+      end
+    end
+    result
+  end
+
+  def expedited_during_date_range? issue
+    prepare_expedite_data(issue).any? do |time, action|
+      next unless %i[expedite_start expedite_stop].include? action
+
+      date_range.include? time.to_date
+    end
+  end
+
   def later_date date1, date2
     return date1 if date2.nil?
     return date2 if date1.nil?
@@ -30,11 +72,12 @@ class ExpeditedChart < ChartBase
     [date1, date2].max
   end
 
-  def make_point issue:, time:, label:
+  def make_point issue:, time:, label:, expedited:
     {
       y: (time.to_date - issue.created.to_date).to_i + 1,
       x: time.to_date.to_s,
-      title: ["#{issue.key} #{label} : #{issue.summary}"]
+      title: ["#{issue.key} #{label} : #{issue.summary}"],
+      expedited: (expedited ? 1 : 0)
     }
   end
 
@@ -42,56 +85,45 @@ class ExpeditedChart < ChartBase
     started_time = @cycletime.started_time(issue)
     stopped_time = @cycletime.stopped_time(issue)
 
-    # Although unlikely, it's possible for two statuses to have exactly the same timestamp
-    # and we don't want the started/stopped dots showing up multiple times each
-    started_dot_inserted = false
-    stopped_dot_inserted = false
+    expedite_data = prepare_expedite_data issue
+    expedite_data << [started_time, :issue_started] if started_time
+    expedite_data << [stopped_time, :issue_stopped] if stopped_time
+    expedite_data.sort! { |a, b| a[0] <=> b[0] }
 
     data = []
     dot_colors = []
-    line_colors = []
     point_styles = []
+    expedited = false
 
-    expedite_started = nil
-    issue.changes.each do |change|
-      if change.time == started_time && started_dot_inserted == false
-        data << make_point(issue: issue, time: change.time, label: 'Started')
+    expedite_data.each do |time, action|
+      case action
+      when :issue_started
+        data << make_point(issue: issue, time: time, label: 'Started', expedited: expedited)
         dot_colors << 'orange'
         point_styles << 'rect'
-        started_dot_inserted = true
-      end
-
-      if change.time == stopped_time && stopped_dot_inserted == false
-        data << make_point(issue: issue, time: change.time, label: 'Completed')
+      when :issue_stopped
+        data << make_point(issue: issue, time: time, label: 'Completed', expedited: expedited)
         dot_colors << 'green'
         point_styles << 'rect'
-        stopped_dot_inserted = true
-      end
-
-      next unless change.priority?
-
-      if change.value == expedited_label
-        expedite_started = change.time
-
-        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: 'Expedited')
+      when :expedite_start
+        data << make_point(issue: issue, time: time, label: 'Expedited', expedited: true)
         dot_colors << 'red'
-        point_styles << 'dash'
-        line_colors << 'red'
-      else
-        data << make_point(issue: issue, time: later_date(date_range.begin, change.time), label: 'Not expedited')
+        point_styles << 'circle'
+        expedited = true
+      when :expedite_stop
+        data << make_point(issue: issue, time: time, label: 'Not expedited', expedited: false)
         dot_colors << 'gray'
         point_styles << 'circle'
-        line_colors << 'gray'
-        expedite_started = nil
+        expedited = false
+      else
+        raise "Unexpected action: #{action}"
       end
     end
 
-    # If the issue is still open but we've run out of changes to process then fabricate the last dot.
-    last_change_time = issue.changes[-1]&.time
-    if last_change_time && last_change_time < date_range.end && stopped_dot_inserted == false
-      data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing')
+    last_change_time = expedite_data[-1][0].to_date
+    if last_change_time && last_change_time <= date_range.end && stopped_time.nil?
+      data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
       dot_colors << 'blue' # It won't be visible so it doesn't matter
-      line_colors = (expedite_started ? 'red' : 'gray')
       point_styles << 'dash'
     end
 
@@ -102,9 +134,9 @@ class ExpeditedChart < ChartBase
       fill: false,
       showLine: true,
       backgroundColor: dot_colors,
-      borderColor: line_colors,
       pointBorderColor: 'black',
-      pointStyle: point_styles
+      pointStyle: point_styles,
+      segment: ExpeditedSegment.new
     }
   end
 end

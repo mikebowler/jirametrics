@@ -9,6 +9,9 @@
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
+const expedited = (ctx, value) => ctx.p0.raw.expedited == 1 ? value : undefined;
+const notExpedited = (ctx, value) => ctx.p0.raw.expedited == 0 ? value : undefined;
+
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   type: 'scatter',
   data: {
