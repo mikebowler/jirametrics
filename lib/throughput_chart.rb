@@ -64,9 +64,12 @@ class ThroughputChart < ChartBase
         [stop_date, issue] if stop_date && period.include?(stop_date)
       end.compact
 
+      date_label = "on #{period.end}"
+      date_label = "between #{period.begin} and #{period.end}" unless period.begin == period.end
+
       { y: closed_issues.size,
         x: period.end,
-        title: ["#{closed_issues.size} items completed"] + closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
+        title: ["#{closed_issues.size} items completed #{date_label}"] + closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
       }
     end
   end

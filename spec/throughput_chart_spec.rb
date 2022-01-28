@@ -66,7 +66,11 @@ describe ThroughputChart do
       )
       expect(dataset).to eq [
         {
-          title: ['2 items completed', 'SP-1 : Create new draft event', 'SP-2 : Update existing event'],
+          title: [
+            '2 items completed between 2021-10-11 and 2021-10-17',
+            'SP-1 : Create new draft event',
+            'SP-2 : Update existing event'
+          ],
           x: Date.parse('2021-10-17'),
           y: 2
         }
