@@ -16,7 +16,7 @@ class Downloader
     remove_old_files
     download_issues
     download_statuses unless @download_config.project_key.nil?
-    download_board_configuration unless @download_config.board_id.nil?
+    download_board_configuration unless @download_config.board_ids.empty?
     save_metadata
   end
 
@@ -77,13 +77,14 @@ class Downloader
   end
 
   def download_board_configuration
-    board_id = @download_config.board_id
-    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
-    json = JSON.parse call_command(command)
-    exit_if_call_failed json
+    @download_config.board_ids.each do |board_id|
+      command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+      json = JSON.parse call_command(command)
+      exit_if_call_failed json
 
-    file_prefix = @download_config.project_config.file_prefix
-    write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+      file_prefix = @download_config.project_config.file_prefix
+      write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+    end
   end
 
   def write_json json, filename

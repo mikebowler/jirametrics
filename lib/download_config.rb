@@ -9,6 +9,7 @@ class DownloadConfig
   def initialize project_config:, block:
     @project_config = project_config
     @block = block
+    @board_ids = []
   end
 
   def run
@@ -40,9 +41,9 @@ class DownloadConfig
     @project_key
   end
 
-  def board_id id = nil
-    @board_id = id unless id.nil?
-    @board_id
+  def board_ids *ids
+    @board_ids = ids unless ids.empty?
+    @board_ids
   end
 
   def filter_name filter = nil

@@ -76,7 +76,7 @@ class ProjectConfig
 
   def load_board_configuration board_id:, filename:
     json = JSON.parse(File.read(filename))
-    @all_board_columns[board_id] = json['columnConfig']['columns'].collect do |column|
+    @all_board_columns[board_id.to_i] = json['columnConfig']['columns'].collect do |column|
       BoardColumn.new column
     end
   end
@@ -136,7 +136,7 @@ class ProjectConfig
           message += ' In this case, we couldn\'t find any configuration files in the target directory.'
         else
           message += 'If there is only one, we use that. In this case we found configurations for' \
-            " the following board ids and this is ambiguous: #{all_board_columns}"
+            " the following board ids and this is ambiguous: #{all_board_columns.keys}"
         end
         raise message
       end
