@@ -9,3 +9,5 @@ gem 'require_all'
 gem 'rspec'
 gem 'rubocop', require: false
 gem 'simplecov'
+gem 'random-word'
+

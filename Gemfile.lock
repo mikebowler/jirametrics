@@ -9,6 +9,7 @@ GEM
       ast (~> 2.4.1)
     rainbow (3.0.0)
     rake (13.0.6)
+    random-word (2.1.1)
     regexp_parser (2.1.1)
     require_all (3.0.0)
     rexml (3.2.5)
@@ -50,6 +51,7 @@ PLATFORMS
 
 DEPENDENCIES
   rake
+  random-word
   require_all
   rspec
   rubocop

@@ -135,4 +135,8 @@ class FileConfig
   def timezone_offset offset = nil
     @timezone_offset = offset unless offset.nil?
   end
+
+  def anonymize
+    Anonymizer.new(@issues).run
+  end
 end
