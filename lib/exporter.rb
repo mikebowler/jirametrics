@@ -14,6 +14,7 @@ class Exporter
   def initialize
     @project_configs = []
     @timezone_offset = '00:00'
+    @target_path = '.'
   end
 
   def export

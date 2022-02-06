@@ -3,12 +3,13 @@
 require 'csv'
 
 class FileConfig
-  attr_reader :project_config
+  attr_reader :project_config, :issues
 
   def initialize project_config:, block:
     @project_config = project_config
     @block = block
     @columns = nil
+    @issues = project_config.issues
   end
 
   def run
@@ -77,22 +78,6 @@ class FileConfig
     end
   end
 
-  def issues
-    unless @issues
-      timezone_offset = @project_config.exporter.timezone_offset
-      issues = []
-      Dir.foreach(@project_config.target_path) do |filename|
-        if filename =~ /#{@project_config.file_prefix}_\d+\.json/
-          content = JSON.parse File.read("#{@project_config.target_path}#{filename}")
-          content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
-        end
-      end
-      @issues = issues
-    end
-
-    @issues
-  end
-
   def columns &block
     assert_only_one_filetype_config_set
     @columns = ColumnsConfig.new file_config: self, block: block
@@ -134,9 +119,5 @@ class FileConfig
 
   def timezone_offset offset = nil
     @timezone_offset = offset unless offset.nil?
-  end
-
-  def anonymize
-    Anonymizer.new(@issues).run
   end
 end

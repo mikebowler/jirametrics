@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class Status
-  attr_reader :name, :id, :type, :category_name, :category_id, :possible_statuses
+  attr_reader :id, :type, :category_name, :category_id
+  attr_accessor :name
 
   def initialize name:, id:, type:, category_name:, category_id:
     @name = name
@@ -10,13 +11,18 @@ class Status
     @category_name = category_name
     @category_id = category_id
   end
+
+  def to_s
+    "Status(name=#{@name.inspect}, id=#{@id.inspect}, type=#{@type.inspect}," \
+      " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect})"
+  end
 end
 
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
     :download_config, :file_configs, :exporter, :time_range
 
-  def initialize exporter:, target_path:, jira_config:, block:
+  def initialize exporter:, jira_config:, block:, target_path: '.'
     @exporter = exporter
     @block = block
     @file_configs = []
@@ -25,6 +31,7 @@ class ProjectConfig
     @jira_config = jira_config
     @possible_statuses = []
     @all_board_columns = {}
+
   end
 
   def evaluate_next_level
@@ -35,6 +42,8 @@ class ProjectConfig
     load_project_metadata
     load_all_board_configurations
     load_status_category_mappings
+    anonymize_data if @anonymizer_needed
+
     @file_configs.each do |file_config|
       file_config.run
     end
@@ -148,5 +157,38 @@ class ProjectConfig
     raise "Unable to find configuration for board_id: #{board_id}" if board_columns.nil?
 
     board_columns
+  end
+
+  def issues
+    unless @issues
+      timezone_offset = exporter.timezone_offset
+      issues = []
+      raise "target_path=#{@target_path.inspect}" if @target_path.nil?
+      if File.exist?(@target_path) && File.directory?(@target_path)
+        Dir.foreach(@target_path) do |filename|
+          if filename =~ /#{file_prefix}_\d+\.json/
+            content = JSON.parse File.read("#{@target_path}#{filename}")
+            content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
+          end
+        end
+      else
+        puts "Path #{@target_path} either doesn't exist or it isn't a directory"
+      end
+      @issues = issues
+    end
+
+    @issues
+  end
+
+  def anonymize
+    @anonymizer_needed = true
+  end
+
+  def anonymize_data
+    Anonymizer.new(
+      issues: issues,
+      all_board_metadata: all_board_columns,
+      possible_statuses: possible_statuses
+    ).run
   end
 end

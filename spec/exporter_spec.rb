@@ -37,12 +37,6 @@ describe Exporter do
   end
 
   context 'project' do
-    it 'should have target_path set' do
-      exporter = Exporter.new
-      exporter.jira_config 'spec/testdata/jira-config.json'
-      expect { exporter.project }.to raise_error 'target_path was never set!'
-    end
-
     it 'should have jira_config set' do
       exporter = Exporter.new
       exporter.target_path TARGET_PATH

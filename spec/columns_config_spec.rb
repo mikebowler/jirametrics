@@ -29,7 +29,8 @@ describe ColumnsConfig do
   context 'column_entry_times' do
 
     it 'should succeed' do
-      project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      exporter = Exporter.new
+      project_config = ProjectConfig.new exporter: exporter, jira_config: nil, block: nil
       project_config.load_board_configuration(board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json')
       file_config = FileConfig.new project_config: project_config, block: nil
       columns_config = ColumnsConfig.new file_config: file_config, block: nil

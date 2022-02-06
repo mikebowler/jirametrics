@@ -146,7 +146,7 @@ class DataQualityChecker
           )
         end
       end
-      last_index = index
+      last_index = index || -1
     end
   end
 

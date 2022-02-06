@@ -10,6 +10,8 @@ class TestableChart < ChartBase
 end
 
 describe HtmlReportConfig do
+  let(:exporter) { Exporter.new }
+
   context 'no injectable dependencies' do
     it 'should still pass if no dependencies supported' do
       config = HtmlReportConfig.new file_config: nil, block: nil
@@ -25,7 +27,7 @@ describe HtmlReportConfig do
 
   it 'should inject issues' do
     project_config = ProjectConfig.new(
-      exporter: nil, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
+      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )
     project_config.file_prefix 'sample'
     project_config.load_board_configuration board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json'

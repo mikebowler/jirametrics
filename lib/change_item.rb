@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :time, :field, :value, :value_id, :old_value, :old_value_id, :raw, :author
+  attr_reader :time, :field, :value_id, :old_value_id, :raw, :author
+  attr_accessor :value, :old_value
 
   def initialize raw:, time:, author:, artificial: false
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = time
     raise "time must be a DateTime in the correct timezone" if @time.is_a? String
+    
     @field = field || @raw['field']
     @value = value || @raw['toString']
     @value_id = @raw['to'].to_i

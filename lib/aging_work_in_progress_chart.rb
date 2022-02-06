@@ -25,11 +25,13 @@ class AgingWorkInProgressChart < ChartBase
         'label' => type,
         'data' => aging_issues.select { |issue| issue.type == type }.collect do |issue|
             age = @cycletime.age(issue)
+            column = column_for issue: issue
+            next if column.nil?
             { 'y' => age,
-              'x' => (column_for issue: issue).name,
+              'x' => column.name,
               'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
-          end,
+          end.compact,
         'fill' => false,
         'showLine' => false,
         'backgroundColor' => color_for(type: type)

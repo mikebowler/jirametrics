@@ -3,9 +3,13 @@
 require './spec/spec_helper'
 
 describe FileConfig do
-  context 'conversions' do
-    config = FileConfig.new project_config: nil, block: nil
+  let(:exporter) { Exporter.new }
+  let(:config) do
+    project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
+    FileConfig.new project_config: project_config, block: nil
+  end
 
+  context 'conversions' do
     it 'should convert string' do
       expect(config.to_string(5)).to eql '5'
     end
@@ -22,7 +26,6 @@ describe FileConfig do
 
   context 'sort all rows' do
     it 'should sort nils to the bottom' do
-      config = FileConfig.new project_config: nil, block: nil
       input = [[nil, 1], [1, 2], [nil, 3], [4, 4]]
       expected = [[1, 2], [4, 4], [nil, 3], [nil, 1]]
       expect(config.sort_output(input)).to eq expected
@@ -31,7 +34,7 @@ describe FileConfig do
 
   context 'output_filename' do
     it 'should create filename' do
-      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
       project_config.file_prefix 'foo'
       config = FileConfig.new project_config: project_config, block: nil
       expect(config.output_filename).to eq 'data/foo.csv'
@@ -40,7 +43,7 @@ describe FileConfig do
 
   context 'prepare_grid' do
     it 'should prepare grid without headers' do
-      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns do
         string 'id', key
@@ -57,7 +60,7 @@ describe FileConfig do
     end
 
     it 'should prepare grid with headers' do
-      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns do
         write_headers true
@@ -76,7 +79,7 @@ describe FileConfig do
     end
 
     it 'should prepare grid only_use_row_if' do
-      project_config = ProjectConfig.new exporter: nil, target_path: 'data/', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.only_use_row_if do |row|
         row[1] !~ /Create/
@@ -97,7 +100,8 @@ describe FileConfig do
 
   context 'columns' do
     it 'should raise error if multiples are set' do
-      file_config = FileConfig.new project_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'data/', jira_config: nil, block: nil
+      file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns { 'a' }
       expect { file_config.columns { 'a' } }.to raise_error /Can only have one/
     end

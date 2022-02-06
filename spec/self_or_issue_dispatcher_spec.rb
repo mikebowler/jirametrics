@@ -20,8 +20,12 @@ describe SelfOrIssueDispatcher do
   context 'method_missing and responds_to_missing?' do
     # Note that the way we test responds_to_missing? is by calling respond_to? Non-intuitive.
 
-    issue = load_issue 'SP-2'
-    file = FileConfig.new project_config: nil, block: nil
+    let(:issue) { load_issue 'SP-2' }
+    let(:file) do
+      exporter = Exporter.new
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      FileConfig.new project_config: project_config, block: nil
+    end
 
     it 'should call a method with config but no args' do
       columns = ColumnsConfig.new file_config: file, block: nil

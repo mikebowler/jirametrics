@@ -3,7 +3,8 @@
 require './spec/spec_helper'
 
 def mock_file_config
-  project = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+  exporter = Exporter.new
+  project = ProjectConfig.new exporter: exporter, jira_config: nil, block: nil
   project.status_category_mapping type: 'Story', status: 'Backlog', category: 'ready'
   project.status_category_mapping type: 'Story', status: 'Selected for Development', category: 'ready'
   project.status_category_mapping type: 'Story', status: 'In Progress', category: 'in-flight'

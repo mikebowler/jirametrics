@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class BoardColumn
-  attr_reader :name, :status_ids, :min, :max
+  attr_reader :status_ids, :min, :max
+  attr_accessor :name
 
   def initialize raw
     @name = raw['name']
