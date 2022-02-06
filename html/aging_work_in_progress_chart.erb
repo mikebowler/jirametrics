@@ -103,7 +103,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
   unless problems.empty? 
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
+    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This means that some items will not show up when they should, on this chart.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
