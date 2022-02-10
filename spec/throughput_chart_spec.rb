@@ -58,8 +58,6 @@ describe ThroughputChart do
       subject.issues = [issue1, issue2, issue10]
       subject.cycletime = defaultCycletimeConfig
 
-      puts subject.cycletime.stopped_time(issue1)
-      puts subject.cycletime.stopped_time(issue2)
       dataset = subject.throughput_dataset(
         periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
         completed_issues: [issue1, issue2]
