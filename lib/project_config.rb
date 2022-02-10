@@ -20,7 +20,8 @@ end
 
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
-    :download_config, :file_configs, :exporter, :time_range
+    :download_config, :file_configs, :exporter
+  attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.'
     @exporter = exporter
@@ -163,7 +164,7 @@ class ProjectConfig
     unless @issues
       timezone_offset = exporter.timezone_offset
       issues = []
-      raise "target_path=#{@target_path.inspect}" if @target_path.nil?
+
       if File.exist?(@target_path) && File.directory?(@target_path)
         Dir.foreach(@target_path) do |filename|
           if filename =~ /#{file_prefix}_\d+\.json/
@@ -185,10 +186,6 @@ class ProjectConfig
   end
 
   def anonymize_data
-    Anonymizer.new(
-      issues: issues,
-      all_board_metadata: all_board_columns,
-      possible_statuses: possible_statuses
-    ).run
+    Anonymizer.new(project_config: self).run
   end
 end

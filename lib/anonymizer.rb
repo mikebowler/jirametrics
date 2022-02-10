@@ -3,16 +3,19 @@
 require 'random-word'
 
 class Anonymizer
-  def initialize issues:, all_board_metadata:, possible_statuses:
-    @issues = issues
-    @all_board_metadata = all_board_metadata
-    @possible_statuses = possible_statuses
+  def initialize project_config:, date_adjustment: -200
+    @project_config = project_config
+    @issues = @project_config.issues
+    @all_board_metadata = @project_config.all_board_columns
+    @possible_statuses = @project_config.possible_statuses
+    @date_adjustment = date_adjustment
   end
 
   def run
     anonymize_issue_keys_and_titles
     anonymize_column_names
     anonymize_issue_statuses
+    shift_all_dates unless @date_adjustment.zero?
     puts 'Anonymize done'
   end
 
@@ -99,5 +102,18 @@ class Anonymizer
       status.name = status_name_hash[status_key] unless status_name_hash[status_key].nil?
     end
   end
-end
 
+  def shift_all_dates
+    puts "Shifting all dates by #{@date_adjustment} days"
+    @issues.each do |issue|
+      issue.changes.each do |change|
+        change.time = change.time + @date_adjustment
+      end
+
+      issue.raw['fields']['updated'] = (issue.updated + @date_adjustment).to_s
+    end
+
+    range = @project_config.time_range
+    @project_config.time_range = (range.begin + @date_adjustment)..(range.end + @date_adjustment)
+  end
+end

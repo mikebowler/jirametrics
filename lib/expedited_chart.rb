@@ -44,16 +44,25 @@ class ExpeditedChart < ChartBase
     issue.changes.each do |change|
       next unless change.priority?
 
+      # It's not enough for start and end points to be in the range. They might pass right through the visible area.
       if change.value == expedited_label
         expedite_start = change.time
-        result << [expedite_start, :expedite_start]
       elsif expedite_start
-        if date_range.include?(expedite_start.to_date) || date_range.include?(change.time.to_date)
-          expedite_start = nil
+        start_date = expedite_start.to_date
+        stop_date = change.time.to_date
+
+        if date_range.include?(start_date) || date_range.include?(stop_date) ||
+           (start_date < date_range.begin && stop_date > date_range.end)
+
+          result << [expedite_start, :expedite_start]
           result << [change.time, :expedite_stop]
         end
+        expedite_start = nil
       end
     end
+
+    # If expedite_start is still set then we never ended.
+    result << [expedite_start, :expedite_start] if expedite_start
     result
   end
 
