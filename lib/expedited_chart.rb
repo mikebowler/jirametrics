@@ -44,7 +44,6 @@ class ExpeditedChart < ChartBase
     issue.changes.each do |change|
       next unless change.priority?
 
-      # It's not enough for start and end points to be in the range. They might pass right through the visible area.
       if change.value == expedited_label
         expedite_start = change.time
       elsif expedite_start
