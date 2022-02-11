@@ -74,3 +74,4 @@ def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id
     'fromString' => old_value
   }
 end
+
