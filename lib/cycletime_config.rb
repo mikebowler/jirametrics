@@ -12,7 +12,7 @@ class CycleTimeConfig
     @parent_config = parent_config
     @label = label
     @today = today
-    instance_eval(&block)
+    instance_eval(&block) unless block.nil?
   end
 
   def start_at block = nil

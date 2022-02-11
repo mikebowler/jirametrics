@@ -49,6 +49,38 @@ describe ExpeditedChart do
     end
   end
 
+  context 'expedited_during_date_range?' do
+    it 'should handle expedited fully inside the range' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2022-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-01-02')
+      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    end
+
+    it 'should handle expedited before the range and stopping inside' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-12-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-01-02')
+      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    end
+
+    it 'should handle expedited starting in the range and stopping inside' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2022-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-02-02')
+      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    end
+
+    it 'should handle expedited starting before and ending after the range' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-02-02')
+      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    end
+
+    it 'should handle no expedites inside the range' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2021-02-02')
+      expect(chart.expedited_during_date_range?(issue1, true)).to be_falsey
+    end
+  end
+
   context 'later_date' do
     it 'should handle null first parameter' do
       date2 = Date.today
@@ -69,6 +101,99 @@ describe ExpeditedChart do
       date1 = date2 + 1
       expect(chart.later_date(date1, date2)).to be date1
     end
+  end
 
+  context 'make_expedite_lines_data_set' do
+    it 'should handle the case with no start or stop times or data' do
+      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
+      config.start_at ->(_issue) {}
+      config.stop_at  ->(_issue) {}
+      chart.cycletime = config
+
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: [])).to eq({
+        type: 'line',
+        label: issue1.key,
+        data: [],
+        fill: false,
+        showLine: true,
+        backgroundColor: [],
+        pointBorderColor: 'black',
+        pointStyle: [],
+        segment: ExpeditedChart::EXPEDITED_SEGMENT
+      })
+    end
+
+    it 'should handle one of everything' do
+      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
+      base_date = Date.parse('2022-01-01')
+      config.start_at ->(_issue) { base_date }
+      config.stop_at  ->(_issue) { base_date + 3 }
+      chart.cycletime = config
+
+      expedite_data = [
+        [base_date + 1, :expedite_start],
+        [base_date + 2, :expedite_stop]
+      ]
+
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).to eq({
+        type: 'line',
+        label: issue1.key,
+        data: [
+          { expedited: 0, title: ['SP-1 Started : Create new draft event'],       x: '2022-01-01', y: 198 },
+          { expedited: 1, title: ['SP-1 Expedited : Create new draft event'],     x: '2022-01-02', y: 199 },
+          { expedited: 0, title: ['SP-1 Not expedited : Create new draft event'], x: '2022-01-03', y: 200 },
+          { expedited: 0, title: ['SP-1 Completed : Create new draft event'],     x: '2022-01-04', y: 201 }
+        ],
+        fill: false,
+        showLine: true,
+        backgroundColor: %w[orange red gray green],
+        pointBorderColor: 'black',
+        pointStyle: %w[rect circle circle rect],
+        segment: ExpeditedChart::EXPEDITED_SEGMENT
+      })
+    end
+
+    it 'should handle an expedite that starts but doesnt end' do
+      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
+      base_date = Date.parse('2022-01-01')
+      config.start_at ->(_issue) { base_date }
+      config.stop_at  ->(_issue) {}
+      chart.cycletime = config
+
+      expedite_data = [
+        [base_date + 1, :expedite_start]
+      ]
+
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).to eq({
+        type: 'line',
+        label: issue1.key,
+        data: [
+          { expedited: 0, title: ['SP-1 Started : Create new draft event'],       x: '2022-01-01', y: 198 },
+          { expedited: 1, title: ['SP-1 Expedited : Create new draft event'],     x: '2022-01-02', y: 199 },
+          { expedited: 1, title: ['SP-1 Still ongoing : Create new draft event'], x: '2022-01-30', y: 227 }
+        ],
+        fill: false,
+        showLine: true,
+        backgroundColor: %w[orange red blue],
+        pointBorderColor: 'black',
+        pointStyle: %w[rect circle dash],
+        segment: ExpeditedChart::EXPEDITED_SEGMENT
+      })
+    end
+
+    it 'should raise an exception for unexpected expedite data' do
+      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
+      config.start_at ->(_issue) {}
+      config.stop_at  ->(_issue) {}
+      chart.cycletime = config
+
+      expedite_data = [
+        [Date.today, :invalid_state]
+      ]
+
+      expect { chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data) }.to(
+        raise_error('Unexpected action: invalid_state')
+      )
+    end
   end
 end

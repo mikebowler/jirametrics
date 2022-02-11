@@ -3,8 +3,8 @@
 require './lib/chart_base'
 
 class ExpeditedChart < ChartBase
-  class ExpeditedSegment
-    def to_json *_args
+  EXPEDITED_SEGMENT = Object.new.tap do |segment|
+    def segment.to_json *_args
       <<-SNIPPET
 {
   borderColor: ctx => expedited(ctx, 'red') || notExpedited(ctx, 'gray'),
@@ -31,7 +31,7 @@ class ExpeditedChart < ChartBase
 
     data_sets = []
     expedited_issues.each do |issue|
-      data_sets << make_expedite_lines_data_set(issue: issue)
+      data_sets << make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end
 
     render(binding, __FILE__)
@@ -65,12 +65,29 @@ class ExpeditedChart < ChartBase
     result
   end
 
-  def expedited_during_date_range? issue
-    prepare_expedite_data(issue).any? do |time, action|
-      next unless %i[expedite_start expedite_stop].include? action
+  def expedited_during_date_range? issue, debug=false
+    start_date = nil
+    puts "entering" if debug
+    prepare_expedite_data(issue).each do |time, action|
+      date = time.to_date
+      # return true if date_range.include? date
+      puts "#{time} : #{action}" if debug
+      case action
+      when :expedite_start
+        start_date = date
+      when :expedite_stop
+        return true if date_range.include?(start_date)
+        return true if date_range.include?(date)
+        puts "start=#{start_date} stop=#{date} date_range=#{date_range}"
+        return true if start_date < date_range.begin && date > date_range.end
 
-      date_range.include? time.to_date
+        # raise "got here"
+        start_date = nil
+      else
+        next
+      end
     end
+    false
   end
 
   def later_date date1, date2
@@ -89,11 +106,10 @@ class ExpeditedChart < ChartBase
     }
   end
 
-  def make_expedite_lines_data_set issue:
+  def make_expedite_lines_data_set issue:, expedite_data:
     started_time = @cycletime.started_time(issue)
     stopped_time = @cycletime.stopped_time(issue)
 
-    expedite_data = prepare_expedite_data issue
     expedite_data << [started_time, :issue_started] if started_time
     expedite_data << [stopped_time, :issue_stopped] if stopped_time
     expedite_data.sort! { |a, b| a[0] <=> b[0] }
@@ -128,11 +144,13 @@ class ExpeditedChart < ChartBase
       end
     end
 
-    last_change_time = expedite_data[-1][0].to_date
-    if last_change_time && last_change_time <= date_range.end && stopped_time.nil?
-      data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
-      dot_colors << 'blue' # It won't be visible so it doesn't matter
-      point_styles << 'dash'
+    unless expedite_data.empty?
+      last_change_time = expedite_data[-1][0].to_date
+      if last_change_time && last_change_time <= date_range.end && stopped_time.nil?
+        data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
+        dot_colors << 'blue' # It won't be visible so it doesn't matter
+        point_styles << 'dash'
+      end
     end
 
     {
@@ -144,7 +162,7 @@ class ExpeditedChart < ChartBase
       backgroundColor: dot_colors,
       pointBorderColor: 'black',
       pointStyle: point_styles,
-      segment: ExpeditedSegment.new
+      segment: EXPEDITED_SEGMENT
     }
   end
 end
