@@ -65,28 +65,20 @@ class ExpeditedChart < ChartBase
     result
   end
 
-  def expedited_during_date_range? issue, debug=false
+  def expedited_during_date_range? issue
     start_date = nil
-    puts "entering" if debug
     prepare_expedite_data(issue).each do |time, action|
       date = time.to_date
-      # return true if date_range.include? date
-      puts "#{time} : #{action}" if debug
-      case action
-      when :expedite_start
-        start_date = date
-      when :expedite_stop
+
+      start_date = date if action == :expedite_start
+
+      if action == :expedite_stop
         return true if date_range.include?(start_date)
         return true if date_range.include?(date)
-        puts "start=#{start_date} stop=#{date} date_range=#{date_range}"
         return true if start_date < date_range.begin && date > date_range.end
-
-        # raise "got here"
-        start_date = nil
-      else
-        next
       end
     end
+
     false
   end
 

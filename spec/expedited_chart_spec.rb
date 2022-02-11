@@ -69,15 +69,23 @@ describe ExpeditedChart do
     end
 
     it 'should handle expedited starting before and ending after the range' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-02-02')
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2020-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2023-01-02')
+      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    end
+
+    it 'should handle an expedited completely out of the range and one through the range.' do
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2019-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2019-02-02')
+      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2020-01-01')
+      issue1.changes << mock_change(field: 'priority', value: '', time: '2023-01-02')
       expect(chart.expedited_during_date_range?(issue1)).to be_truthy
     end
 
     it 'should handle no expedites inside the range' do
       issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-01-01')
       issue1.changes << mock_change(field: 'priority', value: '', time: '2021-02-02')
-      expect(chart.expedited_during_date_range?(issue1, true)).to be_falsey
+      expect(chart.expedited_during_date_range?(issue1)).to be_falsey
     end
   end
 
