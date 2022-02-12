@@ -26,9 +26,12 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one like this' do
-      chart.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-01']]
+      chart.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, '2022-01-01'], # finished but not started
+        [issue2, '2022-01-01', nil] # Started but not finished
+      ]
 
-      chart.issues = [issue1]
+      chart.issues = [issue1, issue2]
       expect(chart.completed_but_not_started_dataset).to eq({
         backgroundColor: '#66FF66',
         borderRadius: 5,
