@@ -26,10 +26,7 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one like this' do
-      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
-      config.start_at ->(_issue) {}
-      config.stop_at  ->(_issue) { Date.parse('2022-01-01') }
-      chart.cycletime = config
+      chart.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-01']]
 
       chart.issues = [issue1]
       expect(chart.completed_but_not_started_dataset).to eq({

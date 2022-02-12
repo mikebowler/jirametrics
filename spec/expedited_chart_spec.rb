@@ -132,11 +132,8 @@ describe ExpeditedChart do
     end
 
     it 'should handle one of everything' do
-      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
       base_date = Date.parse('2022-01-01')
-      config.start_at ->(_issue) { base_date }
-      config.stop_at  ->(_issue) { base_date + 3 }
-      chart.cycletime = config
+      chart.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
 
       expedite_data = [
         [base_date + 1, :expedite_start],
@@ -162,11 +159,8 @@ describe ExpeditedChart do
     end
 
     it 'should handle an expedite that starts but doesnt end' do
-      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
       base_date = Date.parse('2022-01-01')
-      config.start_at ->(_issue) { base_date }
-      config.stop_at  ->(_issue) {}
-      chart.cycletime = config
+      chart.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]]
 
       expedite_data = [
         [base_date + 1, :expedite_start]
@@ -190,10 +184,7 @@ describe ExpeditedChart do
     end
 
     it 'should raise an exception for unexpected expedite data' do
-      config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
-      config.start_at ->(_issue) {}
-      config.stop_at  ->(_issue) {}
-      chart.cycletime = config
+      chart.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
 
       expedite_data = [
         [Date.today, :invalid_state]

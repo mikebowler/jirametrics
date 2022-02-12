@@ -75,3 +75,14 @@ def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id
   }
 end
 
+def mock_cycletime_config stub_values: []
+  stub_values.each do |line|
+    line[1] = Date.parse(line[1]) if line[1].is_a? String
+    line[2] = Date.parse(line[2]) if line[2].is_a? String
+  end
+
+  config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
+  config.start_at ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }[1] }
+  config.stop_at  ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }[2] }
+  config
+end
