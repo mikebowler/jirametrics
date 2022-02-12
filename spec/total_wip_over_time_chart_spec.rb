@@ -62,10 +62,6 @@ describe TotalWipOverTimeChart do
     end
 
     it 'should handle one like this' do
-      # chart.cycletime = mock_cycletime_config stub_values: [
-      #   [issue1, '2022-01-01', '2022-01-03']
-      # ]
-      # chart.issues = [issue1]
       chart.instance_variable_set(:@daily_chart_items, [
         DailyChartItemGenerator::DailyChartItem.new(date: Date.parse('2022-01-03'), completed_issues: [issue1])
       ])
@@ -80,6 +76,45 @@ describe TotalWipOverTimeChart do
           }
         ],
         label: 'Completed',
+        type: 'bar'
+      })
+    end
+  end
+
+  context 'age_range_dataset' do
+    it 'should handle none like this' do
+      chart.instance_variable_set(:@daily_chart_items, [])
+
+      expect(chart.age_range_dataset age_range: 1..3, color: 'red', label: 'foo').to eq({
+        backgroundColor: 'red',
+        borderRadius: 0,
+        data: [],
+        label: 'foo',
+        type: 'bar'
+      })
+    end
+
+    it 'should handle one like this' do
+      chart.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2022-01-01', '2022-01-03'], # Inside the range
+        [issue2, '2021-12-01', '2022-02-03']  # Outside the range
+      ]
+      chart.instance_variable_set(:@daily_chart_items, [
+        DailyChartItemGenerator::DailyChartItem.new(
+          date: Date.parse('2022-01-03'), active_issues: [issue1, issue2], completed_issues: []
+        )
+      ])
+      expect(chart.age_range_dataset age_range: 1..3, color: 'red', label: 'foo').to eq({
+        backgroundColor: 'red',
+        borderRadius: 0,
+        data: [
+          {
+            title: ['foo (1 issue)', 'SP-1 : Create new draft event (age: 3 days)'],
+            x: Date.parse('2022-01-03'),
+            y: 1
+          }
+        ],
+        label: 'foo',
         type: 'bar'
       })
     end
