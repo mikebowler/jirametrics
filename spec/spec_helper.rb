@@ -82,7 +82,7 @@ def mock_cycletime_config stub_values: []
   end
 
   config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
-  config.start_at ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }[1] }
-  config.stop_at  ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }[2] }
+  config.start_at ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](1) }
+  config.stop_at  ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](2) }
   config
 end

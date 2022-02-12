@@ -47,4 +47,41 @@ describe TotalWipOverTimeChart do
       })
     end
   end
+
+  context 'completed' do
+    it 'should handle none like this' do
+      chart.instance_variable_set(:@daily_chart_items, [])
+
+      expect(chart.completed_dataset).to eq({
+        backgroundColor: '#009900',
+        borderRadius: 5,
+        data: [],
+        label: 'Completed',
+        type: 'bar'
+      })
+    end
+
+    it 'should handle one like this' do
+      # chart.cycletime = mock_cycletime_config stub_values: [
+      #   [issue1, '2022-01-01', '2022-01-03']
+      # ]
+      # chart.issues = [issue1]
+      chart.instance_variable_set(:@daily_chart_items, [
+        DailyChartItemGenerator::DailyChartItem.new(date: Date.parse('2022-01-03'), completed_issues: [issue1])
+      ])
+      expect(chart.completed_dataset).to eq({
+        backgroundColor: '#009900',
+        borderRadius: 5,
+        data: [
+          {
+            title: ['Completed (1 issue)', 'SP-1 : Create new draft event'],
+            x: Date.parse('2022-01-03'),
+            y: -1
+          }
+        ],
+        label: 'Completed',
+        type: 'bar'
+      })
+    end
+  end
 end
