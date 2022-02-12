@@ -9,6 +9,7 @@ describe ExpeditedChart do
     chart
   end
   let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+  let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 
   context 'prepare_expedite_data' do
     it 'should handle issue with no changes' do
@@ -49,43 +50,21 @@ describe ExpeditedChart do
     end
   end
 
-  context 'expedited_during_date_range?' do
-    it 'should handle expedited fully inside the range' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2022-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-01-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+  context 'find_expedited_issues' do
+    it 'should handle no issues' do
+      chart.issues = []
+      expect(chart.find_expedited_issues).to be_empty
     end
 
-    it 'should handle expedited before the range and stopping inside' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-12-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-01-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
+    it 'should handle no issues with expedite' do
+      chart.issues = [issue1, issue2]
+      expect(chart.find_expedited_issues).to be_empty
     end
 
-    it 'should handle expedited starting in the range and stopping inside' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2022-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2022-02-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
-    end
-
-    it 'should handle expedited starting before and ending after the range' do
+    it 'should handle one issue with expedite' do
       issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2020-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2023-01-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
-    end
-
-    it 'should handle an expedited completely out of the range and one through the range.' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2019-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2019-02-02')
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2020-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2023-01-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_truthy
-    end
-
-    it 'should handle no expedites inside the range' do
-      issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2021-01-01')
-      issue1.changes << mock_change(field: 'priority', value: '', time: '2021-02-02')
-      expect(chart.expedited_during_date_range?(issue1)).to be_falsey
+      chart.issues = [issue1, issue2]
+      expect(chart.find_expedited_issues).to eq [issue1]
     end
   end
 

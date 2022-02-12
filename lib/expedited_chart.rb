@@ -23,15 +23,10 @@ class ExpeditedChart < ChartBase
   end
 
   def run
-    expedited_issues = @issues.select do |issue|
-      expedited_during_date_range? issue
-    end
+    expedited_issues = find_expedited_issues
 
-    expedited_issues.sort! { |a, b| a.key_as_i <=> b.key_as_i }
-
-    data_sets = []
-    expedited_issues.each do |issue|
-      data_sets << make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
+    data_sets = expedited_issues.collect do |issue|
+      make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end
 
     render(binding, __FILE__)
@@ -65,21 +60,12 @@ class ExpeditedChart < ChartBase
     result
   end
 
-  def expedited_during_date_range? issue
-    start_date = nil
-    prepare_expedite_data(issue).each do |time, action|
-      date = time.to_date
-
-      start_date = date if action == :expedite_start
-
-      if action == :expedite_stop
-        return true if date_range.include?(start_date)
-        return true if date_range.include?(date)
-        return true if start_date < date_range.begin && date > date_range.end
-      end
+  def find_expedited_issues
+    expedited_issues = @issues.reject do |issue|
+      prepare_expedite_data(issue).empty?
     end
 
-    false
+    expedited_issues.sort { |a, b| a.key_as_i <=> b.key_as_i }
   end
 
   def later_date date1, date2
