@@ -46,7 +46,7 @@ describe CycletimeScatterplot do
          }
         ],
         'fill' => false,
-        'label' => 'Story',
+        'label' => 'Story (85% at 80 days)',
         'showLine' => false
        }
      ])

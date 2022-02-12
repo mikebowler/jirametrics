@@ -39,8 +39,8 @@ class HtmlReportConfig
     execute_chart AgingWorkInProgressChart.new
   end
 
-  def cycletime_scatterplot
-    execute_chart CycletimeScatterplot.new
+  def cycletime_scatterplot &block
+    execute_chart CycletimeScatterplot.new block
   end
 
   def total_wip_over_time_chart
