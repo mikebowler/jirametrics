@@ -23,9 +23,7 @@ class ExpeditedChart < ChartBase
   end
 
   def run
-    expedited_issues = find_expedited_issues
-
-    data_sets = expedited_issues.collect do |issue|
+    data_sets = find_expedited_issues.collect do |issue|
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end
 
