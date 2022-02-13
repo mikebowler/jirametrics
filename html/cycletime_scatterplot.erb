@@ -5,6 +5,9 @@
 <p>
   The gray line indicates the 85th percentile (<%= overall_percent_line %> days). 85% of all items on this chart fall on or below the line and the remaining 15% are above the line. 85% is a reasonable proxy for "most" so that we can say that based on this data set, we can predict that most work of this type will complete in <%= overall_percent_line %> days or less. The other lines reflect the 85% line for that respective type of work.
 </p>
+<p>
+  The gray vertical bars indicate weekends, when theoretically we aren't working.
+</p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
@@ -33,7 +36,9 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       y: {
         scaleLabel: {
           display: true,
-          labelString: 'Days'
+          labelString: 'Days',
+          min: 0,
+          max: <%= @highest_cycletime %>
         }
       }
     },
@@ -48,6 +53,19 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       autocolors: false,
       annotation: {
         annotations: {
+          <% holidays.each_with_index do |range, index| %>
+          holiday<%= index %>: {
+            drawTime: 'beforeDraw',
+            type: 'box',
+            xMin: '<%= range.begin %>T00:00:00',
+            xMax: '<%= range.end %>T23:59:59',
+            yMin: 0,
+            yMax: <%= @highest_cycletime %>,
+            backgroundColor: '#F0F0F0',
+            borderColor: '#F0F0F0'
+          },
+          <% end %>
+
           <% @percentage_lines.each_with_index do |args, index| %>
           <%   percent, color = args %>
           line<%= index %>: {
@@ -55,7 +73,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             yMin: <%= percent %>,
             yMax: <%= percent %>,
             borderColor: '<%= color %>',
-            borderWidth: 1
+            borderWidth: 1,
+            drawTime: 'beforeDraw'
           },
           <% end %>
         }

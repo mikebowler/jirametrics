@@ -7,6 +7,7 @@ class CycletimeScatterplot < ChartBase
     super()
     @group_by_block = block || ->(issue) { [issue.type, color_for(type: issue.type)] }
     @percentage_lines = []
+    @highest_cycletime = 0
   end
 
   def run
@@ -44,6 +45,8 @@ class CycletimeScatterplot < ChartBase
 
   def data_for_issue issue
     cycle_time = @cycletime.cycletime(issue)
+    @highest_cycletime = cycle_time if @highest_cycletime < cycle_time
+
     {
       'y' => cycle_time,
       'x' => @cycletime.stopped_time(issue),
@@ -55,5 +58,13 @@ class CycletimeScatterplot < ChartBase
     times = completed_issues.collect { |issue| @cycletime.cycletime(issue) }
     index = times.size * 85 / 100
     times.sort[index]
+  end
+
+  def holidays
+    result = []
+    @date_range.each do |date|
+      result << (date..date+1) if date.wday == 6
+    end
+    result
   end
 end
