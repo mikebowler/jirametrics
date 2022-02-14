@@ -59,8 +59,6 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             type: 'box',
             xMin: '<%= range.begin %>T00:00:00',
             xMax: '<%= range.end %>T23:59:59',
-            yMin: 0,
-            yMax: <%= @highest_cycletime %>,
             backgroundColor: '#F0F0F0',
             borderColor: '#F0F0F0'
           },
