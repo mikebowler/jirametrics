@@ -69,7 +69,7 @@ describe ThroughputChart do
             'SP-1 : Create new draft event',
             'SP-2 : Update existing event'
           ],
-          x: Date.parse('2021-10-17'),
+          x: '2021-10-17T23:59:59',
           y: 2
         }
       ]
