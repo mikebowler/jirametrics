@@ -17,7 +17,7 @@ class CycletimeScatterplot < ChartBase
     overall_percent_line = calculate_percent_line(completed_issues)
     @percentage_lines << [overall_percent_line, 'gray']
 
-    data_quality = scan_data_quality completed_issues
+    data_quality = scan_data_quality(@issues.select { |issue| @cycletime.stopped_time(issue) })
 
     render(binding, __FILE__)
   end
