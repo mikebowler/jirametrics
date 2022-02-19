@@ -35,6 +35,10 @@ class HtmlReportConfig
     @board_id
   end
 
+  def timezone_offset
+    @file_config.project_config.exporter.timezone_offset
+  end
+
   def aging_work_in_progress_chart
     execute_chart AgingWorkInProgressChart.new
   end
@@ -59,12 +63,17 @@ class HtmlReportConfig
     execute_chart ExpeditedChart.new(priority_name)
   end
 
+  def cycletime_histogram &block
+    execute_chart CycletimeHistogram.new block
+  end
+
   def execute_chart chart
     chart.issues = @file_config.issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
     chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
     chart.board_metadata = @file_config.project_config.board_metadata(board_id: @board_id) if chart.respond_to? :'board_metadata='
     chart.possible_statuses = @file_config.project_config.possible_statuses if chart.respond_to? :'possible_statuses='
+    chart.timezone_offset = timezone_offset
 
     if chart.respond_to? :'date_range='
       time_range = @file_config.project_config.time_range

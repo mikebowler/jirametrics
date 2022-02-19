@@ -14,7 +14,11 @@ describe HtmlReportConfig do
 
   context 'no injectable dependencies' do
     it 'should still pass if no dependencies supported' do
-      config = HtmlReportConfig.new file_config: nil, block: nil
+      project_config = ProjectConfig.new(
+        exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
+      )
+      file_config = FileConfig.new project_config: project_config, block: nil
+      config = HtmlReportConfig.new file_config: file_config, block: nil
 
       chart = ChartBase.new
       def chart.run

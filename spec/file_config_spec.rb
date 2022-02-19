@@ -36,8 +36,9 @@ describe FileConfig do
     it 'should create filename' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'foo'
-      config = FileConfig.new project_config: project_config, block: nil
-      expect(config.output_filename).to eq 'spec/testdata/foo.csv'
+      file_config = FileConfig.new project_config: project_config, block: nil
+      file_config.file_suffix '.csv'
+      expect(file_config.output_filename).to eq 'spec/testdata/foo.csv'
     end
   end
 

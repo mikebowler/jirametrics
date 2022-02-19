@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ChartBase
+  attr_accessor :timezone_offset
+
   @@chart_counter = 0
 
   def initialize

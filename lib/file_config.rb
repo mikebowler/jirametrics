@@ -59,7 +59,7 @@ class FileConfig
     segments = []
     segments << project_config.target_path
     segments << project_config.file_prefix
-    segments << (@file_suffix || '.csv')
+    segments << (@file_suffix || "-#{Date.today}.csv")
     segments.join
   end
 
@@ -117,7 +117,4 @@ class FileConfig
     @file_suffix
   end
 
-  def timezone_offset offset = nil
-    @timezone_offset = offset unless offset.nil?
-  end
 end
