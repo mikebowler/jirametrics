@@ -43,6 +43,10 @@ class HtmlReportConfig
     execute_chart AgingWorkInProgressChart.new
   end
 
+  def aging_work_bar_chart
+    execute_chart AgingWorkBarChart.new
+  end
+
   def cycletime_scatterplot &block
     execute_chart CycletimeScatterplot.new block
   end
