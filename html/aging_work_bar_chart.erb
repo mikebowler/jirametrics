@@ -1,6 +1,14 @@
 <h1>Aging Work Bar Chart</h1>
 <p>
-  This chart shows all active (started but not completed) work, ordered from oldest at the top to newest at the bottom.
+  This chart shows all active (started but not completed) work, ordered from oldest at the top to 
+  newest at the bottom.
+</p>
+<p>
+  The colours indicate different statuses, grouped by status category. Any
+  statuses in the status category of "To Do" will be in a shade of blue. Any in the category of 
+  "In Progress" will be in a shade of yellow and any in "Done" will be in a shade of green.
+  Depending on how you calculate cycletime, you may end up with only yellows or you may have a mix
+  of all three.
 </p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>

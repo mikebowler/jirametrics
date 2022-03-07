@@ -25,7 +25,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def data_sets_for issue:, today:
-    y = "#{issue.key} (#{label_days @cycletime.age(issue, today: today)})"
+    y = "[#{label_days @cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
 
     issue_started_time = @cycletime.started_time(issue)
 
