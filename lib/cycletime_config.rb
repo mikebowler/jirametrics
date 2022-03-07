@@ -53,9 +53,9 @@ class CycleTimeConfig
     (stop - start).to_i + 1
   end
 
-  def age issue
+  def age issue, today: nil
     start = started_time(issue)
-    stop = @today || Date.today
+    stop = today || @today || Date.today
     return nil if start.nil? || stop.nil?
 
     (stop - start).to_i + 1

@@ -11,19 +11,11 @@ class AgingWorkBarChart < ChartBase
     data_quality = scan_data_quality(aging_issues)
     @status_colors = pick_colors_for_statuses
 
-    status_names = []
-    aging_issues.each do |issue|
-      issue.changes.each do |change|
-        next unless change.status?
-
-        status_names << change.value
-      end
-    end
-
-    aging_issues.sort! { |a, b| @cycletime.age(b) <=> @cycletime.age(a) }
+    today = date_range.end + 1
+    aging_issues.sort! { |a, b| @cycletime.age(b, today: today) <=> @cycletime.age(a, today: today) }
     data_sets = []
     aging_issues.each do |issue|
-      new_dataset = data_sets_for issue: issue
+      new_dataset = data_sets_for issue: issue, today: today
       new_dataset.each do |data|
         data_sets << data
       end
@@ -32,10 +24,8 @@ class AgingWorkBarChart < ChartBase
     render(binding, __FILE__)
   end
 
-  def data_sets_for issue:
-    # label = issue.key
-    color = %w[blue green red gray black yellow]
-    y = "#{issue.key} (#{label_days @cycletime.age(issue)})"
+  def data_sets_for issue:, today:
+    y = "#{issue.key} (#{label_days @cycletime.age(issue, today: today)})"
 
     issue_started_time = @cycletime.started_time(issue)
 
@@ -72,7 +62,7 @@ class AgingWorkBarChart < ChartBase
         type: 'bar',
         label: "#{issue.key}-#{@@next_id += 1}",
         data: [{
-          x: [previous_start, date_range.end + 1],
+          x: [previous_start, today],
           y: y,
           title: "#{issue.type} : #{previous_status}"
         }],
@@ -86,8 +76,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def color_for status_name:, type:
-    status = @possible_statuses.find { |status| status.name == status_name && status.type == type }
-    @status_colors[status]
+    @status_colors[@possible_statuses.find { |status| status.name == status_name && status.type == type }]
   end
 
   def pick_colors_for_statuses
@@ -102,9 +91,6 @@ class AgingWorkBarChart < ChartBase
       '6495ED'  # cornflowerblue
     ]
     yellows = [
-      # 'FFFFE0', # lightyellow
-      # '#FFFACD', # lemonchiffon
-      # '#FAFAD2', # lightgoldenrodyellow
       '#FFEFD5', # papayawhip
       '#FFE4B5', # moccasin
       '#FFDAB9', # rpeachpuff
@@ -146,10 +132,8 @@ class AgingWorkBarChart < ChartBase
       else
         raise "Unexpected status category: #{status}"
       end
-      # attr_reader :id, :type, :category_name, :category_id
-      # attr_accessor :name
 
-      status_colors[status] = color #%w[blue green red gray black yellow].sample
+      status_colors[status] = color
     end
 
     status_colors

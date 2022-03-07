@@ -1,6 +1,6 @@
 <h1>Aging Work Bar Chart</h1>
 <p>
-  Explanation goes here
+  This chart shows all active (started but not completed) work, ordered from oldest at the top to newest at the bottom.
 </p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
@@ -22,8 +22,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         max: '<%= (@date_range.end + 1).to_s %>',
         stacked: false,
         title: {
-          display: true,
-          text: 'Cycletime in days'
+          display: false
         }
       },
       y: {
