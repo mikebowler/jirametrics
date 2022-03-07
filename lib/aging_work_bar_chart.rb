@@ -9,8 +9,8 @@ class AgingWorkBarChart < ChartBase
   def run
     aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
     data_quality = scan_data_quality(aging_issues)
+    @status_colors = pick_colors_for_statuses
 
-    # Consider sorting statuses by board_id - left to right across the board
     status_names = []
     aging_issues.each do |issue|
       issue.changes.each do |change|
@@ -54,9 +54,9 @@ class AgingWorkBarChart < ChartBase
           data: [{
             x: [previous_start, change.time],
             y: y,
-            title: previous_status
+            title: "#{issue.type} : #{change.value}"
           }],
-          backgroundColor: color.sample,
+          backgroundColor: color_for(status_name: change.value, type: issue.type),
           borderRadius: 0,
           stacked: true
         }
@@ -74,14 +74,84 @@ class AgingWorkBarChart < ChartBase
         data: [{
           x: [previous_start, date_range.end + 1],
           y: y,
-          title: previous_status
+          title: "#{issue.type} : #{previous_status}"
         }],
-        backgroundColor: color.sample,
+        backgroundColor: color_for(status_name: previous_status, type: issue.type),
         borderRadius: 0,
         stacked: true
       }
     end
 
     data
+  end
+
+  def color_for status_name:, type:
+    status = @possible_statuses.find { |status| status.name == status_name && status.type == type }
+    @status_colors[status]
+  end
+
+  def pick_colors_for_statuses
+    blues = [
+      'B0E0E6', # powderblue
+      'ADD8E6', # lightblue
+      '87CEFA', # lightskyblue
+      '87CEEB', # skyblue
+      '00BFFF', # deepskyblue
+      'B0C4DE', # lightsteelblue
+      '1E90FF', # dodgerblue
+      '6495ED'  # cornflowerblue
+    ]
+    yellows = [
+      # 'FFFFE0', # lightyellow
+      # '#FFFACD', # lemonchiffon
+      # '#FAFAD2', # lightgoldenrodyellow
+      '#FFEFD5', # papayawhip
+      '#FFE4B5', # moccasin
+      '#FFDAB9', # rpeachpuff
+      '#EEE8AA', # palegoldenrod
+      '#F0E68C', # khaki
+      '#BDB76B', # darkkhaki
+      '#FFFF00'  # yellow
+    ]
+    greens = [
+      '#7CFC00', # lawngreen
+      '#7FFF00', # chartreuse
+      '#32CD32', # limegreen
+      '#00FF00', # lime
+      '#228B22', # forestgreen
+      '#008000', # green
+      '#006400', # darkgreen
+      '#ADFF2F', # greenyellow
+      '#9ACD32', # yellowgreen
+      '#00FF7F', # springgreen
+      '#00FA9A', # mediumspringgreen
+      '#90EE90'  # lightgreen
+    ]
+
+    status_colors = {}
+    blue_index = 0
+    yellow_index = 0
+    green_index = 0
+
+    possible_statuses.each do |status|
+      puts "Status #{status} shows up multiple times in possible statuses" if status_colors.key? status
+
+      case status.category_name
+      when 'To Do'
+        color = blues[blue_index % blues.length]
+      when 'In Progress'
+        color = yellows[yellow_index % yellows.length]
+      when 'Done'
+        color = greens[green_index % greens.length]
+      else
+        raise "Unexpected status category: #{status}"
+      end
+      # attr_reader :id, :type, :category_name, :category_id
+      # attr_accessor :name
+
+      status_colors[status] = color #%w[blue green red gray black yellow].sample
+    end
+
+    status_colors
   end
 end
