@@ -81,14 +81,14 @@ class AgingWorkBarChart < ChartBase
 
   def pick_colors_for_statuses
     blues = [
-      'B0E0E6', # powderblue
-      'ADD8E6', # lightblue
-      '87CEFA', # lightskyblue
-      '87CEEB', # skyblue
-      '00BFFF', # deepskyblue
-      'B0C4DE', # lightsteelblue
-      '1E90FF', # dodgerblue
-      '6495ED'  # cornflowerblue
+      '#B0E0E6', # powderblue
+      '#ADD8E6', # lightblue
+      '#87CEFA', # lightskyblue
+      '#87CEEB', # skyblue
+      '#00BFFF', # deepskyblue
+      '#B0C4DE', # lightsteelblue
+      '#1E90FF', # dodgerblue
+      '#6495ED'  # cornflowerblue
     ]
     yellows = [
       '#FFEFD5', # papayawhip
@@ -122,13 +122,24 @@ class AgingWorkBarChart < ChartBase
     possible_statuses.each do |status|
       puts "Status #{status} shows up multiple times in possible statuses" if status_colors.key? status
 
+      other_status = @possible_statuses.find do |other|
+        other.name == status.name && other.category_name == status.category_name
+      end
+      if other_status && status_colors[other_status]
+        status_colors[status] = status_colors[other_status]
+        next
+      end
+
       case status.category_name
       when 'To Do'
         color = blues[blue_index % blues.length]
+        blue_index += 1
       when 'In Progress'
         color = yellows[yellow_index % yellows.length]
+        yellow_index += 1
       when 'Done'
         color = greens[green_index % greens.length]
+        green_index += 1
       else
         raise "Unexpected status category: #{status}"
       end

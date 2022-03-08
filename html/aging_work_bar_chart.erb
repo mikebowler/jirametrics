@@ -56,6 +56,24 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 });
 </script>
 
+<table style="border: 1px solid gray;">
+  <thead>
+    <tr>
+      <th style="border-bottom: 1px solid gray">Age (days)</th>
+      <th style="border-bottom: 1px solid gray">Issue</th>
+      <th style="border-bottom: 1px solid gray">Summary</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% aging_issues.each do |issue| %>
+      <tr>
+        <td style="text-align: right;"><%= cycletime.age issue, today: today %></td>
+        <td><%= link_to_issue issue %></td>
+        <td><i><%= issue.summary.inspect %></i></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
 <% 
   problems = data_quality.problems_for :completed_but_not_started
   unless problems.empty? 
