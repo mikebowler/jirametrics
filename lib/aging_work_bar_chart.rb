@@ -141,7 +141,7 @@ class AgingWorkBarChart < ChartBase
         color = greens[green_index % greens.length]
         green_index += 1
       else
-        raise "Unexpected status category: #{status}"
+        raise "Unexpected status category: #{status.category_name}"
       end
 
       status_colors[status] = color
