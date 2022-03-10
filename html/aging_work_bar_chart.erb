@@ -10,6 +10,10 @@
   Depending on how you calculate cycletime, you may end up with only yellows or you may have a mix
   of all three.
 </p>
+<p>
+  The gray backgrounds indicate weekends and the red vertical line indicates the 85% point for all 
+  items in this time period. Anything that started to the left of that is now an outlier.
+</p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
@@ -41,6 +45,29 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       }
     },
     plugins: {
+      annotation: {
+        annotations: {
+          <% holidays.each_with_index do |range, index| %>
+          holiday<%= index %>: {
+            drawTime: 'beforeDraw',
+            type: 'box',
+            xMin: '<%= range.begin %>T00:00:00',
+            xMax: '<%= range.end %>T23:59:59',
+            backgroundColor: '#F0F0F0',
+            borderColor: '#F0F0F0'
+          },
+          <% end %>
+
+          line: {
+            type: 'line',
+            xMin: '<%= percentage_line_x %>',
+            xMax: '<%= percentage_line_x %>',
+            borderColor: 'red',
+            borderWidth: 1,
+            drawTime: 'afterDraw'
+          }
+        }
+      },
       legend: {
         display: false
       },

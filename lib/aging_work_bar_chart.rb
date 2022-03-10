@@ -21,6 +21,8 @@ class AgingWorkBarChart < ChartBase
       end
     end
 
+    percentage_line_x = date_range.end - calculate_percent_line
+
     render(binding, __FILE__)
   end
 
@@ -148,5 +150,11 @@ class AgingWorkBarChart < ChartBase
     end
 
     status_colors
+  end
+
+  def calculate_percent_line percentage: 85
+    days = @issues.collect { |issue| cycletime.cycletime(issue) }.compact.sort
+    index = days.length * percentage / 100
+    days[index]
   end
 end
