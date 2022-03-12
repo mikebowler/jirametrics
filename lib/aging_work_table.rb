@@ -11,8 +11,7 @@ class AgingWorkTable < ChartBase
 
   def run
     @today = date_range.end + 1
-    aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
-    aging_issues.sort! { |a, b| @cycletime.age(b, today: @today) <=> @cycletime.age(a, today: @today) }
+    aging_issues = select_aging_issues
 
     expedited_but_not_started = @issues.select do |issue|
       @cycletime.started_time(issue).nil? && @cycletime.stopped_time(issue).nil? && expedited?(issue)
@@ -20,6 +19,11 @@ class AgingWorkTable < ChartBase
     aging_issues += expedited_but_not_started.sort_by(&:created)
 
     render(binding, __FILE__)
+  end
+
+  def select_aging_issues
+    aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
+    aging_issues.sort { |a, b| @cycletime.age(b, today: @today) <=> @cycletime.age(a, today: @today) }
   end
 
   def expedited? issue
@@ -33,7 +37,7 @@ class AgingWorkTable < ChartBase
   def blocked_text issue
     if issue.blocked_on_date? @today
       "<span title='Blocked' style='font-size: 0.8em;'>🛑</span>"
-    elsif issue.stalled_on_date? @today, 5
+    elsif issue.stalled_on_date?(@today, 5) && @cycletime.started_time(issue)
       "<span title='Stalled' style='font-size: 0.8em;'>&#x1F7E7;</span>"
     else
       ''
