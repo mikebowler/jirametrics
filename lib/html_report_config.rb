@@ -13,6 +13,7 @@ class HtmlReportConfig
     @block = block
     @cycletimes = []
     @sections = []
+    @expedited_priority_name = 'Highest'
   end
 
   def cycletime label = nil, &block
@@ -47,6 +48,10 @@ class HtmlReportConfig
     execute_chart AgingWorkBarChart.new
   end
 
+  def aging_work_table priority_name = @expedited_priority_name
+    execute_chart AgingWorkTable.new(priority_name)
+  end
+
   def cycletime_scatterplot &block
     execute_chart CycletimeScatterplot.new block
   end
@@ -63,7 +68,7 @@ class HtmlReportConfig
     execute_chart BlockedStalledChart.new
   end
 
-  def expedited_chart priority_name = 'Highest'
+  def expedited_chart priority_name = @expedited_priority_name
     execute_chart ExpeditedChart.new(priority_name)
   end
 

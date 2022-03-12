@@ -1,0 +1,33 @@
+<h1>Aging Work Table</h1>
+<p>
+  This chart shows all active (started but not completed) work, ordered from oldest at the top to 
+  newest at the bottom.
+</p>
+<p>
+  If there are expedited items that haven't yet started then they're at the bottom of the table. By the
+  very definition of expedited, if we haven't started them already, we'd better get on that.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th style="border-bottom: 1px solid gray">Age (days)</th>
+      <th style="border-bottom: 1px solid gray">E</th>
+      <th style="border-bottom: 1px solid gray">B</th>
+      <th style="border-bottom: 1px solid gray">Issue</th>
+      <th style="border-bottom: 1px solid gray">Summary</th>
+      <th style="border-bottom: 1px solid gray">Who</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% aging_issues.each do |issue| %>
+      <tr>
+        <td style="text-align: right;"><%= cycletime.age(issue, today: @today) || 'Not started' %></td>
+        <td><%= expedited_text(issue) %></td>
+        <td><%= blocked_text(issue) %></td>
+        <td><%= link_to_issue issue %></td>
+        <td><i><%= issue.summary.inspect %></i></td>
+        <td><%= assigned_to(issue) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
