@@ -27,6 +27,7 @@ class Anonymizer
 
       issue.raw['key'] = new_key
       issue.raw['fields']['summary'] = RandomWord.phrases.next.gsub(/_/, ' ')
+      issue.raw['fields']['assignee']['displayName'] = RandomWord.nouns.next unless issue.raw['fields']['assignee'].nil?
     end
   end
 
