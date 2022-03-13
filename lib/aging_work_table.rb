@@ -3,7 +3,7 @@
 require './lib/chart_base'
 
 class AgingWorkTable < ChartBase
-  attr_accessor :issues, :cycletime, :date_range
+  attr_accessor :issues, :cycletime, :date_range, :today
 
   def initialize expedited_priority_name
     @expedited_priority_name = expedited_priority_name
@@ -30,21 +30,19 @@ class AgingWorkTable < ChartBase
     issue.raw['fields']['priority']['name'] == @expedited_priority_name
   end
 
+  def icon_span title:, icon:
+    "<span title='#{title}' style='font-size: 0.8em;'>#{icon}</span>"
+  end
+
   def expedited_text issue
-    "<span title='Expedited' style='font-size: 0.8em;'>🔥</span>" if expedited?(issue)
+    icon_span(title: 'Expedited', icon: '🔥') if expedited?(issue)
   end
 
   def blocked_text issue
     if issue.blocked_on_date? @today
-      "<span title='Blocked' style='font-size: 0.8em;'>🛑</span>"
+      icon_span title: 'Blocked', icon: '🛑'
     elsif issue.stalled_on_date?(@today, 5) && @cycletime.started_time(issue)
-      "<span title='Stalled' style='font-size: 0.8em;'>&#x1F7E7;</span>"
-    else
-      ''
+      icon_span title: 'Stalled', icon: '🟧'
     end
-  end
-
-  def assigned_to issue
-    issue.raw['fields']['assignee']['displayName']
   end
 end

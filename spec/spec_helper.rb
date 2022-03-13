@@ -65,7 +65,7 @@ def load_complete_sample_date_range
 end
 
 def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil, artificial: false
-  time = DateTime.parse(time)
+  time = DateTime.parse(time) if time.is_a? String
   ChangeItem.new time: time, author: 'Tolkien', artificial: artificial, raw: {
     'field' => field,
     'to' => value_id,

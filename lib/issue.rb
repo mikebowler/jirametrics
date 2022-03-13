@@ -179,6 +179,10 @@ class Issue
     @changes.reverse.find { |change| change.resolution? }&.time
   end
 
+  def assigned_to
+    @raw['fields']&.[]('assignee')&.[]('displayName')
+  end
+
   # TODO: Change to use new cycletime_config
   def blocked_percentage started, finished
     started = started.call self

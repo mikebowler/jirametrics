@@ -26,7 +26,7 @@
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>
         <td><i><%= issue.summary.inspect %></i></td>
-        <td><%= assigned_to(issue) %></td>
+        <td><%= issue.assigned_to %></td>
       </tr>
     <% end %>
   </tbody>
