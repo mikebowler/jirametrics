@@ -27,7 +27,7 @@ class Anonymizer
 
       issue.raw['key'] = new_key
       issue.raw['fields']['summary'] = RandomWord.phrases.next.gsub(/_/, ' ')
-      issue.raw['fields']['assignee']['displayName'] = RandomWord.nouns.next unless issue.raw['fields']['assignee'].nil?
+      issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
     end
   end
 
@@ -116,5 +116,40 @@ class Anonymizer
 
     range = @project_config.time_range
     @project_config.time_range = (range.begin + @date_adjustment)..(range.end + @date_adjustment)
+  end
+
+  def random_name
+    # Names generated from https://www.random-name-generator.com
+    [
+      'Benjamin Pelletier',
+      'Levi Scott',
+      'Emilia Leblanc',
+      'Victoria Singh',
+      'Theodore King',
+      'Amelia Kelly',
+      'Samuel Jones',
+      'Lucy Kelly',
+      'Oliver Fortin',
+      'Riley Murphy',
+      'Elijah Stewart',
+      'Elizabeth Murphy',
+      'Declan Simard',
+      'Myles Singh',
+      'Jayden Smith',
+      'Sophie Richard',
+      'Levi Mitchell',
+      'Alexander Davis',
+      'Sebastian Thompson',
+      'Logan Robinson',
+      'Madison Girard',
+      'Ellie King',
+      'Aiden Miller',
+      'Ethan Anderson',
+      'Scarlett Murray',
+      'Audrey Moore',
+      'Emmett Reid',
+      'Jacob Poirier',
+      'Violet MacDonald'
+    ].sample
   end
 end
