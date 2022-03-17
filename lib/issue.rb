@@ -58,11 +58,7 @@ class Issue
 
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
-    if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
-      "#{$1}/browse/#{key}"
-    else
-      ''
-    end
+    "#{$1}/browse/#{key}" if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
   end
 
   def key_as_i

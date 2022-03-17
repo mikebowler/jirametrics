@@ -75,6 +75,9 @@ class Anonymizer
     status_name_hash = build_status_name_hash
 
     @issues.each do |issue|
+      # This is where we create URL's from
+      issue.raw['self'] = nil
+
       issue.changes.each do |change|
         next unless change.status?
 

@@ -61,7 +61,12 @@ class ChartBase
   end
 
   def link_to_issue issue
-    "<a href='#{issue.url}'>#{issue.key}</a>"
+    puts issue.url.inspect
+    if issue.url
+      "<a href='#{issue.url}'>#{issue.key}</a>"
+    else
+      issue.key
+    end
   end
 
   def collapsible_issues_panel issue_descriptions
@@ -73,7 +78,7 @@ class ChartBase
     result << " return false;'>Show details</a>]"
     result << "<ul id=#{issues_id.inspect} style='display: none'>"
     issue_descriptions.sort { |a, b| a[0].key_as_i <=> b[0].key_as_i }.each do |issue, description|
-      result << "<li><a href='#{issue.url}'>#{issue.key}</a> <i>#{issue.summary.inspect}</i> #{description}</li>"
+      result << "<li>#{link_to_issue issue} <i>#{issue.summary.inspect}</i> #{description}</li>"
     end
     result << '</ul>'
     result
