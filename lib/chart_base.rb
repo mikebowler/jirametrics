@@ -61,7 +61,6 @@ class ChartBase
   end
 
   def link_to_issue issue
-    puts issue.url.inspect
     if issue.url
       "<a href='#{issue.url}'>#{issue.key}</a>"
     else
