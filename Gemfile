@@ -5,9 +5,8 @@ source 'https://rubygems.org'
 ruby '~> 3.0.1'
 
 gem 'rake'
+gem 'random-word'
 gem 'require_all'
 gem 'rspec'
 gem 'rubocop', require: false
 gem 'simplecov'
-gem 'random-word'
-
