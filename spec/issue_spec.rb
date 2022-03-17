@@ -48,7 +48,7 @@ describe Issue do
   it 'cannot fabricate url' do
     issue = load_issue 'SP-2'
     issue.raw['self'] = nil
-    expect(issue.url).to eq ''
+    expect(issue.url).to be_nil
   end
 
   it 'gets created and updated' do
