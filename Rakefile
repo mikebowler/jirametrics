@@ -3,7 +3,7 @@
 require 'rspec/core/rake_task'
 require 'require_all'
 
-task default: %i[download extract]
+task default: %i[download export]
 
 task :initialize_config do
   require_all 'lib'
