@@ -3,3 +3,4 @@ jira_config*.json
 config.rb
 coverage/
 .DS_Store
+Gemfile.lock
