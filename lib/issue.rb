@@ -65,6 +65,10 @@ class Issue
     $1.to_i if key =~ /\-(\d+)$/
   end
 
+  def component_names
+    @raw['fields']['components']&.collect { |component| component['name'] } || []
+  end
+
   def create_fake_change_for_creation existing_changes
     created_time = parse_datetime @raw['fields']['created']
     first_change = existing_changes.find { |change| change.status? }
