@@ -80,6 +80,10 @@ class HtmlReportConfig
     "\##{Random.bytes(3).unpack1('H*')}"
   end
 
+  def html string
+    @sections << string
+  end
+
   def execute_chart chart
     chart.issues = @file_config.issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
