@@ -91,22 +91,48 @@ class ProjectConfig
     end
   end
 
-  def category_for type:, status_name:, issue_id:
+  def category_for type:, status_name:
     status = @possible_statuses.find { |s| s.type == type && s.name == status_name }
-    if status.nil? || status.category_name.nil?
-      message = "Could not determine a category for type: #{type.inspect} and" \
-        " status: #{status_name.inspect} on issue: #{issue_id}. If you" \
-        ' specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
-        ' and we still don\'t have the right mapping, which is possible, then use the' \
-        ' "status_category_mapping" declaration in your config to manually add one.' \
-        ' The mappings we do know about are below:'
-      @possible_statuses.each do |status|
-        message << "\n  Type: #{status.type.inspect}, Status: #{status.name.inspect}, Category: #{status.category_name.inspect}'"
-      end
+    raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
 
-      raise message
-    end
     status.category_name
+  end
+
+  def raise_with_message_about_missing_category_information
+    message = String.new
+    message << 'Could not determine categories for some of the statuses used in this data set.\n\n' \
+      'If you specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
+      ' and we still don\'t have the right mapping, which is possible, then use the' \
+      " 'status_category_mapping' declaration in your config to manually add one.\n\n" \
+      ' The mappings we do know about are below:'
+
+    @possible_statuses.each do |status|
+      message << "\n  type: #{status.type.inspect}, status: #{status.name.inspect}, " \
+        "category: #{status.category_name.inspect}'"
+    end
+
+    message << "\n\nThe ones we're missing are the following:"
+
+    missing_statuses = []
+    issues.each do |issue|
+      issue.changes.each do |change|
+        next unless change.status?
+
+        unless find_status_in_possible(type: issue.type, status_name: change.value)
+          missing_statuses << [issue.type, change.value]
+        end
+      end
+    end
+
+    missing_statuses.each do |type, status_name|
+      message << "\n  type: #{type.inspect}, status: #{status_name.inspect}, category: <unknown>"
+    end
+
+    raise message
+  end
+
+  def find_status_in_possible type:, status_name:
+    @possible_statuses.find { |s| s.type == type && s.name == status_name }
   end
 
   def load_status_category_mappings

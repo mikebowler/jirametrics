@@ -4,18 +4,20 @@ require './spec/spec_helper'
 
 describe ProjectConfig do
   context 'category_for' do
+    let(:exporter) { Exporter.new }
+
     it "where mapping doesn't exist" do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'In progress'
       config.status_category_mapping type: 'Story', status: 'Done', category: 'Done'
-      expect { config.category_for type: 'Epic', status_name: 'Foo', issue_id: 'SP-1' }
-        .to raise_error(/^Could not determine a category for type/)
+      expect { config.category_for type: 'Epic', status_name: 'Foo' }
+        .to raise_error(/^Could not determine categories for some/)
     end
 
     it 'where mapping does exist' do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata', jira_config: nil, block: nil
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'InProgress'
-      expect(config.category_for(type: 'Story', status_name: 'Doing', issue_id: 'SP-1')).to eql 'InProgress'
+      expect(config.category_for(type: 'Story', status_name: 'Doing')).to eql 'InProgress'
     end
   end
 

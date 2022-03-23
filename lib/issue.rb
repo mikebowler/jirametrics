@@ -123,7 +123,7 @@ class Issue
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category config, *category_names
     still_in do |change|
-      category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
+      category = config.file_config.project_config.category_for type: type, status_name: change.value
       category_names.include? category
     end
   end
@@ -141,7 +141,7 @@ class Issue
   # Are we currently in this status category? If yes, then return the time of the most recent status change.
   def currently_in_status_category config, *category_names
     change = most_recent_status_change
-    category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
+    category = config.file_config.project_config.category_for type: type, status_name: change.value
     return change.time if category_names.include? category
   end
 
@@ -153,7 +153,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = config.file_config.project_config.category_for type: type, status_name: change.value, issue_id: key
+      category = config.file_config.project_config.category_for type: type, status_name: change.value
       return change.time if category_names.include? category
     end
     nil
