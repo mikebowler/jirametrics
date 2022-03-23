@@ -72,15 +72,9 @@ class ChartBase
     link_id = next_id
     issues_id = next_id
 
-    result = String.new
-    result << "[<a id=#{link_id.inspect} href='#'' onclick='expand_collapse(\"#{link_id}\", \"#{issues_id}\");"
-    result << " return false;'>Show details</a>]"
-    result << "<ul id=#{issues_id.inspect} style='display: none'>"
-    issue_descriptions.sort { |a, b| a[0].key_as_i <=> b[0].key_as_i }.each do |issue, description|
-      result << "<li>#{link_to_issue issue} <i>#{issue.summary.inspect}</i> #{description}</li>"
-    end
-    result << '</ul>'
-    result
+    issue_descriptions.sort! { |a, b| a[0].key_as_i <=> b[0].key_as_i }
+    erb = ERB.new File.read 'html/collapsible_issues_panel.erb'
+    erb.result(binding)
   end
 
   def scan_data_quality issues

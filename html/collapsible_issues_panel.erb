@@ -1,0 +1,8 @@
+[<a id='<%= link_id %>' href="#" onclick='expand_collapse("<%= link_id %>", "<%= issues_id %>"); return false;'>Show details</a>]
+<ul id='<%= issues_id %>'' style='display: none;'>
+  <% issue_descriptions.each do |issue, description| %>
+    <li>
+      <%= link_to_issue issue %><i><%= issue.summary.inspect %></i> <%= description %>
+    </li>
+  <% end %>
+</ul>
