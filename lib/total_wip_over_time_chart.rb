@@ -47,6 +47,8 @@ class TotalWipOverTimeChart < ChartBase
     hash = {}
     @issues.each do |issue|
       stopped = cycletime.stopped_time(issue)&.to_date
+      next unless date_range.include? stopped
+
       (hash[stopped] ||= []) << issue if cycletime.started_time(issue).nil? && stopped
     end
 

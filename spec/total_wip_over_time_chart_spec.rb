@@ -30,7 +30,7 @@ describe TotalWipOverTimeChart do
         [issue1, nil, '2022-01-01'], # finished but not started
         [issue2, '2022-01-01', nil] # Started but not finished
       ]
-
+      chart.date_range = Date.parse('2021-12-15')..Date.parse('2022-01-15')
       chart.issues = [issue1, issue2]
       expect(chart.completed_but_not_started_dataset).to eq({
         backgroundColor: '#66FF66',
