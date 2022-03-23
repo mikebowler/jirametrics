@@ -124,7 +124,7 @@ class ProjectConfig
       end
     end
 
-    missing_statuses.each do |type, status_name|
+    missing_statuses.uniq.each do |type, status_name|
       message << "\n  type: #{type.inspect}, status: #{status_name.inspect}, category: <unknown>"
     end
 
