@@ -60,8 +60,8 @@ class HtmlReportConfig
     execute_chart TotalWipOverTimeChart.new
   end
 
-  def throughput_chart
-    execute_chart ThroughputChart.new
+  def throughput_chart &block
+    execute_chart ThroughputChart.new(block)
   end
 
   def blocked_stalled_chart

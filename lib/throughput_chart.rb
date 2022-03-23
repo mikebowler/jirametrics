@@ -3,12 +3,24 @@
 class ThroughputChart < ChartBase
   attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
 
+  def initialize block = nil
+    super()
+    @group_by_block = block || ->(_issue) { %w[Throughput blue] }
+  end
+
   def run
     completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) }
 
     data_sets = []
-    data_sets << weekly_throughput_dataset(completed_issues: completed_issues)
-    data_sets << daily_throughput_dataset(completed_issues: completed_issues)
+    groups = completed_issues.collect { |issue| @group_by_block.call(issue) }.uniq
+    groups.each do |type|
+      completed_issues_by_type = completed_issues.select { |issue| @group_by_block.call(issue) == type }
+      label, color = *type
+      data_sets << weekly_throughput_dataset(completed_issues: completed_issues_by_type, label: label, color: color)
+
+    end
+    # data_sets << weekly_throughput_dataset(completed_issues: completed_issues)
+    # data_sets << daily_throughput_dataset(completed_issues: completed_issues)
 
     data_quality = scan_data_quality completed_issues
 
@@ -45,15 +57,15 @@ class ThroughputChart < ChartBase
     }
   end
 
-  def weekly_throughput_dataset completed_issues:
+  def weekly_throughput_dataset completed_issues:, label:, color:
     {
-      label: 'Weekly throughput',
+      label: label,
       data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues),
       fill: false,
       showLine: true,
-      borderColor: 'blue',
+      borderColor: color,
       lineTension: 0.4,
-      backgroundColor: 'blue'
+      backgroundColor: color
     }
   end
 
