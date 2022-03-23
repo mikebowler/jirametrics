@@ -9,7 +9,7 @@ class FileConfig
     @project_config = project_config
     @block = block
     @columns = nil
-    @issues = project_config.issues
+    @issues = project_config.issues.dup
   end
 
   def run
