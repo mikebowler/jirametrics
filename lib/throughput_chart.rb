@@ -17,10 +17,7 @@ class ThroughputChart < ChartBase
       completed_issues_by_type = completed_issues.select { |issue| @group_by_block.call(issue) == type }
       label, color = *type
       data_sets << weekly_throughput_dataset(completed_issues: completed_issues_by_type, label: label, color: color)
-
     end
-    # data_sets << weekly_throughput_dataset(completed_issues: completed_issues)
-    # data_sets << daily_throughput_dataset(completed_issues: completed_issues)
 
     data_quality = scan_data_quality completed_issues
 
@@ -44,17 +41,6 @@ class ThroughputChart < ChartBase
       periods << (first_day..last_day)
       first_day = last_day + 1
     end
-  end
-
-  def daily_throughput_dataset completed_issues:
-    {
-      label: 'Daily throughput',
-      data: throughput_dataset(periods: date_range.collect { |date| date..date }, completed_issues: completed_issues),
-      fill: false,
-      showLine: true,
-      lineTension: 0.4,
-      backgroundColor: 'gray'
-    }
   end
 
   def weekly_throughput_dataset completed_issues:, label:, color:
