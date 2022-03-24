@@ -32,7 +32,6 @@ class ProjectConfig
     @jira_config = jira_config
     @possible_statuses = []
     @all_board_columns = {}
-
   end
 
   def evaluate_next_level
@@ -213,5 +212,36 @@ class ProjectConfig
 
   def anonymize_data
     Anonymizer.new(project_config: self).run
+  end
+
+  def discard_changes_before status_becomes: nil, &block
+    if status_becomes
+      block = lambda do |issue|
+        time = nil
+        issue.changes.each do |change|
+          time = change.time if change.status? && change.value == status_becomes && change.artificial? == false
+        end
+        time
+      end
+    end
+
+    discard_count = 0
+    issues.each do |issue|
+      cutoff_time = block.call(issue)
+      next if cutoff_time.nil?
+
+      days = (cutoff_time.to_date - issue.changes.first.time.to_date).to_i + 1
+      message = "#{issue.key}(#{issue.type}) discarding #{days} "
+      if days == 1
+        message << "day of data on #{cutoff_time.to_date}"
+      else
+        message << "days of data from #{issue.changes.first.time.to_date} to #{cutoff_time.to_date}"
+      end
+      puts message
+      discard_count += 1
+      issue.changes.reject! { |change| change.time < cutoff_time }
+    end
+
+    puts "Discarded data from #{discard_count} issues out of a total #{issues.size}"
   end
 end

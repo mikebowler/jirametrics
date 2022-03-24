@@ -3,9 +3,9 @@
 require './spec/spec_helper'
 
 describe ProjectConfig do
-  context 'category_for' do
-    let(:exporter) { Exporter.new }
+  let(:exporter) { Exporter.new }
 
+  context 'category_for' do
     it "where mapping doesn't exist" do
       config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'In progress'
@@ -109,6 +109,41 @@ describe ProjectConfig do
       project_config.load_board_configuration(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
       expect { project_config.board_metadata }.to raise_error %r{following board ids and this is ambiguous}
+    end
+  end
+
+  context 'discard_changes_before' do
+    let(:issue1) { load_issue('SP-1') }
+
+    it 'should discard for date provided' do
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-01')
+      issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02')
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
+
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
+      project_config.issues << issue1
+
+      project_config.discard_changes_before status_becomes: 'backlog'
+      expect(issue1.changes.collect(&:time)).to eq [
+        DateTime.parse('2022-01-02'),
+        DateTime.parse('2022-01-03')
+      ]
+    end
+
+    it 'should discard for block provided' do
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T07:00:00')
+      issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02T08:00:00')
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T09:00:00')
+
+      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
+      project_config.issues << issue1
+
+      project_config.discard_changes_before { |_issue| DateTime.parse('2022-01-02T09:00:00') }
+      expect(issue1.changes.collect(&:time)).to eq [
+        DateTime.parse('2022-01-02T09:00:00')
+      ]
     end
   end
 end
