@@ -5,6 +5,7 @@ require './lib/self_or_issue_dispatcher'
 
 class HtmlReportConfig
   include SelfOrIssueDispatcher
+  include DiscardChangesBefore
 
   attr_reader :file_config, :sections
 
@@ -84,8 +85,21 @@ class HtmlReportConfig
     @sections << string
   end
 
+  def discard_changes_before_hook issues_cutoff_times
+    raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
+
+    @original_issue_times = {}
+    issues_cutoff_times.each do |issue, cutoff_time|
+      @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: @cycletime.started_time(issue) }
+    end
+  end
+
+  def discarded_changes_report
+    execute_chart DiscardedChangesTable.new @original_issue_times
+  end
+
   def execute_chart chart
-    chart.issues = @file_config.issues if chart.respond_to? :'issues='
+    chart.issues = issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
     chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
     chart.board_metadata = @file_config.project_config.board_metadata(board_id: @board_id) if chart.respond_to? :'board_metadata='
@@ -98,5 +112,9 @@ class HtmlReportConfig
     end
 
     @sections << chart.run
+  end
+
+  def issues
+    @file_config.issues
   end
 end

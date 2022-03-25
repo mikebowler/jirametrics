@@ -1,0 +1,25 @@
+<h1>Discarded Changes Table</h1>
+<p>
+  The configuration is set to discard some issue changes that meet certain criteria. Usually this is done to reset the clock for items that have been moved back to the backlog. <i>Note that moving items back to the backlog after they've started is a poor practice and should be avoided.</i>
+</p>
+<p>
+  This has affected the following issues.
+</p>
+<table>
+  <thead>
+    <tr>
+      <th style="border-bottom: 1px solid gray">Issue</th>
+      <th style="border-bottom: 1px solid gray">Summary</th>
+      <th style="border-bottom: 1px solid gray">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% messages.each do |issue, details| %>
+      <tr>
+        <td><%= link_to_issue issue %></td>
+        <td><i><%= issue.summary.inspect %></i></td>
+        <td><%= details %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
