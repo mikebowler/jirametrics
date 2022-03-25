@@ -1,24 +1,8 @@
 # frozen_string_literal: true
 
-class Status
-  attr_reader :id, :type, :category_name, :category_id
-  attr_accessor :name
-
-  def initialize name:, id:, type:, category_name:, category_id:
-    @name = name
-    @id = id
-    @type = type
-    @category_name = category_name
-    @category_id = category_id
-  end
-
-  def to_s
-    "Status(name=#{@name.inspect}, id=#{@id.inspect}, type=#{@type.inspect}," \
-      " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect})"
-  end
-end
-
 class ProjectConfig
+  include DiscardChangesBefore
+
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
     :download_config, :file_configs, :exporter
   attr_accessor :time_range
@@ -214,22 +198,8 @@ class ProjectConfig
     Anonymizer.new(project_config: self).run
   end
 
-  def discard_changes_before status_becomes: nil, &block
-    if status_becomes
-      block = lambda do |issue|
-        time = nil
-        issue.changes.each do |change|
-          time = change.time if change.status? && change.value == status_becomes && change.artificial? == false
-        end
-        time
-      end
-    end
-
-    discard_count = 0
-    issues.each do |issue|
-      cutoff_time = block.call(issue)
-      next if cutoff_time.nil?
-
+  def discard_changes_before_hook issues_cutoff_times
+    issues_cutoff_times.each do |issue, cutoff_time|
       days = (cutoff_time.to_date - issue.changes.first.time.to_date).to_i + 1
       message = "#{issue.key}(#{issue.type}) discarding #{days} "
       if days == 1
@@ -238,10 +208,7 @@ class ProjectConfig
         message << "days of data from #{issue.changes.first.time.to_date} to #{cutoff_time.to_date}"
       end
       puts message
-      discard_count += 1
-      issue.changes.reject! { |change| change.time < cutoff_time }
     end
-
-    puts "Discarded data from #{discard_count} issues out of a total #{issues.size}"
+    puts "Discarded data from #{issues_cutoff_times.count} issues out of a total #{issues.size}"
   end
 end
