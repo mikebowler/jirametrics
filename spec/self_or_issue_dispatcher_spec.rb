@@ -24,6 +24,7 @@ describe SelfOrIssueDispatcher do
     let(:file) do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      project_config.file_prefix 'sample'
       FileConfig.new project_config: project_config, block: nil
     end
 

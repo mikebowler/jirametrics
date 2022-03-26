@@ -4,10 +4,12 @@ require './spec/spec_helper'
 
 describe ProjectConfig do
   let(:exporter) { Exporter.new }
+  let(:target_path) { 'spec/testdata/' }
 
   context 'category_for' do
     it "where mapping doesn't exist" do
-      config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      config.file_prefix 'sample'
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'In progress'
       config.status_category_mapping type: 'Story', status: 'Done', category: 'Done'
       expect { config.category_for type: 'Epic', status_name: 'Foo' }
@@ -15,7 +17,8 @@ describe ProjectConfig do
     end
 
     it 'where mapping does exist' do
-      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata', jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
+      config.file_prefix 'sample'
       config.status_category_mapping type: 'Story', status: 'Doing', category: 'InProgress'
       expect(config.category_for(type: 'Story', status_name: 'Doing')).to eql 'InProgress'
     end
@@ -23,7 +26,7 @@ describe ProjectConfig do
 
   context 'board_configuration' do
     it 'should load' do
-      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
       config.load_all_board_configurations
       expect(config.all_board_columns.keys).to eq [1]
@@ -46,13 +49,13 @@ describe ProjectConfig do
 
   context 'possible_statuses' do
     it 'should degrade gracefully when mappings not found' do
-      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.load_status_category_mappings
       expect(config.possible_statuses).to be_empty
     end
 
     it 'should load' do
-      config = ProjectConfig.new exporter: nil, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
       config.load_status_category_mappings
 
@@ -121,7 +124,8 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02')
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
 
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      project_config.file_prefix 'sample'
       project_config.issues << issue1
 
       project_config.discard_changes_before status_becomes: 'backlog'
@@ -137,7 +141,8 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02T08:00:00')
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T09:00:00')
 
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata', jira_config: nil, block: nil
+      project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      project_config.file_prefix 'sample'
       project_config.issues << issue1
 
       project_config.discard_changes_before { |_issue| DateTime.parse('2022-01-02T09:00:00') }

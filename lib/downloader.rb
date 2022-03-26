@@ -43,6 +43,10 @@ class Downloader
   end
 
   def download_issues
+    path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
+    puts "Creating path #{path}"
+    Dir.mkdir(path) unless Dir.exist?(path)
+
     jql = CGI.escape @download_config.jql
     max_results = 100
     start_at = 0
@@ -54,7 +58,11 @@ class Downloader
       json = JSON.parse call_command(command)
       exit_if_call_failed json
 
-      write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_#{start_at}.json"
+      json['issues'].each do |issue_json|
+        write_json(issue_json, "#{path}#{issue_json['key']}.json")
+      end
+
+      # write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_#{start_at}.json"
       total = json['total'].to_i
       max_results = json['maxResults']
       start_at += json['issues'].size
@@ -114,7 +122,7 @@ class Downloader
   def remove_old_files
     file_prefix = @download_config.project_config.file_prefix
     Dir.foreach @target_path do |file|
-      next unless file.start_with? file_prefix
+      next unless file =~ /^#{file_prefix}_\d+\.json$/
 
       File.unlink "#{@target_path}#{file}"
     end

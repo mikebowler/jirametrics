@@ -17,6 +17,7 @@ describe HtmlReportConfig do
       project_config = ProjectConfig.new(
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
+      project_config.file_prefix 'sample'
       file_config = FileConfig.new project_config: project_config, block: nil
       config = HtmlReportConfig.new file_config: file_config, block: nil
 

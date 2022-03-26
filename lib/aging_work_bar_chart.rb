@@ -153,6 +153,8 @@ class AgingWorkBarChart < ChartBase
   end
 
   def calculate_percent_line percentage: 85
+    return 0 if @issues.empty?
+
     days = @issues.collect { |issue| cycletime.cycletime(issue) }.compact.sort
     index = days.length * percentage / 100
     days[index]

@@ -172,22 +172,43 @@ class ProjectConfig
   def issues
     unless @issues
       timezone_offset = exporter.timezone_offset
-      issues = []
 
-      if File.exist?(@target_path) && File.directory?(@target_path)
-        Dir.foreach(@target_path) do |filename|
-          if filename =~ /#{file_prefix}_\d+\.json/
-            content = JSON.parse File.read("#{@target_path}#{filename}")
-            content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
-          end
-        end
+      issues_path = "#{@target_path}#{file_prefix}_issues/"
+      if File.exist?(issues_path) && File.directory?(issues_path)
+        issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
+      elsif File.exist?(@target_path) && File.directory?(@target_path)
+        issues = load_issues_from_target_directory path: @target_path, timezone_offset: timezone_offset
       else
-        puts "Path #{@target_path} either doesn't exist or it isn't a directory"
+        puts "Can't find issues in either #{path} or #{@target_path}"
       end
       @issues = issues
     end
 
     @issues
+  end
+
+  def load_issues_from_target_directory path:, timezone_offset:
+    puts 'Deprecated: issues in the target directory. Download again and this should fix itself.'
+
+    issues = []
+    Dir.foreach(path) do |filename|
+      if filename =~ /#{file_prefix}_\d+\.json/
+        content = JSON.parse File.read("#{path}#{filename}")
+        content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
+      end
+    end
+    issues
+  end
+
+  def load_issues_from_issues_directory path:, timezone_offset:
+    issues = []
+    Dir.foreach(path) do |filename|
+      if filename =~ /-\d+\.json$/
+        content = JSON.parse File.read("#{path}#{filename}")
+        issues << Issue.new(raw: content, timezone_offset: timezone_offset)
+      end
+    end
+    issues
   end
 
   def anonymize

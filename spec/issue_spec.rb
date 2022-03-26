@@ -4,7 +4,9 @@ require './spec/spec_helper'
 
 def mock_config
   exporter = Exporter.new
-  project = ProjectConfig.new exporter: exporter, jira_config: nil, block: nil
+  project = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
+  project.file_prefix 'sample'
+
   project.status_category_mapping type: 'Story', status: 'Backlog', category: 'ready'
   project.status_category_mapping type: 'Story', status: 'Selected for Development', category: 'ready'
   project.status_category_mapping type: 'Story', status: 'In Progress', category: 'in-flight'
