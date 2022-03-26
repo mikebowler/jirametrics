@@ -2,7 +2,7 @@
 
 This project is designed to pull data out of Jira (either Cloud or Server) and make them available in a useful format. 
 
-You can export CSV files that cal be used with various spreadsheets, like the excellent ones from [Focused Objective](https://www.focusedobjective.com/w/support/) or with tools like [Actionable Agile](https://analytics.actionableagile.com).
+You can export CSV files that can be used with various spreadsheets, like the excellent ones from [Focused Objective](https://www.focusedobjective.com/w/support/) or with tools like [Actionable Agile](https://analytics.actionableagile.com).
 
 Alternatively, this tool can directly generate HTML files with pretty charts in them.
 
