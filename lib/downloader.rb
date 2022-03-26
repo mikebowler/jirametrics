@@ -12,6 +12,7 @@ class Downloader
 
   def run
     load_jira_config(@download_config.project_config.jira_config)
+    load_metadata
 
     remove_old_files
     download_issues
@@ -47,13 +48,13 @@ class Downloader
     puts "Creating path #{path}"
     Dir.mkdir(path) unless Dir.exist?(path)
 
-    jql = CGI.escape @download_config.jql
+    escaped_jql = CGI.escape make_jql
     max_results = 100
     start_at = 0
     total = 1
     while start_at < total
       command = make_curl_command url: "#{@jira_url}/rest/api/2/search" \
-        "?jql=#{jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
+        "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
 
       json = JSON.parse call_command(command)
       exit_if_call_failed json
@@ -104,15 +105,26 @@ class Downloader
     end
   end
 
-  def save_metadata
-    date_range = @download_config.date_range
-    json = {
-      'time_start' => date_range.begin.to_datetime,
-      'time_end' => end_of_day(date_range.end.to_datetime)
-    }
+  def metadata_pathname
+    "#{@target_path}#{@download_config.project_config.file_prefix}_meta.json"
+  end
 
-    file_prefix = @download_config.project_config.file_prefix
-    write_json json, "#{@target_path}#{file_prefix}_meta.json"
+  def load_metadata
+    if File.exist? metadata_pathname
+      @metadata = JSON.parse(File.read metadata_pathname)
+    else
+      @metadata = {}
+    end
+  end
+
+  def save_metadata
+    time_start = @metadata['time_start']
+    @metadata['earliest_time_start'] = time_start if time_start
+
+    @metadata['time_start'] = @date_range.begin.to_datetime
+    @metadata['time_end'] = end_of_day(@date_range.end.to_datetime)
+
+    write_json @metadata, metadata_pathname
   end
 
   def end_of_day date
@@ -126,5 +138,23 @@ class Downloader
 
       File.unlink "#{@target_path}#{file}"
     end
+  end
+
+  def make_jql today: Date.today
+    segments = []
+    segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
+    segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
+    unless @download_config.rolling_date_count.nil?
+      start_date = today - @download_config.rolling_date_count
+      @date_range = (start_date..today)
+
+      status_changed_jql =
+        %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
+      segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))
+    end
+    # segments << @jql unless @jql.nil?
+    return segments.join ' AND ' unless segments.empty?
+
+    raise 'Everything was nil'
   end
 end
