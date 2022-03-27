@@ -71,7 +71,20 @@ describe Downloader do
     end
 
     it 'throws exception when everything nil' do
-      expect { downloader.make_jql }.to raise_error(/Everything was nil/)
+      expect { downloader.make_jql }.to raise_error(/Couldn't make JQL/)
+    end
+
+    it 'should only pull deltas if we have a previous download' do
+      downloader.metadata.clear
+      downloader.metadata['time_end'] = Date.parse('2021-07-20')
+
+      download_config.rolling_date_count 90
+      today = DateTime.parse('2021-08-01')
+      expected = '((status changed AND resolved = null) OR ' \
+        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")))'
+      expect(downloader.make_jql(today: today)).to eql expected
+
+      expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
   end
 end

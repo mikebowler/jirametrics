@@ -139,7 +139,7 @@ class ProjectConfig
   def load_project_metadata
     filename = "#{@target_path}/#{file_prefix}_meta.json"
     json = JSON.parse(File.read(filename))
-    @time_range = (DateTime.parse(json['time_start'])..DateTime.parse(json['time_end']))
+    @time_range = (DateTime.parse(json['date_start'])..DateTime.parse(json['date_end']))
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise

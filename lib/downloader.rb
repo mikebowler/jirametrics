@@ -4,7 +4,13 @@ require 'cgi'
 require 'json'
 
 class Downloader
+  attr_accessor :metadata # Used only for testing
+
+  # For testing only
+  attr_reader :start_date_in_query
+
   def initialize download_config:, json_file_loader: JsonFileLoader.new
+    @metadata = {}
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
     @json_file_loader = json_file_loader
@@ -63,7 +69,6 @@ class Downloader
         write_json(issue_json, "#{path}#{issue_json['key']}.json")
       end
 
-      # write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_#{start_at}.json"
       total = json['total'].to_i
       max_results = json['maxResults']
       start_at += json['issues'].size
@@ -110,25 +115,32 @@ class Downloader
   end
 
   def load_metadata
-    if File.exist? metadata_pathname
-      @metadata = JSON.parse(File.read metadata_pathname)
-    else
-      @metadata = {}
+    # If we've never done a download before then this file won't be there. That's ok.
+    return unless File.exist? metadata_pathname
+
+    hash = JSON.parse(File.read metadata_pathname)
+
+    # If there's no version identifier then this is the old format of metadata. Throw it away and start fresh.
+    return [] if hash['version'].nil?
+
+    hash.each do |key, value|
+      value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
+      @metadata[key] = value
     end
   end
 
   def save_metadata
-    time_start = @metadata['time_start']
-    @metadata['earliest_time_start'] = time_start if time_start
+    raise "We didn't run any queries. Why are we saving metadata again?" unless @start_date_in_query
 
-    @metadata['time_start'] = @date_range.begin.to_datetime
-    @metadata['time_end'] = end_of_day(@date_range.end.to_datetime)
+    @metadata['version'] = 1
+    @metadata['earliest_date_start'] = @download_date_range.begin if @metadata['earliest_date_start'].nil?
+
+    @metadata['date_start_from_last_query'] = @start_date_in_query
+
+    @metadata['date_start'] = @download_date_range.begin
+    @metadata['date_end'] = @download_date_range.end
 
     write_json @metadata, metadata_pathname
-  end
-
-  def end_of_day date
-    DateTime.new date.year, date.month, date.day, 23, 59, 59
   end
 
   def remove_old_files
@@ -145,16 +157,19 @@ class Downloader
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
     unless @download_config.rolling_date_count.nil?
-      start_date = today - @download_config.rolling_date_count
-      @date_range = (start_date..today)
+      @download_date_range = today - @download_config.rolling_date_count..today
+
+      # For an incremental download, we want to query from the end of the previous one, not from the
+      # beginning of the full range.
+      @start_date_in_query = metadata['time_end'] || @download_date_range.begin
 
       status_changed_jql =
-        %(status changed DURING ("#{start_date.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
+        %(status changed DURING ("#{@start_date_in_query.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
       segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))
     end
-    # segments << @jql unless @jql.nil?
+
     return segments.join ' AND ' unless segments.empty?
 
-    raise 'Everything was nil'
+    raise 'Couldn\'t make JQL because no possible inputs were set. Specify project_key or filter_name.'
   end
 end
