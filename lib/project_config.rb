@@ -48,14 +48,16 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_category_mapping type:, status:, category:
-    status_object = @possible_statuses.find { |s| s.type == type && s.name == status }
+  def status_category_mapping type: nil, status:, category:
+    puts "Deprecated: ProjectConfig.status_category_mapping no longer needs a type: #{type.inspect}" if type
+
+    status_object = find_status(name: status)
     if status_object
       puts "Status/Category mapping was already present. Ignoring redefinition: #{status_object}"
       return
     end
 
-    @possible_statuses << Status.new(name: status, id: nil, type: type, category_name: category, category_id: nil)
+    add_possible_status Status.new(name: status, id: nil, category_name: category, category_id: nil)
   end
 
   def load_all_board_columns
@@ -74,8 +76,8 @@ class ProjectConfig
     end
   end
 
-  def category_for type:, status_name:
-    status = @possible_statuses.find { |s| s.type == type && s.name == status_name }
+  def category_for type: nil, status_name:
+    status = find_status name: status_name
     raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
 
     status.category_name
@@ -101,21 +103,15 @@ class ProjectConfig
       issue.changes.each do |change|
         next unless change.status?
 
-        unless find_status_in_possible(type: issue.type, status_name: change.value)
-          missing_statuses << [issue.type, change.value]
-        end
+        missing_statuses << change.value unless find_status(name: change.value)
       end
     end
 
-    missing_statuses.uniq.each do |type, status_name|
-      message << "\n  type: #{type.inspect}, status: #{status_name.inspect}, category: <unknown>"
+    missing_statuses.uniq.each do |status_name|
+      message << "\n  status: #{status_name.inspect}, category: <unknown>"
     end
 
     raise message
-  end
-
-  def find_status_in_possible type:, status_name:
-    @possible_statuses.find { |s| s.type == type && s.name == status_name }
   end
 
   def load_status_category_mappings
@@ -124,22 +120,43 @@ class ProjectConfig
     return unless File.exist? filename
 
     JSON.parse(File.read(filename)).each do |type_config|
-      issue_type = type_config['name']
       type_config['statuses'].each do |status_config|
         category_config = status_config['statusCategory']
-        @possible_statuses << Status.new(
-          type: issue_type,
-          name: status_config['name'], id: status_config['id'],
-          category_name: category_config['name'], category_id: category_config['id']
+        status_name = status_config['name']
+        add_possible_status Status.new(
+          name: status_name,
+          id: status_config['id'],
+          category_name: category_config['name'],
+          category_id: category_config['id']
         )
       end
     end
   end
 
+  def add_possible_status status
+    existing_status = find_status(name: status.name)
+
+    if existing_status
+      if existing_status.category_name != status.category_name
+        raise "Redefining status category #{status} with #{existing_status}. Was one set in the config?"
+      end
+
+      return
+    end
+
+    @possible_statuses << status
+  end
+
+  def find_status name:
+    @possible_statuses.find { |status| status.name == name }
+  end
+
   def load_project_metadata
     filename = "#{@target_path}/#{file_prefix}_meta.json"
     json = JSON.parse(File.read(filename))
-    @time_range = (DateTime.parse(json['date_start'])..DateTime.parse(json['date_end']))
+    start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
+    stop  = json['date_end'] || json['time_end']
+    @time_range = (DateTime.parse(start)..DateTime.parse(stop))
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise

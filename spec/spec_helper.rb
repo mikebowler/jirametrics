@@ -51,7 +51,6 @@ def load_complete_sample_statuses
     type_config['statuses'].each do |status_config|
       category_config = status_config['statusCategory']
       statuses << Status.new(
-        type: issue_type,
         name: status_config['name'], id: status_config['id'],
         category_name: category_config['name'], category_id: category_config['id']
       )

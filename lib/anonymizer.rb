@@ -12,6 +12,9 @@ class Anonymizer
   end
 
   def run
+    puts "Anonymization temporarily disabled"
+    return
+    
     anonymize_issue_keys_and_titles
     anonymize_column_names
     anonymize_issue_statuses
@@ -62,7 +65,7 @@ class Anonymizer
     @possible_statuses.each do |status|
       status_key = "#{status.type}-#{status.name}"
       if status_name_hash[status_key].nil?
-        status_name_hash[status_key] = "#{status.type.downcase}-status-#{next_status}"
+        status_name_hash[status_key] = "status-#{next_status}"
         next_status = next_status.next
       end
     end

@@ -10,17 +10,17 @@ describe ProjectConfig do
     it "where mapping doesn't exist" do
       config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
-      config.status_category_mapping type: 'Story', status: 'Doing', category: 'In progress'
-      config.status_category_mapping type: 'Story', status: 'Done', category: 'Done'
-      expect { config.category_for type: 'Epic', status_name: 'Foo' }
+      config.status_category_mapping status: 'Doing', category: 'In progress'
+      config.status_category_mapping status: 'Done', category: 'Done'
+      expect { config.category_for status_name: 'Foo' }
         .to raise_error(/^Could not determine categories for some/)
     end
 
     it 'where mapping does exist' do
       config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
-      config.status_category_mapping type: 'Story', status: 'Doing', category: 'InProgress'
-      expect(config.category_for(type: 'Story', status_name: 'Doing')).to eql 'InProgress'
+      config.status_category_mapping status: 'Doing', category: 'InProgress'
+      expect(config.category_for(status_name: 'Doing')).to eql 'InProgress'
     end
   end
 
@@ -59,21 +59,16 @@ describe ProjectConfig do
       config.file_prefix 'sample'
       config.load_status_category_mappings
 
-      expected = []
-      %w[Bug Epic Story Sub-task Task].collect do |type|
-        {
-          'Backlog' => 'To Do',
-          'Done' => 'Done',
-          'In Progress' => 'In Progress',
-          'Review' => 'In Progress',
-          'Selected for Development' => 'In Progress'
-        }.each do |status_name, category_name|
-          expected << [type, status_name, category_name]
-        end
-      end
+      expected = [
+        ['Backlog', 'To Do'],
+        ['Done', 'Done'],
+        ['In Progress', 'In Progress'],
+        ['Review', 'In Progress'],
+        ['Selected for Development', 'In Progress']
+      ]
 
       actual = config.possible_statuses.collect do |status|
-        [status.type, status.name, status.category_name]
+        [status.name, status.category_name]
       end
 
       expect(actual.sort).to eq expected.sort

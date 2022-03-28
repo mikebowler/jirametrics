@@ -51,8 +51,8 @@ class DataQualityChecker
     @entries.reject { |entry| entry.problems.empty? }
   end
 
-  def category_name_for type:, status_name:
-    @possible_statuses.find { |status| status.type == type && status.name == status_name}&.category_name
+  def category_name_for status_name:
+    @possible_statuses.find { |status| status.name == status_name }&.category_name
   end
 
   def initialize_entries
@@ -128,8 +128,8 @@ class DataQualityChecker
       elsif change.old_value.nil?
         # Do nothing
       elsif index < last_index
-        new_category = category_name_for(type: issue.type, status_name: change.value)
-        old_category = category_name_for(type: issue.type, status_name: change.old_value)
+        new_category = category_name_for(status_name: change.value)
+        old_category = category_name_for(status_name: change.old_value)
 
         if new_category == old_category
           entry.report(

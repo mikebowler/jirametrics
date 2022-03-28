@@ -7,11 +7,11 @@ def mock_config
   project = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
   project.file_prefix 'sample'
 
-  project.status_category_mapping type: 'Story', status: 'Backlog', category: 'ready'
-  project.status_category_mapping type: 'Story', status: 'Selected for Development', category: 'ready'
-  project.status_category_mapping type: 'Story', status: 'In Progress', category: 'in-flight'
-  project.status_category_mapping type: 'Story', status: 'Review', category: 'in-flight'
-  project.status_category_mapping type: 'Story', status: 'Done', category: 'finished'
+  project.status_category_mapping status: 'Backlog', category: 'ready'
+  project.status_category_mapping status: 'Selected for Development', category: 'ready'
+  project.status_category_mapping status: 'In Progress', category: 'in-flight'
+  project.status_category_mapping status: 'Review', category: 'in-flight'
+  project.status_category_mapping status: 'Done', category: 'finished'
 
   file = FileConfig.new project_config: project, block: nil
   ColumnsConfig.new file_config: file, block: nil
