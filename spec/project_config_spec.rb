@@ -28,7 +28,7 @@ describe ProjectConfig do
     it 'should load' do
       config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
-      config.load_all_board_configurations
+      config.load_all_board_columns
       expect(config.all_board_columns.keys).to eq [1]
 
       contents = config.all_board_columns[1].collect do |column|
@@ -108,8 +108,8 @@ describe ProjectConfig do
 
     it 'should fail if no board id set and there are multiple boards' do
       project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      project_config.load_board_configuration(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
-      project_config.load_board_configuration(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board_columns(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board_columns(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
       expect { project_config.board_metadata }.to raise_error %r{following board ids and this is ambiguous}
     end

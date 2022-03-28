@@ -31,7 +31,7 @@ describe ColumnsConfig do
     it 'should succeed' do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.load_board_configuration(board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board_columns(board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json')
       project_config.file_prefix 'sample'
       file_config = FileConfig.new project_config: project_config, block: nil
       columns_config = ColumnsConfig.new file_config: file_config, block: nil

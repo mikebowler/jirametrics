@@ -24,7 +24,7 @@ class ProjectConfig
 
   def run
     load_project_metadata
-    load_all_board_configurations
+    load_all_board_columns
     load_status_category_mappings
     anonymize_data if @anonymizer_needed
 
@@ -58,16 +58,16 @@ class ProjectConfig
     @possible_statuses << Status.new(name: status, id: nil, type: type, category_name: category, category_id: nil)
   end
 
-  def load_all_board_configurations
+  def load_all_board_columns
     Dir.foreach(@target_path) do |file|
       next unless file =~ /^#{@file_prefix}_board_(\d+)_configuration\.json$/
 
       board_id = $1
-      load_board_configuration board_id: board_id, filename: "#{@target_path}#{file}"
+      load_board_columns board_id: board_id, filename: "#{@target_path}#{file}"
     end
   end
 
-  def load_board_configuration board_id:, filename:
+  def load_board_columns board_id:, filename:
     json = JSON.parse(File.read(filename))
     @all_board_columns[board_id.to_i] = json['columnConfig']['columns'].collect do |column|
       BoardColumn.new column
