@@ -78,6 +78,8 @@ class ProjectConfig
 
   def category_for type: nil, status_name:
     status = find_status name: status_name
+    # puts "status_name=#{status_name} status=#{status.inspect}"
+    # puts @possible_statuses.collect { |status| status.name }.inspect
     raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
 
     status.category_name

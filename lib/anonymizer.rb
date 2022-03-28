@@ -12,12 +12,9 @@ class Anonymizer
   end
 
   def run
-    puts "Anonymization temporarily disabled"
-    return
-    
     anonymize_issue_keys_and_titles
     anonymize_column_names
-    anonymize_issue_statuses
+    # anonymize_issue_statuses
     shift_all_dates unless @date_adjustment.zero?
     puts 'Anonymize done'
   end
@@ -54,16 +51,16 @@ class Anonymizer
         next unless change.status?
 
         # TODO: Do old value too
-        status_key = "#{issue.type}-#{change.value}"
+        status_key = change.value
         if status_name_hash[status_key].nil?
-          status_name_hash[status_key] = "#{issue.type.downcase}-status-#{next_status}"
+          status_name_hash[status_key] = "status-#{next_status}"
           next_status = next_status.next
         end
       end
     end
 
     @possible_statuses.each do |status|
-      status_key = "#{status.type}-#{status.name}"
+      status_key = status.name
       if status_name_hash[status_key].nil?
         status_name_hash[status_key] = "status-#{next_status}"
         next_status = next_status.next
@@ -84,7 +81,7 @@ class Anonymizer
       issue.changes.each do |change|
         next unless change.status?
 
-        status_key = "#{issue.type}-#{change.value}"
+        status_key = change.value
         anonymized_value = status_name_hash[status_key]
         raise "status_name_hash[#{status_key.inspect} is nil" if anonymized_value.nil?
 
@@ -92,7 +89,7 @@ class Anonymizer
 
         next if change.old_value.nil?
 
-        status_key = "#{issue.type}-#{change.old_value}"
+        status_key = change.old_value
         anonymized_value = status_name_hash[status_key]
         raise "status_name_hash[#{status_key.inspect} is nil" if anonymized_value.nil?
 
@@ -101,7 +98,7 @@ class Anonymizer
     end
 
     @possible_statuses.each do |status|
-      status_key = "#{status.type}-#{status.name}"
+      status_key = status.name
       if status_name_hash[status_key].nil?
         raise "Can't find status_key #{status_key.inspect} in #{status_name_hash.inspect}"
       end
