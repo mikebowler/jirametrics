@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 class TestableChart < ChartBase
-  attr_accessor :issues, :cycletime, :board_metadata, :time_range, :date_range
+  attr_accessor :issues, :cycletime, :board_columns, :time_range, :date_range
   def run
     'running'
   end
@@ -50,7 +50,7 @@ describe HtmlReportConfig do
     config.execute_chart chart
 
     expect(chart.issues).to eq [issue1]
-    expect(chart.board_metadata.collect(&:name)).to eq [
+    expect(chart.board_columns.collect(&:name)).to eq [
       'Backlog', 'Ready', 'In Progress', 'Review', 'Done'
     ]
     expect(chart.time_range).to eq DateTime.parse('2021-09-14')..DateTime.parse('2021-12-13T23:59:59+00:00')

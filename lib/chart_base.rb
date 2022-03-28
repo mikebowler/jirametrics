@@ -81,7 +81,7 @@ class ChartBase
     checker = DataQualityChecker.new
     checker.issues = issues
     checker.cycletime = cycletime
-    checker.board_metadata = board_metadata
+    checker.board_columns = board_columns
     checker.possible_statuses = possible_statuses
     checker.run
     checker

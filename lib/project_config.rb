@@ -145,7 +145,7 @@ class ProjectConfig
     raise
   end
 
-  def board_metadata board_id: nil
+  def board_columns board_id: nil
     all_board_columns = @all_board_columns
     if board_id.nil?
       unless all_board_columns.size == 1

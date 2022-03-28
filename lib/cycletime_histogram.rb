@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class CycletimeHistogram < ChartBase
-  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
 
   def initialize block = nil
     super()

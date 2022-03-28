@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DataQualityChecker
-  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses
+  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses
 
   class Entry
     attr_reader :started, :stopped, :issue, :problems
@@ -119,7 +119,7 @@ class DataQualityChecker
     issue.changes.each do |change|
       next unless change.status?
 
-      index = @board_metadata.find_index { |column| column.status_ids.include? change.value_id }
+      index = @board_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         entry.report(
           problem_key: :status_not_on_board,
@@ -151,7 +151,7 @@ class DataQualityChecker
   end
 
   def scan_for_issues_not_created_in_the_right_status entry:
-    valid_initial_status_ids = @board_metadata[0].status_ids
+    valid_initial_status_ids = @board_columns[0].status_ids
     creation_change = entry.issue.changes.find { |issue| issue.status? }
 
     return if valid_initial_status_ids.include? creation_change.value_id

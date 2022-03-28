@@ -4,7 +4,7 @@ require './lib/chart_base'
 
 class AgingWorkBarChart < ChartBase
   @@next_id = 0
-  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
 
   def run
     aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }

@@ -2,7 +2,7 @@
 
 require './spec/spec_helper'
 
-def complete_sample_board_metadata
+def complete_sample_board_columns
   json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
   json['columnConfig']['columns'].collect { |raw| BoardColumn.new raw }
 end
@@ -10,7 +10,7 @@ end
 describe AgingWorkInProgressChart do
   let :chart do
     chart = AgingWorkInProgressChart.new
-    chart.board_metadata = complete_sample_board_metadata
+    chart.board_columns = complete_sample_board_columns
     chart.cycletime = defaultCycletimeConfig
     chart.issues = load_complete_sample_issues
     chart

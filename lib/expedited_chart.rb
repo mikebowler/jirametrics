@@ -14,7 +14,7 @@ class ExpeditedChart < ChartBase
     end
   end
 
-  attr_accessor :issues, :cycletime, :board_metadata, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
   attr_reader :expedited_label
 
   def initialize priority_name
