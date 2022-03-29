@@ -58,6 +58,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           },
           <% end %>
 
+          <% if percentage_line_x %>
           line: {
             type: 'line',
             xMin: '<%= percentage_line_x %>',
@@ -66,6 +67,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
             borderWidth: 1,
             drawTime: 'afterDraw'
           }
+          <% end %>
         }
       },
       legend: {
