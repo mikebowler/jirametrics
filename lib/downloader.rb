@@ -22,7 +22,7 @@ class Downloader
 
     remove_old_files
     download_issues
-    download_statuses unless @download_config.project_key.nil?
+    download_statuses
     download_board_configuration unless @download_config.board_ids.empty?
     save_metadata
   end
@@ -84,7 +84,7 @@ class Downloader
   end
 
   def download_statuses
-    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/project/#{@download_config.project_key}/statuses\""
+    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/status\""
     json = JSON.parse call_command(command)
 
     write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"

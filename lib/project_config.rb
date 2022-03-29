@@ -4,7 +4,7 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
-    :download_config, :file_configs, :exporter
+    :download_config, :file_configs, :exporter, :data_version
   attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.'
@@ -78,8 +78,6 @@ class ProjectConfig
 
   def category_for type: nil, status_name:
     status = find_status name: status_name
-    # puts "status_name=#{status_name} status=#{status.inspect}"
-    # puts @possible_statuses.collect { |status| status.name }.inspect
     raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
 
     status.category_name
@@ -121,17 +119,28 @@ class ProjectConfig
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
 
-    JSON.parse(File.read(filename)).each do |type_config|
-      type_config['statuses'].each do |status_config|
-        category_config = status_config['statusCategory']
-        status_name = status_config['name']
-        add_possible_status Status.new(
-          name: status_name,
-          id: status_config['id'],
-          category_name: category_config['name'],
-          category_id: category_config['id']
-        )
+    status_json_snippets = []
+
+    json = JSON.parse(File.read(filename))
+    if json[0]['statuses']
+      # Response from /api/2/{project_code}/status
+      json.each do |type_config|
+        status_json_snippets += type_config['statuses']
       end
+    else
+      # Response from /api/2/status
+      status_json_snippets = json
+    end
+
+    status_json_snippets.each do |snippet|
+      category_config = snippet['statusCategory']
+      status_name = snippet['name']
+      add_possible_status Status.new(
+        name: status_name,
+        id: snippet['id'],
+        category_name: category_config['name'],
+        category_id: category_config['id']
+      )
     end
   end
 
@@ -156,6 +165,9 @@ class ProjectConfig
   def load_project_metadata
     filename = "#{@target_path}/#{file_prefix}_meta.json"
     json = JSON.parse(File.read(filename))
+
+    @data_version = json['version'] || 1
+
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
     @time_range = (DateTime.parse(start)..DateTime.parse(stop))
