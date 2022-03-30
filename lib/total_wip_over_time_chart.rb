@@ -3,7 +3,7 @@
 require 'pathname'
 
 class TotalWipOverTimeChart < ChartBase
-  attr_accessor :issues, :cycletime, :date_range, :board_columns, :possible_statuses
+  attr_accessor :issues, :cycletime, :date_range, :possible_statuses
 
   def run
     @daily_chart_items = DailyChartItemGenerator.new(

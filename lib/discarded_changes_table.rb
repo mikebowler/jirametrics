@@ -4,7 +4,7 @@ require './lib/chart_base'
 require './lib/daily_chart_item_generator'
 
 class DiscardedChangesTable < ChartBase
-  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :possible_statuses, :date_range
 
   def initialize original_issue_times
     @original_issue_times = original_issue_times

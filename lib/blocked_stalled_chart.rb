@@ -4,7 +4,7 @@ require './lib/chart_base'
 require './lib/daily_chart_item_generator'
 
 class BlockedStalledChart < ChartBase
-  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :possible_statuses, :date_range
 
   def run
     stalled_threshold = 5

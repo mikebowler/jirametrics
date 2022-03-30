@@ -10,7 +10,8 @@ end
 describe AgingWorkInProgressChart do
   let :chart do
     chart = AgingWorkInProgressChart.new
-    chart.board_columns = complete_sample_board_columns
+    chart.board_id = 1
+    chart.all_board_columns = { 1 => complete_sample_board_columns }
     chart.cycletime = defaultCycletimeConfig
     chart.issues = load_complete_sample_issues
     chart

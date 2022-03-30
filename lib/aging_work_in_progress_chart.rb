@@ -3,7 +3,7 @@
 require './lib/chart_base'
 
 class AgingWorkInProgressChart < ChartBase
-  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses
+  attr_accessor :issues, :cycletime, :possible_statuses
 
   def run
     data_sets = make_data_sets
@@ -56,7 +56,7 @@ class AgingWorkInProgressChart < ChartBase
 
   def accumulated_status_ids_per_column
     accumulated_status_ids = []
-    @board_columns.reverse.collect do |column|
+    board_columns.reverse.collect do |column|
       accumulated_status_ids += column.status_ids
       [column.name, accumulated_status_ids.dup]
     end.reverse
@@ -75,7 +75,7 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def column_for issue:
-    @board_columns.find do |board_column|
+    board_columns.find do |board_column|
       board_column.status_ids.include? issue.status_id
     end
   end

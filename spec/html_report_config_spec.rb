@@ -50,7 +50,7 @@ describe HtmlReportConfig do
     config.execute_chart chart
 
     expect(chart.issues).to eq [issue1]
-    expect(chart.board_columns.collect(&:name)).to eq [
+    expect(chart.all_board_columns[1].collect(&:name)).to eq [
       'Backlog', 'Ready', 'In Progress', 'Review', 'Done'
     ]
     expect(chart.time_range).to eq DateTime.parse('2021-09-14')..DateTime.parse('2021-12-13T23:59:59+00:00')

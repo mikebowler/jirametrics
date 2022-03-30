@@ -41,8 +41,10 @@ class HtmlReportConfig
     @file_config.project_config.exporter.timezone_offset
   end
 
-  def aging_work_in_progress_chart
-    execute_chart AgingWorkInProgressChart.new
+  def aging_work_in_progress_chart board_id: @board_id
+    execute_chart(AgingWorkInProgressChart.new) do |chart|
+      chart.board_id = board_id
+    end
   end
 
   def aging_work_bar_chart
@@ -98,18 +100,23 @@ class HtmlReportConfig
     execute_chart DiscardedChangesTable.new @original_issue_times
   end
 
-  def execute_chart chart
+  def execute_chart chart, &after_init_block
     chart.issues = issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
     chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
-    chart.board_columns = @file_config.project_config.board_columns(board_id: @board_id) if chart.respond_to? :'board_columns='
+    # chart.board_columns = @file_config.project_config.board_columns(board_id: @board_id) if chart.respond_to? :'board_columns='
     chart.possible_statuses = @file_config.project_config.possible_statuses if chart.respond_to? :'possible_statuses='
     chart.timezone_offset = timezone_offset
+
+    chart.all_board_columns = @file_config.project_config.all_board_columns
+    chart.board_id = @board_id
 
     if chart.respond_to? :'date_range='
       time_range = @file_config.project_config.time_range
       chart.date_range = time_range.begin.to_date..time_range.end.to_date
     end
+
+    after_init_block.call chart if after_init_block
 
     @sections << chart.run
   end

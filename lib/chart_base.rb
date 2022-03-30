@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset
+  attr_accessor :timezone_offset, :board_id, :all_board_columns
 
   @@chart_counter = 0
 
@@ -90,8 +90,13 @@ class ChartBase
   def holidays
     result = []
     @date_range.each do |date|
-      result << (date..date+1) if date.wday == 6
+      result << (date..date + 1) if date.wday == 6
     end
     result
+  end
+
+  # Return only the board columns for the current board.
+  def board_columns
+    @all_board_columns[@board_id]
   end
 end
