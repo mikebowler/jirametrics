@@ -4,7 +4,7 @@ require './lib/chart_base'
 
 class AgingWorkBarChart < ChartBase
   @@next_id = 0
-  attr_accessor :issues, :cycletime, :board_columns, :possible_statuses, :date_range
+  attr_accessor :issues, :cycletime, :possible_statuses, :date_range
 
   def run
     aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
@@ -79,7 +79,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def color_for status_name:, type:
-    @status_colors[@possible_statuses.find { |status| status.name == status_name && status.type == type }]
+    @status_colors[@possible_statuses.find { |status| status.name == status_name }]
   end
 
   def pick_colors_for_statuses
@@ -143,8 +143,12 @@ class AgingWorkBarChart < ChartBase
       when 'Done'
         color = greens[green_index % greens.length]
         green_index += 1
+      when 'No Category'
+        # Yet another theoretically impossible thing that we've seen in production
+        color = 'gray'
       else
-        raise "Unexpected status category: #{status.category_name}"
+        puts "AgingWorkBarChart: Unexpected status category: #{status.category_name}"
+        color = 'gray'
       end
 
       status_colors[status] = color
