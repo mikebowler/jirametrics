@@ -97,6 +97,8 @@ class ChartBase
 
   # Return only the board columns for the current board.
   def board_columns
+    raise 'No board id set' if @board_id.nil?
+
     @all_board_columns[@board_id]
   end
 end
