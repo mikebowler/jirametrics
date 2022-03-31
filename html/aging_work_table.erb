@@ -14,6 +14,7 @@
       <th style="border-bottom: 1px solid gray">E</th>
       <th style="border-bottom: 1px solid gray">B</th>
       <th style="border-bottom: 1px solid gray">Issue</th>
+      <th style="border-bottom: 1px solid gray">Type</th>
       <th style="border-bottom: 1px solid gray">Summary</th>
       <th style="border-bottom: 1px solid gray">Who</th>
     </tr>
@@ -25,6 +26,7 @@
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>
+        <td><%= issue.type %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= issue.assigned_to %></td>
       </tr>
