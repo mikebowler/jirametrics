@@ -76,7 +76,7 @@ describe Downloader do
 
     it 'should only pull deltas if we have a previous download' do
       downloader.metadata.clear
-      downloader.metadata['time_end'] = Date.parse('2021-07-20')
+      downloader.metadata['date_end'] = Date.parse('2021-07-20')
 
       download_config.rolling_date_count 90
       today = DateTime.parse('2021-08-01')

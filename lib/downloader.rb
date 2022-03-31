@@ -161,7 +161,7 @@ class Downloader
 
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.
-      @start_date_in_query = metadata['time_end'] || @download_date_range.begin
+      @start_date_in_query = metadata['date_end'] || @download_date_range.begin
 
       status_changed_jql =
         %(status changed DURING ("#{@start_date_in_query.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
