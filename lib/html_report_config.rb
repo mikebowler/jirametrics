@@ -97,7 +97,7 @@ class HtmlReportConfig
   end
 
   def discarded_changes_report
-    execute_chart DiscardedChangesTable.new @original_issue_times
+    execute_chart DiscardedChangesTable.new(@original_issue_times || {})
   end
 
   def execute_chart chart, &after_init_block
