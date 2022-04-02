@@ -1,17 +1,19 @@
 [<a id='<%= link_id %>' href="#" onclick='expand_collapse("<%= link_id %>", "<%= issues_id %>"); return false;'>Show details</a>]
-<table id='<%= issues_id %>'' style='display: none;'>
-  <tr>
-    <th>Issue</th>
-    <th>Summary</th>
-    <th>Description</th>
-  </tr>
-  <% issue_descriptions.each do |issue, description| %>
+<table class='standard' id='<%= issues_id %>'' style='display: none;'>
+  <thead>
     <tr>
-      <td><%= link_to_issue issue %></td>
-      <td><i><%= issue.summary.inspect %></i></td>
-      <td><%= description %></td>
+      <th>Issue</th>
+      <th>Summary</th>
+      <th>Description</th>
     </tr>
-  <% end %>
+  </thead>
+  <tbody>
+    <% issue_descriptions.each do |issue, description| %>
+      <tr>
+        <td><%= link_to_issue issue %></td>
+        <td><i><%= issue.summary.inspect %></i></td>
+        <td><%= description %></td>
+      </tr>
+    <% end %>
+  </tbody>
 </table>
-
-
