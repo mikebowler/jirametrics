@@ -45,7 +45,7 @@ class CycletimeHistogram < ChartBase
     {
       type: 'bar',
       label: label,
-      data: keys.collect do |key|
+      data: keys.sort.collect do |key|
         next if histogram_data[key].zero?
 
         {
