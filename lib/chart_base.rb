@@ -62,7 +62,7 @@ class ChartBase
 
   def link_to_issue issue
     if issue.url
-      "<a href='#{issue.url}'>#{issue.key}</a>"
+      "<a href='#{issue.url}' class='issue_key'>#{issue.key}</a>"
     else
       issue.key
     end
