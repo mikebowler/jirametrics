@@ -3,21 +3,23 @@
   The configuration is set to discard some issue changes that meet certain criteria. Usually this is done to reset the clock for items that have been moved back to the backlog. <i>Note that moving items back to the backlog after they've started is a poor practice and should be avoided.</i>
 </p>
 <p>
-  This has affected the following issues.
+  "Days ignored" refers to the number of days of data that we have discarded. This is most likely time that we legitimately spent working on the item and that we are now pretending didn't happen. This makes the data less predictable and generally less accurate.
 </p>
 <table>
   <thead>
     <tr>
       <th style="border-bottom: 1px solid gray">Issue</th>
       <th style="border-bottom: 1px solid gray">Summary</th>
+      <th style="border-bottom: 1px solid gray">Days ignored</th>
       <th style="border-bottom: 1px solid gray">Details</th>
     </tr>
   </thead>
   <tbody>
-    <% messages.each do |issue, details| %>
+    <% messages.each do |issue, days_ignored, details| %>
       <tr>
         <td><%= link_to_issue issue %></td>
         <td><i><%= issue.summary.inspect %></i></td>
+        <td style="text-align: right;"><%= days_ignored %></td>
         <td><%= details %></td>
       </tr>
     <% end %>

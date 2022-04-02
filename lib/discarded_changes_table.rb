@@ -33,17 +33,19 @@ class DiscardedChangesTable < ChartBase
 
       message = String.new
 
+      days_ignored = nil
       if stop_time.nil? && new_start_time.nil?
-        message << "Previously started on #{old_start_date} and then moved back to 'not started' "
-        message << "on #{cutoff_date}, ignoring the #{label_days((cutoff_date - old_start_date).to_i + 1)} "
-        message << 'that it had previously been in progress.'
+        days_ignored = (cutoff_date - old_start_date).to_i + 1
+        message << "Started on #{old_start_date} and then moved back to 'not started' "
+        message << "on #{cutoff_date}."
       else
-        message << "Previously started on #{old_start_date} and now showing started on #{new_start_date}. "
+        message << "Started on #{old_start_date} and now showing started again on #{new_start_date}. "
         if stop_time.nil? && new_start_time
           old_age = (date_range.end - old_start_date).to_i + 1
           new_age = (date_range.end - new_start_date).to_i + 1
           message << "The current age of this item now shows as #{label_days new_age} when it should really "
           message << "be #{label_days old_age}"
+          days_ignored = old_age - new_age
         else
           stop_date = stop_time.to_date
 
@@ -51,10 +53,11 @@ class DiscardedChangesTable < ChartBase
           new_cycletime = (stop_date - new_start_date).to_i + 1
           message << "The current age of this item now shows as #{label_days new_cycletime} when it should really "
           message << "be #{label_days old_cycletime}"
+          days_ignored = old_cycletime - new_cycletime
         end
       end
 
-      messages << [issue, message]
+      messages << [issue, days_ignored, message]
     end
 
     render(binding, __FILE__) unless messages.empty?
