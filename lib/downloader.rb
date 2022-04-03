@@ -98,6 +98,31 @@ class Downloader
 
       file_prefix = @download_config.project_config.file_prefix
       write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+
+      if json['type'] == 'scrum'
+        download_sprints board_id
+      end
+    end
+  end
+
+  def download_sprints board_id
+    file_prefix = @download_config.project_config.file_prefix
+
+    max_results = 100
+    start_at = 0
+    total = 1
+    while start_at < total
+      command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
+        "maxResults=#{max_results}&startAt=#{start_at}"
+
+      json = JSON.parse call_command(command)
+      exit_if_call_failed json
+
+      write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
+
+      total = json['total'].to_i
+      max_results = json['maxResults']
+      start_at += json['values'].size
     end
   end
 
