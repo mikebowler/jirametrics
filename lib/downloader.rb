@@ -69,6 +69,9 @@ class Downloader
         write_json(issue_json, "#{path}#{issue_json['key']}.json")
       end
 
+      message = "= Downloaded #{start_at}-#{[start_at + max_results, total].min} of #{total} issues ="
+      puts ('=' * message.length), message, ('=' * message.length)
+
       total = json['total'].to_i
       max_results = json['maxResults']
       start_at += json['issues'].size
