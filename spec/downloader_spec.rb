@@ -70,6 +70,11 @@ describe Downloader do
       expect(downloader.make_jql).to eql 'filter="a"'
     end
 
+    it 'makes from jql' do
+      download_config.jql 'project=foo'
+      expect(downloader.make_jql).to eql 'project=foo'
+    end
+
     it 'throws exception when everything nil' do
       expect { downloader.make_jql }.to raise_error(/Couldn't make JQL/)
     end

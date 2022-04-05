@@ -3,7 +3,7 @@
 require 'date'
 
 class DownloadConfig
-  attr_reader :project_config #, :date_range
+  attr_reader :project_config
 
   def initialize project_config:, block:
     @project_config = project_config
@@ -28,6 +28,11 @@ class DownloadConfig
   def filter_name filter = nil
     @filter_name = filter unless filter.nil?
     @filter_name
+  end
+
+  def jql query = nil
+    @jql = query unless query.nil?
+    @jql
   end
 
   def rolling_date_count count = nil

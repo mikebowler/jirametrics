@@ -179,6 +179,7 @@ class Downloader
 
   def make_jql today: Date.today
     segments = []
+    segments << @download_config.jql unless @download_config.jql.nil?
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
     unless @download_config.rolling_date_count.nil?
