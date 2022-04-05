@@ -10,30 +10,18 @@ class InfoDumper
 
   def run key
     find_file_prefixes.each do |prefix|
-      issues = load_issues target_path: @target_dir, file_prefix: prefix
-      issues.select { |issue| issue.key == key }.each do |issue|
-        dump issue
-      end
+      path = "#{@target_dir}#{prefix}_issues/#{key}.json"
+      issue = Issue.new raw: JSON.parse(File.read(path))
+      dump issue
     end
   end
 
   def find_file_prefixes
     prefixes = []
     Dir.foreach @target_dir do |file|
-      prefixes << $1 if file =~ /^(.+)_0.json/
+      prefixes << $1 if file =~ /^(.+)_issues$/
     end
     prefixes
-  end
-
-  def load_issues target_path:, file_prefix:
-    issues = []
-    Dir.foreach(target_path) do |filename|
-      if filename =~ /#{file_prefix}_\d+\.json/
-        content = JSON.parse File.read("#{target_path}#{filename}")
-        content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: '-05:00') }
-      end
-    end
-    issues
   end
 
   def dump issue
@@ -55,7 +43,7 @@ class InfoDumper
         value = compact_text value
         old_value = compact_text old_value
       end
-      # puts change.raw
+
       author = change.author
       author = "(#{author})" if author
       message = "  [change] #{change.time} [#{change.field}] "
