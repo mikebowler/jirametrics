@@ -89,5 +89,29 @@ describe ChartBase do
   end
 
   context 'board_columns' do
+    it 'should raise exception if board cannot be determined' do
+      subject.all_board_columns = {}
+      expect { subject.board_columns }.to raise_error 'No board id set'
+    end
+
+    it 'should return correct columns when board id set' do
+      columns1 = []
+      subject.board_id = 1
+      subject.all_board_columns = { 1 => columns1 }
+      expect(subject.board_columns).to be columns1
+    end
+
+    it 'should return correct columns when board id not set but only one board in use' do
+      columns1 = []
+      subject.all_board_columns = { 1 => columns1 }
+      expect(subject.board_columns).to be columns1
+    end
+
+    it 'should raise exception when board id not set and multiple boards in use' do
+      columns1 = [1]
+      columns2 = [2]
+      subject.all_board_columns = { 1 => columns1, 2 => columns2 }
+      expect { subject.board_columns }.to raise_error 'No board id set'
+    end
   end
 end

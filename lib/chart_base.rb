@@ -97,7 +97,11 @@ class ChartBase
 
   # Return only the board columns for the current board.
   def board_columns
-    raise 'No board id set' if @board_id.nil?
+    if @board_id.nil?
+      raise 'No board id set' unless @all_board_columns.size == 1
+
+      return @all_board_columns.values[0]
+    end
 
     @all_board_columns[@board_id]
   end
