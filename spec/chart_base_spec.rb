@@ -3,22 +3,22 @@
 require './spec/spec_helper'
 
 describe ChartBase do
+  let(:subject) { ChartBase.new }
+
   context 'label_days' do
     it 'should be singular for one' do
-      subject = ChartBase.new
       expect(subject.label_days(1)).to eq '1 day'
     end
 
     it 'should be singular for one' do
-      subject = ChartBase.new
       expect(subject.label_days(5)).to eq '5 days'
     end
   end
 
   context 'daily_chart_dataset' do
+    let(:issue1) { load_issue('SP-1') }
+
     it 'should hande the simple positive case' do
-      issue1 = load_issue('SP-1')
-      subject = ChartBase.new
       date_issues_list = [
         [Date.parse('2021-10-10'), [issue1]]
       ]
@@ -42,8 +42,6 @@ describe ChartBase do
     end
 
     it 'should hande the positive case with a block' do
-      issue1 = load_issue('SP-1')
-      subject = ChartBase.new
       date_issues_list = [
         [Date.parse('2021-10-10'), [issue1]]
       ]
@@ -67,8 +65,6 @@ describe ChartBase do
     end
 
     it 'should hande the simple negative case' do
-      issue1 = load_issue('SP-1')
-      subject = ChartBase.new
       date_issues_list = [
         [Date.parse('2021-10-10'), [issue1]]
       ]
@@ -90,5 +86,8 @@ describe ChartBase do
         borderRadius: 5
       })
     end
+  end
+
+  context 'board_columns' do
   end
 end
