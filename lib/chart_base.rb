@@ -98,9 +98,14 @@ class ChartBase
   # Return only the board columns for the current board.
   def board_columns
     if @board_id.nil?
-      raise 'No board id set' unless @all_board_columns.size == 1
-
-      return @all_board_columns.values[0]
+      case @all_board_columns.size
+      when 0
+        raise 'Couldn\'t find any board configurations. Ensure one is set'
+      when 1
+        return @all_board_columns.values[0]
+      else
+        raise "Must set board_id so we know which to use. Multiple boards found: #{@all_board_columns.keys.inspect}"
+      end
     end
 
     @all_board_columns[@board_id]

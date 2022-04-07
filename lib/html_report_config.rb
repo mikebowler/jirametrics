@@ -104,7 +104,6 @@ class HtmlReportConfig
     chart.issues = issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
     chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
-    # chart.board_columns = @file_config.project_config.board_columns(board_id: @board_id) if chart.respond_to? :'board_columns='
     chart.possible_statuses = @file_config.project_config.possible_statuses if chart.respond_to? :'possible_statuses='
     chart.timezone_offset = timezone_offset
 
@@ -116,7 +115,7 @@ class HtmlReportConfig
       chart.date_range = time_range.begin.to_date..time_range.end.to_date
     end
 
-    after_init_block.call chart if after_init_block
+    after_init_block&.call chart
 
     @sections << chart.run
   end
