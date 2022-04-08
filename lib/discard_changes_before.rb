@@ -21,7 +21,7 @@ module DiscardChangesBefore
     discard_changes_before_hook issues_cutoff_times
 
     issues_cutoff_times.each do |issue, cutoff_time|
-      issue.changes.reject! { |change| change.status? && change.time < cutoff_time }
+      issue.changes.reject! { |change| change.status? && change.time <= cutoff_time && change.artificial? == false }
     end
   end
 end

@@ -125,7 +125,6 @@ describe ProjectConfig do
 
       project_config.discard_changes_before status_becomes: 'backlog'
       expect(issue1.changes.collect(&:time)).to eq [
-        DateTime.parse('2022-01-02'),
         DateTime.parse('2022-01-03')
       ]
     end
@@ -142,7 +141,6 @@ describe ProjectConfig do
 
       project_config.discard_changes_before { |_issue| DateTime.parse('2022-01-02T09:00:00') }
       expect(issue1.changes.collect(&:time)).to eq [
-        DateTime.parse('2022-01-02T09:00:00')
       ]
     end
   end
