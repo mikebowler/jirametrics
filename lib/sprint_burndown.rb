@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SprintBurndown < ChartBase
-  attr_accessor :issues, :sprints # Do DI for this
+  attr_accessor :sprints # Do DI for this
 
   def run
     create_fake_sprint

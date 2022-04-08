@@ -3,7 +3,7 @@
 require './lib/chart_base'
 
 class AgingWorkInProgressChart < ChartBase
-  attr_accessor :issues, :cycletime, :possible_statuses
+  attr_accessor :possible_statuses
 
   def run
     data_sets = make_data_sets

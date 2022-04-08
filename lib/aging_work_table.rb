@@ -3,7 +3,7 @@
 require './lib/chart_base'
 
 class AgingWorkTable < ChartBase
-  attr_accessor :issues, :cycletime, :date_range, :today
+  attr_accessor :today
 
   def initialize expedited_priority_name
     @expedited_priority_name = expedited_priority_name

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ThroughputChart < ChartBase
-  attr_accessor :issues, :cycletime, :possible_statuses, :date_range
+  attr_accessor :possible_statuses
 
   def initialize block = nil
     super()
