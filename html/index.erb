@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/1.2.2/chartjs-plugin-annotation.min.js" integrity="sha512-HycvvBSFvDEVyJ0tjE2rPmymkt6XqsP/Zo96XgLRjXwn6SecQqsn+6V/7KYev66OshZZ9+f9AttCGmYqmzytiw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="text/javascript">
       function expand_collapse(link_id, issues_id)  {
-        //document.getElementById(issues_id).style.display = 'block'
         link_text = document.getElementById(link_id).textContent
         if( link_text == 'Show details') {
           document.getElementById(link_id).textContent = 'Hide details'
@@ -17,7 +16,6 @@
           document.getElementById(link_id).textContent = 'Show details'
           document.getElementById(issues_id).style.display = 'none'
         }
-        //alert(link_text)
       }
     </script>
     <style>
@@ -39,10 +37,13 @@
       a.issue_key {
         white-space: nowrap;
       }
-      table.standard > thead > tr > th {
+      table.standard thead tr th {
         border-bottom: 1px solid gray;
+        position: sticky;
+        top: 0;
+        background: white;
       }
-      table.standard > tbody > tr > td {
+      table.standard tbody tr td {
         padding-left: 0.5em;
         padding-right: 0.5em;
       }
