@@ -9,7 +9,7 @@ class ThroughputChart < ChartBase
   end
 
   def run
-    completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) }
+    completed_issues = completed_issues_in_range include_unstarted: true
 
     data_sets = []
     groups = completed_issues.collect { |issue| @group_by_block.call(issue) }.uniq

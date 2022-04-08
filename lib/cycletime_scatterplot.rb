@@ -11,7 +11,7 @@ class CycletimeScatterplot < ChartBase
   end
 
   def run
-    completed_issues = @issues.select { |issue| @cycletime.stopped_time(issue) && @cycletime.started_time(issue) }
+    completed_issues = completed_issues_in_range include_unstarted: false
 
     data_sets = create_datasets completed_issues
     overall_percent_line = calculate_percent_line(completed_issues)

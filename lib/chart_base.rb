@@ -110,4 +110,12 @@ class ChartBase
 
     @all_board_columns[@board_id]
   end
+
+  def completed_issues_in_range include_unstarted:
+    issues.select do |issue|
+      stopped_time = cycletime.stopped_time(issue)
+      stopped_time && date_range.include?(stopped_time.to_date) && (include_unstarted || cycletime.started_time(issue))
+    end
+  end
+
 end

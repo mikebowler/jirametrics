@@ -9,9 +9,8 @@ class CycletimeHistogram < ChartBase
   end
 
   def run
-    # We want to do the data quality scan across any item that has stopped, whether or not we can
-    # determine a cycle time from it.
-    stopped_issues = @issues.select { |issue| @cycletime.stopped_time(issue) }
+    stopped_issues = completed_issues_in_range include_unstarted: true
+
     data_quality = scan_data_quality(stopped_issues)
 
     # For the histogram, we only want to consider items that have both a start and a stop time.
