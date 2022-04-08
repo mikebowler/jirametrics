@@ -87,6 +87,10 @@ class HtmlReportConfig
     @sections << string
   end
 
+  def sprint_burndown
+    execute_chart SprintBurndown.new
+  end
+
   def discard_changes_before_hook issues_cutoff_times
     raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
 
