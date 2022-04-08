@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_board_columns
+  attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, :time_range
 
   @@chart_counter = 0
 

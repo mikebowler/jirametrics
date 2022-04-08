@@ -18,6 +18,7 @@ describe HtmlReportConfig do
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
       project_config.file_prefix 'sample'
+      project_config.time_range = DateTime.parse('2022-01-01')..DateTime.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
       config = HtmlReportConfig.new file_config: file_config, block: nil
 
