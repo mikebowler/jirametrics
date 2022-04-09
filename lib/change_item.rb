@@ -8,7 +8,7 @@ class ChangeItem
     # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = time
-    raise "Time must be a DateTime in the correct timezone: #{@time}" if @time.is_a? String
+    raise "Time must be an object of type Time in the correct timezone: #{@time}" if @time.is_a? String
 
     @field = field || @raw['field']
     @value = value || @raw['toString']

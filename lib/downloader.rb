@@ -187,7 +187,7 @@ class Downloader
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
     unless @download_config.rolling_date_count.nil?
-      @download_date_range = today - @download_config.rolling_date_count..today
+      @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date
 
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.

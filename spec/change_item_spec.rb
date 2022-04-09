@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe ChangeItem do
   it 'should create change' do
-    time = DateTime.parse('2021-09-06T04:33:55.539+0000').new_offset('00:00')
+    time = Time.parse('2021-09-06T04:33:55.539+0000')
     change = ChangeItem.new time: time, author: 'Tolkien', raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
@@ -23,11 +23,11 @@ describe ChangeItem do
     expect(change.resolution?).to be_falsey
     expect(change.artificial?).to be_falsey
 
-    expect(change.to_s).to eq 'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06T04:33:55+00:00")'
+    expect(change.to_s).to eq 'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000")'
   end
 
   it 'should support artificial' do
-    time = DateTime.parse('2021-09-06T04:33:55.539+0000').new_offset('00:00')
+    time = Time.parse('2021-09-06T04:33:55.539+0000')
     change = ChangeItem.new time: time, artificial: true, author: 'Asimov', raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
@@ -40,7 +40,7 @@ describe ChangeItem do
 
     expect(change.artificial?).to be_truthy
     expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06T04:33:55+00:00", artificial)'
+      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", artificial)'
     )
   end
 end

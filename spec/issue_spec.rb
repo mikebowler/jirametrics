@@ -71,8 +71,8 @@ describe Issue do
     }
     issue = Issue.new raw: raw
     expect([issue.created, issue.updated]).to eq [
-      DateTime.parse('2021-08-29T18:00:00+00:00'),
-      DateTime.parse('2021-09-29T18:00:00+00:00')
+      Time.parse('2021-08-29T18:00:00+00:00'),
+      Time.parse('2021-09-29T18:00:00+00:00')
     ]
   end
 
@@ -121,7 +121,7 @@ describe Issue do
 
   it 'first time in status' do
     issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29T18:06:55+00:00'
+    expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29 18:06:55 +0000'
   end
 
   it "first time in status that doesn't match any" do
@@ -131,7 +131,7 @@ describe Issue do
 
   it 'first time not in status' do
     issue = load_issue 'SP-10'
-    expect(issue.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29T18:06:28+00:00'
+    expect(issue.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29 18:06:28 +0000'
   end
 
   it "first time not in status where it's never in that status" do
@@ -160,17 +160,17 @@ describe Issue do
 
   it "first time for any status change - created doesn't count as status change" do
     issue = load_issue 'SP-10'
-    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29T18:06:28+00:00'
+    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
   end
 
   it 'first time in status category' do
     issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status_category(mock_config, 'finished').to_s).to eq '2021-09-06T04:34:26+00:00'
+    expect(issue.first_time_in_status_category(mock_config, 'finished').to_s).to eq '2021-09-06 04:34:26 +0000'
   end
 
   it 'first status change after created' do
     issue = load_issue 'SP-10'
-    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29T18:06:28+00:00'
+    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
   end
 
   it %(first status change after created, where there isn't anything after created) do
@@ -204,7 +204,7 @@ describe Issue do
       issue = load_issue 'SP-10'
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.currently_in_status('Done').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.currently_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
   end
 
@@ -219,7 +219,7 @@ describe Issue do
       issue = load_issue 'SP-10'
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.still_in_status('Done').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.still_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
 
     it 'item moved to done twice should return first time only' do
@@ -227,7 +227,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
-      expect(issue.still_in_status('Done').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.still_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
 
     it "doesn't match any" do
@@ -247,7 +247,7 @@ describe Issue do
       issue = load_issue 'SP-10'
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.currently_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.currently_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
   end
 
@@ -262,7 +262,7 @@ describe Issue do
       issue = load_issue 'SP-10'
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
 
     it 'item moved to done twice should return first time only' do
@@ -270,7 +270,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
-      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02T00:00:00+00:00'
+      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
   end
 
@@ -449,8 +449,8 @@ describe Issue do
       issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
 
       expect([issue.first_resolution, issue.last_resolution]).to eq [
-        DateTime.parse('2021-10-03T01:00:00+00:00'),
-        DateTime.parse('2021-10-07T01:00:00+00:00')
+        Time.parse('2021-10-03T01:00:00+00:00'),
+        Time.parse('2021-10-07T01:00:00+00:00')
       ]
     end
 

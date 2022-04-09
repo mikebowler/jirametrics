@@ -25,11 +25,11 @@ describe Sprint do
   end
 
   it 'should return start' do
-    expect(sprint.start_time).to eq DateTime.parse('2022-03-26T16:04:09.679Z')
+    expect(sprint.start_time).to eq Time.parse('2022-03-26T16:04:09.679Z')
   end
 
   it 'should return end' do
-    expect(sprint.end_time).to eq DateTime.parse('2022-04-09T16:04:00.000Z')
+    expect(sprint.end_time).to eq Time.parse('2022-04-09T16:04:00.000Z')
   end
 
   it 'should return goal' do

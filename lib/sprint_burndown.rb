@@ -12,3 +12,4 @@ class SprintBurndown < ChartBase
     '<div>SprintBurndown goes here</div>'
   end
 end
+

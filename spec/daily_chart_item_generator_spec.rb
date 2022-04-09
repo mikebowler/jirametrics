@@ -66,8 +66,8 @@ describe DailyChartItemGenerator do
     it 'should handle multiple items starting at once with nothing after' do
       subject = DailyChartItemGenerator.new issues: nil, cycletime: defaultCycletimeConfig, date_range: date_range
       issue_start_stops = [
-        [DateTime.parse('2021-06-17'), 'start', issue1],
-        [DateTime.parse('2021-06-17'), 'start', issue2]
+        [Time.parse('2021-06-17'), 'start', issue1],
+        [Time.parse('2021-06-17'), 'start', issue2]
       ]
       subject.populate_days(start_stop_sequence: issue_start_stops)
 
@@ -81,11 +81,11 @@ describe DailyChartItemGenerator do
     it 'should handle multiple items' do
       subject = DailyChartItemGenerator.new issues: nil, cycletime: defaultCycletimeConfig, date_range: date_range
       issue_start_stops = [
-        [DateTime.parse('2021-06-17'), 'start', issue1],
-        [DateTime.parse('2021-06-17'), 'start', issue2],
+        [Time.parse('2021-06-17'), 'start', issue1],
+        [Time.parse('2021-06-17'), 'start', issue2],
 
-        [DateTime.parse('2021-06-19'), 'start', issue10],
-        [DateTime.parse('2021-06-19'), 'stop', issue10]
+        [Time.parse('2021-06-19'), 'start', issue10],
+        [Time.parse('2021-06-19'), 'stop', issue10]
       ]
       subject.populate_days(start_stop_sequence: issue_start_stops)
 
@@ -99,7 +99,7 @@ describe DailyChartItemGenerator do
     it 'should handle invalid actions' do
       subject = DailyChartItemGenerator.new issues: nil, cycletime: defaultCycletimeConfig, date_range: date_range
       issue_start_stops = [
-        [DateTime.parse('2021-10-10'), 'foo', issue1]
+        [Time.parse('2021-10-10'), 'foo', issue1]
       ]
 
       expect { subject.populate_days(start_stop_sequence: issue_start_stops) }.to raise_error 'Unexpected action: foo'

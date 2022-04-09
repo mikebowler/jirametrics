@@ -50,7 +50,7 @@ class CycleTimeConfig
     stop = stopped_time(issue)
     return nil if start.nil? || stop.nil?
 
-    (stop - start).to_i + 1
+    (stop.to_date - start.to_date).to_i + 1
   end
 
   def age issue, today: nil
@@ -58,6 +58,6 @@ class CycleTimeConfig
     stop = today || @today || Date.today
     return nil if start.nil? || stop.nil?
 
-    (stop - start).to_i + 1
+    (stop.to_date - start.to_date).to_i + 1
   end
 end

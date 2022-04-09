@@ -39,7 +39,7 @@ class TotalWipOverTimeChart < ChartBase
     end
 
     daily_chart_dataset(date_issues_list: date_issues_list, color: color, label: label) do |date, issue|
-      "(age: #{label_days (date - @cycletime.started_time(issue)).to_i + 1})"
+      "(age: #{label_days (date - @cycletime.started_time(issue).to_date).to_i + 1})"
     end
   end
 

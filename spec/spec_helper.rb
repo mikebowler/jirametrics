@@ -60,11 +60,11 @@ def load_complete_sample_statuses
 end
 
 def load_complete_sample_date_range
-  DateTime.parse('2021-09-14T00:00:00+00:00')..DateTime.parse('2021-12-13T23:59:59+00:00')
+  Time.parse('2021-09-14T00:00:00+00:00')..Time.parse('2021-12-13T23:59:59+00:00')
 end
 
 def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil, artificial: false
-  time = DateTime.parse(time) if time.is_a? String
+  time = Time.parse(time) if time.is_a? String
   ChangeItem.new time: time, author: 'Tolkien', artificial: artificial, raw: {
     'field' => field,
     'to' => value_id,
@@ -85,3 +85,14 @@ def mock_cycletime_config stub_values: []
   config.stop_at  ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](2) }
   config
 end
+
+# Duplicated from ChartBase. Should this be in a module?
+def chart_format object
+  if object.is_a? Time
+    # "2022-04-09T11:38:30-07:00"
+    object.strftime '%Y-%m-%dT%H:%M:%S%z'
+  else
+    object.to_s
+  end
+end
+

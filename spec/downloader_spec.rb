@@ -59,7 +59,7 @@ describe Downloader do
 
     it 'makes from project and rolling date count' do
       download_config.rolling_date_count 90
-      today = DateTime.parse('2021-08-01')
+      today = Time.parse('2021-08-01 00:00:00 +0000')
       expected = '((status changed AND resolved = null) OR ' \
         '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")))'
       expect(downloader.make_jql(today: today)).to eql expected
@@ -84,7 +84,7 @@ describe Downloader do
       downloader.metadata['date_end'] = Date.parse('2021-07-20')
 
       download_config.rolling_date_count 90
-      today = DateTime.parse('2021-08-01')
+      today = Time.parse('2021-08-01')
       expected = '((status changed AND resolved = null) OR ' \
         '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")))'
       expect(downloader.make_jql(today: today)).to eql expected

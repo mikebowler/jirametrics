@@ -47,7 +47,7 @@ describe AgingWorkInProgressChart do
 
     it 'should handle happy path' do
       actual = chart.ages_of_issues_that_crossed_column_boundary issues: chart.issues, status_ids: [10_002, 10_011, 3]
-      expect(actual).to eq [179, 72, 1]
+      expect(actual).to eq [180, 73, 1]
     end
   end
 
@@ -59,7 +59,7 @@ describe AgingWorkInProgressChart do
 
     it 'at 0%' do
       actual = chart.days_at_percentage_threshold_for_all_columns percentage: 0, issues: chart.issues
-      expect(actual).to eq [1, 1, 1, 80, 80]
+      expect(actual).to eq [1, 1, 1, 81, 81]
     end
   end
 
@@ -76,29 +76,29 @@ describe AgingWorkInProgressChart do
         'backgroundColor' => 'green',
         'data' => [
           {
-            'title' => ['SP-11 : Report of all orders for an event (182 days)'],
+            'title' => ['SP-11 : Report of all orders for an event (183 days)'],
             'x' => 'Ready',
-            'y' => 182
+            'y' => 183
           },
           {
-            'title' => ['SP-8 : Refund ticket for individual order (182 days)'],
+            'title' => ['SP-8 : Refund ticket for individual order (183 days)'],
              'x' => 'In Progress',
-             'y' => 182
+             'y' => 183
           },
           {
-            'title' => ['SP-7 : Purchase ticket with Apple Pay (182 days)'],
+            'title' => ['SP-7 : Purchase ticket with Apple Pay (183 days)'],
              'x' => 'Ready',
-             'y' => 182
+             'y' => 183
           },
           {
-            'title' => ['SP-2 : Update existing event (182 days)'],
+            'title' => ['SP-2 : Update existing event (183 days)'],
              'x' => 'Ready',
-             'y' => 182
+             'y' => 183
           },
           {
-            'title' => ['SP-1 : Create new draft event (182 days)'],
+            'title' => ['SP-1 : Create new draft event (183 days)'],
             'x' => 'Review',
-            'y' => 182
+            'y' => 183
           }
         ],
        'fill' => false,
@@ -109,7 +109,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [179, 179, 179, 80],
+       'data' => [180, 180, 180, 81],
        'label' => '85%',
        'type' => 'bar'
      }

@@ -46,13 +46,13 @@ describe AgingWorkTable do
     end
 
     it 'should handle started but neither blocked nor stalled' do
-      issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_datetime)
+      issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
       table.cycletime = mock_cycletime_config stub_values: { issue => ['2021-01-01', nil] }
       expect(table.blocked_text issue).to be_nil
     end
 
     it 'should handle not started and also neither blocked nor stalled' do
-      issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_datetime)
+      issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
       table.cycletime = mock_cycletime_config stub_values: { issue => [nil, nil] }
       expect(table.blocked_text issue).to be_nil
     end

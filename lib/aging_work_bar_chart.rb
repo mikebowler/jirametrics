@@ -11,7 +11,7 @@ class AgingWorkBarChart < ChartBase
     data_quality = scan_data_quality(aging_issues)
     @status_colors = pick_colors_for_statuses
 
-    today = date_range.end + 1
+    today = date_range.end
     aging_issues.sort! { |a, b| @cycletime.age(b, today: today) <=> @cycletime.age(a, today: today) }
     data_sets = []
     aging_issues.each do |issue|
@@ -45,11 +45,11 @@ class AgingWorkBarChart < ChartBase
           type: 'bar',
           label: "#{issue.key}-#{@@next_id += 1}",
           data: [{
-            x: [previous_start, change.time],
+            x: [chart_format(previous_start), chart_format(change.time)],
             y: y,
             title: "#{issue.type} : #{change.value}"
           }],
-          backgroundColor: color_for(status_name: change.value, type: issue.type),
+          backgroundColor: color_for(status_name: change.value),
           borderRadius: 0,
           stacked: true
         }
@@ -65,11 +65,11 @@ class AgingWorkBarChart < ChartBase
         type: 'bar',
         label: "#{issue.key}-#{@@next_id += 1}",
         data: [{
-          x: [previous_start, today],
+          x: [chart_format(previous_start), chart_format(today)],
           y: y,
           title: "#{issue.type} : #{previous_status}"
         }],
-        backgroundColor: color_for(status_name: previous_status, type: issue.type),
+        backgroundColor: color_for(status_name: previous_status),
         borderRadius: 0,
         stacked: true
       }
@@ -78,7 +78,7 @@ class AgingWorkBarChart < ChartBase
     data
   end
 
-  def color_for status_name:, type:
+  def color_for status_name:
     @status_colors[@possible_statuses.find { |status| status.name == status_name }]
   end
 

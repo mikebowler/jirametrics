@@ -18,7 +18,7 @@ describe HtmlReportConfig do
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
       project_config.file_prefix 'sample'
-      project_config.time_range = DateTime.parse('2022-01-01')..DateTime.parse('2022-02-01')
+      project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
       config = HtmlReportConfig.new file_config: file_config, block: nil
 
@@ -54,7 +54,7 @@ describe HtmlReportConfig do
     expect(chart.all_board_columns[1].collect(&:name)).to eq [
       'Backlog', 'Ready', 'In Progress', 'Review', 'Done'
     ]
-    expect(chart.time_range).to eq DateTime.parse('2021-09-14')..DateTime.parse('2021-12-13T23:59:59+00:00')
+    expect(chart.time_range).to eq Time.parse('2021-09-14 00:00:00 +0000')..Time.parse('2021-12-13 23:59:59 +0000')
     expect(chart.date_range).to eq Date.parse('2021-09-14')..Date.parse('2021-12-13')
     expect(chart.cycletime.label).to eq 'leadtime'
   end

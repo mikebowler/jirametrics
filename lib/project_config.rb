@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'time'
+
 class ProjectConfig
   include DiscardChangesBefore
 
@@ -183,7 +185,7 @@ class ProjectConfig
 
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
-    @time_range = (DateTime.parse(start)..DateTime.parse(stop))
+    @time_range = (Time.parse(start)..Time.parse(stop))
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise

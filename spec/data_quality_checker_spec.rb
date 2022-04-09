@@ -24,8 +24,8 @@ describe DataQualityChecker do
     subject.initialize_entries
 
     expect(subject.testable_entries).to eq [
-      ['2021-06-18T18:43:34+00:00', '', issue1],
-      ['2021-08-29T18:06:28+00:00', '2021-09-06T04:34:26+00:00', issue10]
+      ['2021-06-18 18:43:34 +0000', '', issue1],
+      ['2021-08-29 18:06:28 +0000', '2021-09-06 04:34:26 +0000', issue10]
     ]
 
     expect(subject.entries_with_problems).to be_empty
@@ -36,7 +36,7 @@ describe DataQualityChecker do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     subject.initialize_entries
 
-    entry = DataQualityChecker::Entry.new started: nil, stopped: DateTime.parse('2021-12-25'), issue: issue1
+    entry = DataQualityChecker::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
     subject.scan_for_completed_issues_without_a_start_time entry: entry
 
     expect(entry.problems.size).to eq 1
@@ -60,7 +60,7 @@ describe DataQualityChecker do
     subject.initialize_entries
 
     entry = DataQualityChecker::Entry.new(
-      started: nil, stopped: DateTime.parse('2021-09-06T04:34:26+00:00'), issue: issue10
+      started: nil, stopped: Time.parse('2021-09-06T04:34:26+00:00'), issue: issue10
     )
     subject.scan_for_status_change_after_done entry: entry
 

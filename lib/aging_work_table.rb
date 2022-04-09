@@ -10,7 +10,7 @@ class AgingWorkTable < ChartBase
   end
 
   def run
-    @today = date_range.end + 1
+    @today = date_range.end
     aging_issues = select_aging_issues
 
     expedited_but_not_started = @issues.select do |issue|

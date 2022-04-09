@@ -27,6 +27,7 @@ class AgingWorkInProgressChart < ChartBase
             age = @cycletime.age(issue)
             column = column_for issue: issue
             next if column.nil?
+
             { 'y' => age,
               'x' => column.name,
               'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
@@ -70,7 +71,7 @@ class AgingWorkInProgressChart < ChartBase
       # Skip if either it hasn't crossed the boundary or we can't tell when it started.
       next if stop.nil? || start.nil?
 
-      (stop - start).to_i + 1
+      (stop.to_date - start.to_date).to_i + 1
     end.compact
   end
 

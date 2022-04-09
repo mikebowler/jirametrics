@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+require 'time'
+
 class Issue
   attr_reader :changes, :raw
 
-  def initialize raw:, timezone_offset: '00:00'
+  def initialize raw:, timezone_offset: '+00:00'
     @raw = raw
     @timezone_offset = timezone_offset
     @changes = []
@@ -15,7 +17,7 @@ class Issue
     end
 
     @raw['changelog']['histories'].each do |history|
-      created = parse_datetime(history['created'])
+      created = parse_time(history['created'])
       author = history['author']['displayName'] || history['author']['name']
       history['items'].each do |item|
         @changes << ChangeItem.new(raw: item, time: created, author: author)
@@ -70,7 +72,7 @@ class Issue
   end
 
   def create_fake_change_for_creation existing_changes
-    created_time = parse_datetime @raw['fields']['created']
+    created_time = parse_time @raw['fields']['created']
     first_change = existing_changes.find { |change| change.status? }
     if first_change.nil?
       # There have been no status changes yet so we have to look at the current status
@@ -159,16 +161,16 @@ class Issue
     nil
   end
 
-  def parse_datetime text
-    DateTime.parse(text).new_offset @timezone_offset
+  def parse_time text
+    Time.parse(text).getlocal(@timezone_offset)
   end
 
   def created
-    parse_datetime @raw['fields']['created']
+    parse_time @raw['fields']['created']
   end
 
   def updated
-    parse_datetime @raw['fields']['updated']
+    parse_time @raw['fields']['updated']
   end
 
   def first_resolution
@@ -241,7 +243,7 @@ class Issue
       else
         # Flag is turning on. Note that Jira may pass in a variety of different values here
         # but all we care about is that it isn't an empty string.
-        blocked_start = change.time
+        blocked_start = change.time.to_date
       end
     end
 

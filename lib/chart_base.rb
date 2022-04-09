@@ -124,4 +124,13 @@ class ChartBase
       time_range.include?(sprint.start_time) # && time_range.include?(sprint.end_time)
     end || []
   end
+
+  def chart_format object
+    if object.is_a? Time
+      # "2022-04-09T11:38:30-07:00"
+      object.strftime '%Y-%m-%dT%H:%M:%S%z'
+    else
+      object.to_s
+    end
+  end
 end
