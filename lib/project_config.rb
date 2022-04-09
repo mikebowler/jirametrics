@@ -4,7 +4,7 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
-    :download_config, :file_configs, :exporter, :data_version
+    :download_config, :file_configs, :exporter, :data_version, :sprints_by_board
   attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.'
@@ -16,6 +16,7 @@ class ProjectConfig
     @jira_config = jira_config
     @possible_statuses = []
     @all_board_columns = {}
+    @sprints_by_board = {}
   end
 
   def evaluate_next_level
@@ -26,6 +27,7 @@ class ProjectConfig
     load_project_metadata
     load_all_board_columns
     load_status_category_mappings
+    load_sprints
     anonymize_data if @anonymizer_needed
 
     @file_configs.each do |file_config|
@@ -141,6 +143,17 @@ class ProjectConfig
         category_name: category_config['name'],
         category_id: category_config['id']
       )
+    end
+  end
+
+  def load_sprints
+    Dir.foreach(@target_path) do |file|
+      next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
+
+      board_id = $1.to_i
+      @sprints_by_board[board_id] = JSON.parse(File.read("#{target_path}#{file}"))['values'].collect do |json|
+        Sprint.new raw: json
+      end
     end
   end
 

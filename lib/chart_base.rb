@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, :time_range
+  attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, 
+    :time_range, :sprints_by_board
 
   @@chart_counter = 0
 
@@ -118,4 +119,9 @@ class ChartBase
     end
   end
 
+  def sprints_in_time_range
+    sprints_by_board[board_id]&.select do |sprint|
+      time_range.include?(sprint.start_time) # && time_range.include?(sprint.end_time)
+    end || []
+  end
 end

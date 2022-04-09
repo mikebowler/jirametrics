@@ -105,13 +105,16 @@ class HtmlReportConfig
   end
 
   def execute_chart chart, &after_init_block
+    project_config = @file_config.project_config
+
     chart.issues = issues if chart.respond_to? :'issues='
     chart.cycletime = @cycletime if chart.respond_to? :'cycletime='
-    chart.time_range = @file_config.project_config.time_range if chart.respond_to? :'time_range='
-    chart.possible_statuses = @file_config.project_config.possible_statuses if chart.respond_to? :'possible_statuses='
+    chart.time_range = project_config.time_range if chart.respond_to? :'time_range='
+    chart.possible_statuses = project_config.possible_statuses if chart.respond_to? :'possible_statuses='
     chart.timezone_offset = timezone_offset
+    chart.sprints_by_board = project_config.sprints_by_board if chart.respond_to? :sprints_by_board
 
-    chart.all_board_columns = @file_config.project_config.all_board_columns
+    chart.all_board_columns = project_config.all_board_columns
     chart.board_id = @board_id
 
     if chart.respond_to? :'date_range='
