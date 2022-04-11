@@ -27,7 +27,7 @@ class SprintBurndown < ChartBase
 
     data_sets = []
     sprints.each_with_index do |sprint, index|
-      color = %w[blue orange][index % 2]
+      color = %w[blue orange green red yellow][index % 5]
       label = sprint.name
       data_sets << {
         label: label,
