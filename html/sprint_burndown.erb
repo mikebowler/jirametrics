@@ -1,0 +1,60 @@
+<div>
+  <canvas id="<%= chart_id %>" width="800" height="100"></canvas>
+</div>
+<script>
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
+  type: 'scatter',
+  data: {
+    datasets: <%= JSON.generate(data_sets) %>
+  },
+  options: {
+    title: {
+      display: true,
+      text: "Sprint Burndown"
+    },
+    responsive: true, // If responsive is true then it fills the screen
+    scales: {
+      x: {
+        type: "time",
+        time: {
+            format: 'YYYY-MM-DD'
+        },
+        scaleLabel: {
+          display: true,
+          labelString: 'Date'
+        }
+      },
+      y: {
+        scaleLabel: {
+          display: true,
+          labelString: 'Items remaining'
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.data[context.dataIndex].title
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          <% holidays(sprint_date_range).each_with_index do |range, index| %>
+          holiday<%= index %>: {
+            drawTime: 'beforeDraw',
+            type: 'box',
+            xMin: '<%= range.begin %>T00:00:00',
+            xMax: '<%= range.end %>T23:59:59',
+            backgroundColor: '#F0F0F0',
+            borderColor: '#F0F0F0'
+          },
+          <% end %>
+        }
+      }
+    }
+  }
+});
+</script>
+

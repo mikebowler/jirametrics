@@ -459,4 +459,29 @@ describe Issue do
       expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
     end
   end
+
+  # context 'story_point_estimate_when_entering_sprint' do
+  #   let(:issue) { empty_issue created: '2021-10-01T00:00:00+00:00' }
+  #   let(:sprint) do
+  #     Sprint.new raw: {
+  #       id: 1,
+  #       self: 'https://improvingflow.atlassian.net/rest/agile/1.0/sprint/1',
+  #       state: 'active',
+  #       name: 'Scrum Sprint 1',
+  #       startDate: '2022-03-26T16:04:09.679Z',
+  #       endDate: '2022-04-09T16:04:00.000Z',
+  #       originBoardId: 2,
+  #       goal: ''
+  #     }
+  #   end
+
+  #   it 'should return nil when no estimates and issue never enters sprint' do
+  #     expect(issue.story_point_estimate_when_entering_sprint sprint).to be_nil
+  #   end
+
+  #   it 'should return nil when estimates but issue never enters sprint' do
+  #     issue.changes << mock_change(field: 'Story Points', value: '4.5',  time: '2021-10-02T00:00:00+00:00')
+  #     expect(issue.story_point_estimate_when_entering_sprint sprint).to be_nil
+  #   end
+  # end
 end

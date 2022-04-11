@@ -19,15 +19,19 @@ class ChangeItem
     @author = author
   end
 
-  def status?   = (field == 'status')
+  def status? = (field == 'status')
 
-  def flagged?  = (field == 'Flagged')
+  def flagged? = (field == 'Flagged')
 
   def priority? = (field == 'priority')
 
   def resolution? = (field == 'resolution')
 
   def artificial? = @artificial
+
+  def sprint? = (field == 'Sprint')
+
+  def story_points? = (field == 'Story Points')
 
   def to_s
     message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: \"#{@time}\""

@@ -88,9 +88,9 @@ class ChartBase
     checker
   end
 
-  def holidays
+  def holidays date_range=@date_range
     result = []
-    @date_range.each do |date|
+    date_range.each do |date|
       result << (date..date + 1) if date.wday == 6
     end
     result
