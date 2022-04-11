@@ -1,5 +1,6 @@
+<h1>Sprint Burndowns</h1>
 <div>
-  <canvas id="<%= chart_id %>" width="800" height="100"></canvas>
+  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
@@ -28,7 +29,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         scaleLabel: {
           display: true,
           labelString: 'Items remaining'
-        }
+        },
+        min: 0.0
       }
     },
     plugins: {
@@ -41,7 +43,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       },
       annotation: {
         annotations: {
-          <% holidays(sprint_date_range).each_with_index do |range, index| %>
+          <% holidays().each_with_index do |range, index| %>
           holiday<%= index %>: {
             drawTime: 'beforeDraw',
             type: 'box',

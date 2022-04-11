@@ -25,18 +25,21 @@ class SprintBurndown < ChartBase
     sprints = sprints_in_time_range
     return nil if sprints.empty?
 
-    result = String.new
-    result << '<h1>Sprint Burndowns</h1>'
-
-    sprints.sort_by(&:end_time).each do |sprint|
-      result << "<h2>#{sprint.name}</h2>"
-      result << "<div>#{sprint.goal}</div>" if sprint.goal
-
-      result << process_one_sprint(sprint, use_story_points: true)
-      # result << process_one_sprint(sprint, use_story_points: false)
+    data_sets = []
+    sprints.each_with_index do |sprint, index|
+      color = %w[blue orange][index % 2]
+      label = sprint.name
+      data_sets << {
+        label: label,
+        data: process_one_sprint(sprint, use_story_points: true),
+        fill: false,
+        showLine: true,
+        borderColor: color,
+        backgroundColor: color
+      }
     end
 
-    result
+    render(binding, __FILE__)
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
@@ -96,10 +99,6 @@ class SprintBurndown < ChartBase
 
     story_points = starting_count
 
-    sprint_end_time = guess_sprint_end_time sprint, sprint_data
-    sprint_time_range = sprint.start_time..sprint_end_time
-    sprint_date_range = sprint.start_time.to_date..sprint_end_time.to_date
-
     data_set = []
     data_set << {
       y: starting_count,
@@ -107,17 +106,16 @@ class SprintBurndown < ChartBase
       title: 'First element'
     }
     sprint_data.each do |change_data|
-      # puts change_data.inspect
-      # next unless sprint_time_range.include? change_data.time
       next unless change_data.time >= sprint.start_time
+      next if sprint.completed_time && change_data.time > sprint.completed_time
 
       case change_data.action
       when :story_points
         story_points += change_data.value
       when :enter_sprint
-        story_points += change_data.story_points
+        story_points += change_data.story_points if change_data.story_points
       when :issue_ended, :leave_spring
-        story_points -= change_data.story_points
+        story_points -= change_data.story_points if change_data.story_points
       end
 
       data_set << {
@@ -135,19 +133,7 @@ class SprintBurndown < ChartBase
       }
     end
 
-    color = 'red'
-    label = 'bar'
-    data_sets = [{
-      label: label,
-      data: data_set,
-      fill: false,
-      showLine: true,
-      borderColor: color,
-      # lineTension: 0.4,
-      backgroundColor: color
-    }]
-
-    render(binding, __FILE__)
+    data_set
   end
 
   def end_posts_story_point_count data:, sprint:
