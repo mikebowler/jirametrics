@@ -45,8 +45,11 @@ class SprintBurndown < ChartBase
     ever_in_sprint = false
     change_data = []
 
+    # TODO: It's ugly that we have both stopped_time and issue_stopped time. Change to use a flag rather
+    # than clearing the time value.
     started_time = cycletime.started_time(issue)
     stopped_time = cycletime.stopped_time(issue)
+    issue_stopped_time = stopped_time
 
     issue.changes.each do |change|
       action = nil
@@ -57,7 +60,7 @@ class SprintBurndown < ChartBase
         ever_in_sprint = true
       elsif change.sprint? && change.old_value == sprint.name
         action = :leave_sprint
-      elsif change.story_points?
+      elsif change.story_points? && (issue_stopped_time.nil? || change.time < issue_stopped_time)
         action = :story_points
         story_points = change.value.to_f || 0.0
         value = story_points - (change.old_value&.to_f || 0.0)

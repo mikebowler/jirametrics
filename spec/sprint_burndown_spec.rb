@@ -82,7 +82,7 @@ describe Sprint do
       issue.changes << mock_change(field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
       # Issue closes on Jan 5
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2022-01-05')
-      # issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
+      issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
 
       expect(subject.single_issue_change_data(issue, sprint)).to eql [
         SprintIssueChangeData.new(
