@@ -16,7 +16,7 @@ class Sprint
 
   # The time that the sprint was actually closed
   def completed_time
-    Time.parse(@raw['completedDate']) if @raw['completedDate']
+    Time.parse(@raw['completeDate']) if @raw['completeDate']
   end
 
   def goal = @raw['goal']
