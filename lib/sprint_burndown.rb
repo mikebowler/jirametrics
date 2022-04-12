@@ -69,7 +69,7 @@ class SprintBurndown < ChartBase
         value = story_points - (change.old_value&.to_f || 0.0)
       elsif started_time && change.time == started_time
         started_time = nil
-        action = :issue_started
+        # action = :issue_started
       elsif stopped_time && change.time == stopped_time
         stopped_time = nil
         action = :issue_stopped
@@ -103,25 +103,34 @@ class SprintBurndown < ChartBase
     data_set << {
       y: starting_count,
       x: chart_format(sprint.start_time),
-      title: 'First element'
+      title: "Sprint started with #{starting_count}pts"
     }
     sprint_data.each do |change_data|
       next unless change_data.time >= sprint.start_time
       next if sprint.completed_time && change_data.time > sprint.completed_time
 
+      message = nil
       case change_data.action
       when :story_points
         story_points += change_data.value
+        message = "Story points changed from #{change_data.story_points - change_data.value} to #{change_data.story_points}pts"
       when :enter_sprint
         story_points += change_data.story_points if change_data.story_points
-      when :issue_ended, :leave_spring
+        message = "Added to sprint with #{change_data.story_points || 'no'} points"
+      when :issue_stopped
         story_points -= change_data.story_points if change_data.story_points
+        message = "Completed with #{change_data.story_points || 'no'} points"
+      when :leave_sprint
+        story_points -= change_data.story_points if change_data.story_points
+        message = "Removed from sprint with #{change_data.story_points || 'no'} points"
+      else
+        message = change_data.action.to_s
       end
 
       data_set << {
         y: story_points,
         x: chart_format(change_data.time),
-        title: "#{change_data.issue.key} #{change_data.action}"
+        title: "#{change_data.issue.key} #{message}"
       }
     end
 
