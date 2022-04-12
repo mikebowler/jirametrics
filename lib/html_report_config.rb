@@ -87,8 +87,10 @@ class HtmlReportConfig
     @sections << string
   end
 
-  def sprint_burndown
-    execute_chart SprintBurndown.new
+  def sprint_burndown use_story_points: true
+    execute_chart SprintBurndown.new do |chart|
+      chart.use_story_points = use_story_points
+    end
   end
 
   def discard_changes_before_hook issues_cutoff_times

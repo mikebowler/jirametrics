@@ -21,6 +21,8 @@ class SprintIssueChangeData
 end
 
 class SprintBurndown < ChartBase
+  attr_accessor :use_story_points
+
   def run
     sprints = sprints_in_time_range
     return nil if sprints.empty?
@@ -31,7 +33,7 @@ class SprintBurndown < ChartBase
       label = sprint.name
       data_sets << {
         label: label,
-        data: process_one_sprint(sprint, use_story_points: true),
+        data: process_one_sprint(sprint),
         fill: false,
         showLine: true,
         borderColor: color,
@@ -43,7 +45,7 @@ class SprintBurndown < ChartBase
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
-  def single_issue_change_data issue, sprint
+  def single_issue_change_data issue:, sprint:
     story_points = nil
     ever_in_sprint = false
     change_data = []
@@ -66,6 +68,7 @@ class SprintBurndown < ChartBase
       elsif change.story_points? && (issue_stopped_time.nil? || change.time < issue_stopped_time)
         action = :story_points
         story_points = change.value.to_f || 0.0
+        story_points = 1.0 unless use_story_points
         value = story_points - (change.old_value&.to_f || 0.0)
       elsif started_time && change.time == started_time
         started_time = nil
@@ -88,10 +91,10 @@ class SprintBurndown < ChartBase
     change_data
   end
 
-  def process_one_sprint sprint, use_story_points:
+  def process_one_sprint sprint
     sprint_data = []
     issues.each do |issue|
-      sprint_data += single_issue_change_data(issue, sprint)
+      sprint_data += single_issue_change_data(issue: issue, sprint: sprint)
     end
     sprint_data.sort_by!(&:time)
 
@@ -113,7 +116,8 @@ class SprintBurndown < ChartBase
       case change_data.action
       when :story_points
         story_points += change_data.value
-        message = "Story points changed from #{change_data.story_points - change_data.value} to #{change_data.story_points}pts"
+        old_story_points = change_data.story_points - change_data.value
+        message = "Story points changed from #{old_story_points}pts to #{change_data.story_points}pts"
       when :enter_sprint
         story_points += change_data.story_points if change_data.story_points
         message = "Added to sprint with #{change_data.story_points || 'no'} points"
