@@ -20,7 +20,7 @@ describe Sprint do
   context 'guess_sprint_end_time' do
     it 'should return completed when provided' do
       sprint_data = []
-      sprint.raw['completedDate'] = '2022-04-10T00:00:00z'
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
       expect(subject.guess_sprint_end_time(sprint, sprint_data)).to eq Time.parse('2022-04-10T00:00:00z')
     end
 
