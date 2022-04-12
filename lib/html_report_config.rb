@@ -115,7 +115,7 @@ class HtmlReportConfig
     chart.sprints_by_board = project_config.sprints_by_board if chart.respond_to? :sprints_by_board
 
     chart.all_board_columns = project_config.all_board_columns
-    chart.board_id = @board_id
+    chart.board_id = @board_id || project_config.guess_board_id
 
     if chart.respond_to? :'date_range='
       time_range = @file_config.project_config.time_range

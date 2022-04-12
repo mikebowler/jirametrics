@@ -191,24 +191,24 @@ class ProjectConfig
     raise
   end
 
+  def guess_board_id
+    unless all_board_columns.size == 1
+      message = "If the board_id isn't set then we look for all board configurations in the target" \
+        ' directory. '
+      if all_board_columns.empty?
+        message += ' In this case, we couldn\'t find any configuration files in the target directory.'
+      else
+        message += 'If there is only one, we use that. In this case we found configurations for' \
+          " the following board ids and this is ambiguous: #{all_board_columns.keys}"
+      end
+      raise message
+    end
+    all_board_columns.keys[0]
+  end
+
   def board_columns board_id: nil
     all_board_columns = @all_board_columns
-    if board_id.nil?
-      unless all_board_columns.size == 1
-        message = "If the board_id isn't set then we look for all board configurations in the target" \
-          ' directory. '
-        if all_board_columns.empty?
-          message += ' In this case, we couldn\'t find any configuration files in the target directory.'
-        else
-          message += 'If there is only one, we use that. In this case we found configurations for' \
-            " the following board ids and this is ambiguous: #{all_board_columns.keys}"
-        end
-        raise message
-      end
-
-      board_id = all_board_columns.keys[0]
-    end
-    board_columns = all_board_columns[board_id]
+    board_columns = all_board_columns[board_id || guess_board_id]
 
     raise "Unable to find configuration for board_id: #{board_id}" if board_columns.nil?
 

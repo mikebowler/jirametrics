@@ -21,6 +21,7 @@ describe HtmlReportConfig do
       project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
       config = HtmlReportConfig.new file_config: file_config, block: nil
+      config.board_id 1
 
       chart = ChartBase.new
       def chart.run
