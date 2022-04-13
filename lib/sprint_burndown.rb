@@ -42,7 +42,9 @@ class SprintBurndown < ChartBase
         fill: false,
         showLine: true,
         borderColor: color,
-        backgroundColor: color
+        backgroundColor: color,
+        stepped: true,
+        pointStyle: %w[rect circle] # First dot is visually different from the rest
       }
     end
 
@@ -103,16 +105,15 @@ class SprintBurndown < ChartBase
     end
     sprint_data.sort_by!(&:time)
 
-    starting_count, ending_count = end_posts_story_point_count data: sprint_data, sprint: sprint
-
-    story_points = starting_count
+    story_points = starting_story_point_count data: sprint_data, sprint: sprint
 
     data_set = []
     data_set << {
-      y: starting_count,
+      y: story_points,
       x: chart_format(sprint.start_time),
-      title: "Sprint started with #{starting_count}pts"
+      title: "Sprint started with #{story_points}pts"
     }
+
     sprint_data.each do |change_data|
       next unless change_data.time >= sprint.start_time
       next if sprint.completed_time && change_data.time > sprint.completed_time
@@ -133,7 +134,7 @@ class SprintBurndown < ChartBase
         story_points -= change_data.story_points if change_data.story_points
         message = "Removed from sprint with #{change_data.story_points || 'no'} points"
       else
-        message = change_data.action.to_s
+        raise "Unexpected action: #{change_data.action}"
       end
 
       data_set << {
@@ -145,7 +146,7 @@ class SprintBurndown < ChartBase
 
     if sprint.completed_time
       data_set << {
-        y: ending_count,
+        y: story_points,
         x: chart_format(sprint.completed_time),
         title: 'Last element'
       }
@@ -154,18 +155,15 @@ class SprintBurndown < ChartBase
     data_set
   end
 
-  def end_posts_story_point_count data:, sprint:
+  def starting_story_point_count data:, sprint:
     starting_count = nil
-    ending_count = nil
 
     story_point_count = 0.0
     data.each do |change_data|
       starting_count = story_point_count if starting_count.nil? && change_data.time >= sprint.start_time
-      ending_count = story_point_count if ending_count.nil? && change_data.time >= sprint.end_time
-
       story_point_count += change_data.value if change_data.action == :story_points
     end
-    [starting_count || story_point_count, ending_count || story_point_count]
+    starting_count || story_point_count
   end
 
   def guess_sprint_end_time sprint, sprint_data
