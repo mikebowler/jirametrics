@@ -53,7 +53,7 @@ describe Sprint do
 
     it 'should return empty list for no changes' do
       subject.cycletime = mock_cycletime_config stub_values: []
-      expect(subject.single_issue_change_data(issue, sprint.name)).to be_empty
+      expect(subject.single_issue_change_data(issue: issue, sprint: sprint)).to be_empty
     end
 
     it 'should return start and end only' do
@@ -62,7 +62,7 @@ describe Sprint do
       ]
       issue.changes << mock_change(field: 'Sprint', value: sprint.name, time: '2022-01-03')
       issue.changes << mock_change(field: 'Sprint', value: '', old_value: sprint.name, time: '2022-01-04')
-      expect(subject.single_issue_change_data(issue, sprint)).to eql [
+      expect(subject.single_issue_change_data(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: Time.parse('2022-01-03'), value: nil, issue: issue, story_points: nil
         ),
@@ -84,7 +84,7 @@ describe Sprint do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2022-01-05')
       issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
 
-      expect(subject.single_issue_change_data(issue, sprint)).to eql [
+      expect(subject.single_issue_change_data(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: Time.parse('2022-01-01'), value: nil, issue: issue, story_points: nil
         ),

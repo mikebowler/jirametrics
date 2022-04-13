@@ -23,6 +23,11 @@ end
 class SprintBurndown < ChartBase
   attr_accessor :use_story_points
 
+  def initialize
+    super()
+    @use_story_points = true
+  end
+
   def run
     sprints = sprints_in_time_range
     return nil if sprints.empty?
