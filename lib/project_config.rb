@@ -153,8 +153,10 @@ class ProjectConfig
       next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
 
       board_id = $1.to_i
+      timezone_offset = exporter.timezone_offset
+
       @sprints_by_board[board_id] = JSON.parse(File.read("#{target_path}#{file}"))['values'].collect do |json|
-        Sprint.new raw: json
+        Sprint.new raw: json, timezone_offset: timezone_offset
       end
     end
   end
