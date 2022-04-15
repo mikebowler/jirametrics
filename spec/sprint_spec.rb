@@ -13,7 +13,7 @@ describe Sprint do
       'endDate' => '2022-04-09T16:04:00.000Z',
       'originBoardId' => 2,
       'goal' => 'Do something'
-    })
+    }, timezone_offset: '+00:00')
   end
 
   it 'should return id' do
