@@ -66,15 +66,18 @@ class SprintBurndown < ChartBase
       value = nil
 
       if change.sprint?
-        currently_in_sprint = sprint_in_change_item(sprint, change)
-        if currently_in_sprint
+        # We can get two sprint changes in a row that tell us the same thing so we have to verify
+        # that something actually changed.
+        in_change_item = sprint_in_change_item(sprint, change)
+        if currently_in_sprint == false && in_change_item
           action = :enter_sprint
           ever_in_sprint = true
           value = story_points
-        else
+        elsif currently_in_sprint && in_change_item == false
           action = :leave_sprint
           value = -story_points
         end
+        currently_in_sprint = in_change_item
       elsif change.story_points? && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
         story_points = change.value&.to_f || 0.0
@@ -117,13 +120,24 @@ class SprintBurndown < ChartBase
       title: "Sprint started with #{story_points}pts"
     }
 
+    issues_currently_in_sprint = []
+
     sprint_data.each do |change_data|
+      case change_data.action
+      when :enter_sprint
+        issues_currently_in_sprint << change_data.issue.key
+      when :leave_sprint
+        issues_currently_in_sprint.delete change_data.issue.key
+      end
+
       next unless change_data.time >= sprint.start_time
       next if sprint.completed_time && change_data.time > sprint.completed_time
 
       message = nil
       case change_data.action
       when :story_points
+        next unless issues_currently_in_sprint.include? change_data.issue.key
+
         story_points += change_data.value
         old_story_points = change_data.story_points - change_data.value
         message = "Story points changed from #{old_story_points}pts to #{change_data.story_points}pts"
@@ -133,6 +147,7 @@ class SprintBurndown < ChartBase
       when :issue_stopped
         story_points -= change_data.story_points if change_data.story_points
         message = "Completed with #{change_data.story_points || 'no'} points"
+        issues_currently_in_sprint.delete change_data.issue.key
       when :leave_sprint
         story_points -= change_data.story_points if change_data.story_points
         message = "Removed from sprint with #{change_data.story_points || 'no'} points"
@@ -155,7 +170,7 @@ class SprintBurndown < ChartBase
       }
     end
 
-    data_set # .tap { |ds| puts '---'; ds.each { |data| puts data.inspect } }
+    data_set #.tap { |ds| puts '---', sprint.name, sprint.start_time; ds.each { |data| puts data.inspect } }
   end
 
   def starting_story_point_count data:, sprint:
