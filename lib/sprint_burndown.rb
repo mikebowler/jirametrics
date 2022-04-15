@@ -52,38 +52,36 @@ class SprintBurndown < ChartBase
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
-  def single_issue_change_data issue:, sprint:
-    story_points = nil
+  def single_issue_change_data_for_story_points issue:, sprint:
+    story_points = 0.0
     ever_in_sprint = false
+    currently_in_sprint = false
     change_data = []
 
-    # TODO: It's ugly that we have both stopped_time and issue_stopped time. Change to use a flag rather
-    # than clearing the time value.
-    started_time = cycletime.started_time(issue)
-    stopped_time = cycletime.stopped_time(issue)
-    issue_stopped_time = stopped_time
+    issue_completed_time = cycletime.stopped_time(issue)
+    completed_has_been_tracked = false
 
     issue.changes.each do |change|
       action = nil
       value = nil
 
-      if change.sprint? && change.value == sprint.name
+      if change.sprint? && sprint_in_change_item(sprint, change)
         action = :enter_sprint
         ever_in_sprint = true
+        currently_in_sprint = true
+        value = story_points
       elsif change.sprint? && change.old_value == sprint.name
         action = :leave_sprint
-      elsif change.story_points? && (issue_stopped_time.nil? || change.time < issue_stopped_time)
+        currently_in_sprint = false
+        value = -story_points
+      elsif change.story_points? && currently_in_sprint && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
-        story_points = change.value.to_f || 0.0
-        story_points = 1.0 unless use_story_points
+        story_points = change.value&.to_f || 0.0
         value = story_points - (change.old_value&.to_f || 0.0)
-      elsif started_time && change.time == started_time
-        started_time = nil
-        # action = :issue_started
-      elsif stopped_time && change.time == stopped_time
-        stopped_time = nil
+      elsif completed_has_been_tracked == false && change.time == issue_completed_time
+        completed_has_been_tracked = true
         action = :issue_stopped
-        story_points = 0.0
+        value = -story_points
       end
 
       next unless action
@@ -98,10 +96,14 @@ class SprintBurndown < ChartBase
     change_data
   end
 
+  def sprint_in_change_item sprint, change_item
+    change_item.raw['to'].split(/\s*,\s*/).any? { |id| id.to_i == sprint.id }
+  end
+
   def process_one_sprint sprint
     sprint_data = []
     issues.each do |issue|
-      sprint_data += single_issue_change_data(issue: issue, sprint: sprint)
+      sprint_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
     end
     sprint_data.sort_by!(&:time)
 
@@ -148,7 +150,7 @@ class SprintBurndown < ChartBase
       data_set << {
         y: story_points,
         x: chart_format(sprint.completed_time),
-        title: 'Last element'
+        title: "Sprint ended with #{story_points}pts unfinished"
       }
     end
 
