@@ -65,16 +65,17 @@ class SprintBurndown < ChartBase
       action = nil
       value = nil
 
-      if change.sprint? && sprint_in_change_item(sprint, change)
-        action = :enter_sprint
-        ever_in_sprint = true
-        currently_in_sprint = true
-        value = story_points
-      elsif change.sprint? && change.old_value == sprint.name
-        action = :leave_sprint
-        currently_in_sprint = false
-        value = -story_points
-      elsif change.story_points? && currently_in_sprint && (issue_completed_time.nil? || change.time < issue_completed_time)
+      if change.sprint?
+        currently_in_sprint = sprint_in_change_item(sprint, change)
+        if currently_in_sprint
+          action = :enter_sprint
+          ever_in_sprint = true
+          value = story_points
+        else
+          action = :leave_sprint
+          value = -story_points
+        end
+      elsif change.story_points? && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
         story_points = change.value&.to_f || 0.0
         value = story_points - (change.old_value&.to_f || 0.0)
@@ -154,20 +155,17 @@ class SprintBurndown < ChartBase
       }
     end
 
-    data_set
+    data_set # .tap { |ds| puts '---'; ds.each { |data| puts data.inspect } }
   end
 
   def starting_story_point_count data:, sprint:
-    # starting_count = nil
-
     story_point_count = 0.0
     data.each do |change_data|
       return story_point_count if change_data.time >= sprint.start_time
 
-      # starting_count = story_point_count if starting_count.nil? && change_data.time >= sprint.start_time
       story_point_count += change_data.value if change_data.action == :story_points
     end
-    starting_count || story_point_count
+    story_point_count
   end
 
   def guess_sprint_end_time sprint, sprint_data

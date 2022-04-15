@@ -195,7 +195,7 @@ class Downloader
 
       status_changed_jql =
         %(status changed DURING ("#{@start_date_in_query.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
-      segments << %(((status changed AND resolved = null) OR (#{status_changed_jql})))
+      segments << %(((status changed AND resolved = null) OR (#{status_changed_jql}) OR (Sprint is not EMPTY)))
     end
 
     return segments.join ' AND ' unless segments.empty?

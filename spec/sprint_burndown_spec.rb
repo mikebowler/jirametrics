@@ -60,8 +60,8 @@ describe Sprint do
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-02-01']
       ]
-      issue.changes << mock_change(field: 'Sprint', value: sprint.name, time: '2022-01-03')
-      issue.changes << mock_change(field: 'Sprint', value: '', old_value: sprint.name, time: '2022-01-04')
+      issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
+      issue.changes << mock_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(subject.single_issue_change_data_for_story_points(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: Time.parse('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
@@ -76,7 +76,7 @@ describe Sprint do
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      issue.changes << mock_change(field: 'Sprint', value: sprint.name, time: '2022-01-01')
+      issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.changes << mock_change(field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
       sprint.raw['startDate'] = '2021-01-03'
       issue.changes << mock_change(field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')

@@ -61,7 +61,7 @@ describe Downloader do
       download_config.rolling_date_count 90
       today = Time.parse('2021-08-01 00:00:00 +0000')
       expected = '((status changed AND resolved = null) OR ' \
-        '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")))'
+        '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
 
@@ -86,7 +86,7 @@ describe Downloader do
       download_config.rolling_date_count 90
       today = Time.parse('2021-08-01')
       expected = '((status changed AND resolved = null) OR ' \
-        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")))'
+        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
       expect(downloader.make_jql(today: today)).to eql expected
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
