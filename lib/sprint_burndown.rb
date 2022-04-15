@@ -158,11 +158,13 @@ class SprintBurndown < ChartBase
   end
 
   def starting_story_point_count data:, sprint:
-    starting_count = nil
+    # starting_count = nil
 
     story_point_count = 0.0
     data.each do |change_data|
-      starting_count = story_point_count if starting_count.nil? && change_data.time >= sprint.start_time
+      return story_point_count if change_data.time >= sprint.start_time
+
+      # starting_count = story_point_count if starting_count.nil? && change_data.time >= sprint.start_time
       story_point_count += change_data.value if change_data.action == :story_points
     end
     starting_count || story_point_count
