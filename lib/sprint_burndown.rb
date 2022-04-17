@@ -136,7 +136,7 @@ class SprintBurndown < ChartBase
         data_set << {
           y: story_points,
           x: chart_format(sprint.start_time),
-          title: "Sprint started with #{story_points}pts"
+          title: "Sprint started with #{story_points} points"
         }
         start_data_written = true
       end
@@ -160,11 +160,11 @@ class SprintBurndown < ChartBase
 
         story_points += change_data.value
         old_story_points = change_data.story_points - change_data.value
-        message = "Story points changed from #{old_story_points}pts to #{change_data.story_points}pts"
+        message = "Story points changed from #{old_story_points} points to #{change_data.story_points} points"
       when :enter_sprint
         message = "Added to sprint with #{change_data.story_points || 'no'} points"
       when :issue_stopped
-        story_points -= change_data.story_points if change_data.story_points
+        story_points -= change_data.story_points
         message = "Completed with #{change_data.story_points || 'no'} points"
         issues_currently_in_sprint.delete change_data.issue.key
       when :leave_sprint
@@ -185,7 +185,7 @@ class SprintBurndown < ChartBase
       data_set << {
         y: story_points,
         x: chart_format(sprint.start_time),
-        title: "Sprint started with #{story_points}pts"
+        title: "Sprint started with #{story_points} points"
       }
     end
 
@@ -193,7 +193,7 @@ class SprintBurndown < ChartBase
       data_set << {
         y: story_points,
         x: chart_format(sprint.completed_time),
-        title: "Sprint ended with #{story_points}pts unfinished"
+        title: "Sprint ended with #{story_points} points unfinished"
       }
     end
 
