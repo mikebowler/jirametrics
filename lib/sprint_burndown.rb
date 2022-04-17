@@ -31,34 +31,55 @@ class SprintIssueChangeData
 end
 
 class SprintBurndown < ChartBase
-  attr_accessor :use_story_points
+  def options= arg
+    @use_story_points = %i[points_only points_and_count].include? arg
+    @use_story_counts = %i[count_only points_and_count].include? arg
 
-  def initialize
-    super()
-    @use_story_points = true
+    raise "One of points or count must be set: #{arg}" if @use_story_count == false && @use_story_points == false
   end
 
   def run
     sprints = sprints_in_time_range
     return nil if sprints.empty?
 
-    data_sets = []
-    sprints.each_with_index do |sprint, index|
-      color = %w[blue orange green red brown][index % 5]
-      label = sprint.name
-      data_sets << {
-        label: label,
-        data: process_one_sprint(sprint),
-        fill: false,
-        showLine: true,
-        borderColor: color,
-        backgroundColor: color,
-        stepped: true,
-        pointStyle: %w[rect circle] # First dot is visually different from the rest
-      }
+    change_data_by_sprint = {}
+    sprints.each do |sprint|
+      change_data = []
+      issues.each do |issue|
+        change_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
+      end
+      change_data_by_sprint[sprint] = change_data.sort_by(&:time)
     end
 
-    render(binding, __FILE__)
+    result = String.new
+    result << '<h1>Sprint Burndowns</h1>'
+
+#
+    [
+      [:data_set_by_story_points, 'Story Points'],
+      [:data_set_by_story_counts, 'Story Count']
+    ].each do |data_method, y_axis_title|
+      data_sets = []
+      sprints.each_with_index do |sprint, index|
+        color = %w[blue orange green red brown][index % 5]
+        label = sprint.name
+        data = send(data_method, **{ sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint] })
+        data_sets << {
+          label: label,
+          data: data,
+          fill: false,
+          showLine: true,
+          borderColor: color,
+          backgroundColor: color,
+          stepped: true,
+          pointStyle: %w[rect circle] # First dot is visually different from the rest
+        }
+      end
+
+      result << render(binding, __FILE__)
+    end
+
+    result
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
@@ -114,17 +135,7 @@ class SprintBurndown < ChartBase
     change_item.raw['to'].split(/\s*,\s*/).any? { |id| id.to_i == sprint.id }
   end
 
-  def process_one_sprint sprint
-    change_data = []
-    issues.each do |issue|
-      change_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
-    end
-    change_data.sort_by!(&:time)
-
-    data_sets_for_sprint sprint: sprint, change_data_for_sprint: change_data
-  end
-
-  def data_sets_for_sprint sprint:, change_data_for_sprint:
+  def data_set_by_story_points sprint:, change_data_for_sprint:
     story_points = 0.0
     start_data_written = false
     data_set = []
@@ -199,5 +210,11 @@ class SprintBurndown < ChartBase
 
     data_set
   end
+
+  def data_set_by_story_counts sprint:, change_data_for_sprint:
+    data_set = []
+    data_set
+  end
+
 end
 

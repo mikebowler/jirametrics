@@ -76,13 +76,13 @@ describe Sprint do
     end
   end
 
-  context 'data_sets_for_sprint' do
+  context 'data_set_by_story_points' do
     let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
     let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 
     it 'should handle an empty active sprint' do
       change_data = []
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' }
       ]
     end
@@ -90,7 +90,7 @@ describe Sprint do
     it 'should handle an empty completed sprint' do
       change_data = []
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0 points unfinished' }
       ]
@@ -126,7 +126,7 @@ describe Sprint do
           time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 4.0
         )
       ]
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0 points to 5.0 points' },
         { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' }
@@ -151,7 +151,7 @@ describe Sprint do
           time: to_time('2022-04-11'), action: :story_points, value: -2.0, issue: issue1, story_points: 3.0
         )
       ]
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0 points unfinished' }
       ]
@@ -175,7 +175,7 @@ describe Sprint do
           time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, story_points: 5.0
         )
       ]
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Removed from sprint with 5.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
@@ -200,7 +200,7 @@ describe Sprint do
           time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
         )
       ]
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 5.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
@@ -225,7 +225,7 @@ describe Sprint do
           time: to_time('2022-03-27'), action: :issue_stopped, value: 0.0, issue: issue1, story_points: 0.0
         )
       ]
-      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+      expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 7.0, title: 'Sprint started with 7.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 0.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
@@ -239,7 +239,7 @@ describe Sprint do
           time: to_time('2022-03-28'), action: :illegal_action, value: 0.0, issue: issue1, story_points: 0.0
         )
       ]
-      expect { subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint) }.to(
+      expect { subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint) }.to(
         raise_error 'Unexpected action: illegal_action'
       )
     end
