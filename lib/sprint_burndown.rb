@@ -105,29 +105,39 @@ class SprintBurndown < ChartBase
   end
 
   def process_one_sprint sprint
-    sprint_data = []
+    change_data = []
     issues.each do |issue|
-      sprint_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
+      change_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
     end
-    sprint_data.sort_by!(&:time)
+    change_data.sort_by!(&:time)
 
-    story_points = starting_story_point_count data: sprint_data, sprint: sprint
+    data_sets_for_sprint sprint: sprint, change_data_for_sprint: change_data
+  end
 
+  def data_sets_for_sprint sprint:, change_data_for_sprint:
+    story_points = 0.0
+    start_data_written = false
     data_set = []
-    data_set << {
-      y: story_points,
-      x: chart_format(sprint.start_time),
-      title: "Sprint started with #{story_points}pts"
-    }
 
     issues_currently_in_sprint = []
 
-    sprint_data.each do |change_data|
+    change_data_for_sprint.each do |change_data|
       case change_data.action
       when :enter_sprint
         issues_currently_in_sprint << change_data.issue.key
+        story_points += change_data.story_points
       when :leave_sprint
         issues_currently_in_sprint.delete change_data.issue.key
+        story_points -= change_data.story_points
+      end
+
+      if start_data_written == false && change_data.time >= sprint.start_time
+        data_set << {
+          y: story_points,
+          x: chart_format(sprint.start_time),
+          title: "Sprint started with #{story_points}pts"
+        }
+        start_data_written = true
       end
 
       next unless change_data.time >= sprint.start_time
@@ -142,14 +152,12 @@ class SprintBurndown < ChartBase
         old_story_points = change_data.story_points - change_data.value
         message = "Story points changed from #{old_story_points}pts to #{change_data.story_points}pts"
       when :enter_sprint
-        story_points += change_data.story_points if change_data.story_points
         message = "Added to sprint with #{change_data.story_points || 'no'} points"
       when :issue_stopped
         story_points -= change_data.story_points if change_data.story_points
         message = "Completed with #{change_data.story_points || 'no'} points"
         issues_currently_in_sprint.delete change_data.issue.key
       when :leave_sprint
-        story_points -= change_data.story_points if change_data.story_points
         message = "Removed from sprint with #{change_data.story_points || 'no'} points"
       else
         raise "Unexpected action: #{change_data.action}"
@@ -162,6 +170,15 @@ class SprintBurndown < ChartBase
       }
     end
 
+    unless start_data_written
+      # There was nothing that triggered us to write the sprint started block so do it now.
+      data_set << {
+        y: story_points,
+        x: chart_format(sprint.start_time),
+        title: "Sprint started with #{story_points}pts"
+      }
+    end
+
     if sprint.completed_time
       data_set << {
         y: story_points,
@@ -171,16 +188,6 @@ class SprintBurndown < ChartBase
     end
 
     data_set #.tap { |ds| puts '---', sprint.name, sprint.start_time; ds.each { |data| puts data.inspect } }
-  end
-
-  def starting_story_point_count data:, sprint:
-    story_point_count = 0.0
-    data.each do |change_data|
-      return story_point_count if change_data.time >= sprint.start_time
-
-      story_point_count += change_data.value if change_data.action == :story_points
-    end
-    story_point_count
   end
 
   def guess_sprint_end_time sprint, sprint_data

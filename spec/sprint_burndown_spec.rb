@@ -3,7 +3,13 @@
 require './spec/spec_helper'
 
 describe Sprint do
-  let(:subject) { SprintBurndown.new }
+  let(:subject) do
+    SprintBurndown.new.tap do |chart|
+      # Larger than the sprint
+      chart.date_range = Date.parse('2022-03-01')..Date.parse('2022-04-11')
+    end
+  end
+
   let(:sprint) do
     Sprint.new(raw: {
       'id' => 1,
@@ -97,6 +103,85 @@ describe Sprint do
         SprintIssueChangeData.new(
           action: :issue_stopped, time: Time.parse('2022-01-05'), value: -4.0, issue: issue, story_points: 4.0
         )
+      ]
+    end
+  end
+
+  context 'data_sets_for_sprint' do
+    let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
+
+    it 'should handle an empty active sprint' do
+      change_data = []
+      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0pts' }
+      ]
+    end
+
+    it 'should handle an empty completed sprint' do
+      change_data = []
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0pts' },
+        { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0pts unfinished' }
+      ]
+    end
+
+    it 'should handle complex case with active sprint' do
+      change_data = [
+        # Sprint start is 2022-03-26
+
+        SprintIssueChangeData.new( # Has points assigned but not in sprint at start
+          time: to_time('2022-03-23'), action: :story_points, value: 2.0, issue: issue2, story_points: 2.0
+        ),
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :story_points, value: 7.0, issue: issue1, story_points: 12.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 12.0
+        ),
+
+        # sprint starts here
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 2.0
+        )
+      ]
+      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0pts' },
+        { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0pts to 5.0pts' },
+        { x: '2022-03-28T00:00:00+0000', y: 19.0, title: 'SP-2 Added to sprint with 2.0 points' }
+      ]
+    end
+
+    it 'should ignore changes after sprint end' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        # Sprint start is 2022-03-26, end is 2022-04-10
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+
+        # sprint starts and then ends here
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-04-11'), action: :story_points, value: -2.0, issue: issue1, story_points: 3.0
+        )
+      ]
+      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0pts' },
+        { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0pts unfinished' }
       ]
     end
   end
