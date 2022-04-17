@@ -18,6 +18,16 @@ class SprintIssueChangeData
   def state
     instance_variables.map { |variable| instance_variable_get variable }
   end
+
+  def inspect
+    result = String.new
+    result << 'SprintIssueChangeData('
+    result << instance_variables.collect do |variable|
+      "#{variable}=#{instance_variable_get(variable).inspect}"
+    end.join(', ')
+    result << ')'
+    result
+  end
 end
 
 class SprintBurndown < ChartBase
@@ -122,15 +132,6 @@ class SprintBurndown < ChartBase
     issues_currently_in_sprint = []
 
     change_data_for_sprint.each do |change_data|
-      case change_data.action
-      when :enter_sprint
-        issues_currently_in_sprint << change_data.issue.key
-        story_points += change_data.story_points
-      when :leave_sprint
-        issues_currently_in_sprint.delete change_data.issue.key
-        story_points -= change_data.story_points
-      end
-
       if start_data_written == false && change_data.time >= sprint.start_time
         data_set << {
           y: story_points,
@@ -138,6 +139,15 @@ class SprintBurndown < ChartBase
           title: "Sprint started with #{story_points}pts"
         }
         start_data_written = true
+      end
+
+      case change_data.action
+      when :enter_sprint
+        issues_currently_in_sprint << change_data.issue.key
+        story_points += change_data.story_points
+      when :leave_sprint
+        issues_currently_in_sprint.delete change_data.issue.key
+        story_points -= change_data.story_points
       end
 
       next unless change_data.time >= sprint.start_time
@@ -188,31 +198,6 @@ class SprintBurndown < ChartBase
     end
 
     data_set #.tap { |ds| puts '---', sprint.name, sprint.start_time; ds.each { |data| puts data.inspect } }
-  end
-
-  def guess_sprint_end_time sprint, sprint_data
-    # If the sprint is closed then we'll have an actual completed time. If it's still active then
-    # in theory we should be using the endTime but the sprint may still be open past the time
-    # that Jira thought it should have closed. So if we're past that defined end time then use
-    # the time of the most recent activity because when the sprint is finally closed, the end
-    # will certainly be later than that.
-    #
-    # Of course there's no guarantee that the sprint will have a most recent change as it may have
-    # just been created. Sigh.
-    time = sprint.completed_time
-    return time if time
-
-    most_recent_activity = sprint_data[-1]&.time
-    anticipated_sprint_end = sprint.end_time
-
-    # The sprint has been created but nothings been done with it.
-    return anticipated_sprint_end if most_recent_activity.nil?
-
-    if most_recent_activity > anticipated_sprint_end
-      most_recent_activity
-    else
-      anticipated_sprint_end
-    end
   end
 end
 

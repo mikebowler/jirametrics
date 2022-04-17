@@ -23,37 +23,6 @@ describe Sprint do
     }, timezone_offset: '+00:00')
   end
 
-  context 'guess_sprint_end_time' do
-    it 'should return completed when provided' do
-      sprint_data = []
-      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
-      expect(subject.guess_sprint_end_time(sprint, sprint_data)).to eq Time.parse('2022-04-10T00:00:00z')
-    end
-
-    it 'should return end when there has been no activity in the sprint' do
-      sprint_data = []
-      expect(subject.guess_sprint_end_time(sprint, sprint_data)).to eq Time.parse('2022-04-09T00:00:00z')
-    end
-
-    it 'should return end when end is older than any activity' do
-      sprint_data = [
-        SprintIssueChangeData.new(
-          time: Time.parse('2022-04-09T00:00:00z'), action: :foo, value: nil, issue: nil, story_points: nil
-        )
-      ]
-      expect(subject.guess_sprint_end_time(sprint, sprint_data)).to eq Time.parse('2022-04-09T00:00:00z')
-    end
-
-    it 'should return oldest activity time when thats older than end' do
-      sprint_data = [
-        SprintIssueChangeData.new(
-          time: Time.parse('2022-10-09T00:00:00z'), action: :foo, value: nil, issue: nil, story_points: nil
-        )
-      ]
-      expect(subject.guess_sprint_end_time(sprint, sprint_data)).to eq Time.parse('2022-10-09T00:00:00z')
-    end
-  end
-
   context 'single_issue_change_data_for_story_points' do
     let(:issue) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
 
@@ -182,6 +151,31 @@ describe Sprint do
       expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0pts' },
         { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0pts unfinished' }
+      ]
+    end
+
+    it 'should handle an issue being removed mid-sprint' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        # Sprint start is 2022-03-26, end is 2022-04-10
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+        ),
+
+        # sprint starts
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, story_points: 5.0
+        )
+      ]
+      expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0pts' },
+        { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Removed from sprint with 5.0 points' },
+        { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0pts unfinished' }
       ]
     end
   end
