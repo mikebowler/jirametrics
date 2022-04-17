@@ -119,14 +119,17 @@ describe Sprint do
         SprintIssueChangeData.new(
           time: to_time('2022-03-27'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
         ),
+        SprintIssueChangeData.new( # Should be ignored because it's in sprint yet
+          time: to_time('2022-03-27'), action: :story_points, value: 2.0, issue: issue2, story_points: 4.0
+        ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 2.0
+          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 4.0
         )
       ]
       expect(subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0 points to 5.0 points' },
-        { x: '2022-03-28T00:00:00+0000', y: 19.0, title: 'SP-2 Added to sprint with 2.0 points' }
+        { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' }
       ]
     end
 
@@ -227,6 +230,18 @@ describe Sprint do
         { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 0.0 points' },
         { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
       ]
+    end
+
+    it 'should raise error if an illegal action is passed in' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-28'), action: :illegal_action, value: 0.0, issue: issue1, story_points: 0.0
+        )
+      ]
+      expect { subject.data_sets_for_sprint(change_data_for_sprint: change_data, sprint: sprint) }.to(
+        raise_error 'Unexpected action: illegal_action'
+      )
     end
   end
 end

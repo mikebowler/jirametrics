@@ -197,7 +197,7 @@ class SprintBurndown < ChartBase
       }
     end
 
-    data_set #.tap { |ds| puts '---', sprint.name, sprint.start_time; ds.each { |data| puts data.inspect } }
+    data_set
   end
 end
 
