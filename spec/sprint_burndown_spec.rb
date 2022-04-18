@@ -244,4 +244,112 @@ describe Sprint do
       )
     end
   end
+
+  context 'data_set_by_story_counts' do
+    let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
+
+    it 'should handle an empty active sprint' do
+      change_data = []
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' }
+      ]
+    end
+
+    it 'should handle an empty completed sprint' do
+      change_data = []
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
+        { x: '2022-04-10T00:00:00+0000', y: 0, title: 'Sprint ended with 0 stories unfinished' }
+      ]
+    end
+
+    it 'should handle complex case with active sprint' do
+      change_data = [
+        # Sprint start is 2022-03-26
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 12.0
+        ),
+
+        # sprint starts here
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 4.0
+        )
+      ]
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 1.0, title: 'Sprint started with 1 stories' },
+        { x: '2022-03-28T00:00:00+0000', y: 2.0, title: 'SP-2 Added to sprint' }
+      ]
+    end
+
+    xit 'should ignore changes after sprint end' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        # Sprint start is 2022-03-26, end is 2022-04-10
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+
+        # sprint starts and then ends here
+      ]
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
+        { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0 points unfinished' }
+      ]
+    end
+
+    it 'should handle an issue being removed mid-sprint' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        # Sprint start is 2022-03-26, end is 2022-04-10
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :enter_sprint, value: nil, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: nil, issue: issue2, story_points: 7.0
+        ),
+
+        # sprint starts
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :leave_sprint, value: nil, issue: issue1, story_points: 5.0
+        )
+      ]
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
+        { x: '2022-03-27T00:00:00+0000', y: 1, title: 'SP-1 Removed from sprint' },
+        { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
+      ]
+    end
+
+    it 'should handle an issue being completed mid-sprint' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        # Sprint start is 2022-03-26, end is 2022-04-10
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+        ),
+
+        # sprint starts
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
+        )
+      ]
+      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+        { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
+        { x: '2022-03-27T00:00:00+0000', y: 1, title: 'SP-1 Completed' },
+        { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
+      ]
+    end
+  end
 end

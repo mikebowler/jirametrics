@@ -54,7 +54,6 @@ class SprintBurndown < ChartBase
     result = String.new
     result << '<h1>Sprint Burndowns</h1>'
 
-#
     [
       [:data_set_by_story_points, 'Story Points'],
       [:data_set_by_story_counts, 'Story Count']
@@ -213,8 +212,66 @@ class SprintBurndown < ChartBase
 
   def data_set_by_story_counts sprint:, change_data_for_sprint:
     data_set = []
+    issues_currently_in_sprint = []
+    start_data_written = false
+
+    change_data_for_sprint.each do |change_data|
+      if start_data_written == false && change_data.time >= sprint.start_time
+        data_set << {
+          y: issues_currently_in_sprint.size,
+          x: chart_format(sprint.start_time),
+          title: "Sprint started with #{issues_currently_in_sprint.size} stories"
+        }
+        start_data_written = true
+      end
+
+      case change_data.action
+      when :enter_sprint
+        issues_currently_in_sprint << change_data.issue.key
+      when :leave_sprint, :issue_stopped
+        issues_currently_in_sprint.delete change_data.issue.key
+      end
+
+      next unless change_data.time >= sprint.start_time
+      next if sprint.completed_time && change_data.time > sprint.completed_time
+
+      message = nil
+      case change_data.action
+      when :enter_sprint
+        message = 'Added to sprint'
+      when :issue_stopped
+        message = 'Completed'
+      when :leave_sprint
+        message = 'Removed from sprint'
+      end
+
+      if message
+        data_set << {
+          y: issues_currently_in_sprint.size,
+          x: chart_format(change_data.time),
+          title: "#{change_data.issue.key} #{message}"
+        }
+      end
+    end
+
+    unless start_data_written
+      # There was nothing that triggered us to write the sprint started block so do it now.
+      data_set << {
+        y: issues_currently_in_sprint.size,
+        x: chart_format(sprint.start_time),
+        title: "Sprint started with #{issues_currently_in_sprint.size || 'no'} stories"
+      }
+    end
+
+    if sprint.completed_time
+      data_set << {
+        y: issues_currently_in_sprint.size,
+        x: chart_format(sprint.completed_time),
+        title: "Sprint ended with #{issues_currently_in_sprint.size} stories unfinished"
+      }
+    end
+
     data_set
   end
-
 end
 
