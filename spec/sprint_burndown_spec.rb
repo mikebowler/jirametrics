@@ -23,12 +23,12 @@ describe Sprint do
     }, timezone_offset: '+00:00')
   end
 
-  context 'single_issue_change_data_for_story_points' do
+  context 'changes_for_one_issue' do
     let(:issue) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
 
     it 'should return empty list for no changes' do
       subject.cycletime = mock_cycletime_config stub_values: []
-      expect(subject.single_issue_change_data_for_story_points(issue: issue, sprint: sprint)).to be_empty
+      expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
     it 'should return start and end only' do
@@ -37,7 +37,7 @@ describe Sprint do
       ]
       issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
       issue.changes << mock_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
-      expect(subject.single_issue_change_data_for_story_points(issue: issue, sprint: sprint)).to eql [
+      expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: Time.parse('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
         ),
@@ -59,7 +59,7 @@ describe Sprint do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2022-01-05')
       issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
 
-      expect(subject.single_issue_change_data_for_story_points(issue: issue, sprint: sprint)).to eql [
+      expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: Time.parse('2022-01-01'), value: 0.0, issue: issue, story_points: 0.0
         ),
@@ -310,7 +310,7 @@ describe Sprint do
       ]
     end
 
-    it 'should handle an issue being completed mid-sprint' do
+    it 'should handle an issue being completed mid-sprint and should ignore one after sprint end' do
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
       change_data = [
         # Sprint start is 2022-03-26, end is 2022-04-10
@@ -324,13 +324,23 @@ describe Sprint do
 
         # sprint starts
 
+        SprintIssueChangeData.new( # This should be ignored
+          time: to_time('2022-03-27'), action: :story_points, value: 4.0, issue: issue1, story_points: 9.0
+        ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-28'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
+        ),
+
+        # sprint ends
+
+        SprintIssueChangeData.new(
+          time: to_time('2022-04-11'), action: :issue_stopped, value: -7.0, issue: issue1, story_points: 7.0
         )
+
       ]
       expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
-        { x: '2022-03-27T00:00:00+0000', y: 1, title: 'SP-1 Completed' },
+        { x: '2022-03-28T00:00:00+0000', y: 1, title: 'SP-1 Completed' },
         { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
       ]
     end

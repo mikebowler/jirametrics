@@ -46,7 +46,7 @@ class SprintBurndown < ChartBase
     sprints.each do |sprint|
       change_data = []
       issues.each do |issue|
-        change_data += single_issue_change_data_for_story_points(issue: issue, sprint: sprint)
+        change_data += changes_for_one_issue(issue: issue, sprint: sprint)
       end
       change_data_by_sprint[sprint] = change_data.sort_by(&:time)
     end
@@ -82,7 +82,7 @@ class SprintBurndown < ChartBase
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
-  def single_issue_change_data_for_story_points issue:, sprint:
+  def changes_for_one_issue issue:, sprint:
     story_points = 0.0
     ever_in_sprint = false
     currently_in_sprint = false
