@@ -151,6 +151,8 @@ class SprintBurndown < ChartBase
         start_data_written = true
       end
 
+      break if sprint.completed_time && change_data.time > sprint.completed_time
+
       case change_data.action
       when :enter_sprint
         issues_currently_in_sprint << change_data.issue.key
@@ -161,7 +163,6 @@ class SprintBurndown < ChartBase
       end
 
       next unless change_data.time >= sprint.start_time
-      next if sprint.completed_time && change_data.time > sprint.completed_time
 
       message = nil
       case change_data.action
