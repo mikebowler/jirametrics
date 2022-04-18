@@ -285,23 +285,6 @@ describe Sprint do
       ]
     end
 
-    xit 'should ignore changes after sprint end' do
-      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
-      change_data = [
-        # Sprint start is 2022-03-26, end is 2022-04-10
-
-        SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
-        ),
-
-        # sprint starts and then ends here
-      ]
-      expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0 points unfinished' }
-      ]
-    end
-
     it 'should handle an issue being removed mid-sprint' do
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
       change_data = [
