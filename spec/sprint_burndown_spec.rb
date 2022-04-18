@@ -23,6 +23,27 @@ describe Sprint do
     }, timezone_offset: '+00:00')
   end
 
+  context 'options' do
+    it 'should handle points_only' do
+      subject.options = :points_only
+      expect([subject.use_story_points, subject.use_story_counts]).to eq([true, false])
+    end
+
+    it 'should handle counts_only' do
+      subject.options = :counts_only
+      expect([subject.use_story_points, subject.use_story_counts]).to eq([false, true])
+    end
+
+    it 'should handle points_and_counts' do
+      subject.options = :points_and_counts
+      expect([subject.use_story_points, subject.use_story_counts]).to eq([true, true])
+    end
+
+    it 'should handle neither' do
+      expect { subject.options = :foo }.to raise_error 'Unexpected option: foo'
+    end
+  end
+
   context 'changes_for_one_issue' do
     let(:issue) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
 

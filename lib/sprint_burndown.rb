@@ -1,41 +1,22 @@
 # frozen_string_literal: true
 
-class SprintIssueChangeData
-  attr_reader :time, :action, :value, :issue, :story_points
-
-  def initialize time:, action:, value:, issue:, story_points:
-    @time = time
-    @action = action
-    @value = value
-    @issue = issue
-    @story_points = story_points
-  end
-
-  def eql?(other)
-    (other.class == self.class) && (other.state == state)
-  end
-
-  def state
-    instance_variables.map { |variable| instance_variable_get variable }
-  end
-
-  def inspect
-    result = String.new
-    result << 'SprintIssueChangeData('
-    result << instance_variables.collect do |variable|
-      "#{variable}=#{instance_variable_get(variable).inspect}"
-    end.join(', ')
-    result << ')'
-    result
-  end
-end
-
 class SprintBurndown < ChartBase
-  def options= arg
-    @use_story_points = %i[points_only points_and_count].include? arg
-    @use_story_counts = %i[count_only points_and_count].include? arg
+  attr_reader :use_story_points, :use_story_counts
 
-    raise "One of points or count must be set: #{arg}" if @use_story_count == false && @use_story_points == false
+  def options= arg
+    case arg
+    when :points_only
+      @use_story_points = true
+      @use_story_counts = false
+    when :counts_only
+      @use_story_points = false
+      @use_story_counts = true
+    when :points_and_counts
+      @use_story_points = true
+      @use_story_counts = true
+    else
+      raise "Unexpected option: #{arg}"
+    end
   end
 
   def run
