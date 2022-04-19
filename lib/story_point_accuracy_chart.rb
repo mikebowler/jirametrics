@@ -4,10 +4,14 @@ class StoryPointAccuracyChart < ChartBase
 
   def run
     data_sets = []
+
+    data = scan_issues
+    return nil if data.empty?
+
     color = 'blue'
     data_sets << {
       'label' => 'foo',
-      'data' => do_it,
+      'data' => data,
       'fill' => false,
       'showLine' => false,
       'backgroundColor' => color
@@ -15,7 +19,7 @@ class StoryPointAccuracyChart < ChartBase
     render(binding, __FILE__)
   end
 
-  def do_it
+  def scan_issues
     issues.collect do |issue|
       start_time = cycletime.started_time(issue)
       stop_time = cycletime.stopped_time(issue)
@@ -36,11 +40,8 @@ class StoryPointAccuracyChart < ChartBase
   end
 
   def story_points_at issue:, start_time:
-    puts issue.key
     story_points = nil
     issue.changes.each do |change|
-      # puts story_points
-      puts change.inspect
       return story_points if change.time >= start_time
 
       story_points = change.value if change.story_points?
