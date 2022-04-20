@@ -10,7 +10,7 @@ class StoryPointAccuracyChart < ChartBase
 
     color = 'blue'
     data_sets << {
-      'label' => 'foo',
+      'label' => 'Issues',
       'data' => data,
       'fill' => false,
       'showLine' => false,
