@@ -34,7 +34,7 @@ class StoryPointAccuracyChart < ChartBase
       {
         'x' => cycle_time,
         'y' => estimate,
-        'title' => ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
+        'title' => ["#{issue.key} : #{issue.summary} (#{estimate}pts, #{label_days(cycle_time)})"]
       }
     end.compact
   end
