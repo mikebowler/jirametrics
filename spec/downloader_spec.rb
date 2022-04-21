@@ -91,5 +91,10 @@ describe Downloader do
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
+
+    it 'should provide a helpful error if no reasonable filter criteria are set' do
+      download_config.rolling_date_count 90
+      expect { downloader.make_jql }.to raise_error 'At least one of project_name, filter_name or jql must be specified'
+    end
   end
 end

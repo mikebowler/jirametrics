@@ -186,6 +186,11 @@ class Downloader
     segments << @download_config.jql unless @download_config.jql.nil?
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
+
+    if segments.empty?
+      raise 'Couldn\'t make JQL because no possible inputs were set. Specify project_key or filter_name.'
+    end
+
     unless @download_config.rolling_date_count.nil?
       @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date
 
@@ -199,7 +204,5 @@ class Downloader
     end
 
     return segments.join ' AND ' unless segments.empty?
-
-    raise 'Couldn\'t make JQL because no possible inputs were set. Specify project_key or filter_name.'
   end
 end
