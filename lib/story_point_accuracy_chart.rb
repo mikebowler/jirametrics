@@ -29,11 +29,11 @@ class StoryPointAccuracyChart < ChartBase
       estimate = story_points_at issue: issue, start_time: start_time
       cycle_time = (stop_time.to_date - start_time.to_date).to_i + 1
 
-      next unless estimate
+      next if estimate.nil? || estimate.empty?
 
       {
         'x' => cycle_time,
-        'y' => estimate,
+        'y' => estimate.to_f,
         'title' => ["#{issue.key} : #{issue.summary} (#{estimate}pts, #{label_days(cycle_time)})"]
       }
     end.compact
