@@ -59,8 +59,9 @@ describe Downloader do
 
     it 'makes from project and rolling date count' do
       download_config.rolling_date_count 90
+      download_config.project_key 'SP'
       today = Time.parse('2021-08-01 00:00:00 +0000')
-      expected = '((status changed AND resolved = null) OR ' \
+      expected = 'project="SP" AND ((status changed AND resolved = null) OR ' \
         '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
@@ -75,17 +76,14 @@ describe Downloader do
       expect(downloader.make_jql).to eql 'project=foo'
     end
 
-    it 'throws exception when everything nil' do
-      expect { downloader.make_jql }.to raise_error(/Couldn't make JQL/)
-    end
-
     it 'should only pull deltas if we have a previous download' do
       downloader.metadata.clear
       downloader.metadata['date_end'] = Date.parse('2021-07-20')
 
       download_config.rolling_date_count 90
+      download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
-      expected = '((status changed AND resolved = null) OR ' \
+      expected = 'project="SP" AND ((status changed AND resolved = null) OR ' \
         '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
       expect(downloader.make_jql(today: today)).to eql expected
 
@@ -94,7 +92,7 @@ describe Downloader do
 
     it 'should provide a helpful error if no reasonable filter criteria are set' do
       download_config.rolling_date_count 90
-      expect { downloader.make_jql }.to raise_error 'At least one of project_name, filter_name or jql must be specified'
+      expect { downloader.make_jql }.to raise_error 'At least one of project_key, filter_name or jql must be specified'
     end
   end
 end

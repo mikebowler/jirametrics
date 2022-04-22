@@ -188,7 +188,7 @@ class Downloader
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
 
     if segments.empty?
-      raise 'Couldn\'t make JQL because no possible inputs were set. Specify project_key or filter_name.'
+      raise 'At least one of project_key, filter_name or jql must be specified'
     end
 
     unless @download_config.rolling_date_count.nil?
