@@ -20,15 +20,19 @@ class Issue
     @timezone_offset = timezone_offset
     @changes = []
 
-    if @raw['changelog'].nil?
-      raise "No changelog found in issue #{@raw['key']}. This is likely because when we pulled the data" \
-      ' from Jira, we didn\'t specify expand=changelog. Without that changelog, nothing else is going to' \
-      ' work so stopping now.'
-    end
+    # if @raw['changelog'].nil?
+    #   raise "No changelog found in issue #{@raw['key']}. This is likely because when we pulled the data" \
+    #   ' from Jira, we didn\'t specify expand=changelog. Without that changelog, nothing else is going to' \
+    #   ' work so stopping now.'
+    # end
+
+    return unless @raw['changelog']
 
     @raw['changelog']['histories'].each do |history|
       created = parse_time(history['created'])
-      author = history['author']['displayName'] || history['author']['name']
+
+      # It should be impossible to not have an author but we've seen it in production
+      author = history['author']&.[]('displayName') || history['author']&.[]('name') || 'Unknown author'
       history['items'].each do |item|
         @changes << ChangeItem.new(raw: item, time: created, author: author)
       end
@@ -282,13 +286,13 @@ class Issue
     @raw['fields']['issuelinks'].collect do |issue_link|
       if issue_link['inwardIssue']
         IssueLink.new(
-          to: LinkedIssue.new(raw: issue_link['inwardIssue']),
+          to: Issue.new(raw: issue_link['inwardIssue']),
           from: self,
           label: issue_link['type']['inward']
         )
       elsif issue_link['outwardIssue']
         IssueLink.new(
-          to: LinkedIssue.new(raw: issue_link['outwardIssue']),
+          to: Issue.new(raw: issue_link['outwardIssue']),
           from: self,
           label: issue_link['type']['outward']
         )
