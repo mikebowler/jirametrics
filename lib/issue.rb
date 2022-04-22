@@ -2,6 +2,16 @@
 
 require 'time'
 
+class IssueLink
+  attr_accessor :from, :to, :label
+
+  def initialize from:, to:, label:
+    @from = from
+    @to = to
+    @label = label
+  end
+end
+
 class Issue
   attr_reader :changes, :raw
 
@@ -266,5 +276,23 @@ class Issue
     return true if date < updated_date
 
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
+  end
+
+  def issue_links
+    @raw['fields']['issuelinks'].collect do |issue_link|
+      if issue_link['inwardIssue']
+        IssueLink.new(
+          to: LinkedIssue.new(raw: issue_link['inwardIssue']),
+          from: self,
+          label: issue_link['type']['inward']
+        )
+      elsif issue_link['outwardIssue']
+        IssueLink.new(
+          to: LinkedIssue.new(raw: issue_link['outwardIssue']),
+          from: self,
+          label: issue_link['type']['outward']
+        )
+      end
+    end.compact
   end
 end

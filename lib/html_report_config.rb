@@ -110,6 +110,10 @@ class HtmlReportConfig
     execute_chart DiscardedChangesTable.new(@original_issue_times || {})
   end
 
+  def dependency_chart
+    execute_chart DependencyChart.new
+  end
+
   def execute_chart chart, &after_init_block
     project_config = @file_config.project_config
 
