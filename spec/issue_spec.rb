@@ -114,11 +114,6 @@ describe Issue do
     ]
   end
 
-  it "should give a reasonable error if the changelog isn't present" do
-    raw = {  'key' => 'SP-1' }
-    expect { Issue.new raw: raw }.to raise_error(/^No changelog found in issue/)
-  end
-
   it 'first time in status' do
     issue = load_issue 'SP-10'
     expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29 18:06:55 +0000'
@@ -460,28 +455,58 @@ describe Issue do
     end
   end
 
-  # context 'story_point_estimate_when_entering_sprint' do
-  #   let(:issue) { empty_issue created: '2021-10-01T00:00:00+00:00' }
-  #   let(:sprint) do
-  #     Sprint.new raw: {
-  #       id: 1,
-  #       self: 'https://improvingflow.atlassian.net/rest/agile/1.0/sprint/1',
-  #       state: 'active',
-  #       name: 'Scrum Sprint 1',
-  #       startDate: '2022-03-26T16:04:09.679Z',
-  #       endDate: '2022-04-09T16:04:00.000Z',
-  #       originBoardId: 2,
-  #       goal: ''
-  #     }
-  #   end
+  context 'created from a linked issue' do
+    let(:issue) do
+      Issue.new raw: {
+        'id' => '10019',
+        'key' => 'SP-12',
+        'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/issue/10019',
+        'fields' => {
+          'summary' => 'Report of all events',
+          'status' => {
+            'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/status/10002',
+            'description' => '',
+            'iconUrl' => 'https =>//improvingflow.atlassian.net/',
+            'name' => 'Done',
+            'id' => '10002',
+            'statusCategory' => {
+              'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/statuscategory/3',
+              'id' => 3,
+              'key' => 'done',
+              'colorName' => 'green',
+              'name' => 'Done'
+            }
+          },
+          'priority' => {
+            'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/priority/3',
+            'iconUrl' => 'https =>//improvingflow.atlassian.net/images/icons/priorities/medium.svg',
+            'name' => 'Medium',
+            'id' => '3'
+          },
+          'issuetype' => {
+            'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/issuetype/10001',
+            'id' => '10001',
+            'description' => 'Functionality or a feature expressed as a user goal.',
+            'iconUrl' => 'https =>//improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium',
+            'name' => 'Story',
+            'subtask' => false,
+            'avatarId' => 10_315,
+            'hierarchyLevel' => 0
+          }
+        }
+      }
+    end
 
-  #   it 'should return nil when no estimates and issue never enters sprint' do
-  #     expect(issue.story_point_estimate_when_entering_sprint sprint).to be_nil
-  #   end
+    it 'gets key' do
+      expect(issue.key).to eql 'SP-12'
+    end
 
-  #   it 'should return nil when estimates but issue never enters sprint' do
-  #     issue.changes << mock_change(field: 'Story Points', value: '4.5',  time: '2021-10-02T00:00:00+00:00')
-  #     expect(issue.story_point_estimate_when_entering_sprint sprint).to be_nil
-  #   end
-  # end
+    it 'gets type' do
+      expect(issue.type).to eql 'Story'
+    end
+
+    it 'gets key' do
+      expect(issue.summary).to eql 'Report of all events'
+    end
+  end
 end

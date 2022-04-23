@@ -2,16 +2,6 @@
 
 require 'time'
 
-class IssueLink
-  attr_accessor :from, :to, :label
-
-  def initialize from:, to:, label:
-    @from = from
-    @to = to
-    @label = label
-  end
-end
-
 class Issue
   attr_reader :changes, :raw
 
@@ -19,12 +9,6 @@ class Issue
     @raw = raw
     @timezone_offset = timezone_offset
     @changes = []
-
-    # if @raw['changelog'].nil?
-    #   raise "No changelog found in issue #{@raw['key']}. This is likely because when we pulled the data" \
-    #   ' from Jira, we didn\'t specify expand=changelog. Without that changelog, nothing else is going to' \
-    #   ' work so stopping now.'
-    # end
 
     return unless @raw['changelog']
 
@@ -284,19 +268,7 @@ class Issue
 
   def issue_links
     @raw['fields']['issuelinks'].collect do |issue_link|
-      if issue_link['inwardIssue']
-        IssueLink.new(
-          to: Issue.new(raw: issue_link['inwardIssue']),
-          from: self,
-          label: issue_link['type']['inward']
-        )
-      elsif issue_link['outwardIssue']
-        IssueLink.new(
-          to: Issue.new(raw: issue_link['outwardIssue']),
-          from: self,
-          label: issue_link['type']['outward']
-        )
-      end
-    end.compact
+      IssueLink.new origin: self, raw: issue_link
+    end
   end
 end

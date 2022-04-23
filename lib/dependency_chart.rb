@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require './lib/chart_base'
+require 'open3'
 
 class DependencyChart < ChartBase
 
@@ -20,18 +21,18 @@ class DependencyChart < ChartBase
   def build_dot_graph issue_links
     issue_keys = Set.new
     issue_links.each do |link|
-      issue_keys << link.to.key
-      issue_keys << link.from.key
+      issue_keys << link.origin.key
+      issue_keys << link.other_issue.key
     end
 
     dot_graph = String.new
     dot_graph << "digraph mygraph {\nrankdir=LR\n"
     issue_keys.each do |key|
-      dot_graph << %Q("#{key}"[label="#{key}|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]\n)
+      dot_graph << %("#{key}"[label="#{key}|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]\n)
     end
 
     issue_links.each do |link|
-      dot_graph << %Q("#{link.from.key}" -> "#{link.to.key}"[ label="#{link.label}",color="black" ];\n)
+      dot_graph << %("#{link.origin.key}" -> "#{link.other_issue.key}"[ label="#{link.label}",color="black" ];\n)
     end
 
     dot_graph << '}'
@@ -39,8 +40,6 @@ class DependencyChart < ChartBase
   end
 
   def execute_graphviz dot_graph
-    puts 'graphfiz'
-    require 'open3'
     Open3.popen3('dot -Tsvg') do |stdin, stdout, _stderr, _wait_thread|
       stdin.write dot_graph
       stdin.close
@@ -48,3 +47,12 @@ class DependencyChart < ChartBase
     end
   end
 end
+
+# name="Cloners", inward="is cloned by", outward="clones"
+# name="To be done after", inward="To be done before", outward="To be done after"
+# name="Relates", inward="relates to", outward="relates to"
+# name="Blocks", inward="is blocked by", outward="blocks"
+# name="Issue split", inward="split from", outward="split to"
+# name="Duplicate", inward="is duplicated by", outward="duplicates"
+# name="Problem/Incident", inward="is caused by", outward="causes"
+# name="Depends", inward="Is Depended on by", outward="Depends on"
