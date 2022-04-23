@@ -15,7 +15,10 @@ class DependencyChart < ChartBase
     issues.each do |issue|
       result += issue.issue_links
     end
-    result
+    result.reject do |link|
+      # TODO: These are configurable values so there needs to be a way to configure them here.
+      ['Cloners', 'Issue split', 'Duplicate', 'Satisfy Requirement', 'Parent/Child'].include? link.name
+    end
   end
 
   def build_dot_graph issue_links

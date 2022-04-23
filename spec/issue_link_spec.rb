@@ -78,5 +78,9 @@ describe IssueLink do
     subject.raw.delete 'inwardIssue'
     expect(subject.label).to eq 'causes'
   end
+
+  it 'should return name' do
+    expect(subject.name).to eq 'Problem/Incident'
+  end
 end
 

@@ -42,4 +42,8 @@ class IssueLink
       @raw['type']['outward']
     end
   end
+
+  def name
+    @raw['type']['name']
+  end
 end
