@@ -20,6 +20,11 @@ class Downloader
     load_jira_config(@download_config.project_config.jira_config)
     load_metadata
 
+    if @metadata['no-download']
+      puts "Skipping download of #{@download_config.project_config.file_prefix}. Found no-download in meta file"
+      return
+    end
+
     remove_old_files
     download_issues
     download_statuses
@@ -150,12 +155,15 @@ class Downloader
     hash = JSON.parse(File.read metadata_pathname)
 
     # If there's no version identifier then this is the old format of metadata. Throw it away and start fresh.
-    return [] if hash['version'].nil?
-
-    hash.each do |key, value|
-      value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
-      @metadata[key] = value
+    if hash['version']
+      hash.each do |key, value|
+        value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
+        @metadata[key] = value
+      end
     end
+
+    # Even if this is the old format, we want to obey this one tag
+    @metadata['no-download'] = hash['no-download'] if hash['no-download']
   end
 
   def save_metadata
