@@ -1,0 +1,408 @@
+{
+  "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,renderedFields",
+  "id": "10021",
+  "self": "https://improvingflow.atlassian.net/rest/api/2/issue/10021",
+  "key": "SP-14",
+  "changelog": {
+    "startAt": 0,
+    "maxResults": 5,
+    "total": 5,
+    "histories": [
+      {
+        "id": "10141",
+        "author": {
+          "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "emailAddress": "mbowler@gargoylesoftware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+          },
+          "displayName": "Mike Bowler",
+          "active": true,
+          "timeZone": "Etc/GMT",
+          "accountType": "atlassian"
+        },
+        "created": "2022-04-24T16:42:42.488+0000",
+        "items": [
+          {
+            "field": "Link",
+            "fieldtype": "jira",
+            "from": null,
+            "fromString": null,
+            "to": "SP-15",
+            "toString": "This issue blocks SP-15"
+          }
+        ]
+      },
+      {
+        "id": "10130",
+        "author": {
+          "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "emailAddress": "mbowler@gargoylesoftware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+          },
+          "displayName": "Mike Bowler",
+          "active": true,
+          "timeZone": "Etc/GMT",
+          "accountType": "atlassian"
+        },
+        "created": "2022-04-19T01:53:07.054+0000",
+        "items": [
+          {
+            "field": "resolution",
+            "fieldtype": "jira",
+            "fieldId": "resolution",
+            "from": null,
+            "fromString": null,
+            "to": "10000",
+            "toString": "Done"
+          },
+          {
+            "field": "status",
+            "fieldtype": "jira",
+            "fieldId": "status",
+            "from": "3",
+            "fromString": "In Progress",
+            "to": "10002",
+            "toString": "Done"
+          }
+        ]
+      },
+      {
+        "id": "10128",
+        "author": {
+          "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "emailAddress": "mbowler@gargoylesoftware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+          },
+          "displayName": "Mike Bowler",
+          "active": true,
+          "timeZone": "Etc/GMT",
+          "accountType": "atlassian"
+        },
+        "created": "2022-04-19T01:31:32.667+0000",
+        "items": [
+          {
+            "field": "status",
+            "fieldtype": "jira",
+            "fieldId": "status",
+            "from": "10000",
+            "fromString": "Backlog",
+            "to": "3",
+            "toString": "In Progress"
+          }
+        ]
+      },
+      {
+        "id": "10124",
+        "author": {
+          "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "emailAddress": "mbowler@gargoylesoftware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+          },
+          "displayName": "Mike Bowler",
+          "active": true,
+          "timeZone": "Etc/GMT",
+          "accountType": "atlassian"
+        },
+        "created": "2022-04-15T00:52:55.832+0000",
+        "items": [
+          {
+            "field": "Sprint",
+            "fieldtype": "custom",
+            "fieldId": "customfield_10020",
+            "from": "",
+            "fromString": "",
+            "to": "3",
+            "toString": "Scrum Sprint 3"
+          }
+        ]
+      },
+      {
+        "id": "10122",
+        "author": {
+          "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "emailAddress": "mbowler@gargoylesoftware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+          },
+          "displayName": "Mike Bowler",
+          "active": true,
+          "timeZone": "Etc/GMT",
+          "accountType": "atlassian"
+        },
+        "created": "2022-04-15T00:52:43.561+0000",
+        "items": [
+          {
+            "field": "Story Points",
+            "fieldtype": "custom",
+            "fieldId": "customfield_10036",
+            "from": null,
+            "fromString": null,
+            "to": null,
+            "toString": "14"
+          }
+        ]
+      }
+    ]
+  },
+  "fields": {
+    "statuscategorychangedate": "2022-04-19T01:53:07.031+0000",
+    "issuetype": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/issuetype/10001",
+      "id": "10001",
+      "description": "Functionality or a feature expressed as a user goal.",
+      "iconUrl": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+      "name": "Story",
+      "subtask": false,
+      "avatarId": 10315,
+      "hierarchyLevel": 0
+    },
+    "timespent": null,
+    "project": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/project/10000",
+      "id": "10000",
+      "key": "SP",
+      "name": "Sample Project",
+      "projectTypeKey": "software",
+      "simplified": false,
+      "avatarUrls": {
+        "48x48": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10403",
+        "24x24": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10403?size=small",
+        "16x16": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10403?size=xsmall",
+        "32x32": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10403?size=medium"
+      }
+    },
+    "customfield_10032": null,
+    "fixVersions": [
+
+    ],
+    "customfield_10033": null,
+    "customfield_10034": null,
+    "aggregatetimespent": null,
+    "customfield_10035": null,
+    "resolution": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/resolution/10000",
+      "id": "10000",
+      "description": "Work has been completed on this issue.",
+      "name": "Done"
+    },
+    "customfield_10036": 14.0,
+    "customfield_10037": null,
+    "customfield_10027": null,
+    "customfield_10028": null,
+    "customfield_10029": null,
+    "resolutiondate": "2022-04-19T01:53:07.028+0000",
+    "workratio": -1,
+    "lastViewed": "2022-04-15T01:23:13.399+0000",
+    "watches": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/issue/SP-14/watchers",
+      "watchCount": 1,
+      "isWatching": true
+    },
+    "created": "2022-02-01T13:30:58.942+0000",
+    "customfield_10020": [
+      {
+        "id": 3,
+        "name": "Scrum Sprint 3",
+        "state": "active",
+        "boardId": 2,
+        "goal": "",
+        "startDate": "2022-04-15T00:55:17.688Z",
+        "endDate": "2022-04-26T16:51:00.000Z"
+      }
+    ],
+    "customfield_10021": null,
+    "customfield_10022": null,
+    "priority": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/priority/3",
+      "iconUrl": "https://improvingflow.atlassian.net/images/icons/priorities/medium.svg",
+      "name": "Medium",
+      "id": "3"
+    },
+    "customfield_10023": null,
+    "customfield_10024": null,
+    "customfield_10025": "3_*:*_1_*:*_1294387_*|*_10000_*:*_1_*:*_6609633725_*|*_10002_*:*_1_*:*_0",
+    "labels": [
+
+    ],
+    "customfield_10026": [
+
+    ],
+    "customfield_10016": null,
+    "customfield_10017": null,
+    "customfield_10018": {
+      "hasEpicLinkFieldDependency": false,
+      "showField": false,
+      "nonEditableReason": {
+        "reason": "PLUGIN_LICENSE_ERROR",
+        "message": "The Parent Link is only available to Jira Premium users."
+      }
+    },
+    "customfield_10019": "0|i0004n:",
+    "aggregatetimeoriginalestimate": null,
+    "timeestimate": null,
+    "versions": [
+
+    ],
+    "issuelinks": [
+      {
+        "id": "10003",
+        "self": "https://improvingflow.atlassian.net/rest/api/2/issueLink/10003",
+        "type": {
+          "id": "10000",
+          "name": "Blocks",
+          "inward": "is blocked by",
+          "outward": "blocks",
+          "self": "https://improvingflow.atlassian.net/rest/api/2/issueLinkType/10000"
+        },
+        "outwardIssue": {
+          "id": "10022",
+          "key": "SP-15",
+          "self": "https://improvingflow.atlassian.net/rest/api/2/issue/10022",
+          "fields": {
+            "summary": "CLONE - Report of people checked in at an event",
+            "status": {
+              "self": "https://improvingflow.atlassian.net/rest/api/2/status/10000",
+              "description": "",
+              "iconUrl": "https://improvingflow.atlassian.net/",
+              "name": "Backlog",
+              "id": "10000",
+              "statusCategory": {
+                "self": "https://improvingflow.atlassian.net/rest/api/2/statuscategory/2",
+                "id": 2,
+                "key": "new",
+                "colorName": "blue-gray",
+                "name": "To Do"
+              }
+            },
+            "priority": {
+              "self": "https://improvingflow.atlassian.net/rest/api/2/priority/3",
+              "iconUrl": "https://improvingflow.atlassian.net/images/icons/priorities/medium.svg",
+              "name": "Medium",
+              "id": "3"
+            },
+            "issuetype": {
+              "self": "https://improvingflow.atlassian.net/rest/api/2/issuetype/10001",
+              "id": "10001",
+              "description": "Functionality or a feature expressed as a user goal.",
+              "iconUrl": "https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+              "name": "Story",
+              "subtask": false,
+              "avatarId": 10315,
+              "hierarchyLevel": 0
+            }
+          }
+        }
+      }
+    ],
+    "assignee": null,
+    "updated": "2022-04-24T16:42:42.485+0000",
+    "status": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/status/10002",
+      "description": "",
+      "iconUrl": "https://improvingflow.atlassian.net/",
+      "name": "Done",
+      "id": "10002",
+      "statusCategory": {
+        "self": "https://improvingflow.atlassian.net/rest/api/2/statuscategory/3",
+        "id": 3,
+        "key": "done",
+        "colorName": "green",
+        "name": "Done"
+      }
+    },
+    "components": [
+
+    ],
+    "timeoriginalestimate": null,
+    "description": null,
+    "customfield_10010": null,
+    "customfield_10014": null,
+    "customfield_10015": null,
+    "customfield_10005": null,
+    "customfield_10006": null,
+    "customfield_10007": null,
+    "security": null,
+    "customfield_10008": null,
+    "customfield_10009": null,
+    "aggregatetimeestimate": null,
+    "summary": "Save credit card information",
+    "creator": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+      "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+      "emailAddress": "mbowler@gargoylesoftware.com",
+      "avatarUrls": {
+        "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+      },
+      "displayName": "Mike Bowler",
+      "active": true,
+      "timeZone": "Etc/GMT",
+      "accountType": "atlassian"
+    },
+    "subtasks": [
+
+    ],
+    "reporter": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
+      "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+      "emailAddress": "mbowler@gargoylesoftware.com",
+      "avatarUrls": {
+        "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+        "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
+      },
+      "displayName": "Mike Bowler",
+      "active": true,
+      "timeZone": "Etc/GMT",
+      "accountType": "atlassian"
+    },
+    "customfield_10000": "{}",
+    "aggregateprogress": {
+      "progress": 0,
+      "total": 0
+    },
+    "customfield_10001": null,
+    "customfield_10002": null,
+    "customfield_10003": null,
+    "customfield_10004": null,
+    "customfield_10038": null,
+    "environment": null,
+    "duedate": null,
+    "progress": {
+      "progress": 0,
+      "total": 0
+    },
+    "votes": {
+      "self": "https://improvingflow.atlassian.net/rest/api/2/issue/SP-14/votes",
+      "votes": 0,
+      "hasVoted": false
+    }
+  }
+}
