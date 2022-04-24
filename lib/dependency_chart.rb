@@ -44,6 +44,8 @@ class DependencyChart < ChartBase
   end
 
   def make_dot_link issue_link:, link_rules:
+    puts link_rules.inspect
+    puts link_rules.line_color
     result = String.new
     result << issue_link.origin.key.inspect
     result << ' -> '
