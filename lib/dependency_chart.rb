@@ -80,12 +80,19 @@ class DependencyChart < ChartBase
     issue_keys = Set.new
     link_graph = []
     links_to_ignore = []
+    all_link_rules = {}
 
     issue_links.each do |link|
       next if links_to_ignore.include? link
 
-      link_rules = LinkRules.new
-      @link_rules_block.call link.name, link_rules
+      link_rules = all_link_rules[link.name]
+      if link_rules.nil?
+        # Cache the link rules
+        link_rules = LinkRules.new
+        @link_rules_block.call link.name, link_rules
+        all_link_rules[link.name] = link_rules
+      end
+
       next if link_rules.ignored?
 
       if link_rules.get_merge_bidirectional
