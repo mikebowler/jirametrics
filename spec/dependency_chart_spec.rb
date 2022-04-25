@@ -38,8 +38,8 @@ describe DependencyChart do
 
     it 'should handle ignore for a link type' do
       subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link_name, rules|
-        rules.ignore if link_name == 'Cloners'
+      subject.link_rules do |link, rules|
+        rules.ignore if link.name == 'Cloners'
       end
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
@@ -54,8 +54,8 @@ describe DependencyChart do
 
     it 'should handle line_color for links' do
       subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link_name, rules|
-        rules.line_color = 'blue' if link_name == 'Cloners'
+      subject.link_rules do |link, rules|
+        rules.line_color = 'blue' if link.name == 'Cloners'
       end
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
@@ -73,8 +73,8 @@ describe DependencyChart do
 
     it 'should support labels for links' do
       subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link_name, rules|
-        rules.label = 'foo' if link_name == 'Cloners'
+      subject.link_rules do |link, rules|
+        rules.label = 'foo' if link.name == 'Cloners'
       end
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
@@ -92,8 +92,8 @@ describe DependencyChart do
 
     it 'should support merge_bidirectional' do
       subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link_name, rules|
-        rules.merge_bidirectional keep: 'outward' if link_name == 'Cloners'
+      subject.link_rules do |link, rules|
+        rules.merge_bidirectional keep: 'outward' if link.name == 'Cloners'
       end
       # subject.build_dot_graph.each { |line| puts line }
       expect(subject.build_dot_graph).to eq [

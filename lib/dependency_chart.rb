@@ -80,19 +80,12 @@ class DependencyChart < ChartBase
     issue_keys = Set.new
     link_graph = []
     links_to_ignore = []
-    all_link_rules = {}
 
     issue_links.each do |link|
       next if links_to_ignore.include? link
 
-      link_rules = all_link_rules[link.name]
-      if link_rules.nil?
-        # Cache the link rules to ensure that the link_rules_block is only called once for each
-        # link name. This is to ensure deterministic behaviour, more so than performance.
-        link_rules = LinkRules.new
-        @link_rules_block.call link.name, link_rules
-        all_link_rules[link.name] = link_rules
-      end
+      link_rules = LinkRules.new
+      @link_rules_block.call link, link_rules
 
       next if link_rules.ignored?
 
