@@ -87,7 +87,8 @@ class DependencyChart < ChartBase
 
       link_rules = all_link_rules[link.name]
       if link_rules.nil?
-        # Cache the link rules
+        # Cache the link rules to ensure that the link_rules_block is only called once for each
+        # link name. This is to ensure deterministic behaviour, more so than performance.
         link_rules = LinkRules.new
         @link_rules_block.call link.name, link_rules
         all_link_rules[link.name] = link_rules
