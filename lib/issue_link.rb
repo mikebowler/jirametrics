@@ -46,4 +46,8 @@ class IssueLink
   def name
     @raw['type']['name']
   end
+
+  def inspect
+    "IssueLink(origin=#{origin.key}, other=#{other_issue.key}, direction=#{direction}, label=#{label.inspect}, name=#{name.inspect}"
+  end
 end

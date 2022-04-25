@@ -16,6 +16,16 @@ end
 class DependencyChart < ChartBase
   class LinkRules < Rules
     attr_accessor :line_color, :label
+
+    def merge_bidirectional keep: 'inward'
+      raise "Keep must be either inward or outward: #{keep}" unless %i[inward outward].include? keep.to_sym
+
+      @merge_bidirectional = keep.to_sym
+    end
+
+    def get_merge_bidirectional
+      @merge_bidirectional
+    end
   end
 
   def initialize rules_block
@@ -69,11 +79,29 @@ class DependencyChart < ChartBase
 
     issue_keys = Set.new
     link_graph = []
+    links_to_ignore = []
 
     issue_links.each do |link|
+      next if links_to_ignore.include? link
+
       link_rules = LinkRules.new
       @link_rules_block.call link.name, link_rules
       next if link_rules.ignored?
+
+      if link_rules.get_merge_bidirectional
+        opposite = issue_links.find do |l|
+          l.name == link.name && l.origin.key == link.other_issue.key && l.other_issue.key == link.origin.key
+        end
+        if opposite
+          if link_rules.get_merge_bidirectional.to_sym == link.direction
+            # We keep this one and discard the opposite
+            links_to_ignore << opposite
+          else
+            # We keep the opposite and discard this one
+            next
+          end
+        end
+      end
 
       link_graph << make_dot_link(issue_link: link, link_rules: link_rules)
 
