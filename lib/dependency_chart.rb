@@ -139,10 +139,10 @@ class DependencyChart < ChartBase
       stdin.close
       return stdout.read
     end
-  rescue => e # rubocop:disable Style/RescueStandardError
+  rescue # rubocop:disable Style/RescueStandardError
     message = "Unable to execute the command 'dot' which is part of graphviz. " \
       'Ensure that graphviz is installed and that dot is in your path.'
-    puts message, e, e.backtrace
+    puts message
     message
   end
 end
