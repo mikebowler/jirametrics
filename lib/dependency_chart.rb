@@ -26,6 +26,14 @@ class DependencyChart < ChartBase
     def get_merge_bidirectional
       @merge_bidirectional
     end
+
+    def use_bidirectional_arrows
+      @use_bidirectional_arrows = true
+    end
+
+    def bidirectional_arrows?
+      @use_bidirectional_arrows
+    end
   end
 
   def initialize rules_block
@@ -61,6 +69,7 @@ class DependencyChart < ChartBase
     result << '['
     result << 'label=' << (link_rules.label || issue_link.label).inspect
     result << ',color=' << (link_rules.line_color || 'black').inspect
+    result << ',dir=both' if link_rules.bidirectional_arrows?
     result << '];'
     result
   end

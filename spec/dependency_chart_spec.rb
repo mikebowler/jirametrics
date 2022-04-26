@@ -95,7 +95,6 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'outward' if link.name == 'Cloners'
       end
-      # subject.build_dot_graph.each { |line| puts line }
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
@@ -106,6 +105,26 @@ describe DependencyChart do
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
         %("SP-15" -> "SP-13"[label="clones",color="black"];),
+        '}'
+      ]
+    end
+
+    it 'should draw double arrowhead' do
+      subject.issues = [issue13, issue14, issue15]
+      subject.link_rules do |link, rules|
+        rules.use_bidirectional_arrows if link.name == 'Cloners'
+      end
+      # subject.build_dot_graph.each { |line| puts line }
+      expect(subject.build_dot_graph).to eq [
+        'digraph mygraph {',
+        'rankdir=LR',
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="black",dir=both];),
+        %("SP-14" -> "SP-15"[label="blocks",color="black"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
+        %("SP-15" -> "SP-13"[label="clones",color="black",dir=both];),
         '}'
       ]
     end
