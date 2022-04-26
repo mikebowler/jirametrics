@@ -109,7 +109,6 @@ describe DependencyChart do
       ]
     end
 
-
     it 'should support merge_bidirectional while keeping inward' do
       subject.issues = [issue13, issue14, issue15]
       subject.link_rules do |link, rules|
@@ -129,6 +128,30 @@ describe DependencyChart do
       ]
     end
 
+    it 'should merge_bidirectional when the data only goes one way' do
+      # Remove the inward Cloner link for issue 15
+      issue13.raw['fields']['issuelinks'].reject! do |link_json|
+        link_json['type']['name'] == 'Cloners' && link_json['inwardIssue']
+      end
+
+      subject.issues = [issue13, issue14, issue15]
+      subject.link_rules do |link, rules|
+        rules.merge_bidirectional keep: 'inward' if link.name == 'Cloners'
+      end
+      expect(subject.build_dot_graph).to eq [
+        'digraph mygraph {',
+        'rankdir=LR',
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        # %("SP-13" -> "SP-15"[label="is cloned by",color="black"];), # Should be removed
+        %("SP-14" -> "SP-15"[label="blocks",color="black"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
+        %("SP-15" -> "SP-13"[label="clones",color="black"];),
+        '}'
+      ]
+    end
+
     it 'should support raise exception for invalid keep argument in merge_bidirectional' do
       subject.issues = [issue13, issue14, issue15]
       subject.link_rules do |_link, rules|
@@ -142,6 +165,7 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.use_bidirectional_arrows if link.name == 'Cloners'
       end
+      # subject.build_dot_graph.each { |line| puts line }
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
