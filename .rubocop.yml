@@ -68,3 +68,9 @@ Metrics/ParameterLists:
 
 Style/NestedParenthesizedCalls:
   Enabled: false
+
+Layout/EndAlignment:
+  Enabled: false
+
+Layout/CaseIndentation:
+  Enabled: false
