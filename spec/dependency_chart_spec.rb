@@ -4,6 +4,7 @@ require './spec/spec_helper'
 
 describe DependencyChart do
   let(:subject) { DependencyChart.new nil }
+  let(:empty_issue_rules) { ->(_issue, rules) { rules.show_tooltip = false } }
 
   # Relationships: SP-15 is a clone of SP-13 and is blocked by SP-14
   let(:issue13) { load_issue('SP-13') }
@@ -22,12 +23,13 @@ describe DependencyChart do
 
     it 'should handle simple graph of relationships with default configuration' do
       subject.issues = [issue13, issue14, issue15]
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -41,11 +43,12 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.ignore if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
         '}'
@@ -57,12 +60,13 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.line_color = 'blue' if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="blue"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -76,12 +80,13 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.label = 'foo' if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-13" -> "SP-15"[label="foo",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -95,12 +100,13 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'outward' if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         # "SP-13" -> "SP-15"[label="is cloned by",color="black"];) should be removed
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -114,12 +120,13 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'inward' if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -135,15 +142,16 @@ describe DependencyChart do
       end
 
       subject.issues = [issue13, issue14, issue15]
+      subject.issue_rules(&empty_issue_rules)
       subject.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'inward' if link.name == 'Cloners'
       end
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         # %("SP-13" -> "SP-15"[label="is cloned by",color="black"];), # Should be removed
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -154,6 +162,7 @@ describe DependencyChart do
 
     it 'should support raise exception for invalid keep argument in merge_bidirectional' do
       subject.issues = [issue13, issue14, issue15]
+      subject.issue_rules(&empty_issue_rules)
       subject.link_rules do |_link, rules|
         rules.merge_bidirectional keep: 'up'
       end
@@ -165,19 +174,51 @@ describe DependencyChart do
       subject.link_rules do |link, rules|
         rules.use_bidirectional_arrows if link.name == 'Cloners'
       end
+      subject.issue_rules(&empty_issue_rules)
       # subject.build_dot_graph.each { |line| puts line }
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,style=filled,fillcolor="#FFCCFF"]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black",dir=both];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
         %("SP-15" -> "SP-13"[label="clones",color="black",dir=both];),
         '}'
       ]
+    end
+  end
+
+  context 'make_dot_issue' do
+    it 'should handle simple case' do
+      rules = DependencyChart::IssueRules.new
+      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord]))
+      )
+    end
+
+    it 'should support tooltip' do
+      rules = DependencyChart::IssueRules.new
+      rules.show_tooltip = true
+      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+      )
+    end
+
+    it 'should support color' do
+      rules = DependencyChart::IssueRules.new
+      rules.color = 'red'
+      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="red"]))
+      )
+    end
+  end
+
+  context 'default_color_for_issue' do
+    it 'should return colors for all normal issue types' do
+      expect(subject.default_color_for_issue(issue13)).to be_truthy
     end
   end
 end

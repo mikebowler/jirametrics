@@ -23,7 +23,7 @@ class DependencyChart < ChartBase
       @merge_bidirectional = keep.to_sym
     end
 
-    def get_merge_bidirectional
+    def get_merge_bidirectional # rubocop:disable Naming/AccessorMethodName
       @merge_bidirectional
     end
 
@@ -36,10 +36,15 @@ class DependencyChart < ChartBase
     end
   end
 
+  class IssueRules < Rules
+    attr_accessor :color, :show_tooltip
+  end
+
   def initialize rules_block
     super()
     @rules_block = rules_block
     @link_rules_block = ->(link_name, link_rules) {}
+    @issue_rules_block = ->(issue, issue_rules) { issue_rules.color = default_color_for_issue(issue) }
   end
 
   def run
@@ -51,6 +56,10 @@ class DependencyChart < ChartBase
 
   def link_rules &block
     @link_rules_block = block
+  end
+
+  def issue_rules &block
+    @issue_rules_block = block
   end
 
   def find_links
@@ -74,19 +83,23 @@ class DependencyChart < ChartBase
     result
   end
 
-  def make_dot_issue issue_key:, issue_type_rules:
+  def make_dot_issue issue:, issue_rules:
     result = String.new
-    result << issue_key.inspect
+    result << issue.key.inspect
     result << '['
-    result << "label=\"#{issue_key}|Story\""
-    result << ',shape=Mrecord,style=filled,fillcolor="#FFCCFF"]'
+    result << "label=\"#{issue.key}|#{issue.type}\""
+    result << ',shape=Mrecord'
+    tooltip = "#{issue.key}: #{issue.summary}"
+    result << ",tooltip=#{tooltip[0..80].inspect}" if issue_rules.show_tooltip
+    result << %(,style=filled,fillcolor="#{issue_rules.color}") if issue_rules.color
+    result << ']'
     result
   end
 
   def build_dot_graph
     issue_links = find_links
 
-    issue_keys = Set.new
+    visible_issues = {}
     link_graph = []
     links_to_ignore = []
 
@@ -115,8 +128,8 @@ class DependencyChart < ChartBase
 
       link_graph << make_dot_link(issue_link: link, link_rules: link_rules)
 
-      issue_keys << link.origin.key
-      issue_keys << link.other_issue.key
+      visible_issues[link.origin.key] = link.origin
+      visible_issues[link.other_issue.key] = link.other_issue
     end
 
     dot_graph = []
@@ -124,8 +137,10 @@ class DependencyChart < ChartBase
     dot_graph << 'rankdir=LR'
 
     # Sort the keys so they are proccessed in a deterministic order.
-    issue_keys.to_a.sort.each do |key|
-      dot_graph << make_dot_issue(issue_key: key, issue_type_rules: nil)
+    visible_issues.values.sort_by(&:key_as_i).each do |issue|
+      rules = IssueRules.new
+      @issue_rules_block.call(issue, rules)
+      dot_graph << make_dot_issue(issue: issue, issue_rules: rules)
     end
 
     dot_graph += link_graph
@@ -144,5 +159,15 @@ class DependencyChart < ChartBase
       'Ensure that graphviz is installed and that dot is in your path.'
     puts message
     message
+  end
+
+  def default_color_for_issue issue
+    {
+      'Story' => '#90EE90',
+      'Task' => '#87CEFA',
+      'Bug' => '#ffdab9',
+      'Defect' => '#ffdab9',
+      'Epic' => '#fafad2'
+    }[issue.type]
   end
 end
