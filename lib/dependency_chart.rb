@@ -165,9 +165,11 @@ class DependencyChart < ChartBase
     {
       'Story' => '#90EE90',
       'Task' => '#87CEFA',
-      'Bug' => '#ffdab9',
-      'Defect' => '#ffdab9',
-      'Epic' => '#fafad2'
+      'Bug' => '#f08080',
+      'Defect' => '#f08080',
+      'Epic' => '#fafad2',
+      'Spike' => '#7fffd4',
+      'Sub-task' => '#dcdcdc'
     }[issue.type]
   end
 end
