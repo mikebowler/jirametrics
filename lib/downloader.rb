@@ -190,14 +190,20 @@ class Downloader
   end
 
   def make_jql today: Date.today
+    # If JQL was specified then use exactly that without modification
+    return @download_config.jql if @download_config.jql
+
+    full_download = metadata['date_end'].nil?
+
     segments = []
-    segments << @download_config.jql unless @download_config.jql.nil?
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
 
-    if segments.empty?
-      raise 'At least one of project_key, filter_name or jql must be specified'
-    end
+    raise 'At least one of project_key, filter_name or jql must be specified' if segments.empty?
+
+    where_snippets = []
+    where_snippets << '(status changed AND resolved = null)' if full_download
+    where_snippets << '(Sprint is not EMPTY)'
 
     unless @download_config.rolling_date_count.nil?
       @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date
@@ -206,11 +212,13 @@ class Downloader
       # beginning of the full range.
       @start_date_in_query = metadata['date_end'] || @download_date_range.begin
 
-      status_changed_jql =
-        %(status changed DURING ("#{@start_date_in_query.strftime '%Y-%m-%d'} 00:00","#{today.strftime '%Y-%m-%d'} 23:59"))
-      segments << %(((status changed AND resolved = null) OR (#{status_changed_jql}) OR (Sprint is not EMPTY)))
+      start_date_text = @start_date_in_query.strftime '%Y-%m-%d'
+      end_date_text = today.strftime '%Y-%m-%d'
+      where_snippets << %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
     end
 
-    return segments.join ' AND ' unless segments.empty?
+    segments << "(#{where_snippets.join(' OR ')})"
+
+    segments.join ' AND '
   end
 end

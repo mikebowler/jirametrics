@@ -54,21 +54,25 @@ describe Downloader do
   context 'make_jql' do
     it 'makes from project' do
       download_config.project_key 'a'
-      expect(downloader.make_jql).to eql 'project="a"'
+      expect(downloader.make_jql).to eql(
+        'project="a" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY))'
+      )
     end
 
     it 'makes from project and rolling date count' do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01 00:00:00 +0000')
-      expected = 'project="SP" AND ((status changed AND resolved = null) OR ' \
-        '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
+      expected = 'project="SP" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY) OR ' \
+        '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
 
     it 'makes from filter' do
       download_config.filter_name 'a'
-      expect(downloader.make_jql).to eql 'filter="a"'
+      expect(downloader.make_jql).to eql(
+        'filter="a" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY))'
+      )
     end
 
     it 'makes from jql' do
@@ -83,8 +87,8 @@ describe Downloader do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
-      expected = 'project="SP" AND ((status changed AND resolved = null) OR ' \
-        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR (Sprint is not EMPTY))'
+      expected = 'project="SP" AND ((Sprint is not EMPTY) OR ' \
+        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")))'
       expect(downloader.make_jql(today: today)).to eql expected
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
