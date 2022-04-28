@@ -4,7 +4,7 @@ This project is designed to pull data out of Jira (either Cloud or Server) and m
 
 You can export CSV files that can be used with various spreadsheets, like the excellent ones from [Focused Objective](https://www.focusedobjective.com/w/support/) or with tools like [Actionable Agile](https://analytics.actionableagile.com).
 
-Alternatively, this tool can directly [generate HTML](https://github.com/mikebowler/jira-export/wiki/html_report) files with pretty charts in them.
+Alternatively, this tool can directly [generate HTML](https://github.com/mikebowler/jira-export/wiki/HTML-Reports) files with pretty charts in them.
 
 * Installation
 * Configuring [how it connects to Jira](https://github.com/mikebowler/jira-export/wiki/Jira-Configuration).
