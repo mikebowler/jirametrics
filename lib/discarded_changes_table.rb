@@ -60,6 +60,7 @@ class DiscardedChangesTable < ChartBase
       messages << [issue, days_ignored, message]
     end
 
+    messages.sort_by! { |a| a[0].key_as_i }
     render(binding, __FILE__) unless messages.empty?
   end
 end
