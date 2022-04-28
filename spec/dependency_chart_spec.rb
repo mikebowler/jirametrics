@@ -221,4 +221,12 @@ describe DependencyChart do
       expect(subject.default_color_for_issue(issue13)).to be_truthy
     end
   end
+
+  context 'shrink_svg' do
+    it 'should shrink' do
+      svg = '<svg width="914pt" height="1126pt" viewBox="0.00 0.00 914.00 1126.00"'
+      expected = '<svg width="731pt" height="900pt" viewBox="0.00 0.00 914.00 1126.00"'
+      expect(subject.shrink_svg svg).to eq expected
+    end
+  end
 end

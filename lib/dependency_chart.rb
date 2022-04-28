@@ -51,7 +51,7 @@ class DependencyChart < ChartBase
     instance_eval(&@rules_block) if @rules_block
 
     svg = execute_graphviz(build_dot_graph.join("\n"))
-    "<h1>Dependencies</h1>#{svg}"
+    "<h1>Dependencies</h1>#{shrink_svg svg}"
   end
 
   def link_rules &block
@@ -171,5 +171,14 @@ class DependencyChart < ChartBase
       'Spike' => '#7fffd4',
       'Sub-task' => '#dcdcdc'
     }[issue.type]
+  end
+
+  def shrink_svg svg
+    scale = 0.8
+    svg.sub(/width="([\d.]+)pt" height="([\d.]+)pt"/) do
+      width = $1.to_i * scale
+      height = $2.to_i * scale
+      "width=\"#{width.to_i}pt\" height=\"#{height.to_i}pt\""
+    end
   end
 end
