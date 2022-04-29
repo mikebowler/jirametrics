@@ -50,7 +50,7 @@ class Issue
 
   def status_id = @raw['fields']['status']['id'].to_i
 
-  def labels = @raw['fields']['labels']
+  def labels = @raw['fields']['labels'] || []
 
   def author = @raw['fields']['creator']['displayName']
 
