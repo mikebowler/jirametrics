@@ -4,7 +4,7 @@ require 'cgi'
 require 'json'
 
 class Downloader
-  attr_accessor :metadata # Used only for testing
+  attr_accessor :metadata, :quiet_mode # Used only for testing
 
   # For testing only
   attr_reader :start_date_in_query
@@ -78,10 +78,14 @@ class Downloader
       max_results = json['maxResults']
 
       message = " Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
-      puts ('=' * message.length), message, ('=' * message.length)
+      puts_banner message
 
       start_at += json['issues'].size
     end
+  end
+
+  def puts_banner message
+    puts ('=' * message.length), message, ('=' * message.length) unless @quiet_mode
   end
 
   def exit_if_call_failed json
@@ -167,16 +171,23 @@ class Downloader
   end
 
   def save_metadata
-    raise "We didn't run any queries. Why are we saving metadata again?" unless @start_date_in_query
+    # raise "We didn't run any queries. Why are we saving metadata again?" unless @start_date_in_query
 
     @metadata['version'] = 1
-    @metadata['earliest_date_start'] = @download_date_range.begin if @metadata['earliest_date_start'].nil?
+    @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
-    @metadata['date_start_from_last_query'] = @start_date_in_query
+    if @download_date_range.nil?
+      puts_banner "Making up a date range in meta since one wasn't specified. You'll want to change that."
+      today = Date.today
+      @download_date_range = (today - 7)..today
+    end
 
-    @metadata['date_start'] = @download_date_range.begin
-    @metadata['date_end'] = @download_date_range.end
+    if @download_date_range
+      @metadata['earliest_date_start'] = @download_date_range.begin if @metadata['earliest_date_start'].nil?
 
+      @metadata['date_start'] = @download_date_range.begin
+      @metadata['date_end'] = @download_date_range.end
+    end
     write_json @metadata, metadata_pathname
   end
 
@@ -193,17 +204,11 @@ class Downloader
     # If JQL was specified then use exactly that without modification
     return @download_config.jql if @download_config.jql
 
-    full_download = metadata['date_end'].nil?
-
     segments = []
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
 
     raise 'At least one of project_key, filter_name or jql must be specified' if segments.empty?
-
-    where_snippets = []
-    where_snippets << '(status changed AND resolved = null)' if full_download
-    where_snippets << '(Sprint is not EMPTY)'
 
     unless @download_config.rolling_date_count.nil?
       @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date
@@ -211,13 +216,19 @@ class Downloader
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.
       @start_date_in_query = metadata['date_end'] || @download_date_range.begin
+      puts_banner "Incremental download only. Pulling from #{@start_date_in_query}" if metadata['date_end']
 
+      # Catch-all to pick up anything that's been around since before the range started but hasn't
+      # had an update during the range.
+      catch_all = '((status changed) OR (Sprint is not EMPTY) AND resolved is null)'
+
+      # Pick up any issues that had a status change in the range
       start_date_text = @start_date_in_query.strftime '%Y-%m-%d'
       end_date_text = today.strftime '%Y-%m-%d'
-      where_snippets << %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
-    end
+      find_in_range = %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
 
-    segments << "(#{where_snippets.join(' OR ')})"
+      segments << "(#{find_in_range} OR #{catch_all})"
+    end
 
     segments.join ' AND '
   end

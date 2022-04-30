@@ -17,7 +17,7 @@ end
 
 describe Downloader do
   let(:download_config) { mock_download_config }
-  let(:downloader) { Downloader.new(download_config: download_config) }
+  let(:downloader) { Downloader.new(download_config: download_config).tap { |d| d.quiet_mode = true } }
 
   context 'Build curl command' do
     it 'should generate with url only' do
@@ -55,7 +55,7 @@ describe Downloader do
     it 'makes from project' do
       download_config.project_key 'a'
       expect(downloader.make_jql).to eql(
-        'project="a" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY))'
+        'project="a"'
       )
     end
 
@@ -63,15 +63,15 @@ describe Downloader do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01 00:00:00 +0000')
-      expected = 'project="SP" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY) OR ' \
-        '(status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")))'
+      expected = 'project="SP" AND ((status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) ' \
+        'OR ((status changed) OR (Sprint is not EMPTY) AND resolved is null))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
 
     it 'makes from filter' do
       download_config.filter_name 'a'
       expect(downloader.make_jql).to eql(
-        'filter="a" AND ((status changed AND resolved = null) OR (Sprint is not EMPTY))'
+        'filter="a"'
       )
     end
 
@@ -87,8 +87,8 @@ describe Downloader do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
-      expected = 'project="SP" AND ((Sprint is not EMPTY) OR ' \
-        '(status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")))'
+      expected = 'project="SP" AND ((status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR ' \
+        '((status changed) OR (Sprint is not EMPTY) AND resolved is null))'
       expect(downloader.make_jql(today: today)).to eql expected
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
