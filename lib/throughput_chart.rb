@@ -3,25 +3,62 @@
 class ThroughputChart < ChartBase
   attr_accessor :possible_statuses
 
+  class GroupingRules < Rules
+    attr_accessor :label, :color
+  end
+
   def initialize block = nil
     super()
-    @group_by_block = block || ->(_issue) { %w[Throughput blue] }
+    @rules_block = block
+
+    if block && block.arity == 1
+      puts 'DEPRECATED: ThroughputChart: Use the new grouping_rules syntax'
+      grouping_rules do |issue, rules|
+        rules.label, rules.color = block.call(issue)
+      end
+      @rules_block = nil
+    end
   end
 
   def run
+    instance_eval(&@rules_block) if @rules_block
+
     completed_issues = completed_issues_in_range include_unstarted: true
+    rules_to_issues = group_issues completed_issues
 
     data_sets = []
-    groups = completed_issues.collect { |issue| @group_by_block.call(issue) }.uniq
-    groups.each do |type|
-      completed_issues_by_type = completed_issues.select { |issue| @group_by_block.call(issue) == type }
-      label, color = *type
-      data_sets << weekly_throughput_dataset(completed_issues: completed_issues_by_type, label: label, color: color)
+    rules_to_issues.each_key do |rules|
+      data_sets << weekly_throughput_dataset(
+        completed_issues: rules_to_issues[rules], label: rules.label, color: rules.color
+      )
     end
 
     data_quality = scan_data_quality completed_issues
 
     render(binding, __FILE__)
+  end
+
+  def grouping_rules &block
+    @group_by_block = block
+  end
+
+  def group_issues completed_issues
+    if @group_by_block.nil?
+      grouping_rules do |_issue, rules|
+        rules.label = 'Throughput'
+        rules.color = 'blue'
+      end
+    end
+
+    result = {}
+    completed_issues.each do |issue|
+      rules = GroupingRules.new
+      @group_by_block.call(issue, rules)
+      next if rules.ignored?
+
+      (result[rules] ||= []) << issue
+    end
+    result
   end
 
   def calculate_time_periods

@@ -2,16 +2,7 @@
 
 require './lib/chart_base'
 require 'open3'
-
-class Rules
-  def ignore
-    @ignore = true
-  end
-
-  def ignored?
-    @ignore
-  end
-end
+require './lib/rules'
 
 class DependencyChart < ChartBase
   class LinkRules < Rules

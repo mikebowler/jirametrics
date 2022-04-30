@@ -4,6 +4,10 @@ require './spec/spec_helper'
 require './lib/throughput_chart'
 
 describe ThroughputChart do
+  let(:issue1) { load_issue 'SP-1' }
+  let(:issue2) { load_issue 'SP-2' }
+  let(:issue10) { load_issue 'SP-10' }
+
   context 'calculate_time_periods' do
     # October 11 is a Monday
 
@@ -43,15 +47,12 @@ describe ThroughputChart do
 
   context 'throughput_dataset' do
     it 'should work' do
-      issue1 = load_issue('SP-1')
       issue1.changes.clear
       issue1.changes << mock_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
-      issue2 = load_issue('SP-2')
       issue2.changes.clear
       issue2.changes << mock_change(field: 'resolution', value: 'done', time: '2021-10-13T01:00:00')
 
-      issue10 = load_issue('SP-10') # This one should be ignored
       issue10.changes.clear
 
       subject = ThroughputChart.new
@@ -73,6 +74,46 @@ describe ThroughputChart do
           y: 2
         }
       ]
+    end
+  end
+
+  context 'group_issues' do
+    it 'should render when no rules specified' do
+      expected_rules = ThroughputChart::GroupingRules.new
+      expected_rules.color = 'blue'
+      expected_rules.label = 'Throughput'
+      expect(subject.group_issues([issue1])).to eq({
+        expected_rules => [issue1]
+      })
+    end
+
+    it 'should render when the old (deprecated) approach is used' do
+      subject = ThroughputChart.new(lambda do |_issue|
+        %w[foo orange]
+      end)
+      expected_rules = ThroughputChart::GroupingRules.new
+      expected_rules.color = 'orange'
+      expected_rules.label = 'foo'
+      expect(subject.group_issues([issue1])).to eq({
+        expected_rules => [issue1]
+      })
+    end
+
+    it 'should render when grouping_rules are used' do
+      subject.grouping_rules do |issue, rules|
+        if issue.key == 'SP-1'
+          rules.color = 'orange'
+          rules.label = 'foo'
+        else
+          rules.ignore
+        end
+      end
+      expected_rules = ThroughputChart::GroupingRules.new
+      expected_rules.color = 'orange'
+      expected_rules.label = 'foo'
+      expect(subject.group_issues([issue1, issue2])).to eq({
+        expected_rules => [issue1]
+      })
     end
   end
 end
