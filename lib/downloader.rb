@@ -182,12 +182,11 @@ class Downloader
       @download_date_range = (today - 7)..today
     end
 
-    if @download_date_range
-      @metadata['earliest_date_start'] = @download_date_range.begin if @metadata['earliest_date_start'].nil?
+    @metadata['earliest_date_start'] = @download_date_range.begin if @metadata['earliest_date_start'].nil?
 
-      @metadata['date_start'] = @download_date_range.begin
-      @metadata['date_end'] = @download_date_range.end
-    end
+    @metadata['date_start'] = @download_date_range.begin
+    @metadata['date_end'] = @download_date_range.end
+
     write_json @metadata, metadata_pathname
   end
 
