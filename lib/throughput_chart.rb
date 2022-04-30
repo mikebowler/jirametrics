@@ -27,6 +27,12 @@ class ThroughputChart < ChartBase
     rules_to_issues = group_issues completed_issues
 
     data_sets = []
+    if rules_to_issues.size > 1
+      data_sets << weekly_throughput_dataset(
+        completed_issues: completed_issues, label: 'Totals', color: 'gray', dashed: true
+      )
+    end
+
     rules_to_issues.each_key do |rules|
       data_sets << weekly_throughput_dataset(
         completed_issues: rules_to_issues[rules], label: rules.label, color: rules.color
@@ -80,8 +86,8 @@ class ThroughputChart < ChartBase
     end
   end
 
-  def weekly_throughput_dataset completed_issues:, label:, color:
-    {
+  def weekly_throughput_dataset completed_issues:, label:, color:, dashed: false
+    result = {
       label: label,
       data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues),
       fill: false,
@@ -90,6 +96,8 @@ class ThroughputChart < ChartBase
       lineTension: 0.4,
       backgroundColor: color
     }
+    result['borderDash'] = [10, 5] if dashed
+    result
   end
 
   def throughput_dataset periods:, completed_issues:

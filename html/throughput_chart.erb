@@ -29,7 +29,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       y: {
         scaleLabel: {
           display: true,
-          labelString: 'Work items count'
+        },
+        title: {
+          display: true,
+          text: 'Count of items'
         },
         min: 0
       },
