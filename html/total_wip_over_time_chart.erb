@@ -34,7 +34,11 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         scaleLabel: {
           display: true,
           labelString: 'WIP'
-        }
+        },
+        title: {
+          display: true,
+          text: 'Number of items'
+        },
       }
     },
     plugins: {

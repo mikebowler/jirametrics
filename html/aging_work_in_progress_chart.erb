@@ -29,7 +29,11 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
         scaleLabel: {
           display: true,
           labelString: 'Days'
-        }
+        },
+        title: {
+          display: true,
+          text: 'Age in days'
+        },
       }
     },
     plugins: {

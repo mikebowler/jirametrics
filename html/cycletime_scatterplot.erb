@@ -39,7 +39,11 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           labelString: 'Days',
           min: 0,
           max: <%= @highest_cycletime %>
-        }
+        },
+        title: {
+          display: true,
+          text: 'Cycle time in days'
+        },
       }
     },
     plugins: {
