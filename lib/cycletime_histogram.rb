@@ -1,29 +1,36 @@
 # frozen_string_literal: true
 
+require './lib/groupable_issue_chart'
+
 class CycletimeHistogram < ChartBase
+  include GroupableIssueChart
   attr_accessor :possible_statuses
 
   def initialize block = nil
     super()
-    @group_by_block = block || ->(issue) { [issue.type, color_for(type: issue.type)] }
+    init_configuration_block(block) do
+      grouping_rules do |issue, rule|
+        rule.label = issue.type
+        rule.color = color_for type: issue.type
+      end
+    end
   end
 
   def run
     stopped_issues = completed_issues_in_range include_unstarted: true
 
+    # For data quality, we need to look at everything that's stopped
     data_quality = scan_data_quality(stopped_issues)
 
     # For the histogram, we only want to consider items that have both a start and a stop time.
     histogram_issues = stopped_issues.select { |issue| @cycletime.started_time(issue) }
+    rules_to_issues = group_issues histogram_issues
 
-    type_color_groupings = histogram_issues.collect { |issue| @group_by_block.call(issue) }.uniq
-    data_sets = type_color_groupings.collect do |type, color|
+    data_sets = rules_to_issues.keys.collect do |rules|
       data_set_for(
-        histogram_data: histogram_data_for(
-          issues: histogram_issues.select { |issue| @group_by_block.call(issue) == [type, color] }
-        ),
-        label: type,
-        color: color
+        histogram_data: histogram_data_for(issues: rules_to_issues[rules]),
+        label: rules.label,
+        color: rules.color
       )
     end
 
