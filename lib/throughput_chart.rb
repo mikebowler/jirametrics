@@ -1,28 +1,23 @@
 # frozen_string_literal: true
 
 class ThroughputChart < ChartBase
+  include GroupableIssueChart
+
   attr_accessor :possible_statuses
 
-  class GroupingRules < Rules
-    attr_accessor :label, :color
-  end
 
   def initialize block = nil
     super()
-    @rules_block = block
 
-    if block && block.arity == 1
-      puts 'DEPRECATED: ThroughputChart: Use the new grouping_rules syntax'
-      grouping_rules do |issue, rules|
-        rules.label, rules.color = block.call(issue)
+    init_configuration_block(block) do
+      grouping_rules do |issue, rule|
+        rule.label = issue.type
+        rule.color = color_for type: issue.type
       end
-      @rules_block = nil
     end
   end
 
   def run
-    instance_eval(&@rules_block) if @rules_block
-
     completed_issues = completed_issues_in_range include_unstarted: true
     rules_to_issues = group_issues completed_issues
 
@@ -42,29 +37,6 @@ class ThroughputChart < ChartBase
     data_quality = scan_data_quality completed_issues
 
     render(binding, __FILE__)
-  end
-
-  def grouping_rules &block
-    @group_by_block = block
-  end
-
-  def group_issues completed_issues
-    if @group_by_block.nil?
-      grouping_rules do |_issue, rules|
-        rules.label = 'Throughput'
-        rules.color = 'blue'
-      end
-    end
-
-    result = {}
-    completed_issues.each do |issue|
-      rules = GroupingRules.new
-      @group_by_block.call(issue, rules)
-      next if rules.ignored?
-
-      (result[rules] ||= []) << issue
-    end
-    result
   end
 
   def calculate_time_periods

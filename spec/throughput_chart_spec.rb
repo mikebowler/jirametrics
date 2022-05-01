@@ -80,8 +80,8 @@ describe ThroughputChart do
   context 'group_issues' do
     it 'should render when no rules specified' do
       expected_rules = ThroughputChart::GroupingRules.new
-      expected_rules.color = 'blue'
-      expected_rules.label = 'Throughput'
+      expected_rules.color = 'green'
+      expected_rules.label = 'Story'
       expect(subject.group_issues([issue1])).to eq({
         expected_rules => [issue1]
       })
