@@ -1,9 +1,22 @@
 # frozen_string_literal: true
 
 require './lib/chart_base'
+require './lib/groupable_issue_chart'
 
 class AgingWorkInProgressChart < ChartBase
+  include GroupableIssueChart
   attr_accessor :possible_statuses
+
+  def initialize block = nil
+    super()
+
+    init_configuration_block(block) do
+      grouping_rules do |issue, rule|
+        rule.label = issue.type
+        rule.color = color_for type: issue.type
+      end
+    end
+  end
 
   def run
     data_sets = make_data_sets
@@ -18,12 +31,13 @@ class AgingWorkInProgressChart < ChartBase
     aging_issues = @issues.select { |issue| @cycletime.in_progress? issue }
 
     percentage = 85
-    data_sets = []
-    aging_issues.collect(&:type).uniq.each do |type|
-      data_sets << {
+    rules_to_issues = group_issues aging_issues
+    data_sets = rules_to_issues.keys.collect do |rules|
+      # aging_issues.collect(&:type).uniq.each do |type|
+      {
         'type' => 'line',
-        'label' => type,
-        'data' => aging_issues.select { |issue| issue.type == type }.collect do |issue|
+        'label' => rules.label,
+        'data' => rules_to_issues[rules].collect do |issue|
             age = @cycletime.age(issue)
             column = column_for issue: issue
             next if column.nil?
@@ -35,7 +49,7 @@ class AgingWorkInProgressChart < ChartBase
           end.compact,
         'fill' => false,
         'showLine' => false,
-        'backgroundColor' => color_for(type: type)
+        'backgroundColor' => rules.color
       }
     end
     data_sets << {

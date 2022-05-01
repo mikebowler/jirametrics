@@ -41,8 +41,8 @@ class HtmlReportConfig
     @file_config.project_config.exporter.timezone_offset
   end
 
-  def aging_work_in_progress_chart board_id: @board_id
-    execute_chart(AgingWorkInProgressChart.new) do |chart|
+  def aging_work_in_progress_chart board_id: @board_id, &block
+    execute_chart(AgingWorkInProgressChart.new(block)) do |chart|
       chart.board_id = board_id
     end
   end
