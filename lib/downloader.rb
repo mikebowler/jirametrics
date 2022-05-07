@@ -65,7 +65,7 @@ class Downloader
     total = 1
     while start_at < total
       command = make_curl_command url: "#{@jira_url}/rest/api/2/search" \
-        "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog"
+        "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
       json = JSON.parse call_command(command)
       exit_if_call_failed json
