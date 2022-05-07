@@ -12,15 +12,10 @@ class Issue
 
     return unless @raw['changelog']
 
-    @raw['changelog']['histories'].each do |history|
-      created = parse_time(history['created'])
+    load_history_into_changes
 
-      # It should be impossible to not have an author but we've seen it in production
-      author = history['author']&.[]('displayName') || history['author']&.[]('name') || 'Unknown author'
-      history['items'].each do |item|
-        @changes << ChangeItem.new(raw: item, time: created, author: author)
-      end
-    end
+    # If this is an older pull of data then comments may not be there.
+    load_comments_into_changes if @raw['fields']['comment']
 
     # It might appear that Jira already returns these in order but we've found different
     # versions of Server/Cloud return the changelog in different orders so we sort them.
@@ -269,6 +264,37 @@ class Issue
   def issue_links
     @raw['fields']['issuelinks'].collect do |issue_link|
       IssueLink.new origin: self, raw: issue_link
+    end
+  end
+
+  private
+
+  def assemble_author raw
+    raw['author']&.[]('displayName') || raw['author']&.[]('name') || 'Unknown author'
+  end
+
+  def load_history_into_changes
+    @raw['changelog']['histories'].each do |history|
+      created = parse_time(history['created'])
+
+      # It should be impossible to not have an author but we've seen it in production
+      author = assemble_author history
+      history['items'].each do |item|
+        @changes << ChangeItem.new(raw: item, time: created, author: author)
+      end
+    end
+  end
+
+  def load_comments_into_changes
+    @raw['fields']['comment']['comments'].each do |comment|
+      raw = {
+        'field' => 'comment',
+        'to' => comment['id'],
+        'toString' =>  comment['body']
+      }
+      author = assemble_author comment
+      created = parse_time(comment['created'])
+      @changes << ChangeItem.new(raw: raw, time: created, author: author, artificial: true)
     end
   end
 end
