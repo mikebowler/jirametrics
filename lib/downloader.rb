@@ -200,12 +200,10 @@ class Downloader
   end
 
   def make_jql today: Date.today
-    # If JQL was specified then use exactly that without modification
-    return @download_config.jql if @download_config.jql
-
     segments = []
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
+    segments << @download_config.jql if @download_config.jql
 
     raise 'At least one of project_key, filter_name or jql must be specified' if segments.empty?
 
