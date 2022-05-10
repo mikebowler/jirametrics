@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe DependencyChart do
   let(:subject) { DependencyChart.new nil }
-  let(:empty_issue_rules) { ->(_issue, rules) { rules.show_tooltip = false } }
+  let(:empty_issue_rules) { ->(_issue, rules) {} }
 
   # Relationships: SP-15 is a clone of SP-13 and is blocked by SP-14
   let(:issue13) { load_issue('SP-13') }
@@ -27,9 +27,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -47,8 +47,8 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
         '}'
@@ -64,9 +64,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="blue"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -84,9 +84,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-13" -> "SP-15"[label="foo",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -104,9 +104,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         # "SP-13" -> "SP-15"[label="is cloned by",color="black"];) should be removed
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -124,9 +124,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black"];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -149,9 +149,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         # %("SP-13" -> "SP-15"[label="is cloned by",color="black"];), # Should be removed
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -179,9 +179,9 @@ describe DependencyChart do
       expect(subject.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord]),
+        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
+        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
+        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-13" -> "SP-15"[label="is cloned by",color="black",dir=both];),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
         %("SP-15" -> "SP-14"[label="is blocked by",color="black"];),
@@ -195,14 +195,6 @@ describe DependencyChart do
     it 'should handle simple case' do
       rules = DependencyChart::IssueRules.new
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord]))
-      )
-    end
-
-    it 'should support tooltip' do
-      rules = DependencyChart::IssueRules.new
-      rules.show_tooltip = true
-      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
     end
@@ -211,7 +203,7 @@ describe DependencyChart do
       rules = DependencyChart::IssueRules.new
       rules.color = 'red'
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,style=filled,fillcolor="red"]))
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event",style=filled,fillcolor="red"]))
       )
     end
   end

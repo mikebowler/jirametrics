@@ -28,7 +28,7 @@ class DependencyChart < ChartBase
   end
 
   class IssueRules < Rules
-    attr_accessor :color, :show_tooltip
+    attr_accessor :color
   end
 
   def initialize rules_block
@@ -81,7 +81,7 @@ class DependencyChart < ChartBase
     result << "label=\"#{issue.key}|#{issue.type}\""
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
-    result << ",tooltip=#{tooltip[0..80].inspect}" if issue_rules.show_tooltip
+    result << ",tooltip=#{tooltip[0..80].inspect}"
     result << %(,style=filled,fillcolor="#{issue_rules.color}") if issue_rules.color
     result << ']'
     result
