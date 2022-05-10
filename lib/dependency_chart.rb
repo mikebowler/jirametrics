@@ -28,7 +28,7 @@ class DependencyChart < ChartBase
   end
 
   class IssueRules < Rules
-    attr_accessor :color
+    attr_accessor :color, :label
   end
 
   def initialize rules_block
@@ -78,12 +78,15 @@ class DependencyChart < ChartBase
     result = String.new
     result << issue.key.inspect
     result << '['
-    result << "label=\"#{issue.key}|#{issue.type}\""
+    label = issue_rules.label || "#{issue.key}|#{issue.type}"
+    label = label.inspect unless label =~ /^<.+>$/
+    result << "label=#{label}"
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
     result << %(,style=filled,fillcolor="#{issue_rules.color}") if issue_rules.color
     result << ']'
+    puts result
     result
   end
 

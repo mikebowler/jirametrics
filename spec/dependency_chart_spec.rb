@@ -206,6 +206,22 @@ describe DependencyChart do
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event",style=filled,fillcolor="red"]))
       )
     end
+
+    it 'should support plain label' do
+      rules = DependencyChart::IssueRules.new
+      rules.label = 'hello'
+      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label="hello",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+      )
+    end
+
+    it 'should support html label' do
+      rules = DependencyChart::IssueRules.new
+      rules.label = '<hello>'
+      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+      )
+    end
   end
 
   context 'default_color_for_issue' do
