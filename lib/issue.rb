@@ -49,7 +49,7 @@ class Issue
 
   def author = @raw['fields']['creator']['displayName']
 
-  def resolution = @raw['fields']['resolution']['name']
+  def resolution = @raw['fields']['resolution']&.[]('name')
 
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.

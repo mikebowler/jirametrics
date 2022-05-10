@@ -455,6 +455,20 @@ describe Issue do
     end
   end
 
+  context 'resolution' do
+    it 'should return nil when not resolved' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      expect(issue.resolution).to be_nil
+    end
+
+    it 'should work' do
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue.raw['fields']['resolution'] = {'name' => 'Done'}
+      expect(issue.resolution).to eq 'Done'
+    end
+
+  end
+
   context 'created from a linked issue' do
     let(:issue) do
       Issue.new raw: {
