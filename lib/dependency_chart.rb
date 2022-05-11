@@ -86,7 +86,6 @@ class DependencyChart < ChartBase
     result << ",tooltip=#{tooltip[0..80].inspect}"
     result << %(,style=filled,fillcolor="#{issue_rules.color}") if issue_rules.color
     result << ']'
-    puts result
     result
   end
 

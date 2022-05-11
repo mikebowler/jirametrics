@@ -41,9 +41,22 @@ class Issue
 
   def summary = @raw['fields']['summary']
 
-  def status = @raw['fields']['status']['name']
+  def status
+    raw_status = @raw['fields']['status']
+    raw_category = raw_status['statusCategory']
 
-  def status_id = @raw['fields']['status']['id'].to_i
+    Status.new(
+      name: raw_status['name'],
+      id: raw_status['id'].to_i,
+      category_name: raw_category['name'],
+      category_id: raw_category['id'].to_i
+    )
+  end
+
+  def status_id
+    puts 'DEPRECATED(Issue.status_id) Call Issue.status.id instead'
+    status.id
+  end
 
   def labels = @raw['fields']['labels'] || []
 

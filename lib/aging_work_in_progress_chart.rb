@@ -91,7 +91,7 @@ class AgingWorkInProgressChart < ChartBase
 
   def column_for issue:
     board_columns.find do |board_column|
-      board_column.status_ids.include? issue.status_id
+      board_column.status_ids.include? issue.status.id
     end
   end
 end

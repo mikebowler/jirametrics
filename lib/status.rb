@@ -15,4 +15,13 @@ class Status
     "Status(name=#{@name.inspect}, id=#{@id.inspect}," \
       " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect})"
   end
+
+  def eql?(other)
+    puts "Comparing statuses"
+    (other.class == self.class) && (other.state == state)
+  end
+
+  def state
+    instance_variables.map { |variable| instance_variable_get variable }
+  end
 end

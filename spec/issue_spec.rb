@@ -523,4 +523,12 @@ describe Issue do
       expect(issue.summary).to eql 'Report of all events'
     end
   end
+
+  context 'status' do
+    it 'should work' do
+      expect(load_issue('SP-1').status).to eql(
+        Status.new(name: 'In Progress', id: 3, category_name: 'In Progress', category_id: 4)
+      )
+    end
+  end
 end
