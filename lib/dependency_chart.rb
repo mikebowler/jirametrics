@@ -35,7 +35,7 @@ class DependencyChart < ChartBase
     super()
     @rules_block = rules_block
     @link_rules_block = ->(link_name, link_rules) {}
-    @issue_rules_block = ->(issue, issue_rules) { issue_rules.color = default_color_for_issue(issue) }
+    @issue_rules_block = ->(issue, issue_rules) {}
   end
 
   def run
@@ -84,7 +84,9 @@ class DependencyChart < ChartBase
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
-    result << %(,style=filled,fillcolor="#{issue_rules.color}") if issue_rules.color
+    unless issue_rules.color == :none
+      result << %(,style=filled,fillcolor="#{issue_rules.color || color_for(type: issue.type, shade: :light)}")
+    end
     result << ']'
     result
   end

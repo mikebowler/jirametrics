@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe DependencyChart do
   let(:subject) { DependencyChart.new nil }
-  let(:empty_issue_rules) { ->(_issue, rules) {} }
+  let(:empty_issue_rules) { ->(_issue, rules) { rules.color = :none } }
 
   # Relationships: SP-15 is a clone of SP-13 and is blocked by SP-14
   let(:issue13) { load_issue('SP-13') }
@@ -194,6 +194,7 @@ describe DependencyChart do
   context 'make_dot_issue' do
     it 'should handle simple case' do
       rules = DependencyChart::IssueRules.new
+      rules.color = :none
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
@@ -210,6 +211,7 @@ describe DependencyChart do
     it 'should support plain label' do
       rules = DependencyChart::IssueRules.new
       rules.label = 'hello'
+      rules.color = :none
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="hello",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
@@ -218,6 +220,7 @@ describe DependencyChart do
     it 'should support html label' do
       rules = DependencyChart::IssueRules.new
       rules.label = '<hello>'
+      rules.color = :none
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )

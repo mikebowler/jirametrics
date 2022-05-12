@@ -8,11 +8,17 @@ class ChartBase
 
   def initialize
     @chart_colors = {
-      'Story' => 'green',
-      'Task' => 'blue',
-      'Bug' => 'orange',
-      'Defect' => 'orange',
-      'Spike' => 'gray'
+      'dark:Story' => 'green',
+      'dark:Task' => 'blue',
+      'dark:Bug' => 'orange',
+      'dark:Defect' => 'orange',
+      'dark:Spike' => 'gray',
+      'light:Story' => '#90EE90',
+      'light:Task' => '#87CEFA',
+      'light:Bug' => '#ffdab9',
+      'light:Defect' => 'orange',
+      'light:Epic' => '#fafad2',
+      'light:Spike' => 'lightgray'
     }
   end
 
@@ -31,8 +37,8 @@ class ChartBase
     @@chart_counter += 1
   end
 
-  def color_for type:
-    @chart_colors[type] || 'red'
+  def color_for type:, shade: :dark
+    @chart_colors["#{shade}:#{type}"] || 'red'
   end
 
   def label_days days
