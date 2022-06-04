@@ -4,6 +4,11 @@ require 'random-word'
 require 'require_all'
 require_all 'lib'
 
+def to_time date
+  Time.new date.year, date.month, date.day, rand(0..23), rand(0..59), rand(0..59)
+  # Time.new date.year, date.month, date.day, 0, 0, 0
+end
+
 class FakeIssue
   @@issue_number = 1
   attr_reader :effort, :raw
@@ -15,8 +20,8 @@ class FakeIssue
         histories: []
       },
       fields: {
-        created: date.to_time.to_s,
-        updated: date.to_time.to_s,
+        created: to_time(date).to_s,
+        updated: to_time(date).to_s,
         creator: {
           displayName: 'George Jetson'
         },
@@ -24,11 +29,11 @@ class FakeIssue
           name: type
         },
         status: {
-          name: 'ToDo',
+          name: 'To Do',
           id: 1,
           statusCategory: {
             id: 2,
-            name: 'ToDo'
+            name: 'To Do'
           }
         },
         priority: {
@@ -40,11 +45,17 @@ class FakeIssue
     }
 
 
-    @effort = [1, 2, 3, 3, 3, 3, 4, 4, 4, 5, 6].sample
+    @effort = case type
+    when 'Story'
+      [1, 2, 3, 3, 3, 3, 4, 4, 4, 5, 6].sample
+    else
+      [1, 2, 3].sample
+    end
     unblock
     @done = false
-    @last_status = nil
-    change_status new_status: 'In Progress', date: date
+    @last_status = 'To Do'
+    @last_status_id = 1
+    change_status new_status: 'In Progress', new_status_id: 3, date: date
   end
 
   def blocked? = @blocked
@@ -57,31 +68,46 @@ class FakeIssue
     raise 'Already done' if done?
 
     @effort -= effort
-    change_status new_status: 'Done', date: date if done?
+    return unless done?
+
+    change_status new_status: 'Done', new_status_id: 5, date: date
+    fix_change_timestamps
+  end
+
+  def fix_change_timestamps
+    # since the timestamps have random hours, it's possible for them to be issued out of order. Sort them now
+    changes = @raw[:changelog][:histories]
+    times = changes.collect { |change| change[:created] }.sort
+
+    changes.each do |change|
+      change[:created] = times.shift
+    end
   end
 
   def done? = @effort <= 0
 
-  def change_status date:, new_status:
+  def change_status date:, new_status:, new_status_id:
     @raw[:changelog][:histories] << {
       author: {
         emailAddress: 'george@jetson.com',
         displayName: 'George Jetson'
       },
-      created: date.to_time,
+      created: to_time(date),
       items: [
         {
           field: 'status',
           fieldtype: 'jira',
           fieldId: 'status',
-          from: 1,
-          fromString: @last_status || 'ToDo',
-          to: 2,
+          from: @last_status_id,
+          fromString: @last_status,
+          to: new_status_id,
           toString: new_status
         }
       ]
     }
+
     @last_status = new_status
+    @last_status_id = new_status_id
 
   end
 end
