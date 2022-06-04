@@ -15,7 +15,7 @@ class FakeIssue
 
   def initialize date:, type:
     @raw = {
-      key: "SP-#{@@issue_number += 1}",
+      key: "FAKE-#{@@issue_number += 1}",
       changelog: {
         histories: []
       },
@@ -132,6 +132,7 @@ class Generator
   end
 
   def run
+    remove_old_files
     @date_range.each_with_index do |date, day|
       yield date, day if block_given?
       process_date(date, day) if (1..5).include? date.wday # Weekday
@@ -150,8 +151,16 @@ class Generator
         'no-download': true
       })
     end
+  end
 
-    # dump it all to the target directory
+  def remove_old_files
+    path = "#{@target_path}#{@file_prefix}_issues"
+    Dir.foreach path do |file|
+      next unless file =~ /-\d+\.json$/
+
+      filename = "#{path}/#{file}"
+      File.unlink filename
+    end
   end
 
   def lucky? probability
