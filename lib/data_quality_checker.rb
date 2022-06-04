@@ -123,7 +123,7 @@ class DataQualityChecker
       if index.nil?
         entry.report(
           problem_key: :status_not_on_board,
-          detail: "Status [#{change.value}] is not on the board"
+          detail: "Status [#{change.value}:#{change.value_id}] is not on the board"
         )
       elsif change.old_value.nil?
         # Do nothing
