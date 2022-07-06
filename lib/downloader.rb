@@ -217,7 +217,7 @@ class Downloader
 
       # Catch-all to pick up anything that's been around since before the range started but hasn't
       # had an update during the range.
-      catch_all = '((status changed) OR (Sprint is not EMPTY) AND resolved is null)'
+      catch_all = '((status changed OR Sprint is not EMPTY) AND statusCategory != Done)'
 
       # Pick up any issues that had a status change in the range
       start_date_text = @start_date_in_query.strftime '%Y-%m-%d'

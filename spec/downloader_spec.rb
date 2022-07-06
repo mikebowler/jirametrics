@@ -64,7 +64,7 @@ describe Downloader do
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01 00:00:00 +0000')
       expected = 'project="SP" AND ((status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) ' \
-        'OR ((status changed) OR (Sprint is not EMPTY) AND resolved is null))'
+        'OR ((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
 
@@ -88,7 +88,7 @@ describe Downloader do
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
       expected = 'project="SP" AND ((status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR ' \
-        '((status changed) OR (Sprint is not EMPTY) AND resolved is null))'
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
       expect(downloader.make_jql(today: today)).to eql expected
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
