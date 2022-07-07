@@ -11,9 +11,9 @@ end
 
 class FakeIssue
   @@issue_number = 1
-  attr_reader :effort, :raw
+  attr_reader :effort, :raw, :worker
 
-  def initialize date:, type:
+  def initialize date:, type:, worker:
     @raw = {
       key: "FAKE-#{@@issue_number += 1}",
       changelog: {
@@ -44,7 +44,7 @@ class FakeIssue
       }
     }
 
-
+    @workers = [worker]
     @effort = case type
     when 'Story'
       [1, 2, 3, 3, 3, 3, 4, 4, 4, 5, 6].sample
@@ -167,6 +167,18 @@ class Generator
     @random.rand(1..100) <= probability
   end
 
+  def next_issue_for worker:, date:, type:
+    # First look for something I already started
+    issue = @issues.find { |issue| issue.worker == worker && !issue.done? && !issue.blocked? }
+
+    # Then look for something that someone else started
+
+    # Then start new work
+    issue = FakeIssue.new(date: date, type: type, worker: worker) if issue.nil?
+
+    issue
+  end
+
   def process_date date, simulation_day
     @issues.each do |issue|
       if issue.blocked?
@@ -178,12 +190,13 @@ class Generator
 
     @workers.each do |worker|
       worker_capacity = [0, 1, 1, 1, 2].sample
-      if worker.issue.nil?
+      if worker.issue.nil? || worker.issue.done?
         type = lucky?(89) ? 'Story' : 'Bug'
-        worker.issue = FakeIssue.new date: date, type: type
+        worker.issue = next_issue_for worker: worker, date: date, type: type
         @issues << worker.issue
       end
 
+      worker.issue = next_issue_for worker: worker, date: date, type: type if worker.issue.blocked?
       worker.issue.do_work date: date, effort: worker_capacity
       worker.issue = nil if worker.issue.done?
     end
