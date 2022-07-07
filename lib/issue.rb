@@ -3,11 +3,12 @@
 require 'time'
 
 class Issue
-  attr_reader :changes, :raw
+  attr_reader :changes, :raw, :subtasks
 
   def initialize raw:, timezone_offset: '+00:00'
     @raw = raw
     @timezone_offset = timezone_offset
+    @subtasks = []
     @changes = []
 
     return unless @raw['changelog']
@@ -261,11 +262,18 @@ class Issue
   end
 
   def stalled_on_date? date, stalled_threshold = 5
+    # Did any changes happen within the threshold
     changes.each do |change|
       change_date = change.time.to_date
       next if change_date > date
 
       return false if (date - change_date).to_i < stalled_threshold
+    end
+
+    # Walk through all subtasks to see if any of them have been updated within
+    # the threshold. This obviously only works if the subtasks are already loaded.
+    @subtasks.each do |subtask|
+      return false unless subtask.stalled_on_date?(date, stalled_threshold)
     end
 
     updated_date = updated.to_date
