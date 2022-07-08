@@ -240,7 +240,7 @@ class ProjectConfig
 
   def attach_subtasks issues
     issues.each do |issue|
-      issue.raw['fields']['subtasks'].each do |subtask_element|
+      issue.raw['fields']['subtasks']&.each do |subtask_element|
         subtask_key = subtask_element['key']
         subtask = issues.find { |i| i.key == subtask_key }
         issue.subtasks << subtask if subtask
