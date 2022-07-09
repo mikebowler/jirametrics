@@ -30,19 +30,26 @@ describe AgingWorkTable do
 
     it 'should work when expedited' do
       issue.raw['fields']['priority']['name'] = 'Highest'
-      expect(table.expedited_text issue).to eq(table.icon_span title: 'Expedited', icon: '🔥')
+      expect(table.expedited_text issue).to eq(
+        table.icon_span title: 'Expedited: Has a priority of &quot;Highest&quot;', icon: '🔥'
+      )
     end
   end
 
   context 'blocked_text' do
     it 'should handle simple blocked' do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
-      expect(table.blocked_text issue).to eq(table.icon_span title: 'Blocked', icon: '🛑')
+      expect(table.blocked_text issue).to eq(table.icon_span title: 'Blocked: Has the flag set', icon: '🛑')
     end
 
     it 'should handle stalled' do
       table.cycletime = mock_cycletime_config stub_values: { issue => 10 }
-      expect(table.blocked_text issue).to eq(table.icon_span title: 'Stalled', icon: '🟧')
+      expect(table.blocked_text issue).to eq(
+        table.icon_span(
+          title: 'Stalled: Hasn&apos;t had any activity in 5 days and isn&apos;t explicitly marked as blocked',
+          icon: '🟧'
+        )
+      )
     end
 
     it 'should handle started but neither blocked nor stalled' do

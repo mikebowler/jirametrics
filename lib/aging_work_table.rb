@@ -7,6 +7,10 @@ class AgingWorkTable < ChartBase
 
   def initialize expedited_priority_name
     @expedited_priority_name = expedited_priority_name
+    @blocked_icon = '🛑'
+    @expedited_icon = '🔥'
+    @stalled_icon = '🟧'
+    @stalled_threshold = 5
   end
 
   def run
@@ -35,14 +39,19 @@ class AgingWorkTable < ChartBase
   end
 
   def expedited_text issue
-    icon_span(title: 'Expedited', icon: '🔥') if expedited?(issue)
+    if expedited?(issue)
+      icon_span(title: "Expedited: Has a priority of &quot;#{@expedited_priority_name}&quot;", icon: @expedited_icon)
+    end
   end
 
   def blocked_text issue
     if issue.blocked_on_date? @today
-      icon_span title: 'Blocked', icon: '🛑'
-    elsif issue.stalled_on_date?(@today, 5) && @cycletime.started_time(issue)
-      icon_span title: 'Stalled', icon: '🟧'
+      icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon
+    elsif issue.stalled_on_date?(@today, @stalled_threshold) && @cycletime.started_time(issue)
+      icon_span(
+        title: "Stalled: Hasn&apos;t had any activity in #{@stalled_threshold} days and isn&apos;t explicitly marked as blocked",
+        icon: @stalled_icon
+      )
     end
   end
 end
