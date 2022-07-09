@@ -3,6 +3,7 @@
   <thead>
     <tr>
       <th>Issue</th>
+      <th>Type</th>
       <th>Summary</th>
       <th>Description</th>
     </tr>
@@ -11,6 +12,7 @@
     <% issue_descriptions.each do |issue, description| %>
       <tr>
         <td><%= link_to_issue issue %></td>
+        <td><%= issue.type %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= description %></td>
       </tr>
