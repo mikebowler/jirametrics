@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, 
-    :time_range, :sprints_by_board
+    :time_range, :sprints_by_board, :data_quality
 
   @@chart_counter = 0
 
@@ -100,7 +100,16 @@ class ChartBase
     checker.board_columns = board_columns
     checker.possible_statuses = possible_statuses
     checker.run
+    @data_quality_checker = checker
     checker
+  end
+
+  def check_data_quality_for *names
+    @data_quality_check_names = names
+  end
+
+  def data_quality_problems_for name
+    @data_quality_checker.problems_for(name) if @data_quality_check_names.include? name
   end
 
   def holidays date_range=@date_range

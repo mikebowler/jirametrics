@@ -12,6 +12,12 @@ class ThroughputChart < ChartBase
     # set reasonable defaults
     header_text 'Throughput Chart'
     description_text 'This chart shows how many items we completed per unit of time'
+    check_data_quality_for(
+      :status_changes_after_done,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :status_not_on_board
+    )
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
@@ -37,7 +43,7 @@ class ThroughputChart < ChartBase
       )
     end
 
-    data_quality = scan_data_quality completed_issues
+    scan_data_quality completed_issues
 
     wrap_and_render(binding, __FILE__)
   end

@@ -64,7 +64,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 </script>
 
 <% 
-  problems = data_quality.problems_for :status_changes_after_done
+  problems = data_quality_problems_for :status_changes_after_done
   unless problems.empty? 
 %>
   <p>
@@ -76,7 +76,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 %>
 
 <% 
-  problems = data_quality.problems_for :backwords_through_statuses
+  problems = data_quality_problems_for :backwords_through_statuses
   unless problems.empty? 
 %>
   <p>
@@ -88,7 +88,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 %>
 
 <% 
-  problems = data_quality.problems_for :backwards_through_status_categories
+  problems = data_quality_problems_for :backwards_through_status_categories
   unless problems.empty? 
 %>
   <p>
@@ -100,7 +100,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 %>
 
 <% 
-  problems = data_quality.problems_for :status_not_on_board
+  problems = data_quality_problems_for :status_not_on_board
   unless problems.empty? 
 %>
   <p>
