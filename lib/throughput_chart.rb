@@ -9,6 +9,10 @@ class ThroughputChart < ChartBase
   def initialize block = nil
     super()
 
+    # set reasonable defaults
+    header_text 'Throughput Chart'
+    description_text 'This chart shows how many items we completed per unit of time'
+
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -20,7 +24,6 @@ class ThroughputChart < ChartBase
   def run
     completed_issues = completed_issues_in_range include_unstarted: true
     rules_to_issues = group_issues completed_issues
-
     data_sets = []
     if rules_to_issues.size > 1
       data_sets << weekly_throughput_dataset(
@@ -36,7 +39,7 @@ class ThroughputChart < ChartBase
 
     data_quality = scan_data_quality completed_issues
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def calculate_time_periods

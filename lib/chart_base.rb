@@ -33,6 +33,15 @@ class ChartBase
     erb.result(caller_binding)
   end
 
+  # Render the file and then wrap it with standard headers and quality checks.
+  def wrap_and_render caller_binding, file
+    result = String.new
+    result << "<h1>#{@header_text}</h1>" if @header_text
+    result << "<div>#{@description_text}</div>" if @description_text
+    result << render(caller_binding, file)
+    result
+  end
+
   def next_id
     @@chart_counter += 1
   end
@@ -138,5 +147,13 @@ class ChartBase
     else
       object.to_s
     end
+  end
+
+  def header_text text
+    @header_text = text
+  end
+
+  def description_text text
+    @description_text = text
   end
 end

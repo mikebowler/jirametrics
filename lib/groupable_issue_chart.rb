@@ -5,6 +5,10 @@ require './lib/rules'
 module GroupableIssueChart
   class GroupingRules < Rules
     attr_accessor :label, :color
+
+    def inspect
+      "GroupingRules(label=#{label.inspect}, color=#{color}"
+    end
   end
 
   def init_configuration_block user_provided_block, &default_block
@@ -17,13 +21,12 @@ module GroupableIssueChart
       return
     end
 
-    if user_provided_block.nil?
-      # The user didn't provide a block so we use the default one for the specific chart
-      user_provided_block = default_block
+    if user_provided_block
+      instance_eval(&user_provided_block)
+      return if @group_by_block
     end
 
-    instance_eval(&user_provided_block)
-    raise 'If a configuration block is provided then grouping_rules must be set' if @group_by_block.nil?
+    instance_eval(&default_block)
   end
 
   def grouping_rules &block
@@ -31,8 +34,6 @@ module GroupableIssueChart
   end
 
   def group_issues completed_issues
-    raise '@group_by_block never got set' if @group_by_block.nil?
-
     result = {}
     completed_issues.each do |issue|
       rules = GroupingRules.new
@@ -44,3 +45,4 @@ module GroupableIssueChart
     result
   end
 end
+
