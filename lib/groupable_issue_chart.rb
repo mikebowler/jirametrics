@@ -42,6 +42,10 @@ module GroupableIssueChart
 
       (result[rules] ||= []) << issue
     end
+
+    result.each_key do |rules|
+      rules.color = "\##{Random.bytes(3).unpack1('H*')}" if rules.color.nil?
+    end
     result
   end
 end
