@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '3'
+ruby '>= 3'
 
 gem 'rake'
 gem 'random-word'
