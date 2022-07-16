@@ -1,6 +1,3 @@
-<h1>Aging Work in Progress</h1>
-<p>This chart shows only work items that have started but not completed, grouped by the column they're currently in. Hovering over a dot will show you the ID of that work item.</p>
-<p>The gray area indicates the 85% mark for work items that have passed through here - 85% of previous work items left this column while still inside the gray area. Any work items above the gray area are outliers and they are the items that you should pay special attention to.</p>
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
 </div>
@@ -53,66 +50,3 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
   }
 });
 </script>
-
-<% 
-  problems = data_quality.problems_for :status_changes_after_done
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-<% 
-  problems = data_quality.problems_for :backwords_through_statuses
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board. This will affect aging calculations
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-<% 
-  problems = data_quality.problems_for :backwards_through_status_categories
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> items moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted aging calculations as the start or end times are often taken at status category boundaries.
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-<% 
-  problems = data_quality.problems_for :created_in_wrong_status
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> items were created in the wrong status. This will affect aging data as we can't say for sure when it really started.
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-<% 
-  problems = data_quality.problems_for :status_not_on_board
-  unless problems.empty? 
-%>
-  <p>
-    <b>Data quality note:</b> <%= problems.size %> were not visible on the board for some period of time. This means that some items will not show up when they should, on this chart.
-    <%= collapsible_issues_panel problems %>
-  </p>
-<% 
-  end
-%>
-
-
-

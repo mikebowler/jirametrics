@@ -9,7 +9,25 @@ class AgingWorkInProgressChart < ChartBase
 
   def initialize block = nil
     super()
-
+    header_text 'Aging Work in Progress'
+    description_text <<-HTML
+      <p>
+        This chart shows only work items that have started but not completed, grouped by the column
+      they're currently in. Hovering over a dot will show you the ID of that work item.
+      </p>
+      <p>
+        The gray area indicates the 85% mark for work items that have passed through here - 85% of
+        previous work items left this column while still inside the gray area. Any work items above
+        the gray area are outliers and they are the items that you should pay special attention to.
+      </p>
+    HTML
+    check_data_quality_for(
+      :status_changes_after_done,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :created_in_wrong_status,
+      :status_not_on_board
+    )
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -24,7 +42,7 @@ class AgingWorkInProgressChart < ChartBase
 
     data_quality = scan_data_quality @issues
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def make_data_sets

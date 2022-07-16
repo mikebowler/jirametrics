@@ -9,7 +9,6 @@ class ThroughputChart < ChartBase
   def initialize block = nil
     super()
 
-    # set reasonable defaults
     header_text 'Throughput Chart'
     description_text 'This chart shows how many items we completed per unit of time'
     check_data_quality_for(
