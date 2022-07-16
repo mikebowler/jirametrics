@@ -8,6 +8,24 @@ class CycletimeHistogram < ChartBase
 
   def initialize block = nil
     super()
+
+    header_text 'Cycletime Histogram'
+    description_text <<-HTML
+      <p>
+        The Cycletime Histogram shows how many items completed in a certain timeframe. This can be
+        useful for determining how many different types of work are flowing through, based on the
+        lengths of time they take.
+      </p>
+    HTML
+    check_data_quality_for(
+      :status_changes_after_done,
+      :completed_but_not_started,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :created_in_wrong_status,
+      :status_not_on_board
+    )
+
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -34,7 +52,7 @@ class CycletimeHistogram < ChartBase
       )
     end
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def histogram_data_for issues:
