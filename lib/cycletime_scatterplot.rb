@@ -10,6 +10,32 @@ class CycletimeScatterplot < ChartBase
   def initialize block = nil
     super()
 
+    header_text 'Cycletime Scatterplot'
+    description_text <<-HTML
+      <p>
+        This chart shows only completed work and indicates both what day it completed as well as
+        how many days it took to get done. Hovering over a dot will show you the ID of the work item.
+      </p>
+      <p>
+        The gray line indicates the 85th percentile (<%= overall_percent_line %> days). 85% of all
+        items on this chart fall on or below the line and the remaining 15% are above the line. 85%
+        is a reasonable proxy for "most" so that we can say that based on this data set, we can
+        predict that most work of this type will complete in <%= overall_percent_line %> days or
+        less. The other lines reflect the 85% line for that respective type of work.
+      </p>
+      <p>
+        The gray vertical bars indicate weekends, when theoretically we aren't working.
+      </p>
+    HTML
+    check_data_quality_for(
+      :status_changes_after_done,
+      :completed_but_not_started,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :created_in_wrong_status,
+      :status_not_on_board
+    )
+
     init_configuration_block block do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -30,7 +56,7 @@ class CycletimeScatterplot < ChartBase
 
     data_quality = scan_data_quality(@issues.select { |issue| @cycletime.stopped_time(issue) })
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def create_datasets completed_issues

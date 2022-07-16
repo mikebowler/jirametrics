@@ -12,10 +12,18 @@ class AgingWorkBarChart < ChartBase
     header_text 'Aging Work Bar Chart'
     description_text <<-HTML
       <p>
-        This chart highlights work that is blocked or stalled on each given day. In Jira terms, blocked means that the issue has been "flagged". Stalled indicates that the item hasn't had any updates in <%= stalled_threshold %> days. Updates could include status changes, comments, or field changes such as updated summary.
+        This chart shows all active (started but not completed) work, ordered from oldest at the top to
+        newest at the bottom.
       </p>
       <p>
-        Note that if an item tracks as both blocked and stalled, it will only show up in the blocked totals. It will not be double counted.
+        The colours indicate different statuses, grouped by status category. Any statuses in the status
+        category of "To Do" will be in a shade of blue. Any in the category of "In Progress" will be in a
+        shade of yellow and any in "Done" will be in a shade of green. Depending on how you calculate
+        cycletime, you may end up with only yellows or you may have a mix of all three.
+      </p>
+      <p>
+        The gray backgrounds indicate weekends and the red vertical line indicates the 85% point for all
+        items in this time period. Anything that started to the left of that is now an outlier.
       </p>
     HTML
     check_data_quality_for(

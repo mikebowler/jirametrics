@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, 
-    :time_range, :sprints_by_board, :data_quality
+    :time_range, :sprints_by_board, :data_quality, :possible_statuses
 
   @@chart_counter = 0
 
@@ -37,7 +37,8 @@ class ChartBase
   def wrap_and_render caller_binding, file
     result = String.new
     result << "<h1>#{@header_text}</h1>" if @header_text
-    result << "<div>#{@description_text}</div>" if @description_text
+    result << ERB.new(@description_text).result(caller_binding) if @description_text
+    # result << "<div>#{@description_text}</div>" if @description_text
     result << render(caller_binding, file)
     result << ERB.new(File.read('html/data_quality_checks.erb')).result(caller_binding)
     result

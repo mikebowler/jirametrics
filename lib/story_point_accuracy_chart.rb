@@ -2,9 +2,33 @@
 
 class StoryPointAccuracyChart < ChartBase
 
+  def initialize
+    super()
+
+    header_text 'Story Point Accuracy'
+    description_text <<-HTML
+      <p>
+        This chart graphs story point estimates against actual recorded cycle times. Since story point
+        estimates can change over time, we're graphing the estimate at the time that the story started.
+      </p>
+      <p>
+        The color coding indicates how many issues fell at that intersection of estimate and actual.
+      </p>
+    HTML
+    check_data_quality_for(
+      :status_changes_after_done,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :created_in_wrong_status,
+      :status_not_on_board
+    )
+  end
+
   def run
+    scan_data_quality(completed_issues_in_range include_unstarted: true)
+
     data_sets = scan_issues
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def scan_issues

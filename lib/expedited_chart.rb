@@ -20,6 +20,28 @@ class ExpeditedChart < ChartBase
   def initialize priority_name
     super()
     @expedited_label = priority_name
+
+    header_text 'Aging Work Bar Chart'
+    description_text <<-HTML
+      <p>
+        This chart only shows issues that have been expedited at some point. We care about these as
+        any form of expedited work will affect the entire system and will slow down non-expedited work.
+        Refer to this article on
+        <a href="https://improvingflow.com/2021/06/16/classes-of-service.html">classes of service</a>
+        for a longer explanation on why we want to avoid expedited work.
+      </p>
+      <p>
+        The lines indicate time that this issue was expedited. When the line is red then the issue was
+        expedited at that time. When it's gray then it wasn't. Orange dots indicate the date the work
+        was started and green dots represent the completion date. Lastly, the vertical height of the
+        lines/dots indicates how long it's been since this issue was created.
+      </p>
+      <p>
+        In this report, an item is considered expedited if it has the priority of
+        <%= @expedited_label.inspect %>
+      </p>
+    HTML
+    check_data_quality_for # none
   end
 
   def run
@@ -27,7 +49,7 @@ class ExpeditedChart < ChartBase
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def prepare_expedite_data issue

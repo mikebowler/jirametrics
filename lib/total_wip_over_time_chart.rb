@@ -5,6 +5,32 @@ require 'pathname'
 class TotalWipOverTimeChart < ChartBase
   attr_accessor :possible_statuses
 
+  def initialize
+    super()
+
+    header_text 'Flow of Daily WIP'
+    description_text <<-HTML
+      <p>
+        This chart shows the highest WIP on each given day. The WIP is color coded so you can see
+        how old it is and hovering over the bar will show you exactly which work items it relates
+        to. The green bar underneath, shows how many items completed on that day.
+      </p>
+      <p>
+        "Completed without being started" reflects the fact that while we know that it completed
+        that day, we were unable to determine when it had started. These items will not show up in
+        the aging portion because we don't know when they started.
+      </p>
+    HTML
+    check_data_quality_for(
+      :completed_but_not_started,
+      :status_changes_after_done,
+      :backwords_through_statuses,
+      :backwards_through_status_categories,
+      :created_in_wrong_status,
+      :status_not_on_board
+    )
+  end
+
   def run
     @daily_chart_items = DailyChartItemGenerator.new(
       issues: @issues, date_range: @date_range, cycletime: @cycletime
@@ -26,7 +52,7 @@ class TotalWipOverTimeChart < ChartBase
 
     data_quality = scan_data_quality @issues
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def age_range_dataset age_range:, color:, label:
