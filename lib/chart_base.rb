@@ -39,6 +39,7 @@ class ChartBase
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << "<div>#{@description_text}</div>" if @description_text
     result << render(caller_binding, file)
+    result << ERB.new(File.read('html/data_quality_checks.erb')).result(caller_binding)
     result
   end
 
@@ -109,7 +110,9 @@ class ChartBase
   end
 
   def data_quality_problems_for name
-    @data_quality_checker.problems_for(name) if @data_quality_check_names.include? name
+    return [] unless @data_quality_check_names.include? name
+
+    @data_quality_checker.problems_for(name) 
   end
 
   def holidays date_range=@date_range
