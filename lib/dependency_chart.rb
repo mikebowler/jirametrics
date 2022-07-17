@@ -33,6 +33,14 @@ class DependencyChart < ChartBase
 
   def initialize rules_block
     super()
+
+    header_text 'Dependencies'
+    description_text <<-HTML
+      <p>
+        These are all the "linked issues" as defined in Jira
+      </p>
+    HTML
+
     @rules_block = rules_block
     @link_rules_block = ->(link_name, link_rules) {}
     @issue_rules_block = ->(issue, issue_rules) {}
@@ -42,7 +50,7 @@ class DependencyChart < ChartBase
     instance_eval(&@rules_block) if @rules_block
 
     svg = execute_graphviz(build_dot_graph.join("\n"))
-    "<h1>Dependencies</h1>#{shrink_svg svg}"
+    "<h1>#{@header_text}</h1><div>#{@description_text}</div>#{shrink_svg svg}"
   end
 
   def link_rules &block
