@@ -97,17 +97,7 @@ describe ExpeditedChart do
       config.stop_at  ->(_issue) {}
       chart.cycletime = config
 
-      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: [])).to eq({
-        type: 'line',
-        label: issue1.key,
-        data: [],
-        fill: false,
-        showLine: true,
-        backgroundColor: [],
-        pointBorderColor: 'black',
-        pointStyle: [],
-        segment: ExpeditedChart::EXPEDITED_SEGMENT
-      })
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: [])).to be_nil
     end
 
     it 'should handle one of everything' do

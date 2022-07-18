@@ -21,7 +21,7 @@ class ExpeditedChart < ChartBase
     super()
     @expedited_label = priority_name
 
-    header_text 'Aging Work Bar Chart'
+    header_text 'Expedited work'
     description_text <<-HTML
       <p>
         This chart only shows issues that have been expedited at some point. We care about these as
@@ -47,7 +47,7 @@ class ExpeditedChart < ChartBase
   def run
     data_sets = find_expedited_issues.collect do |issue|
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
-    end
+    end.compact
 
     wrap_and_render(binding, __FILE__)
   end
@@ -111,6 +111,9 @@ class ExpeditedChart < ChartBase
     expedite_data << [started_time, :issue_started] if started_time
     expedite_data << [stopped_time, :issue_stopped] if stopped_time
     expedite_data.sort! { |a, b| a[0] <=> b[0] }
+
+    # If none of the data would be visible on the chart then skip it.
+    return nil unless expedite_data.any? { |time, action| time.to_date >= date_range.begin }
 
     data = []
     dot_colors = []
