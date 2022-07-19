@@ -240,4 +240,26 @@ describe DependencyChart do
       expect(subject.shrink_svg svg).to eq expected
     end
   end
+
+  context 'word_wrap' do
+    it 'should handle different line endings coming in' do
+      expect(subject.word_wrap "a\nb\r\nc", max_width: 80, separator: '|').to eq 'a|b|c'
+    end
+
+    it 'should handle empty string' do
+      expect(subject.word_wrap '', max_width: 80, separator: '|').to eq ''
+    end
+
+    it 'should handle simple too long string' do
+      expect(subject.word_wrap 'this is a long string', max_width: 10, separator: "\n").to eq(
+        "this is a\nlong\nstring"
+      )
+    end
+
+    it 'should handle text that cannnot be wrapped' do
+      expect(subject.word_wrap 'this is a absolutelyhorriblylong string', max_width: 10, separator: "\n").to eq(
+        "this is a\nabsolutelyhorriblylong\nstring"
+      )
+    end
+  end
 end

@@ -43,7 +43,12 @@ class DependencyChart < ChartBase
 
     @rules_block = rules_block
     @link_rules_block = ->(link_name, link_rules) {}
-    @issue_rules_block = ->(issue, issue_rules) {}
+
+    issue_rules do |issue, rules|
+      key = issue.key
+      key = "<S>#{key} </S> " if issue.status.category_name == 'Done'
+      rules.label = "<#{key} [#{issue.type}]<BR/>#{word_wrap issue.summary}>"
+    end
   end
 
   def run
@@ -183,5 +188,22 @@ class DependencyChart < ChartBase
       height = $2.to_i * scale
       "width=\"#{width.to_i}pt\" height=\"#{height.to_i}pt\""
     end
+  end
+
+  def word_wrap2(text, line_width: 80, break_sequence: "\n")
+    text.split("\n").collect! do |line|
+      line.length > line_width ? line.gsub(/(.{1,#{line_width}})(\s+|$)/, "\\1#{break_sequence}").strip : line
+    end * break_sequence
+  end
+
+  def word_wrap text, max_width: 50, separator: "\n"
+    text.lines.collect do |line|
+      line.chomp!
+      if line.length > max_width
+        line.gsub(/(.{1,#{max_width}})(\s+|$)/, "\\1#{separator}").strip
+      else
+        line
+      end
+    end.join(separator)
   end
 end
