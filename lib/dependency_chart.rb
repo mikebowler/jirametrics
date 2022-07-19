@@ -190,13 +190,7 @@ class DependencyChart < ChartBase
     end
   end
 
-  def word_wrap2(text, line_width: 80, break_sequence: "\n")
-    text.split("\n").collect! do |line|
-      line.length > line_width ? line.gsub(/(.{1,#{line_width}})(\s+|$)/, "\\1#{break_sequence}").strip : line
-    end * break_sequence
-  end
-
-  def word_wrap text, max_width: 50, separator: "\n"
+  def word_wrap text, max_width: 50, separator: "<BR/>"
     text.lines.collect do |line|
       line.chomp!
       if line.length > max_width
