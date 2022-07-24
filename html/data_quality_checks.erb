@@ -3,7 +3,7 @@
   unless problems.empty? 
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started.
+    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started. Consider whether looking at only <%= ((issues.size - problems.size).to_f / issues.size * 100).to_i %>% of the total data points is enough to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">Survivorship Bias</a>.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
