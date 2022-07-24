@@ -63,14 +63,11 @@ class CycletimeScatterplot < ChartBase
     data_sets = []
 
     groups = group_issues completed_issues
-    # groups = completed_issues.collect { |issue| @group_by_block.call(issue) }.uniq
 
     groups.each_key do |rules|
-      # completed_issues_by_type = completed_issues.select { |issue| @group_by_block.call(issue) == type }
       completed_issues_by_type = groups[rules]
       label = rules.label
       color = rules.color
-      # label, color = *type
       percent_line = calculate_percent_line completed_issues_by_type
       data_sets << {
         'label' => "#{label} (85% at #{label_days(percent_line)})",
