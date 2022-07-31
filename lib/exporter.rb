@@ -61,4 +61,19 @@ class Exporter
     @timezone_offset = offset unless offset.nil?
     @timezone_offset
   end
+
+  def holiday_dates *args
+    unless args.empty?
+      dates = []
+      args.each do |arg|
+        if arg =~ /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/
+          Date.parse($1).upto(Date.parse($2)).each { |date| dates << date }
+        else
+          dates << Date.parse(arg)
+        end
+      end
+      @holiday_dates = dates
+    end
+    @holiday_dates
+  end
 end

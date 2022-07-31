@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, 
-    :time_range, :sprints_by_board, :data_quality, :possible_statuses
+    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
 
   @@chart_counter = 0
 
@@ -116,10 +116,23 @@ class ChartBase
     @data_quality_checker.problems_for(name) 
   end
 
-  def holidays date_range=@date_range
+  def holidays date_range: @date_range
     result = []
+    start_date = nil
+    end_date = nil
+
     date_range.each do |date|
-      result << (date..date + 1) if date.wday == 6
+      if date.saturday? || date.sunday? || holiday_dates.include?(date)
+        if start_date.nil?
+          start_date = date
+        else
+          end_date = date
+        end
+      elsif start_date
+        result << (start_date..(end_date || start_date))
+        start_date = nil
+        end_date = nil
+      end
     end
     result
   end

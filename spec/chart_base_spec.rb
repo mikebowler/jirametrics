@@ -136,7 +136,7 @@ describe ChartBase do
       expect(subject.completed_issues_in_range include_unstarted: true).to be_empty
     end
 
-    it 'should return empty when one  issue finished but outside the range' do
+    it 'should return empty when one issue finished but outside the range' do
       subject.issues = [issue1]
       subject.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
       subject.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2000-01-02']]
@@ -148,6 +148,26 @@ describe ChartBase do
       subject.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
       subject.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-02']]
       expect(subject.completed_issues_in_range include_unstarted: true).to eq [issue1]
+    end
+  end
+
+  context 'holidays' do
+    it 'should handle Tues-Thu in the same week' do
+      subject.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-03')
+      subject.holiday_dates = []
+      expect(subject.holidays).to eq []
+    end
+
+    it 'should handle Tues-Tues in the next week' do
+      subject.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-08')
+      subject.holiday_dates = []
+      expect(subject.holidays).to eq [Date.parse('2022-02-05')..Date.parse('2022-02-06')]
+    end
+
+    it 'should handle a three day weekend' do
+      subject.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-08')
+      subject.holiday_dates = [Date.parse('2022-02-04')]
+      expect(subject.holidays).to eq [Date.parse('2022-02-04')..Date.parse('2022-02-06')]
     end
   end
 end

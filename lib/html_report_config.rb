@@ -126,6 +126,7 @@ class HtmlReportConfig
 
     chart.all_board_columns = project_config.all_board_columns
     chart.board_id = @board_id || project_config.guess_board_id
+    chart.holiday_dates = project_config.exporter.holiday_dates
 
     if chart.respond_to? :'date_range='
       time_range = @file_config.project_config.time_range

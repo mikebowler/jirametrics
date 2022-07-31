@@ -51,4 +51,18 @@ describe Exporter do
       expect(exporter.project_configs.collect(&:target_path)).to eq ['spec/tmp/testdir/']
     end
   end
+
+  context 'holiday_dates' do
+    it 'should allow simple dates' do
+      exporter = Exporter.new
+      expect(exporter.holiday_dates '2022-02-03').to eq([Date.parse('2022-02-03')])
+    end
+
+    it 'should allow ranges' do
+      exporter = Exporter.new
+      expect(exporter.holiday_dates '2022-12-24..2022-12-26').to eq(
+        [Date.parse('2022-12-24'), Date.parse('2022-12-25'), Date.parse('2022-12-26')]
+      )
+    end
+  end
 end
