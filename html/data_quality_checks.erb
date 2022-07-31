@@ -1,9 +1,13 @@
 <% 
   problems = data_quality_problems_for :completed_but_not_started
-  unless problems.empty? 
+  unless problems.empty?
+    percentage_work_included = ((issues.size - problems.size).to_f / issues.size * 100).to_i
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started. Consider whether looking at only <%= ((issues.size - problems.size).to_f / issues.size * 100).to_i %>% of the total data points is enough to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">Survivorship Bias</a>.
+    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started. 
+    <% if percentage_work_included < 85 %>
+      Consider whether looking at only <%= percentage_work_included %>% of the total data points is enough to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">Survivorship Bias</a>.
+    <% end %>
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
