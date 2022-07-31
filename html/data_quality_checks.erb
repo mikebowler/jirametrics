@@ -15,7 +15,7 @@
   unless problems.empty? 
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. There is a high liklihood that these items are not showing the correct completion time.
+    <b>Data quality note:</b> <%= problems.size %> items had a status change after being identified as done. Were they really done at that point?
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
