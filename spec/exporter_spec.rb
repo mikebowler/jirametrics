@@ -64,5 +64,10 @@ describe Exporter do
         [Date.parse('2022-12-24'), Date.parse('2022-12-25'), Date.parse('2022-12-26')]
       )
     end
+
+    it 'should initialize dates correctly' do
+      exporter = Exporter.new
+      expect(exporter.holiday_dates).to be_empty
+    end
   end
 end
