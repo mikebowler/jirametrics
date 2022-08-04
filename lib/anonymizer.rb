@@ -19,6 +19,17 @@ class Anonymizer
     puts 'Anonymize done'
   end
 
+  def next_random_word
+    # RandomWord periodically blows up for no reason we can determine. If it throws an exception then
+    # just try again. In every case we've seen, it's worked on the second attempt, but we'll be 
+    # cautious and try five times.
+    5.times do |i|
+      return RandomWord.phrases.next.gsub(/_/, ' ')
+    rescue
+      puts "Random word blew up on attempt #{i + 1}"
+    end
+  end
+
   def anonymize_issue_keys_and_titles
     puts 'Anonymizing issue ids and descriptions'
     counter = 1
@@ -26,7 +37,7 @@ class Anonymizer
       new_key = "ANON-#{counter += 1}"
 
       issue.raw['key'] = new_key
-      issue.raw['fields']['summary'] = RandomWord.phrases.next.gsub(/_/, ' ')
+      issue.raw['fields']['summary'] = next_random_word
       issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
     end
   end
