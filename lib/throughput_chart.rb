@@ -15,7 +15,8 @@ class ThroughputChart < ChartBase
       :status_changes_after_done,
       :backwords_through_statuses,
       :backwards_through_status_categories,
-      :status_not_on_board
+      :status_not_on_board,
+      :stopped_before_started
     )
 
     init_configuration_block(block) do
