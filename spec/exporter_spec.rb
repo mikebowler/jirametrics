@@ -66,6 +66,7 @@ describe Exporter do
     end
 
     it 'should initialize dates correctly' do
+      # This seems like a wierd thing to test for but it was causing exceptions at one point
       exporter = Exporter.new
       expect(exporter.holiday_dates).to be_empty
     end
