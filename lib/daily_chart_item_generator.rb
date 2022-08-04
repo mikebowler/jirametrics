@@ -96,7 +96,15 @@ class DailyChartItemGenerator
       list << [started, 'start', issue]
       list << [@cycletime.stopped_time(issue), 'stop', issue] unless stopped.nil?
     end
-    list.sort { |a, b| a.first <=> b.first }
+
+    list.sort do |a, b|
+      if a.first == b.first
+        # if the times are the same then make sure the start comes before the stop.
+        a[1] == 'start' ? -1 : 1
+      else
+        a.first <=> b.first
+      end
+    end
   end
 
   # Returns a flattened list that's easier to assert against.
