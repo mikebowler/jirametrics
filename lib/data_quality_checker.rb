@@ -26,6 +26,7 @@ class DataQualityChecker
       scan_for_status_change_after_done entry: entry
       scan_for_backwards_movement entry: entry
       scan_for_issues_not_created_in_the_right_status entry: entry
+      scan_for_stopped_before_started entry: entry
     end
 
     entries_with_problems = entries_with_problems()
@@ -159,6 +160,15 @@ class DataQualityChecker
     entry.report(
       problem_key: :created_in_wrong_status,
       detail: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}"
+    )
+  end
+
+  def scan_for_stopped_before_started entry:
+    return unless entry.stopped && entry.started && entry.stopped < entry.started
+
+    entry.report(
+      problem_key: :stopped_before_started,
+      detail: "The stopped time '#{entry.stopped}' is before the started time '#{entry.started}'"
     )
   end
 end

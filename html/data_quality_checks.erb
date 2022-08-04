@@ -73,3 +73,16 @@
 <% 
   end
 %>
+
+<% 
+  problems = data_quality_problems_for :stopped_before_started
+  unless problems.empty? 
+%>
+  <p>
+    <b>Data quality note:</b> <%= problems.size %> items were stopped before they were started and this will play havoc with any cycletime or WIP calculations.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+

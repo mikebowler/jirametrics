@@ -69,7 +69,7 @@ describe DataQualityChecker do
     expect(problem_key).to match :status_changes_after_done
   end
 
-  describe 'backwards movement' do
+  context 'backwards movement' do
     it 'should detect backwards status' do
       subject.board_columns = load_complete_sample_columns
       subject.possible_statuses = load_complete_sample_statuses
@@ -151,7 +151,7 @@ describe DataQualityChecker do
     end
   end
 
-  describe 'scan_for_issues_not_created_in_the_right_status' do
+  context 'scan_for_issues_not_created_in_the_right_status' do
     it 'should catch invalid starting status' do
       subject.board_columns = load_complete_sample_columns
       subject.possible_statuses = load_complete_sample_statuses
@@ -182,6 +182,30 @@ describe DataQualityChecker do
       subject.scan_for_issues_not_created_in_the_right_status entry: entry
 
       expect(entry.problems).to be_empty
+    end
+  end
+
+  context 'scan_for_stopped_before_started' do
+    it 'should accept correct data' do
+      entry = DataQualityChecker::Entry.new(
+        started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
+      )
+      subject.scan_for_stopped_before_started entry: entry
+      expect(entry.problems).to eq []
+    end
+
+    it 'should identify incorrect data' do
+      entry = DataQualityChecker::Entry.new(
+        started: to_time('2022-01-04'), stopped: to_time('2022-01-03'), issue: issue1
+      )
+      subject.scan_for_stopped_before_started entry: entry
+      expect(entry.problems).to eq [
+        [
+          :stopped_before_started,
+          "The stopped time '2022-01-03 00:00:00 +0000' is before the started time '2022-01-04 00:00:00 +0000'",
+          nil, nil
+        ]
+      ]
     end
   end
 end
