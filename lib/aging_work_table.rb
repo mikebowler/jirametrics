@@ -49,9 +49,32 @@ class AgingWorkTable < ChartBase
       icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon
     elsif issue.stalled_on_date?(@today, @stalled_threshold) && @cycletime.started_time(issue)
       icon_span(
-        title: "Stalled: Hasn&apos;t had any activity in #{@stalled_threshold} days and isn&apos;t explicitly marked as blocked",
+        title: "Stalled: Hasn&apos;t had any activity in #{@stalled_threshold} days and isn&apos;t explicitly " \
+          'marked as blocked',
         icon: @stalled_icon
       )
     end
+  end
+
+  def unmapped_status_text issue
+    icon_span(
+      title: "The status #{issue.status.name.inspect} is not mapped to any column and will not be visible",
+      icon: ' ⁉️'
+    )
+  end
+
+  def fix_versions_text issue
+    issue.fix_versions.collect do |fix|
+      if fix.released?
+        icon_text = icon_span title: 'Released. Likely not on the board anymore.', icon: '✅'
+        "#{fix.name} #{icon_text}"
+      else
+        fix.name
+      end
+    end.join('<br />')
+  end
+
+  def status_visible? status
+    board_columns.any? { |column| column.status_ids.include? status.id }
   end
 end

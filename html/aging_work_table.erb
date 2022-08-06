@@ -17,6 +17,7 @@
       <th>Issue</th>
       <th>Type</th>
       <th>Status</th>
+      <th>Fix versions</th>
       <th>Summary</th>
       <th>Who</th>
     </tr>
@@ -29,7 +30,8 @@
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>
         <td><%= issue.type %></td>
-        <td><%= issue.status.name %></td>
+        <td><%= issue.status.name %><%= unmapped_status_text(issue) unless status_visible? issue.status %></td>
+        <td><%= fix_versions_text(issue) %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= issue.assigned_to %></td>
       </tr>
