@@ -199,13 +199,19 @@ class Downloader
     end
   end
 
-  def make_jql today: Date.today
+  def make_jql today: Date.today, board_configuration: @board_configuration
     segments = []
     segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
     segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
     segments << @download_config.jql if @download_config.jql
 
-    raise 'At least one of project_key, filter_name or jql must be specified' if segments.empty?
+    if segments.empty? && board_configuration
+      # Build the query from the filter in the board configuration
+      filter_id = board_configuration['filter']['id']
+      segments << "filter=#{filter_id}"
+    end
+
+    raise 'Unable to query: Must specify project or filter or jql' if segments.empty?
 
     unless @download_config.rolling_date_count.nil?
       @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date

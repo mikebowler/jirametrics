@@ -94,9 +94,18 @@ describe Downloader do
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
 
-    it 'should provide a helpful error if no reasonable filter criteria are set' do
+    it 'should use the filter id in the board config' do
       download_config.rolling_date_count 90
-      expect { downloader.make_jql }.to raise_error 'At least one of project_key, filter_name or jql must be specified'
+      expected = 'filter=5 AND ((status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) OR ' \
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+
+      jql = downloader.make_jql(today: Time.parse('2021-08-01'), board_configuration: { 'filter' => { 'id' => 5 } })
+      expect(jql).to eql expected
+    end
+
+    it 'should fail if nothing else set' do
+      download_config.rolling_date_count 90
+      expect { downloader.make_jql }.to raise_error 'Unable to query: Must specify project or filter or jql'
     end
   end
 end
