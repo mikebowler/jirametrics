@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'time'
-require 'fix_version'
 
 class Issue
   attr_reader :changes, :raw, :subtasks
