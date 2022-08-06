@@ -17,7 +17,6 @@ class Status
   end
 
   def eql?(other)
-    puts "Comparing statuses"
     (other.class == self.class) && (other.state == state)
   end
 
