@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'time'
+require 'fix_version'
 
 class Issue
   attr_reader :changes, :raw, :subtasks
@@ -285,6 +286,12 @@ class Issue
   def issue_links
     @raw['fields']['issuelinks'].collect do |issue_link|
       IssueLink.new origin: self, raw: issue_link
+    end
+  end
+
+  def fix_versions
+    @raw['fields']['fixVersions'].collect do |fix_version|
+      FixVersion.new fix_version
     end
   end
 
