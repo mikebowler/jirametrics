@@ -26,9 +26,9 @@ class Downloader
     end
 
     remove_old_files
-    download_issues
     download_statuses
     download_board_configuration unless @download_config.board_ids.empty?
+    download_issues
     save_metadata
   end
 
@@ -108,6 +108,8 @@ class Downloader
       command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
       json = JSON.parse call_command(command)
       exit_if_call_failed json
+
+      @board_configuration = json if @download_config.board_ids.size == 1
 
       file_prefix = @download_config.project_config.file_prefix
       write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
