@@ -1,9 +1,18 @@
-<h1>Discarded Changes Table</h1>
+<h1>Items moved back to the backlog after they were started</h1>
 <p>
-  The configuration is set to discard some issue changes that meet certain criteria. Usually this is done to reset the clock for items that have been moved back to the backlog. <i>Note that moving items back to the backlog after they've started is a poor practice and should be avoided.</i>
+  This configuration is set to "reset the clock" if an item is moved back to the backlog after it's
+  been discarded. This hides important information and makes the data less accurate. <b>Moving items
+  back to the backlog is strongly discouraged.</b>
+<p>
+  <%= messages.collect {|issue, days_ignored, details| issue.key}.uniq.size %> issues were moved back
+  to the backlog after they were started, ignoring
+  <%= messages.collect {|issue, days_ignored, details| days_ignored}.sum %> days that they were potentially
+  being worked on.
 </p>
 <p>
-  "Days ignored" refers to the number of days of data that we have discarded. This is most likely time that we legitimately spent working on the item and that we are now pretending didn't happen. This makes the data less predictable and generally less accurate.
+  "Days ignored" refers to the number of days of data that we have discarded. This is most likely time
+  that we legitimately spent working on the item and that we are now pretending didn't happen. This makes
+  the data less predictable and generally less accurate.
 </p>
 <table class='standard'>
   <thead>

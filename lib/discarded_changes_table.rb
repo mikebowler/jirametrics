@@ -57,7 +57,8 @@ class DiscardedChangesTable < ChartBase
         end
       end
 
-      messages << [issue, days_ignored, message]
+      # If days_ignored is zero then we don't really care
+      messages << [issue, days_ignored, message] unless days_ignored.zero?
     end
 
     messages.sort_by! { |a| a[0].key_as_i }
