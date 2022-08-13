@@ -4,9 +4,9 @@
   been discarded. This hides important information and makes the data less accurate. <b>Moving items
   back to the backlog is strongly discouraged.</b>
 <p>
-  <%= messages.collect {|issue, days_ignored, details| issue.key}.uniq.size %> issues were moved back
+  <%= format_integer messages.collect {|issue, days_ignored, details| issue.key}.uniq.size %> issues were moved back
   to the backlog after they were started, ignoring
-  <%= messages.collect {|issue, days_ignored, details| days_ignored}.sum %> days that they were potentially
+  <%= format_integer messages.collect {|issue, days_ignored, details| days_ignored}.sum %> days that they were potentially
   being worked on.
 </p>
 <p>

@@ -7,6 +7,7 @@ class DiscardedChangesTable < ChartBase
   attr_accessor :issues, :cycletime, :possible_statuses, :date_range
 
   def initialize original_issue_times
+    super()
     @original_issue_times = original_issue_times
   end
 

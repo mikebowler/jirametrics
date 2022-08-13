@@ -170,4 +170,21 @@ describe ChartBase do
       expect(subject.holidays).to eq [Date.parse('2022-02-04')..Date.parse('2022-02-06')]
     end
   end
+
+  context 'format_integer' do
+    it 'should format for three digits or less' do
+      expect(subject.format_integer 5).to eq '5'
+      expect(subject.format_integer 500).to eq '500'
+    end
+
+    it 'should format for 4-6 digits' do
+      expect(subject.format_integer 1000).to eq '1,000'
+      expect(subject.format_integer 999_999).to eq '999,999'
+    end
+
+    it 'should format for 7-9 digits' do
+      expect(subject.format_integer 1_000_000).to eq '1,000,000'
+      expect(subject.format_integer 999_999_999).to eq '999,999,999'
+    end
+  end
 end

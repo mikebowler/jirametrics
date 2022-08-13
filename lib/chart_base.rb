@@ -182,4 +182,8 @@ class ChartBase
   def description_text text
     @description_text = text
   end
+
+  def format_integer number
+    number.to_s.reverse.scan(/.{1,3}/).join(',').reverse
+  end
 end
