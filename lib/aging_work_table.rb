@@ -75,6 +75,6 @@ class AgingWorkTable < ChartBase
   end
 
   def status_visible? status
-    board_columns.any? { |column| column.status_ids.include? status.id }
+    current_board.visible_columns.any? { |column| column.status_ids.include? status.id }
   end
 end

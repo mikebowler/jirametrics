@@ -37,7 +37,7 @@ describe HtmlReportConfig do
       exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )
     project_config.file_prefix 'sample'
-    project_config.load_board_columns board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json'
+    project_config.load_board board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json'
     project_config.load_project_metadata
 
     issue1 = load_issue('SP-1')
@@ -52,8 +52,8 @@ describe HtmlReportConfig do
     config.execute_chart chart
 
     expect(chart.issues).to eq [issue1]
-    expect(chart.all_board_columns[1].collect(&:name)).to eq [
-      'Backlog', 'Ready', 'In Progress', 'Review', 'Done'
+    expect(chart.all_boards[1].visible_columns.collect(&:name)).to eq [
+      'Ready', 'In Progress', 'Review', 'Done'
     ]
     expect(chart.time_range).to eq Time.parse('2021-09-14 00:00:00 +0000')..Time.parse('2021-12-13 23:59:59 +0000')
     expect(chart.date_range).to eq Date.parse('2021-09-14')..Date.parse('2021-12-13')

@@ -99,29 +99,31 @@ describe ChartBase do
   end
 
   context 'board_columns' do
+    let(:raw_board) { { 'type' => 'scrum', 'columnConfig' => { 'columns' => [] } } }
+
     it 'should raise exception if board cannot be determined' do
-      subject.all_board_columns = {}
-      expect { subject.board_columns }.to raise_error 'Couldn\'t find any board configurations. Ensure one is set'
+      subject.all_boards = {}
+      expect { subject.current_board }.to raise_error 'Couldn\'t find any board configurations. Ensure one is set'
     end
 
     it 'should return correct columns when board id set' do
-      columns1 = []
+      board1 = Board.new raw: raw_board
       subject.board_id = 1
-      subject.all_board_columns = { 1 => columns1 }
-      expect(subject.board_columns).to be columns1
+      subject.all_boards = { 1 => board1 }
+      expect(subject.current_board).to be board1
     end
 
     it 'should return correct columns when board id not set but only one board in use' do
-      columns1 = []
-      subject.all_board_columns = { 1 => columns1 }
-      expect(subject.board_columns).to be columns1
+      board1 = Board.new raw: raw_board
+      subject.all_boards = { 1 => board1 }
+      expect(subject.current_board).to be board1
     end
 
     it 'should raise exception when board id not set and multiple boards in use' do
-      columns1 = [1]
-      columns2 = [2]
-      subject.all_board_columns = { 1 => columns1, 2 => columns2 }
-      expect { subject.board_columns }.to raise_error(
+      board1 = Board.new raw: raw_board
+      board2 = Board.new raw: raw_board
+      subject.all_boards = { 1 => board1, 2 => board2 }
+      expect { subject.current_board }.to raise_error(
         'Must set board_id so we know which to use. Multiple boards found: [1, 2]'
       )
     end

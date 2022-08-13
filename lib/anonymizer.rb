@@ -6,7 +6,7 @@ class Anonymizer
   def initialize project_config:, date_adjustment: -200
     @project_config = project_config
     @issues = @project_config.issues
-    @all_board_columns = @project_config.all_board_columns
+    @all_boards = @project_config.all_boards
     @possible_statuses = @project_config.possible_statuses
     @date_adjustment = date_adjustment
   end
@@ -21,7 +21,7 @@ class Anonymizer
 
   def next_random_word
     # RandomWord periodically blows up for no reason we can determine. If it throws an exception then
-    # just try again. In every case we've seen, it's worked on the second attempt, but we'll be 
+    # just try again. In every case we've seen, it's worked on the second attempt, but we'll be
     # cautious and try five times.
     5.times do |i|
       return RandomWord.phrases.next.gsub(/_/, ' ')
@@ -43,11 +43,11 @@ class Anonymizer
   end
 
   def anonymize_column_names
-    @all_board_columns.each_key do |board_id|
+    @all_boards.each_key do |board_id|
       puts "Anonymizing column names for board #{board_id}"
 
       column_name = 'Column-A'
-      @all_board_columns[board_id].each do |column|
+      @all_boards[board_id].visible_columns.each do |column|
         column.name = column_name
         column_name = column_name.next
       end

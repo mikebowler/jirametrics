@@ -71,7 +71,7 @@ describe DataQualityChecker do
 
   context 'backwards movement' do
     it 'should detect backwards status' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
@@ -92,7 +92,7 @@ describe DataQualityChecker do
     end
 
     it 'should detect backwards status category' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
@@ -115,7 +115,7 @@ describe DataQualityChecker do
     end
 
     it 'should detect statuses that just aren\'t on the board' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
@@ -132,7 +132,7 @@ describe DataQualityChecker do
     end
 
     it 'should detect skip past changes that are moving right' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
@@ -153,7 +153,7 @@ describe DataQualityChecker do
 
   context 'scan_for_issues_not_created_in_the_right_status' do
     it 'should catch invalid starting status' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
@@ -170,7 +170,7 @@ describe DataQualityChecker do
     end
 
     it 'should skip past valid status' do
-      subject.board_columns = load_complete_sample_columns
+      subject.board = load_complete_sample_board
       subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 

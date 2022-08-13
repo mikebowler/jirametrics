@@ -11,7 +11,7 @@ describe AgingWorkInProgressChart do
   let :chart do
     chart = AgingWorkInProgressChart.new
     chart.board_id = 1
-    chart.all_board_columns = { 1 => complete_sample_board_columns }
+    chart.all_boards = { 1 => load_complete_sample_board }
     chart.cycletime = defaultCycletimeConfig
     chart.issues = load_complete_sample_issues
     chart
@@ -23,7 +23,6 @@ describe AgingWorkInProgressChart do
 
       actual = chart.accumulated_status_ids_per_column
       expect(actual).to eq [
-        ['Backlog',     [10_002, 10_011, 3, 10_001, 10_000]],
         ['Ready',       [10_002, 10_011, 3, 10_001]],
         ['In Progress', [10_002, 10_011, 3]],
         ['Review',      [10_002, 10_011]],
@@ -54,12 +53,12 @@ describe AgingWorkInProgressChart do
   context 'days_at_percentage_threshold_for_all_columns' do
     it 'at 100%' do
       actual = chart.days_at_percentage_threshold_for_all_columns percentage: 100, issues: chart.issues
-      expect(actual).to eq [0, 0, 0, 0, 0]
+      expect(actual).to eq [0, 0, 0, 0]
     end
 
     it 'at 0%' do
       actual = chart.days_at_percentage_threshold_for_all_columns percentage: 0, issues: chart.issues
-      expect(actual).to eq [1, 1, 1, 81, 81]
+      expect(actual).to eq [1, 1, 81, 81]
     end
   end
 
@@ -109,7 +108,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [180, 180, 180, 81],
+       'data' => [180, 180, 81],
        'label' => '85%',
        'type' => 'bar'
      }

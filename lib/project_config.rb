@@ -5,7 +5,7 @@ require 'time'
 class ProjectConfig
   include DiscardChangesBefore
 
-  attr_reader :target_path, :jira_config, :all_board_columns, :possible_statuses,
+  attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :sprints_by_board
   attr_accessor :time_range
 
@@ -17,7 +17,7 @@ class ProjectConfig
     @target_path = target_path
     @jira_config = jira_config
     @possible_statuses = []
-    @all_board_columns = {}
+    @all_boards = {}
     @sprints_by_board = {}
   end
 
@@ -27,7 +27,7 @@ class ProjectConfig
 
   def run
     load_project_metadata
-    load_all_board_columns
+    load_all_boards
     load_status_category_mappings
     load_sprints
     anonymize_data if @anonymizer_needed
@@ -64,20 +64,17 @@ class ProjectConfig
     add_possible_status Status.new(name: status, id: nil, category_name: category, category_id: nil)
   end
 
-  def load_all_board_columns
+  def load_all_boards
     Dir.foreach(@target_path) do |file|
       next unless file =~ /^#{@file_prefix}_board_(\d+)_configuration\.json$/
 
-      board_id = $1
-      load_board_columns board_id: board_id, filename: "#{@target_path}#{file}"
+      board_id = $1.to_i
+      load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
   end
 
-  def load_board_columns board_id:, filename:
-    json = JSON.parse(File.read(filename))
-    @all_board_columns[board_id.to_i] = json['columnConfig']['columns'].collect do |column|
-      BoardColumn.new column
-    end
+  def load_board board_id:, filename:
+    @all_boards[board_id] = Board.new raw: JSON.parse(File.read(filename))
   end
 
   def category_for type: nil, status_name:
@@ -194,27 +191,27 @@ class ProjectConfig
   end
 
   def guess_board_id
-    unless all_board_columns.size == 1
+    unless all_boards.size == 1
       message = "If the board_id isn't set then we look for all board configurations in the target" \
         ' directory. '
-      if all_board_columns.empty?
+      if all_boards.empty?
         message += ' In this case, we couldn\'t find any configuration files in the target directory.'
       else
         message += 'If there is only one, we use that. In this case we found configurations for' \
-          " the following board ids and this is ambiguous: #{all_board_columns.keys}"
+          " the following board ids and this is ambiguous: #{all_boards.keys}"
       end
       raise message
     end
-    all_board_columns.keys[0]
+    all_boards.keys[0]
   end
 
-  def board_columns board_id: nil
+  def find_board_by_id board_id=nil
     all_board_columns = @all_board_columns
-    board_columns = all_board_columns[board_id || guess_board_id]
+    board = all_boards[board_id || guess_board_id]
 
-    raise "Unable to find configuration for board_id: #{board_id}" if board_columns.nil?
+    raise "Unable to find configuration for board_id: #{board_id}" if board.nil?
 
-    board_columns
+    board
   end
 
   def issues

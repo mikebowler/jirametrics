@@ -37,6 +37,10 @@ class AgingWorkInProgressChart < ChartBase
     end
   end
 
+  def board_columns
+    current_board.visible_columns
+  end
+
   def run
     data_sets = make_data_sets
     column_headings = board_columns.collect(&:name)

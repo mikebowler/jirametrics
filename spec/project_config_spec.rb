@@ -28,16 +28,15 @@ describe ProjectConfig do
     it 'should load' do
       config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
       config.file_prefix 'sample'
-      config.load_all_board_columns
-      expect(config.all_board_columns.keys).to eq [1]
+      config.load_all_boards
+      expect(config.all_boards.keys).to eq [1]
 
-      contents = config.all_board_columns[1].collect do |column|
+      contents = config.all_boards[1].visible_columns.collect do |column|
         [column.name, column.status_ids, column.min, column.max]
       end
 
       # rubocop:disable Layout/ExtraSpacing
       expect(contents).to eq [
-        ['Backlog',     [10_000], nil, nil],
         ['Ready',       [10_001],   1,   4],
         ['In Progress',      [3], nil,   3],
         ['Review',      [10_011], nil,   3],
@@ -103,8 +102,8 @@ describe ProjectConfig do
 
     it 'should fail if no board id set and there are multiple boards' do
       project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      project_config.load_board_columns(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
-      project_config.load_board_columns(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
+      project_config.load_board(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
       expect { project_config.guess_board_id }.to raise_error %r{following board ids and this is ambiguous}
     end

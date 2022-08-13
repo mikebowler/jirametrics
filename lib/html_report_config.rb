@@ -124,7 +124,7 @@ class HtmlReportConfig
     chart.timezone_offset = timezone_offset
     chart.sprints_by_board = project_config.sprints_by_board if chart.respond_to? :sprints_by_board
 
-    chart.all_board_columns = project_config.all_board_columns
+    chart.all_boards = project_config.all_boards
     chart.board_id = @board_id || project_config.guess_board_id
     chart.holiday_dates = project_config.exporter.holiday_dates
 

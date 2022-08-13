@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_board_columns, :cycletime, :issues, :date_range, 
+  attr_accessor :timezone_offset, :board_id, :all_boards, :cycletime, :issues, :date_range, 
     :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
 
   @@chart_counter = 0
@@ -99,7 +99,7 @@ class ChartBase
     checker = DataQualityChecker.new
     checker.issues = issues
     checker.cycletime = cycletime
-    checker.board_columns = board_columns
+    checker.board = current_board
     checker.possible_statuses = possible_statuses
     checker.run
     @data_quality_checker = checker
@@ -138,19 +138,19 @@ class ChartBase
   end
 
   # Return only the board columns for the current board.
-  def board_columns
+  def current_board
     if @board_id.nil?
-      case @all_board_columns.size
+      case @all_boards.size
       when 0
         raise 'Couldn\'t find any board configurations. Ensure one is set'
       when 1
-        return @all_board_columns.values[0]
+        return @all_boards.values[0]
       else
-        raise "Must set board_id so we know which to use. Multiple boards found: #{@all_board_columns.keys.inspect}"
+        raise "Must set board_id so we know which to use. Multiple boards found: #{@all_boards.keys.inspect}"
       end
     end
 
-    @all_board_columns[@board_id]
+    @all_boards[@board_id]
   end
 
   def completed_issues_in_range include_unstarted:

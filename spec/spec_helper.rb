@@ -35,11 +35,9 @@ def load_complete_sample_issues
   json['issues'].collect { |raw| Issue.new raw: raw }
 end
 
-def load_complete_sample_columns
+def load_complete_sample_board
   json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
-  json['columnConfig']['columns'].collect do |column|
-    BoardColumn.new column
-  end
+  Board.new raw: json
 end
 
 def load_complete_sample_statuses
