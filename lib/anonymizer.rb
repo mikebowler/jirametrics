@@ -3,6 +3,9 @@
 require 'random-word'
 
 class Anonymizer
+  # needed for testing
+  attr_reader :project_config, :issues
+
   def initialize project_config:, date_adjustment: -200
     @project_config = project_config
     @issues = @project_config.issues
@@ -19,7 +22,7 @@ class Anonymizer
     puts 'Anonymize done'
   end
 
-  def next_random_word
+  def random_phrase
     # RandomWord periodically blows up for no reason we can determine. If it throws an exception then
     # just try again. In every case we've seen, it's worked on the second attempt, but we'll be
     # cautious and try five times.
@@ -30,14 +33,13 @@ class Anonymizer
     end
   end
 
-  def anonymize_issue_keys_and_titles
-    puts 'Anonymizing issue ids and descriptions'
-    counter = 1
-    @issues.each do |issue|
+  def anonymize_issue_keys_and_titles issues: @issues
+    counter = 0
+    issues.each do |issue|
       new_key = "ANON-#{counter += 1}"
 
       issue.raw['key'] = new_key
-      issue.raw['fields']['summary'] = next_random_word
+      issue.raw['fields']['summary'] = random_phrase
       issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
     end
   end
