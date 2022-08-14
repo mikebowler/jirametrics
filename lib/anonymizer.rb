@@ -41,6 +41,12 @@ class Anonymizer
       issue.raw['key'] = new_key
       issue.raw['fields']['summary'] = random_phrase
       issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
+
+      issue.issue_links.each do |link|
+        other_issue = link.other_issue
+        other_issue.raw['key'] = "ANON-#{counter += 1}"
+        other_issue.raw['fields']['summary'] = random_phrase
+      end
     end
   end
 
