@@ -31,8 +31,15 @@ def defaultCycletimeConfig
 end
 
 def load_complete_sample_issues
-  json = JSON.parse(File.read('./spec/complete_sample/sample_0.json'))
-  json['issues'].collect { |raw| Issue.new raw: raw }
+  result = []
+  Dir.each_child './spec/complete_sample/sample_issues' do |file|
+    next unless file =~ /SP-.+/
+
+    result << Issue.new(raw: JSON.parse(File.read("./spec/complete_sample/sample_issues/#{file}")))
+  end
+
+  # Sort them back into the order they would have come from Jira because some of the tests are order dependant.
+  result.sort_by(&:key_as_i).reverse
 end
 
 def load_complete_sample_board
