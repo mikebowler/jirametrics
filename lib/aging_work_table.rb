@@ -74,6 +74,28 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
+  def sprints_text issue
+    sprint_ids = []
+    sprints = sprints_by_board[current_board.id]
+
+    issue.changes.each do |change|
+      next unless change.sprint?
+
+      sprint_ids << change.raw['to'].split(/\s*,\s*/).collect { |id| id.to_i }
+    end
+    sprint_ids.flatten!
+
+    sprints.select { |s| sprint_ids.include? s.id }.collect do |sprint|
+      icon_text = nil
+      if sprint.active?
+        icon_text = icon_span title: 'Active sprint', icon: '🚴🏽‍♂️'
+      else
+        icon_text = icon_span title: 'Sprint closed', icon: '✅'
+      end
+      "#{sprint.name} #{icon_text}"
+    end.join('<br />')
+  end
+
   def status_visible? status
     current_board.visible_columns.any? { |column| column.status_ids.include? status.id }
   end

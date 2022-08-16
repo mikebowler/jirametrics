@@ -18,7 +18,9 @@
       <th>Type</th>
       <th>Status</th>
       <th>Fix versions</th>
-      <th>Summary</th>
+      <% if current_board.scrum? %>
+          <th>Sprints</th>
+        <% end %>      <th>Summary</th>
       <th>Who</th>
     </tr>
   </thead>
@@ -32,6 +34,9 @@
         <td><%= issue.type %></td>
         <td><%= issue.status.name %><%= unmapped_status_text(issue) unless status_visible? issue.status %></td>
         <td><%= fix_versions_text(issue) %></td>
+        <% if current_board.scrum? %>
+          <td><%= sprints_text(issue) %></td>
+        <% end %>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= issue.assigned_to %></td>
       </tr>

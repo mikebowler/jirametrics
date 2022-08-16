@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Board
-  attr_reader :backlog_statuses, :visible_columns
+  attr_reader :backlog_statuses, :visible_columns, :raw
 
   def initialize raw:
     @raw = raw
@@ -38,5 +38,9 @@ class Board
 
   def scrum?
     @board_type == 'scrum'
+  end
+
+  def id
+    @raw['id'].to_i
   end
 end
