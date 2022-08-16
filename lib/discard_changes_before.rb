@@ -3,8 +3,15 @@
 module DiscardChangesBefore
   def discard_changes_before status_becomes: nil, &block
     if status_becomes
-      status_becomes = expand_backlog_statuses if status_becomes == :backlog
       status_becomes = [status_becomes] unless status_becomes.is_a? Array
+
+      status_becomes = status_becomes.collect do |status_name|
+        if status_name == :backlog
+          expand_backlog_statuses
+        else
+          status_name
+        end
+      end.flatten
 
       block = lambda do |issue|
         time = nil
@@ -31,9 +38,6 @@ module DiscardChangesBefore
   def expand_backlog_statuses
     project_config = @file_config.project_config
     status_ids = project_config.all_boards[find_board_id].backlog_statuses
-    # puts status_ids.inspect
-    # puts project_config.possible_statuses.inspect
-    puts project_config.file_prefix
-    project_config.possible_statuses.select { |s| status_ids.include? s.id.to_i }.collect {|s| s.name}.tap {|a|puts a.inspect}
+    project_config.possible_statuses.select { |s| status_ids.include? s.id.to_i }.collect {|s| s.name}
   end
 end
