@@ -17,10 +17,12 @@ class StoryPointAccuracyChart < ChartBase
     HTML
     check_data_quality_for(
       :status_changes_after_done,
+      :completed_but_not_started,
       :backwords_through_statuses,
       :backwards_through_status_categories,
       :created_in_wrong_status,
-      :status_not_on_board
+      :status_not_on_board,
+      :stopped_before_started
     )
   end
 
