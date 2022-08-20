@@ -38,6 +38,6 @@ module DiscardChangesBefore
   def expand_backlog_statuses
     project_config = @file_config.project_config
     status_ids = project_config.all_boards[find_board_id].backlog_statuses
-    project_config.possible_statuses.select { |s| status_ids.include? s.id.to_i }.collect {|s| s.name}
+    project_config.possible_statuses.select { |s| status_ids.include? s.id.to_i }.collect { |s| s.name }
   end
 end
