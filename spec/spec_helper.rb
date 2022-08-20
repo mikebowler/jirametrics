@@ -20,7 +20,7 @@ def load_issue key
   Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")))
 end
 
-def defaultCycletimeConfig
+def default_cycletime_config
   today = Date.parse('2021-12-17')
 
   block = lambda do |_|

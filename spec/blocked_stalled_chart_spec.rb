@@ -12,7 +12,7 @@ describe BlockedStalledChart do
       issue1.raw['fields']['updated'] = '2021-10-02' # Stalled logic uses this field.
 
       subject = BlockedStalledChart.new
-      subject.cycletime = defaultCycletimeConfig
+      subject.cycletime = default_cycletime_config
 
       expected_blocked = []
       expected_stalled = []
@@ -30,7 +30,7 @@ describe BlockedStalledChart do
       issue1.raw['fields']['updated'] = '2021-10-03' # Stalled logic uses this field.
 
       subject = BlockedStalledChart.new
-      subject.cycletime = defaultCycletimeConfig
+      subject.cycletime = default_cycletime_config
 
       expected_blocked = [issue1]
       expected_stalled = []
@@ -47,7 +47,7 @@ describe BlockedStalledChart do
       issue1.raw['fields']['updated'] = '2021-10-03' # Stalled logic uses this field.
 
       subject = BlockedStalledChart.new
-      subject.cycletime = defaultCycletimeConfig
+      subject.cycletime = default_cycletime_config
 
       expected_blocked = []
       expected_stalled = [issue1]
@@ -65,7 +65,7 @@ describe BlockedStalledChart do
       issue1.raw['fields']['updated'] = '2021-10-03' # Stalled logic uses this field.
 
       subject = BlockedStalledChart.new
-      subject.cycletime = defaultCycletimeConfig
+      subject.cycletime = default_cycletime_config
 
       expected_blocked = [issue1]
       expected_stalled = []

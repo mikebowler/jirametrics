@@ -57,7 +57,7 @@ describe ThroughputChart do
 
       subject = ThroughputChart.new
       subject.issues = [issue1, issue2, issue10]
-      subject.cycletime = defaultCycletimeConfig
+      subject.cycletime = default_cycletime_config
 
       dataset = subject.throughput_dataset(
         periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],

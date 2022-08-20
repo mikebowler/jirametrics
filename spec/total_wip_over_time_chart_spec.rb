@@ -9,7 +9,7 @@ describe TotalWipOverTimeChart do
 
   let :chart do
     chart = TotalWipOverTimeChart.new
-    chart.cycletime = defaultCycletimeConfig
+    chart.cycletime = default_cycletime_config
     chart
   end
 

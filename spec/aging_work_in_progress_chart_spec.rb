@@ -12,7 +12,7 @@ describe AgingWorkInProgressChart do
     chart = AgingWorkInProgressChart.new
     chart.board_id = 1
     chart.all_boards = { 1 => load_complete_sample_board }
-    chart.cycletime = defaultCycletimeConfig
+    chart.cycletime = default_cycletime_config
     chart.issues = load_complete_sample_issues
     chart
   end

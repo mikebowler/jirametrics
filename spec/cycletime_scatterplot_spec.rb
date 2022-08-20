@@ -9,7 +9,7 @@ describe CycletimeScatterplot do
   context 'data_for_issue' do
     it '' do
       issue = load_issue('SP-10')
-      chart.cycletime = defaultCycletimeConfig
+      chart.cycletime = default_cycletime_config
       expect(chart.data_for_issue issue).to eq({
         'title' => ['SP-10 : Check in people at an event (81 days)'],
         'x' => chart_format(issue.last_resolution),
@@ -31,7 +31,7 @@ describe CycletimeScatterplot do
   it 'should create_datasets' do
     issue = load_issue('SP-10')
 
-    chart.cycletime = defaultCycletimeConfig
+    chart.cycletime = default_cycletime_config
     chart.issues = [issue]
 
     expect(chart.create_datasets [issue]).to eq([
