@@ -110,7 +110,7 @@ describe FileConfig do
       project_config.file_prefix 'sample'
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns { 'a' }
-      expect { file_config.columns { 'a' } }.to raise_error /Can only have one/
+      expect { file_config.columns { 'a' } }.to raise_error(/Can only have one/)
     end
   end
 end

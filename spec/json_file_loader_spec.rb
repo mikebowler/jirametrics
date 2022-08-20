@@ -6,9 +6,7 @@ describe JsonFileLoader do
   it 'should load json' do
     filename = make_test_filename 'jsonfileloader'
     begin
-      File.open(filename, 'w') do |file|
-        file.write('{"a": "b"}')
-      end
+      File.write(filename, '{"a": "b"}')
 
       expect(JsonFileLoader.new.load(filename)).to eq({ 'a' => 'b' })
     ensure

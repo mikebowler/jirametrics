@@ -74,3 +74,6 @@ Layout/EndAlignment:
 
 Layout/CaseIndentation:
   Enabled: false
+
+Layout/LineContinuationLeadingSpace:
+  Enabled: false

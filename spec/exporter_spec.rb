@@ -7,7 +7,7 @@ TARGET_PATH = 'spec/tmp/testdir'
 describe Exporter do
   context 'target_path' do
     it 'should work with no file separator at end' do
-      Dir.rmdir TARGET_PATH if Dir.exist? TARGET_PATH
+      Dir.rmdir TARGET_PATH
       exporter = Exporter.new
       exporter.target_path TARGET_PATH
       expect(exporter.target_path).to eq "#{TARGET_PATH}/"
@@ -15,7 +15,7 @@ describe Exporter do
     end
 
     it 'should work with file separator at end' do
-      Dir.rmdir TARGET_PATH if Dir.exist? TARGET_PATH
+      Dir.rmdir TARGET_PATH
       exporter = Exporter.new
       exporter.target_path "#{TARGET_PATH}/"
       expect(exporter.target_path).to eq "#{TARGET_PATH}/"

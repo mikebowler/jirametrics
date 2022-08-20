@@ -13,4 +13,3 @@ describe FixVersion do
     expect(subject.released?).to be_truthy
   end
 end
-

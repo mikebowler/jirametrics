@@ -83,4 +83,3 @@ describe IssueLink do
     expect(subject.name).to eq 'Problem/Incident'
   end
 end
-

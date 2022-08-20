@@ -463,10 +463,9 @@ describe Issue do
 
     it 'should work' do
       issue = empty_issue created: '2021-10-01T00:00:00+00:00'
-      issue.raw['fields']['resolution'] = {'name' => 'Done'}
+      issue.raw['fields']['resolution'] = { 'name' => 'Done' }
       expect(issue.resolution).to eq 'Done'
     end
-
   end
 
   context 'created from a linked issue' do
@@ -501,7 +500,8 @@ describe Issue do
             'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/issuetype/10001',
             'id' => '10001',
             'description' => 'Functionality or a feature expressed as a user goal.',
-            'iconUrl' => 'https =>//improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium',
+            'iconUrl' => 'https =>//improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/' \
+              'issuetype/avatar/10315?size=medium',
             'name' => 'Story',
             'subtask' => false,
             'avatarId' => 10_315,

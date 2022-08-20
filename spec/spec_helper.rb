@@ -52,7 +52,6 @@ def load_complete_sample_statuses
 
   json = JSON.parse(File.read('./spec/complete_sample/sample_statuses.json'))
   json.each do |type_config|
-    issue_type = type_config['name']
     type_config['statuses'].each do |status_config|
       category_config = status_config['statusCategory']
       statuses << Status.new(

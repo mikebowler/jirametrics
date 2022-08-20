@@ -4,6 +4,7 @@ require './spec/spec_helper'
 
 class TestableChart < ChartBase
   attr_accessor :issues, :cycletime, :board_columns, :time_range, :date_range
+
   def run
     'running'
   end

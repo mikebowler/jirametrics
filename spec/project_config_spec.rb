@@ -60,7 +60,7 @@ describe ProjectConfig do
 
       expected = [
         ['Backlog', 'To Do'],
-        ['Done', 'Done'],
+        ['Done', 'Done'], # rubocop:disable Style/WordArray
         ['In Progress', 'In Progress'],
         ['Review', 'In Progress'],
         ['Selected for Development', 'In Progress']
@@ -139,8 +139,7 @@ describe ProjectConfig do
       project_config.issues << issue1
 
       project_config.discard_changes_before { |_issue| Time.parse('2022-01-02T09:00:00') }
-      expect(issue1.changes.collect(&:time)).to eq [
-      ]
+      expect(issue1.changes.collect(&:time)).to eq []
     end
   end
 end
