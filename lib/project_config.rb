@@ -52,7 +52,7 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_category_mapping type: nil, status:, category:
+  def status_category_mapping status:, category:, type: nil
     puts "Deprecated: ProjectConfig.status_category_mapping no longer needs a type: #{type.inspect}" if type
 
     status_object = find_status(name: status)
@@ -77,7 +77,7 @@ class ProjectConfig
     @all_boards[board_id] = Board.new raw: JSON.parse(File.read(filename))
   end
 
-  def category_for type: nil, status_name:
+  def category_for status_name:
     status = find_status name: status_name
     raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
 
@@ -205,8 +205,7 @@ class ProjectConfig
     all_boards.keys[0]
   end
 
-  def find_board_by_id board_id=nil
-    all_board_columns = @all_board_columns
+  def find_board_by_id board_id = nil
     board = all_boards[board_id || guess_board_id]
 
     raise "Unable to find configuration for board_id: #{board_id}" if board.nil?

@@ -27,7 +27,6 @@ describe ColumnsConfig do
   end
 
   context 'column_entry_times' do
-
     it 'should succeed' do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil

@@ -28,7 +28,7 @@ class Anonymizer
     # cautious and try five times.
     5.times do |i|
       return RandomWord.phrases.next.gsub(/_/, ' ')
-    rescue
+    rescue # rubocop:disable Style/RescueStandardError We don't care what exception was thrown.
       puts "Random word blew up on attempt #{i + 1}"
     end
   end

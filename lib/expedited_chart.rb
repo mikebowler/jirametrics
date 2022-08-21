@@ -5,11 +5,11 @@ require './lib/chart_base'
 class ExpeditedChart < ChartBase
   EXPEDITED_SEGMENT = Object.new.tap do |segment|
     def segment.to_json *_args
-      <<-SNIPPET
-{
-  borderColor: ctx => expedited(ctx, 'red') || notExpedited(ctx, 'gray'),
-  borderDash: ctx => notExpedited(ctx, [6, 6])
-}
+      <<~SNIPPET
+        {
+          borderColor: ctx => expedited(ctx, 'red') || notExpedited(ctx, 'gray'),
+          borderDash: ctx => notExpedited(ctx, [6, 6])
+        }
       SNIPPET
     end
   end
@@ -113,7 +113,7 @@ class ExpeditedChart < ChartBase
     expedite_data.sort! { |a, b| a[0] <=> b[0] }
 
     # If none of the data would be visible on the chart then skip it.
-    return nil unless expedite_data.any? { |time, action| time.to_date >= date_range.begin }
+    return nil unless expedite_data.any? { |time, _action| time.to_date >= date_range.begin }
 
     data = []
     dot_colors = []

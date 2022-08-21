@@ -57,7 +57,7 @@ describe ChartBase do
       ]
       dataset = subject.daily_chart_dataset(
         date_issues_list: date_issues_list, color: 'red', label: 'MyChart', positive: true
-      ) { |_date, _issue| '(dynamic content!)'}
+      ) { |_date, _issue| '(dynamic content!)' }
 
       expect(dataset).to eq({
         type: 'bar',

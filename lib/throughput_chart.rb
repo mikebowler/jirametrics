@@ -5,7 +5,6 @@ class ThroughputChart < ChartBase
 
   attr_accessor :possible_statuses
 
-
   def initialize block = nil
     super()
 
@@ -93,7 +92,8 @@ class ThroughputChart < ChartBase
 
       { y: closed_issues.size,
         x: "#{period.end}T23:59:59",
-        title: ["#{closed_issues.size} items completed #{date_label}"] + closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
+        title: ["#{closed_issues.size} items completed #{date_label}"] +
+          closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
       }
     end
   end

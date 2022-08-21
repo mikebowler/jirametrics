@@ -6,6 +6,7 @@ class AgingWorkTable < ChartBase
   attr_accessor :today
 
   def initialize expedited_priority_name
+    super()
     @expedited_priority_name = expedited_priority_name
     @blocked_icon = '🛑'
     @expedited_icon = '🔥'
@@ -39,9 +40,9 @@ class AgingWorkTable < ChartBase
   end
 
   def expedited_text issue
-    if expedited?(issue)
-      icon_span(title: "Expedited: Has a priority of &quot;#{@expedited_priority_name}&quot;", icon: @expedited_icon)
-    end
+    return unless expedited?(issue)
+
+    icon_span(title: "Expedited: Has a priority of &quot;#{@expedited_priority_name}&quot;", icon: @expedited_icon)
   end
 
   def blocked_text issue

@@ -204,7 +204,8 @@ describe DependencyChart do
       rules = DependencyChart::IssueRules.new
       rules.color = 'red'
       expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event",style=filled,fillcolor="red"]))
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
+          %(,style=filled,fillcolor="red"]))
       )
     end
 

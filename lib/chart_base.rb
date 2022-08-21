@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_boards, :cycletime, :issues, :date_range, 
+  attr_accessor :timezone_offset, :board_id, :all_boards, :cycletime, :issues, :date_range,
     :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
 
   @@chart_counter = 0
@@ -27,7 +27,7 @@ class ChartBase
     raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
 
     # Insert a incrementing chart_id so that all the chart names on the page are unique
-    caller_binding.eval "chart_id='chart#{next_id}'"
+    caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
     erb = ERB.new File.read "html/#{$1}.erb"
     erb.result(caller_binding)
@@ -113,7 +113,7 @@ class ChartBase
   def data_quality_problems_for name
     return [] unless @data_quality_check_names.include? name
 
-    @data_quality_checker.problems_for(name) 
+    @data_quality_checker.problems_for(name)
   end
 
   def holidays date_range: @date_range

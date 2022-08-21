@@ -124,6 +124,7 @@ class DependencyChart < ChartBase
           l.name == link.name && l.origin.key == link.other_issue.key && l.other_issue.key == link.origin.key
         end
         if opposite
+          # rubocop:disable Style/GuardClause
           if link_rules.get_merge_bidirectional.to_sym == link.direction
             # We keep this one and discard the opposite
             links_to_ignore << opposite
@@ -131,6 +132,7 @@ class DependencyChart < ChartBase
             # We keep the opposite and discard this one
             next
           end
+          # rubocop:enable Style/GuardClause
         end
       end
 
@@ -190,7 +192,7 @@ class DependencyChart < ChartBase
     end
   end
 
-  def word_wrap text, max_width: 50, separator: "<BR/>"
+  def word_wrap text, max_width: 50, separator: '<BR/>'
     text.lines.collect do |line|
       line.chomp!
       if line.length > max_width

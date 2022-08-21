@@ -49,4 +49,3 @@ module GroupableIssueChart
     result
   end
 end
-

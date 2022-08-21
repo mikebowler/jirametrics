@@ -16,7 +16,9 @@ describe DailyChartItemGenerator do
     end
 
     it 'should handle one issue that is done' do
-      subject = DailyChartItemGenerator.new issues: [issue10], cycletime: default_cycletime_config, date_range: date_range
+      subject = DailyChartItemGenerator.new(
+        issues: [issue10], cycletime: default_cycletime_config, date_range: date_range
+      )
       expect(subject.make_start_stop_sequence_for_issues).to eq [
         [issue10.created, 'start', issue10],
         [issue10.last_resolution, 'stop', issue10]
@@ -24,7 +26,9 @@ describe DailyChartItemGenerator do
     end
 
     it 'should handle one issue that isn\'t done' do
-      subject = DailyChartItemGenerator.new issues: [issue1], cycletime: default_cycletime_config, date_range: date_range
+      subject = DailyChartItemGenerator.new(
+        issues: [issue1], cycletime: default_cycletime_config, date_range: date_range
+      )
       expect(subject.make_start_stop_sequence_for_issues).to eq [
         [issue1.created, 'start', issue1]
       ]

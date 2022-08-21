@@ -13,7 +13,6 @@ class MockAnonymizer < Anonymizer
 end
 
 describe Anonymizer do
-
   let(:anonymizer) do
     exporter = Exporter.new
     project_config = ProjectConfig.new(

@@ -116,5 +116,4 @@ class FileConfig
     @file_suffix = suffix unless suffix.nil?
     @file_suffix
   end
-
 end

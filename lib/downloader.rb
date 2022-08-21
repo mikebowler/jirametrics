@@ -114,9 +114,7 @@ class Downloader
       file_prefix = @download_config.project_config.file_prefix
       write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
 
-      if json['type'] == 'scrum'
-        download_sprints board_id
-      end
+      download_sprints board_id if json['type'] == 'scrum'
     end
   end
 
@@ -145,9 +143,7 @@ class Downloader
     file_path = File.dirname(filename)
     FileUtils.mkdir_p file_path unless File.exist?(file_path)
 
-    File.open(filename, 'w') do |file|
-      file.write(JSON.pretty_generate(json))
-    end
+    File.write(filename, JSON.pretty_generate(json))
   end
 
   def metadata_pathname

@@ -66,4 +66,3 @@ class DiscardedChangesTable < ChartBase
     render(binding, __FILE__) unless messages.empty?
   end
 end
-

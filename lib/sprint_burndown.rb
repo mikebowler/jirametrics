@@ -7,8 +7,7 @@ class SprintBurndown < ChartBase
     super()
 
     header_text 'Sprint burndown'
-    description_text <<-HTML
-    HTML
+    description_text ''
     check_data_quality_for(
       :status_changes_after_done,
       :completed_but_not_started,
@@ -244,13 +243,13 @@ class SprintBurndown < ChartBase
         message = 'Removed from sprint'
       end
 
-      if message
-        data_set << {
-          y: issues_currently_in_sprint.size,
-          x: chart_format(change_data.time),
-          title: "#{change_data.issue.key} #{message}"
-        }
-      end
+      next unless message
+
+      data_set << {
+        y: issues_currently_in_sprint.size,
+        x: chart_format(change_data.time),
+        title: "#{change_data.issue.key} #{message}"
+      }
     end
 
     unless start_data_written
@@ -273,4 +272,3 @@ class SprintBurndown < ChartBase
     data_set
   end
 end
-
