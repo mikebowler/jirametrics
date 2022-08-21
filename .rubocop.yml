@@ -7,6 +7,9 @@ Style/MethodDefParentheses:
 Layout/FirstArrayElementIndentation:
   Enabled: false
 
+Layout/MultilineOperationIndentation:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: false
 
@@ -15,6 +18,12 @@ Metrics/MethodLength:
 
 Metrics/AbcSize:
   Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Max: 20 # Probably way too high but unsure where the cutoff should be. The default was too low.
+
+Metrics/PerceivedComplexity:
+  Max: 20 # Probably way too high but unsure where the cutoff should be. The default was too low.
 
 Style/Documentation:
   Enabled: false
@@ -76,4 +85,8 @@ Layout/CaseIndentation:
   Enabled: false
 
 Layout/LineContinuationLeadingSpace:
+  Enabled: false
+
+# This may be a bug in rubocop. It recommends things that actually change the behaviour.
+Lint/NonAtomicFileOperation:
   Enabled: false

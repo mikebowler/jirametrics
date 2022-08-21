@@ -108,7 +108,6 @@ class FakeIssue
 
     @last_status = new_status
     @last_status_id = new_status_id
-
   end
 end
 
@@ -144,13 +143,11 @@ class Generator
       end
     end
 
-    File.open "target/fake_meta.json", 'w' do |file|
-      file.puts JSON.pretty_generate({
-        time_start: (@date_range.end - 90).to_time,
-        time_end: @date_range.end.to_time,
-        'no-download': true
-      })
-    end
+    File.write 'target/fake_meta.json', JSON.pretty_generate({
+      time_start: (@date_range.end - 90).to_time,
+      time_end: @date_range.end.to_time,
+      'no-download': true
+    })
   end
 
   def remove_old_files
@@ -169,7 +166,7 @@ class Generator
 
   def next_issue_for worker:, date:, type:
     # First look for something I already started
-    issue = @issues.find { |issue| issue.worker == worker && !issue.done? && !issue.blocked? }
+    issue = @issues.find { |i| i.worker == worker && !i.done? && !i.blocked? }
 
     # Then look for something that someone else started
 
@@ -179,7 +176,7 @@ class Generator
     issue
   end
 
-  def process_date date, simulation_day
+  def process_date date, _simulation_day
     @issues.each do |issue|
       if issue.blocked?
         issue.unblock if lucky? @probability_blocked_work_becomes_unblocked

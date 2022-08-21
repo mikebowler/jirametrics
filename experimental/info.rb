@@ -70,4 +70,3 @@ end
 ARGV.each do |key|
   InfoDumper.new.run key
 end
-
