@@ -70,6 +70,21 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           },
           <% end %>
         }
+      },
+      legend: {
+        onClick: (evt, legendItem, legend) => {
+          // Find the datasetMeta that corresponds to the item clicked
+          var i = 0
+          while(legendItem.text != legend.chart.getDatasetMeta(i).label) {
+            i++;
+          }
+
+          // Hide/show the 85% line for that dataset
+          legend.chart.options.plugins.annotation.annotations["line"+i].display = legend.chart.getDatasetMeta(i).hidden;
+
+          // Still run the default behaviour
+          Chart.defaults.plugins.legend.onClick(evt, legendItem, legend)
+        }
       }
     }
   }
