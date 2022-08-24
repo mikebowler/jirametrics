@@ -148,13 +148,15 @@ class ProjectConfig
   def load_sprints
     Dir.foreach(@target_path) do |file|
       next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
-
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
-
-      @sprints_by_board[board_id] = JSON.parse(File.read("#{target_path}#{file}"))['values'].collect do |json|
-        Sprint.new raw: json, timezone_offset: timezone_offset
+      JSON.parse(File.read("#{target_path}#{file}"))['values'].each do |json|
+        (@sprints_by_board[board_id] ||= []) << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
+    end
+
+    @sprints_by_board.each do |board_id, sprints|
+      sprints.sort_by!(&:id)
     end
   end
 

@@ -106,6 +106,7 @@ class Downloader
   def download_board_configuration
     @download_config.board_ids.each do |board_id|
       command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+
       json = JSON.parse call_command(command)
       exit_if_call_failed json
 
@@ -120,20 +121,18 @@ class Downloader
 
   def download_sprints board_id
     file_prefix = @download_config.project_config.file_prefix
-
     max_results = 100
     start_at = 0
-    total = 1
-    while start_at < total
+    is_last = false
+
+    while is_last == false
       command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
         "maxResults=#{max_results}&startAt=#{start_at}"
-
       json = JSON.parse call_command(command)
       exit_if_call_failed json
 
       write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
-
-      total = json['total'].to_i
+      is_last = json['isLast']
       max_results = json['maxResults']
       start_at += json['values'].size
     end
