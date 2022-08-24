@@ -89,7 +89,7 @@ class AgingWorkTable < ChartBase
     sprints.select { |s| sprint_ids.include? s.id }.collect do |sprint|
       icon_text = nil
       if sprint.active?
-        icon_text = icon_span title: 'Active sprint', icon: '🚴🏽‍♂️'
+        icon_text = icon_span title: 'Active sprint', icon: '➡️'
       else
         icon_text = icon_span title: 'Sprint closed', icon: '✅'
       end
