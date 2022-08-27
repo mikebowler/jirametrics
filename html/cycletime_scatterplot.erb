@@ -78,12 +78,17 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           while(legendItem.text != legend.chart.getDatasetMeta(i).label) {
             i++;
           }
+          nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
 
           // Hide/show the 85% line for that dataset
-          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = legend.chart.getDatasetMeta(i).hidden;
+          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
+
+          // Hide/show the trendline for this dataset, if they were enabled. The trendline is always
+          // there but not always visible.
+          legend.chart.setDatasetVisibility(i+1, <%= !!@show_trend_lines %> && nextVisibility);
 
           // Still run the default behaviour
-          Chart.defaults.plugins.legend.onClick(evt, legendItem, legend)
+          Chart.defaults.plugins.legend.onClick(evt, legendItem, legend);
         },
         labels: {
           filter: function(item, chart) {
