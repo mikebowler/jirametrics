@@ -54,7 +54,6 @@ class CycletimeScatterplot < ChartBase
     data_sets = create_datasets completed_issues
     overall_percent_line = calculate_percent_line(completed_issues)
     @percentage_lines << [overall_percent_line, 'gray']
-
     data_quality = scan_data_quality(@issues.select { |issue| @cycletime.stopped_time(issue) })
 
     wrap_and_render(binding, __FILE__)
@@ -70,16 +69,67 @@ class CycletimeScatterplot < ChartBase
       label = rules.label
       color = rules.color
       percent_line = calculate_percent_line completed_issues_by_type
+      data = completed_issues_by_type.collect { |issue| data_for_issue(issue) }.compact
       data_sets << {
         'label' => "#{label} (85% at #{label_days(percent_line)})",
-        'data' => completed_issues_by_type.collect { |issue| data_for_issue(issue) }.compact,
+        'data' => data,
         'fill' => false,
         'showLine' => false,
         'backgroundColor' => color
       }
+
+      data_sets << trend_line_data_set(label: label, data: data, color: color)
+
       @percentage_lines << [percent_line, color]
     end
     data_sets
+  end
+
+  def show_trend_lines
+    @show_trend_lines = true
+  end
+
+  def trend_line_data_set label:, data:, color:
+    data_points = []
+
+    # We can't do trend calculations with less than two data points but we still need
+    # the dataset to be created so the javascript hide/show logic is simple.
+    if data.size >= 2
+      points = data.collect do |hash|
+        [Time.parse(hash['x']).to_i, hash['y']]
+      end
+
+      calculator = TrendLineCalculator.new(points)
+      x_start = time_range.begin
+      y_start = calculator.calc_y(x: time_range.begin.to_i).to_i
+      x_end = time_range.end
+      y_end = calculator.calc_y(x: time_range.end.to_i).to_i
+
+      if y_start.negative?
+        x_start = Time.at(calculator.calc_x_where_y_is_zero.to_i)
+        y_start = 0
+      end
+
+      if y_end.negative?
+        x_end = Time.at(calculator.calc_x_where_y_is_zero.to_i)
+        y_end = 0
+      end
+
+      data_points << { 'x' => chart_format(x_start), 'y' => y_start }
+      data_points << { 'x' => chart_format(x_end), 'y' => y_end }
+    end
+
+    {
+      'type' => 'line',
+      'label' => "#{label} Trendline",
+      'data' => data_points,
+      'fill' => false,
+      'borderWidth' => 1,
+      'markerType' => 'none',
+      'borderColor' => color,
+      'borderDash' => [6, 3],
+      'hidden' => !@show_trend_lines
+    }
   end
 
   def data_for_issue issue

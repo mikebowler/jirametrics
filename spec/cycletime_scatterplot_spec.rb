@@ -4,7 +4,12 @@ require './spec/spec_helper'
 require './lib/cycletime_scatterplot'
 
 describe CycletimeScatterplot do
-  let(:chart) { CycletimeScatterplot.new }
+  let(:chart) do
+    CycletimeScatterplot.new.tap do |chart|
+      chart.time_range = to_time('2020-01-01')..to_time('2020-02-01')
+      puts chart.time_range
+    end
+  end
 
   context 'data_for_issue' do
     it '' do
@@ -47,7 +52,18 @@ describe CycletimeScatterplot do
         'fill' => false,
         'label' => 'Story (85% at 81 days)',
         'showLine' => false
-       }
+      },
+      {
+        'type' => 'line',
+        'label' => 'Story Trendline',
+        'data' => [],
+        'fill' => false,
+        'borderWidth' => 1,
+        'markerType' => 'none',
+        'borderColor' => 'green',
+        'borderDash' => [6, 3],
+        'hidden' => true
+      }
      ])
   end
 

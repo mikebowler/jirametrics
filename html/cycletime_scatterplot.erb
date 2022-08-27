@@ -80,10 +80,16 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           }
 
           // Hide/show the 85% line for that dataset
-          legend.chart.options.plugins.annotation.annotations["line"+i].display = legend.chart.getDatasetMeta(i).hidden;
+          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = legend.chart.getDatasetMeta(i).hidden;
 
           // Still run the default behaviour
           Chart.defaults.plugins.legend.onClick(evt, legendItem, legend)
+        },
+        labels: {
+          filter: function(item, chart) {
+            // Logic to remove a particular legend item goes here
+            return !item.text.includes('Trendline');
+          }
         }
       }
     }
