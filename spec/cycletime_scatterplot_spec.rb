@@ -7,7 +7,6 @@ describe CycletimeScatterplot do
   let(:chart) do
     CycletimeScatterplot.new.tap do |chart|
       chart.time_range = to_time('2020-01-01')..to_time('2020-02-01')
-      puts chart.time_range
     end
   end
 
