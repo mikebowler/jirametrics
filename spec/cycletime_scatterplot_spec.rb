@@ -15,9 +15,9 @@ describe CycletimeScatterplot do
       issue = load_issue('SP-10')
       chart.cycletime = default_cycletime_config
       expect(chart.data_for_issue issue).to eq({
-        'title' => ['SP-10 : Check in people at an event (81 days)'],
-        'x' => chart_format(issue.last_resolution),
-        'y' => 81
+        title: ['SP-10 : Check in people at an event (81 days)'],
+        x: chart_format(issue.last_resolution),
+        y: 81
       })
     end
   end
@@ -40,28 +40,29 @@ describe CycletimeScatterplot do
 
     expect(chart.create_datasets [issue]).to eq([
       {
-        'backgroundColor' => 'green',
-        'data' => [
+        backgroundColor: 'green',
+        data: [
           {
-            'title' => ['SP-10 : Check in people at an event (81 days)'],
-            'x' => chart_format(issue.last_resolution),
-            'y' => 81
+            title: ['SP-10 : Check in people at an event (81 days)'],
+            x: chart_format(issue.last_resolution),
+            y: 81
          }
         ],
-        'fill' => false,
-        'label' => 'Story (85% at 81 days)',
-        'showLine' => false
+        fill: false,
+        label: 'Story (85% at 81 days)',
+        showLine: false
       },
       {
-        'type' => 'line',
-        'label' => 'Story Trendline',
-        'data' => [],
-        'fill' => false,
-        'borderWidth' => 1,
-        'markerType' => 'none',
-        'borderColor' => 'green',
-        'borderDash' => [6, 3],
-        'hidden' => true
+        type: 'line',
+        label: 'Story Trendline',
+        data: [],
+        fill: false,
+        borderWidth: 1,
+        markerType: 'none',
+        borderColor: 'green',
+        borderDash: [6, 3],
+        pointStyle: 'dash',
+        hidden: true
       }
      ])
   end

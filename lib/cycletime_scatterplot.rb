@@ -93,7 +93,7 @@ class CycletimeScatterplot < ChartBase
     data_points = []
 
     points = data.collect do |hash|
-      [Time.parse(hash['x']).to_i, hash['y']]
+      [Time.parse(hash[:x]).to_i, hash[:y]]
     end
 
     calculator = TrendLineCalculator.new(points)
@@ -116,8 +116,8 @@ class CycletimeScatterplot < ChartBase
         y_end = 0
       end
 
-      data_points << { 'x' => chart_format(x_start), 'y' => y_start }
-      data_points << { 'x' => chart_format(x_end), 'y' => y_end }
+      data_points << { x: chart_format(x_start), y: y_start }
+      data_points << { x: chart_format(x_end), y: y_end }
     end
 
     {
@@ -139,9 +139,9 @@ class CycletimeScatterplot < ChartBase
     @highest_cycletime = cycle_time if @highest_cycletime < cycle_time
 
     {
-      'y' => cycle_time,
-      'x' => chart_format(@cycletime.stopped_time(issue)),
-      'title' => ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
+      y: cycle_time,
+      x: chart_format(@cycletime.stopped_time(issue)),
+      title: ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
     }
   end
 
