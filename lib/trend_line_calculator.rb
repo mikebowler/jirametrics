@@ -30,4 +30,30 @@ class TrendLineCalculator
 
     -(@offset / @slope)
   end
+
+  # If the trend line can't be calculated then return an empty array. Otherwise, return
+  # an array with two (x,y) points, with which you can draw the trend line.
+  def chart_datapoints range:
+    data_points = []
+    if valid?
+      x_start = range.begin
+      y_start = calc_y(x: range.begin).to_i
+      x_end = range.end
+      y_end = calc_y(x: range.end).to_i
+
+      if y_start.negative?
+        x_start = calc_x_where_y_is_zero.to_i
+        y_start = 0
+      end
+
+      if y_end.negative?
+        x_end = calc_x_where_y_is_zero.to_i
+        y_end = 0
+      end
+
+      data_points << { x: x_start, y: y_start }
+      data_points << { x: x_end, y: y_end }
+    end
+    data_points
+  end
 end

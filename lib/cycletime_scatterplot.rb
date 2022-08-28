@@ -90,34 +90,17 @@ class CycletimeScatterplot < ChartBase
   end
 
   def trend_line_data_set label:, data:, color:
-    data_points = []
+    # data_points = []
 
     points = data.collect do |hash|
       [Time.parse(hash[:x]).to_i, hash[:y]]
     end
 
+    # The trend calculation works with numbers only so convert Time to an int and back
     calculator = TrendLineCalculator.new(points)
-
-    # Even if we can't create the trend line, we still need
-    # the dataset to be created so the javascript hide/show logic is simple.
-    if calculator.valid?
-      x_start = time_range.begin
-      y_start = calculator.calc_y(x: time_range.begin.to_i).to_i
-      x_end = time_range.end
-      y_end = calculator.calc_y(x: time_range.end.to_i).to_i
-
-      if y_start.negative?
-        x_start = Time.at(calculator.calc_x_where_y_is_zero.to_i)
-        y_start = 0
-      end
-
-      if y_end.negative?
-        x_end = Time.at(calculator.calc_x_where_y_is_zero.to_i)
-        y_end = 0
-      end
-
-      data_points << { x: chart_format(x_start), y: y_start }
-      data_points << { x: chart_format(x_end), y: y_end }
+    data_points = calculator.chart_datapoints range: time_range.begin.to_i..time_range.end.to_i
+    data_points.each do |point_hash|
+      point_hash[:x] = chart_format Time.at(point_hash[:x])
     end
 
     {
