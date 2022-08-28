@@ -59,8 +59,8 @@ class HtmlReportConfig
     execute_chart CycletimeScatterplot.new block
   end
 
-  def total_wip_over_time_chart
-    execute_chart TotalWipOverTimeChart.new
+  def total_wip_over_time_chart &block
+    execute_chart TotalWipOverTimeChart.new block
   end
 
   def throughput_chart &block

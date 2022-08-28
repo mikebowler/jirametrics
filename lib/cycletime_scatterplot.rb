@@ -90,8 +90,6 @@ class CycletimeScatterplot < ChartBase
   end
 
   def trend_line_data_set label:, data:, color:
-    # data_points = []
-
     points = data.collect do |hash|
       [Time.parse(hash[:x]).to_i, hash[:y]]
     end

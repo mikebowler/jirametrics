@@ -5,9 +5,10 @@ require 'pathname'
 class TotalWipOverTimeChart < ChartBase
   attr_accessor :possible_statuses
 
-  def initialize
+  def initialize block = nil
     super()
 
+    @show_trend_lines = false
     header_text 'Flow of Daily WIP'
     description_text <<-HTML
       <p>
@@ -30,6 +31,8 @@ class TotalWipOverTimeChart < ChartBase
       :status_not_on_board,
       :stopped_before_started
     )
+
+    instance_eval(&block) if block
   end
 
   def run
@@ -38,6 +41,7 @@ class TotalWipOverTimeChart < ChartBase
     ).run
 
     data_sets = []
+    data_sets << trend_line_data_set if @show_trend_lines
     data_sets << completed_dataset
     data_sets << completed_but_not_started_dataset
 
@@ -50,10 +54,39 @@ class TotalWipOverTimeChart < ChartBase
     ].each do |age_range, color, label|
       data_sets << age_range_dataset(age_range: age_range, color: color, label: label)
     end
-
     data_quality = scan_data_quality @issues
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def show_trend_lines
+    puts 'enabling trends'
+    @show_trend_lines = true
+  end
+
+  def trend_line_data_set label: 'Trendline' , data: nil, color: 'gray'
+    points = @daily_chart_items.collect do |daily_chart_item|
+      [daily_chart_item.date.jd, daily_chart_item.active_issues.size]
+    end
+
+    # The trend calculation works with numbers only so convert Time to an int and back
+    calculator = TrendLineCalculator.new(points)
+    data_points = calculator.chart_datapoints range: @daily_chart_items[0].date.jd..@daily_chart_items[-1].date.jd
+    data_points.each do |point_hash|
+      point_hash[:x] = chart_format Date.jd(point_hash[:x])
+    end
+
+    {
+      type: 'line',
+      label: "#{label} Trendline",
+      data: data_points,
+      fill: false,
+      borderWidth: 1,
+      markerType: 'none',
+      borderColor: color,
+      borderDash: [6, 3],
+      pointStyle: 'dash'
+    }
   end
 
   def age_range_dataset age_range:, color:, label:
