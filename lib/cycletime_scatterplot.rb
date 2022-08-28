@@ -92,14 +92,15 @@ class CycletimeScatterplot < ChartBase
   def trend_line_data_set label:, data:, color:
     data_points = []
 
-    # We can't do trend calculations with less than two data points but we still need
-    # the dataset to be created so the javascript hide/show logic is simple.
-    if data.size >= 2
-      points = data.collect do |hash|
-        [Time.parse(hash['x']).to_i, hash['y']]
-      end
+    points = data.collect do |hash|
+      [Time.parse(hash['x']).to_i, hash['y']]
+    end
 
-      calculator = TrendLineCalculator.new(points)
+    calculator = TrendLineCalculator.new(points)
+
+    # Even if we can't create the trend line, we still need
+    # the dataset to be created so the javascript hide/show logic is simple.
+    if calculator.valid?
       x_start = time_range.begin
       y_start = calculator.calc_y(x: time_range.begin.to_i).to_i
       x_end = time_range.end
