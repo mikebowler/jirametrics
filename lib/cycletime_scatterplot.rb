@@ -71,11 +71,11 @@ class CycletimeScatterplot < ChartBase
       percent_line = calculate_percent_line completed_issues_by_type
       data = completed_issues_by_type.collect { |issue| data_for_issue(issue) }.compact
       data_sets << {
-        'label' => "#{label} (85% at #{label_days(percent_line)})",
-        'data' => data,
-        'fill' => false,
-        'showLine' => false,
-        'backgroundColor' => color
+        label: "#{label} (85% at #{label_days(percent_line)})",
+        data: data,
+        fill: false,
+        showLine: false,
+        backgroundColor: color
       }
 
       data_sets << trend_line_data_set(label: label, data: data, color: color)
@@ -121,15 +121,16 @@ class CycletimeScatterplot < ChartBase
     end
 
     {
-      'type' => 'line',
-      'label' => "#{label} Trendline",
-      'data' => data_points,
-      'fill' => false,
-      'borderWidth' => 1,
-      'markerType' => 'none',
-      'borderColor' => color,
-      'borderDash' => [6, 3],
-      'hidden' => !@show_trend_lines
+      type: 'line',
+      label: "#{label} Trendline",
+      data: data_points,
+      fill: false,
+      borderWidth: 1,
+      markerType: 'none',
+      borderColor: color,
+      borderDash: [6, 3],
+      pointStyle: 'dash',
+      hidden: !@show_trend_lines
     }
   end
 
