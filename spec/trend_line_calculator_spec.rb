@@ -75,5 +75,4 @@ describe TrendLineCalculator do
       ])
     end
   end
-
 end
