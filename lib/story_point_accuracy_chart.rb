@@ -29,6 +29,10 @@ class StoryPointAccuracyChart < ChartBase
     scan_data_quality(completed_issues_in_range include_unstarted: true)
 
     data_sets = scan_issues
+
+    # If no issues have story points then don't even show the chart.
+    return '' if data_sets.empty?
+
     wrap_and_render(binding, __FILE__)
   end
 
