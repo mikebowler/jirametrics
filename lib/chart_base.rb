@@ -12,13 +12,13 @@ class ChartBase
       'dark:Task' => 'blue',
       'dark:Bug' => 'orange',
       'dark:Defect' => 'orange',
-      'dark:Spike' => 'gray',
+      'dark:Spike' => '#9400D3', # dark purple
       'light:Story' => '#90EE90',
       'light:Task' => '#87CEFA',
       'light:Bug' => '#ffdab9',
       'light:Defect' => 'orange',
       'light:Epic' => '#fafad2',
-      'light:Spike' => 'lightgray'
+      'light:Spike' => '#DDA0DD' # light purple
     }
   end
 
