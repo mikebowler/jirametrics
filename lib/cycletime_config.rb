@@ -6,7 +6,7 @@ require 'date'
 class CycleTimeConfig
   include SelfOrIssueDispatcher
 
-  attr_reader :label
+  attr_reader :label, :parent_config
 
   def initialize parent_config:, label:, block:, today: Date.today
     @parent_config = parent_config
@@ -59,5 +59,9 @@ class CycleTimeConfig
     return nil if start.nil? || stop.nil?
 
     (stop.to_date - start.to_date).to_i + 1
+  end
+
+  def possible_statuses
+    parent_config.file_config.project_config.possible_statuses
   end
 end

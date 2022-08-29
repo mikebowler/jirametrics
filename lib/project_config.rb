@@ -2,6 +2,20 @@
 
 require 'time'
 
+class StatusCollection < Array
+  def filtered_status_names category_name
+    collect do |status|
+      next unless status.category_name == category_name
+
+      status.name
+    end.compact
+  end
+
+  def todo_status_names = filtered_status_names('To Do')
+  def in_progress_status_names = filtered_status_names('In Progress')
+  def done_status_names = filtered_status_names('Done')
+end
+
 class ProjectConfig
   include DiscardChangesBefore
 
@@ -16,7 +30,7 @@ class ProjectConfig
     @download_config = nil
     @target_path = target_path
     @jira_config = jira_config
-    @possible_statuses = []
+    @possible_statuses = StatusCollection.new
     @all_boards = {}
     @sprints_by_board = {}
   end
