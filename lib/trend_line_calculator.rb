@@ -16,6 +16,9 @@ class TrendLineCalculator
 
     @slope = ((n * sum_of_xy) - (sum_of_x * sum_of_y)) / ((n * sum_of_x2) - (sum_of_x * sum_of_x))
     @offset = (sum_of_y - (@slope * sum_of_x)) / n
+
+    # If the line is vertical then consider it invalid.
+    @valid = false if @slope.infinite? || @slope.zero?
   end
 
   def valid? = @valid
