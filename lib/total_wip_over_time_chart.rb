@@ -60,7 +60,6 @@ class TotalWipOverTimeChart < ChartBase
   end
 
   def show_trend_lines
-    puts 'enabling trends'
     @show_trend_lines = true
   end
 
