@@ -1,5 +1,16 @@
 # frozen_string_literal: true
 
+class SprintSummaryStats
+  attr_accessor :started, :added, :changed, :removed, :completed
+
+  def initialize
+    @added = 0
+    @completed = 0
+    @removed = 0
+    @started = 0
+  end
+end
+
 class SprintBurndown < ChartBase
   attr_reader :use_story_points, :use_story_counts
 
@@ -131,6 +142,9 @@ class SprintBurndown < ChartBase
   end
 
   def data_set_by_story_points sprint:, change_data_for_sprint:
+    summary_stats = SprintSummaryStats.new
+    summary_stats.completed = 0.0
+
     story_points = 0.0
     start_data_written = false
     data_set = []
@@ -144,6 +158,7 @@ class SprintBurndown < ChartBase
           x: chart_format(sprint.start_time),
           title: "Sprint started with #{story_points} points"
         }
+        summary_stats.started = story_points
         start_data_written = true
       end
 
@@ -174,6 +189,7 @@ class SprintBurndown < ChartBase
         story_points -= change_data.story_points
         message = "Completed with #{change_data.story_points || 'no'} points"
         issues_currently_in_sprint.delete change_data.issue.key
+        summary_stats.completed += change_data.story_points
       when :leave_sprint
         message = "Removed from sprint with #{change_data.story_points || 'no'} points"
       else
@@ -194,6 +210,7 @@ class SprintBurndown < ChartBase
         x: chart_format(sprint.start_time),
         title: "Sprint started with #{story_points} points"
       }
+      summary_stats.started = story_points
     end
 
     if sprint.completed_time
@@ -204,10 +221,13 @@ class SprintBurndown < ChartBase
       }
     end
 
+    # puts "#{sprint.name.inspect} [points] stats=#{summary_stats.inspect}"
     data_set
   end
 
   def data_set_by_story_counts sprint:, change_data_for_sprint:
+    summary_stats = SprintSummaryStats.new
+
     data_set = []
     issues_currently_in_sprint = []
     start_data_written = false
@@ -219,6 +239,7 @@ class SprintBurndown < ChartBase
           x: chart_format(sprint.start_time),
           title: "Sprint started with #{issues_currently_in_sprint.size} stories"
         }
+        summary_stats.started = issues_currently_in_sprint.size
         start_data_written = true
       end
 
@@ -237,10 +258,13 @@ class SprintBurndown < ChartBase
       case change_data.action
       when :enter_sprint
         message = 'Added to sprint'
+        summary_stats.added += 1
       when :issue_stopped
         message = 'Completed'
+        summary_stats.completed += 1
       when :leave_sprint
         message = 'Removed from sprint'
+        summary_stats.removed += 1
       end
 
       next unless message
@@ -269,6 +293,7 @@ class SprintBurndown < ChartBase
       }
     end
 
+    # puts "#{sprint.name.inspect} [count] stats=#{summary_stats.inspect}"
     data_set
   end
 end

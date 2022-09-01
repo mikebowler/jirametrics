@@ -14,7 +14,7 @@ class Sprint
   def active? = (@raw['state'] == 'active')
 
   def start_time
-    parse_time(@raw['startDate'])
+    parse_time(@raw['activatedDate'] || @raw['startDate'])
   end
 
   # The time that was anticipated that the sprint would close

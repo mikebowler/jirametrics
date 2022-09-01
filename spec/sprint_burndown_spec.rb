@@ -16,7 +16,7 @@ describe Sprint do
       'self' => 'https://improvingflow.atlassian.net/rest/agile/1.0/sprint/1',
       'state' => 'active',
       'name' => 'Scrum Sprint 1',
-      'startDate' => '2022-03-26T00:00:00z',
+      'activatedDate' => '2022-03-26T00:00:00z',
       'endDate' => '2022-04-09T00:00:00z',
       'originBoardId' => 2,
       'goal' => 'Do something'
@@ -74,7 +74,7 @@ describe Sprint do
       ]
       issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.changes << mock_change(field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
-      sprint.raw['startDate'] = '2021-01-03'
+      sprint.raw['activatedDate'] = '2021-01-03'
       issue.changes << mock_change(field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
       # Issue closes on Jan 5
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2022-01-05')
