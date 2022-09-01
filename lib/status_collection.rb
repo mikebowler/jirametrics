@@ -1,41 +1,38 @@
 # frozen_string_literal: true
 
-class StatusCollection #< Array
+class StatusCollection
   def initialize
     @list = []
   end
 
-  def filtered_status_names category_name
-    puts "Deprecated: StatusCollection.filtered_status_names(#{category_name})"
-    @list.collect do |status|
-      next unless status.category_name == category_name
-
-      status.name
-    end.compact
-  end
-
-  def todo_status_names = filtered_status_names('To Do')
-  def in_progress_status_names = filtered_status_names('In Progress')
-  def done_status_names = filtered_status_names('Done')
-
-  ##############
-
-  def filter_status_names category_name:, including:, excluding:
-    including = [] if including.nil?
-    excluding = [] if excluding.nil?
-    including = [including] unless including.is_a? Array
-    excluding = [excluding] unless excluding.is_a? Array
+  def filter_status_names category_name:, including: nil, excluding: nil
+    including = expand_statuses including
+    excluding = expand_statuses excluding
 
     @list.collect do |status|
-      keep = status.category_name == category_name || matches?(list: including, status: status)
-      keep = false if matches?(list: excluding, status: status)
+      keep = status.category_name == category_name ||
+        including.any? { |s| s.name == status.name }
+      keep = false if excluding.any? { |s| s.name == status.name }
 
       status.name if keep
     end.compact
   end
 
-  def matches? list:, status:
-    list.include?(status.name) || list.include?(status.id)
+  def expand_statuses names_or_ids
+    result = []
+    return result if names_or_ids.nil?
+
+    names_or_ids = [names_or_ids] unless names_or_ids.is_a? Array
+
+    names_or_ids.each do |name_or_id|
+      status = @list.find { |s| s.name == name_or_id || s.id == name_or_id }
+      if status.nil?
+        puts "Status name/id not found: #{name_or_id}"
+      else
+        result << status
+      end
+    end
+    result
   end
 
   def todo including: nil, excluding: nil
@@ -54,7 +51,7 @@ class StatusCollection #< Array
     category_names = @list.collect(&:category_name).uniq.sort.reverse
     category_names.each do |category|
       puts category
-      filtered_status_names(category).sort.each do |status_name|
+      filter_status_names(category_name: category).sort.each do |status_name|
         puts "  #{status_name}"
       end
     end
