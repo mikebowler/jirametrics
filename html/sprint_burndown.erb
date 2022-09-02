@@ -1,3 +1,4 @@
+<h2>Burndown by <%= y_axis_title %></h2>
 
 <div>
   <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
@@ -66,4 +67,26 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   }
 });
 </script>
-
+<!--
+<table class='standard'>
+  <thead>
+    <th>Sprint</th>
+    <th>Started</th>
+    <th>Completed</th>
+    <th>Added after start</th>
+    <th>Removed mid-sprint</th>
+  </thead>
+  <tbody>
+    <% @summary_stats.keys.sort_by(&:start_time).each do |sprint| %>
+      <tr>
+        <td><%= sprint.name %></td>
+        <% stats = @summary_stats[sprint] %>
+        <td><%= stats.started %></td>
+        <td><%= stats.completed %></td>
+        <td><%= stats.added %></td>
+        <td><%= stats.removed %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+-->

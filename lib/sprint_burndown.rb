@@ -65,6 +65,7 @@ class SprintBurndown < ChartBase
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
     charts_to_generate.each do |data_method, y_axis_title|
+      @summary_stats = {}
       data_sets = []
       sprints.each_with_index do |sprint, index|
         color = %w[blue orange green red brown][index % 5]
@@ -221,7 +222,7 @@ class SprintBurndown < ChartBase
       }
     end
 
-    # puts "#{sprint.name.inspect} [points] stats=#{summary_stats.inspect}"
+    @summary_stats[sprint] = summary_stats
     data_set
   end
 
@@ -239,6 +240,7 @@ class SprintBurndown < ChartBase
           x: chart_format(sprint.start_time),
           title: "Sprint started with #{issues_currently_in_sprint.size} stories"
         }
+        puts issues_currently_in_sprint if sprint.name == 'Scrum Sprint 5'
         summary_stats.started = issues_currently_in_sprint.size
         start_data_written = true
       end
@@ -293,6 +295,7 @@ class SprintBurndown < ChartBase
       }
     end
 
+    @summary_stats[sprint] = summary_stats
     # puts "#{sprint.name.inspect} [count] stats=#{summary_stats.inspect}"
     data_set
   end
