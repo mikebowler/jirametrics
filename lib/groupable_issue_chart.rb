@@ -1,16 +1,9 @@
 # frozen_string_literal: true
 
 require './lib/rules'
+require './lib/grouping_rules'
 
 module GroupableIssueChart
-  class GroupingRules < Rules
-    attr_accessor :label, :color
-
-    def inspect
-      "GroupingRules(label=#{label.inspect}, color=#{color}"
-    end
-  end
-
   def init_configuration_block user_provided_block, &default_block
     # The user provided a block but it's using the old deprecated style
     if user_provided_block && user_provided_block.arity == 1

@@ -71,7 +71,7 @@ describe CycletimeScatterplot do
     let(:issue1) { load_issue 'SP-1' }
 
     it 'should render when no rules specified' do
-      expected_rules = CycletimeScatterplot::GroupingRules.new
+      expected_rules = GroupingRules.new
       expected_rules.color = 'green'
       expected_rules.label = issue1.type
       expect(chart.group_issues([issue1])).to eq({
