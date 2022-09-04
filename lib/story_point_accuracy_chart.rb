@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class StoryPointAccuracyChart < ChartBase
-  def initialize
+  def initialize configuration_block = nil
     super()
 
+    @groupings = []
     header_text 'Story Point Accuracy'
     description_text <<-HTML
       <p>
@@ -23,6 +24,19 @@ class StoryPointAccuracyChart < ChartBase
       :status_not_on_board,
       :stopped_before_started
     )
+
+    if configuration_block
+      instance_eval(&configuration_block)
+    else
+      grouping range: 1..1, color: '#dcdcde'
+      grouping range: 2..3, color: '#c3c4c7'
+      grouping range: 4..6, color: '#a7aaad'
+      grouping range: 7..10, color: '#8c8f94'
+      grouping range: 11..15, color: '#787682'
+      grouping range: 16..20, color: '#646970'
+      grouping range: 21..30, color: '#3c434a'
+      grouping range: 31.., color: '#101517'
+    end
   end
 
   def run
@@ -31,7 +45,7 @@ class StoryPointAccuracyChart < ChartBase
     data_sets = scan_issues
 
     # If no issues have story points then don't even show the chart.
-    return '' if data_sets.empty?
+    # return '' if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end
@@ -53,16 +67,7 @@ class StoryPointAccuracyChart < ChartBase
       (hash[key] ||= []) << issue
     end
 
-    [
-      [1..1, '#dcdcde'],
-      [2..3, '#c3c4c7'],
-      [4..6, '#a7aaad'],
-      [7..10, '#8c8f94'],
-      [11..15, '#787682'],
-      [16..20, '#646970'],
-      [21..30, '#3c434a'],
-      [31.., '#101517']
-    ].collect do |range, color|
+    @groupings.collect do |range, color|
       data = hash.select { |_key, issues| range.include? issues.size }.collect do |key, values|
         estimate, cycle_time = *key
         title = ["Estimate: #{estimate}pts, Cycletime: #{label_days(cycle_time)}, #{values.size} issues"] +
@@ -83,6 +88,10 @@ class StoryPointAccuracyChart < ChartBase
         'backgroundColor' => color
       }
     end.compact
+  end
+
+  def grouping range:, color:
+    @groupings << [range, color]
   end
 
   def range_to_s range

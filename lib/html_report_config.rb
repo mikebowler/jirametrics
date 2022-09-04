@@ -93,8 +93,8 @@ class HtmlReportConfig
     end
   end
 
-  def story_point_accuracy_chart
-    execute_chart StoryPointAccuracyChart.new
+  def story_point_accuracy_chart &block
+    execute_chart StoryPointAccuracyChart.new block
   end
 
   def discard_changes_before_hook issues_cutoff_times
