@@ -4,6 +4,8 @@ require 'cgi'
 require 'json'
 
 class Downloader
+  CURRENT_METADATA_VERSION = 2
+
   attr_accessor :metadata, :quiet_mode # Used only for testing
 
   # For testing only
@@ -155,8 +157,8 @@ class Downloader
 
     hash = JSON.parse(File.read metadata_pathname)
 
-    # If there's no version identifier then this is the old format of metadata. Throw it away and start fresh.
-    if hash['version']
+    # Only use the saved metadata if the version number is the same one that we're currently using.
+    if (hash['version'] || 0) == CURRENT_METADATA_VERSION
       hash.each do |key, value|
         value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
         @metadata[key] = value
@@ -170,7 +172,7 @@ class Downloader
   def save_metadata
     # raise "We didn't run any queries. Why are we saving metadata again?" unless @start_date_in_query
 
-    @metadata['version'] = 1
+    @metadata['version'] = CURRENT_METADATA_VERSION
     @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
     if @download_date_range.nil?
@@ -225,7 +227,8 @@ class Downloader
       # Pick up any issues that had a status change in the range
       start_date_text = @start_date_in_query.strftime '%Y-%m-%d'
       end_date_text = today.strftime '%Y-%m-%d'
-      find_in_range = %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
+      # find_in_range = %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
+      find_in_range = %((updated >= "#{start_date_text} 00:00" AND updated <= "#{end_date_text} 23:59"))
 
       segments << "(#{find_in_range} OR #{catch_all})"
     end

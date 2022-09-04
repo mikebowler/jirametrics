@@ -63,7 +63,7 @@ describe Downloader do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01 00:00:00 +0000')
-      expected = 'project="SP" AND ((status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) ' \
+      expected = 'project="SP" AND ((updated >= "2021-05-03 00:00" AND updated <= "2021-08-01 23:59") ' \
         'OR ((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
       expect(downloader.make_jql(today: today)).to eql expected
     end
@@ -87,7 +87,7 @@ describe Downloader do
       download_config.rolling_date_count 90
       download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
-      expected = 'project="SP" AND ((status changed DURING ("2021-07-20 00:00","2021-08-01 23:59")) OR ' \
+      expected = 'project="SP" AND ((updated >= "2021-07-20 00:00" AND updated <= "2021-08-01 23:59") OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
       expect(downloader.make_jql(today: today)).to eql expected
 
@@ -96,7 +96,7 @@ describe Downloader do
 
     it 'should use the filter id in the board config' do
       download_config.rolling_date_count 90
-      expected = 'filter=5 AND ((status changed DURING ("2021-05-03 00:00","2021-08-01 23:59")) OR ' \
+      expected = 'filter=5 AND ((updated >= "2021-05-03 00:00" AND updated <= "2021-08-01 23:59") OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
 
       jql = downloader.make_jql(today: Time.parse('2021-08-01'), board_configuration: { 'filter' => { 'id' => 5 } })
