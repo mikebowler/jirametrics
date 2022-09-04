@@ -49,7 +49,12 @@ class ExpeditedChart < ChartBase
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end.compact
 
-    wrap_and_render(binding, __FILE__)
+    if data_sets.empty?
+      '<h1>Expedited work</h1>There is no expedited work in this time period. In this report, an item is considered expedited ' \
+      "if it has the priority of #{@expedited_label.inspect}"
+    else
+      wrap_and_render(binding, __FILE__)
+    end
   end
 
   def prepare_expedite_data issue
