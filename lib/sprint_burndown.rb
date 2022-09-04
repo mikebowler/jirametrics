@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 class SprintSummaryStats
-  attr_accessor :started, :added, :changed, :removed, :completed
+  attr_accessor :started, :added, :changed, :removed, :completed, :points_values_changed
 
   def initialize
     @added = 0
     @completed = 0
     @removed = 0
     @started = 0
+    @points_values_changed = false
   end
 end
 
@@ -17,6 +18,7 @@ class SprintBurndown < ChartBase
   def initialize
     super()
 
+    @summary_stats = {}
     header_text 'Sprint burndown'
     description_text ''
     check_data_quality_for(
@@ -65,7 +67,7 @@ class SprintBurndown < ChartBase
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
     charts_to_generate.each do |data_method, y_axis_title|
-      @summary_stats = {}
+      @summary_stats.clear
       data_sets = []
       sprints.each_with_index do |sprint, index|
         color = %w[blue orange green red brown][index % 5]
@@ -172,6 +174,8 @@ class SprintBurndown < ChartBase
       when :leave_sprint
         issues_currently_in_sprint.delete change_data.issue.key
         story_points -= change_data.story_points
+      when :story_points
+        story_points += change_data.value if issues_currently_in_sprint.include? change_data.issue.key
       end
 
       next unless change_data.time >= sprint.start_time
@@ -181,11 +185,12 @@ class SprintBurndown < ChartBase
       when :story_points
         next unless issues_currently_in_sprint.include? change_data.issue.key
 
-        story_points += change_data.value
         old_story_points = change_data.story_points - change_data.value
         message = "Story points changed from #{old_story_points} points to #{change_data.story_points} points"
+        summary_stats.points_values_changed = true
       when :enter_sprint
         message = "Added to sprint with #{change_data.story_points || 'no'} points"
+        summary_stats.added += change_data.story_points
       when :issue_stopped
         story_points -= change_data.story_points
         message = "Completed with #{change_data.story_points || 'no'} points"
@@ -193,6 +198,7 @@ class SprintBurndown < ChartBase
         summary_stats.completed += change_data.story_points
       when :leave_sprint
         message = "Removed from sprint with #{change_data.story_points || 'no'} points"
+        summary_stats.removed += change_data.story_points
       else
         raise "Unexpected action: #{change_data.action}"
       end
@@ -240,7 +246,6 @@ class SprintBurndown < ChartBase
           x: chart_format(sprint.start_time),
           title: "Sprint started with #{issues_currently_in_sprint.size} stories"
         }
-        puts issues_currently_in_sprint if sprint.name == 'Scrum Sprint 5'
         summary_stats.started = issues_currently_in_sprint.size
         start_data_written = true
       end
@@ -296,7 +301,6 @@ class SprintBurndown < ChartBase
     end
 
     @summary_stats[sprint] = summary_stats
-    # puts "#{sprint.name.inspect} [count] stats=#{summary_stats.inspect}"
     data_set
   end
 end
