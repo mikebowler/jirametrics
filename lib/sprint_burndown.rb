@@ -85,6 +85,22 @@ class SprintBurndown < ChartBase
         }
       end
 
+      legend = []
+      case data_method
+      when :data_set_by_story_counts
+        legend << '<b>Started</b>: Number of issues already in the sprint, when the sprint was started.'
+        legend << '<b>Completed</b>: Number of issues, completed during the sprint'
+        legend << '<b>Added</b>: Number of issues added in the middle of the sprint'
+        legend << '<b>Removed</b>: Number of issues removed while the sprint was in progress'
+      when :data_set_by_story_points
+        legend << '<b>Started</b>: Total count of story points when the sprint was started'
+        legend << '<b>Completed</b>: Count of story points completed during the sprint'
+        legend << '<b>Added</b>: Count of story points added in the middle of the sprint'
+        legend << '<b>Removed</b>: Count of story points removed while the sprint was in progress'
+      else
+        raise "Unexpected method #{data_method}"
+      end
+
       result << render(binding, __FILE__)
     end
 
