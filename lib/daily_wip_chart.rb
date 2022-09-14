@@ -54,13 +54,12 @@ class DailyWipChart < ChartBase
           rules.label = 'Completed but not started'
           rules.color = '#66FF66'
           rules.group_priority = -1
-        elsif rules.current_date >= issue.created.to_date && rules.current_date < rules.current_date
+        elsif rules.current_date >= issue.created.to_date && rules.current_date < stopped
           # We've past the creation date but it isn't done yet
           rules.label = 'Cannot tell when it started'
-          rules.color = 'red'
+          rules.color = 'white'
           rules.group_priority = 11
-        else
-          rules.ignore
+          rules.issue_hint = "(age since created: #{label_days (rules.current_date - issue.created.to_date + 1).to_i})"
         end
       elsif stopped == rules.current_date
         rules.label = 'Completed'
@@ -167,6 +166,8 @@ class DailyWipChart < ChartBase
       label: grouping_rule.label,
       data: data,
       backgroundColor: grouping_rule.color,
+      borderColor: 'gray',
+      borderWidth: grouping_rule.color == 'white' ? 1 : 0,
       borderRadius: positive ? 0 : 5
     }
   end
