@@ -3,7 +3,11 @@
 class GroupingRules < Rules
   attr_accessor :label, :color
 
-  def inspect
-    "GroupingRules(label=#{label.inspect}, color=#{color}"
+  def eql? other
+    other.label == @label && other.color == @color
+  end
+
+  def group
+    [@label, @color]
   end
 end
