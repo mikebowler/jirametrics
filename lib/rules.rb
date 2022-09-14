@@ -20,4 +20,15 @@ class Rules
   def hash
     2 # TODO: While this work, it's not performant
   end
+
+  def inspect
+    result = String.new
+    result << "#{self.class}("
+    result << instance_variables.collect do |variable|
+      "#{variable}=#{instance_variable_get(variable).inspect}"
+    end.join(', ')
+    result << ')'
+    result
+  end
+
 end
