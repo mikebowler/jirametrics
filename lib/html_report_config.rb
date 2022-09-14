@@ -60,7 +60,25 @@ class HtmlReportConfig
   end
 
   def total_wip_over_time_chart &block
+    # TODO: deprecate this in favour of daily_wip_by_age
     execute_chart TotalWipOverTimeChart.new block
+  end
+
+  def daily_wip_chart &block
+    execute_chart DailyWipChart.new(block)
+  end
+
+  def daily_wip_by_age &block
+    execute_chart TotalWipOverTimeChart.new block
+  end
+
+  def daily_wip_by_type &block
+    execute_chart DailyWipChart.new block
+  end
+
+  def daily_wip_by_blocked_stalled
+    # TODO: Deprecate this in favour of daily_wip_by_blocked_stalled
+    execute_chart BlockedStalledChart.new
   end
 
   def throughput_chart &block
@@ -68,6 +86,7 @@ class HtmlReportConfig
   end
 
   def blocked_stalled_chart
+    # TODO: Deprecated this in favour of daily_wip_by_blocked_stalled
     execute_chart BlockedStalledChart.new
   end
 
