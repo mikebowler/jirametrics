@@ -19,7 +19,7 @@ class DailyWipChart < ChartBase
     super()
 
     if block
-      instance_eval(&@block)
+      instance_eval(&block)
     else
       run_default_config
     end
@@ -59,7 +59,8 @@ class DailyWipChart < ChartBase
           rules.label = 'Cannot tell when it started'
           rules.color = 'white'
           rules.group_priority = 11
-          rules.issue_hint = "(age since created: #{label_days (rules.current_date - issue.created.to_date + 1).to_i})"
+          created_days = rules.current_date - issue.created.to_date + 1
+          rules.issue_hint = "(created: #{label_days created_days.to_i} ago, stopped on #{stopped})"
         end
       elsif stopped == rules.current_date
         rules.label = 'Completed'
@@ -98,16 +99,8 @@ class DailyWipChart < ChartBase
   end
 
   def run
-    issue_rules = {}
-
-    possible_rules = []
     issue_rules_by_active_date = group_issues_by_active_dates
-    issue_rules_by_active_date.each_pair do |_date, issues_rules_list|
-      issues_rules_list.each do |_issue, rules|
-        possible_rules << rules unless possible_rules.any? { |r| r.group == rules.group }
-      end
-    end
-    possible_rules.sort_by!(&:group_priority).reverse
+    possible_rules = select_possible_rules issue_rules_by_active_date
 
     data_sets = possible_rules.collect do |grouping_rule|
       make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date
@@ -118,26 +111,33 @@ class DailyWipChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
+  def select_possible_rules issue_rules_by_active_date
+    possible_rules = []
+    issue_rules_by_active_date.each_pair do |_date, issues_rules_list|
+      issues_rules_list.each do |_issue, rules|
+        possible_rules << rules unless possible_rules.any? { |r| r.group == rules.group }
+      end
+    end
+    possible_rules.sort_by!(&:group_priority)
+  end
+
   # TODO: Replaces DailyChartItemGenerator
   def group_issues_by_active_dates
     hash = {}
-
-    @date_range.begin.upto(@date_range.end) do |date|
-      hash[date] = []
-    end
 
     @issues.each do |issue|
       start = @cycletime.started_time(issue)&.to_date
       stop = @cycletime.stopped_time(issue)&.to_date
       next if start.nil? && stop.nil?
 
-      # If it stopped but never started then assume it started at creation
+      # If it stopped but never started then assume it started at creation so the data points
+      # will be available for the config.
       start = issue.created.to_date if stop && start.nil?
       start = @date_range.begin if start < @date_range.begin
 
       start.upto(stop || @date_range.end) do |date|
         rule = configure_rule issue: issue, date: date
-        hash[date] << [issue, rule] unless rule.ignored?
+        (hash[date] ||= []) << [issue, rule] unless rule.ignored?
       end
     end
     hash
@@ -152,7 +152,7 @@ class DailyWipChart < ChartBase
         .select { |_issue, rules| rules.group == grouping_rule.group }
         .sort_by { |issue, _rules| issue.key_as_i }
         .collect { |issue, rules| "#{issue.key} : #{issue.summary.strip} #{rules.issue_hint}" }
-      title = ["#{grouping_rule.label} (#{label_issues issues.size})"] + issue_strings
+      title = ["#{grouping_rule.label} (#{label_issues issue_strings.size})"] + issue_strings
 
       {
         x: date,
@@ -173,6 +173,8 @@ class DailyWipChart < ChartBase
   end
 
   def configure_rule issue:, date:
+    raise 'grouping_rules must be set' if @group_by_block.nil?
+
     rules = DailyGroupingRules.new
     rules.current_date = date
     @group_by_block.call issue, rules
