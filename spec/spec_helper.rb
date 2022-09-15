@@ -108,3 +108,7 @@ def to_time string
     Time.parse string
   end
 end
+
+def to_date string
+  Date.parse string
+end

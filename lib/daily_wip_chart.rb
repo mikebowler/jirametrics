@@ -10,6 +10,7 @@ class DailyGroupingRules < GroupingRules
     super()
     @group_priority = 0
   end
+
 end
 
 class DailyWipChart < ChartBase
@@ -55,12 +56,12 @@ class DailyWipChart < ChartBase
           rules.color = '#66FF66'
           rules.group_priority = -1
         elsif rules.current_date >= issue.created.to_date && rules.current_date < stopped
-          # We've past the creation date but it isn't done yet
+          # We're past the creation date but it isn't done yet
           rules.label = 'Cannot tell when it started'
           rules.color = 'white'
           rules.group_priority = 11
           created_days = rules.current_date - issue.created.to_date + 1
-          rules.issue_hint = "(created: #{label_days created_days.to_i} ago, stopped on #{stopped})"
+          rules.issue_hint = "(created: #{label_days created_days.to_i} earlier, stopped on #{stopped})"
         end
       elsif stopped == rules.current_date
         rules.label = 'Completed'
