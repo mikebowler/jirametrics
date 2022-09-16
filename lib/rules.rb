@@ -6,7 +6,7 @@ class Rules
   end
 
   def ignored?
-    @ignore
+    @ignore == true
   end
 
   def eql?(other)

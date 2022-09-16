@@ -16,13 +16,18 @@ end
 class DailyWipChart < ChartBase
   attr_accessor :possible_statuses
 
-  def initialize block
+  def initialize block = nil
     super()
+
+    header_text default_header_text
+    description_text default_description_text
 
     if block
       instance_eval(&block)
     else
-      run_default_config
+      grouping_rules do |issue, rules|
+        default_grouping_rules issue: issue, rules: rules
+      end
     end
 
     check_data_quality_for(
@@ -34,69 +39,6 @@ class DailyWipChart < ChartBase
       :status_not_on_board,
       :stopped_before_started
     )
-  end
-
-  def run_default_config
-    header_text 'Daily WIP Chart - base'
-    description_text <<-HTML
-      <p>
-        This chart highlights aging work, grouped by type
-      </p>
-    HTML
-
-    grouping_rules do |issue, rules|
-      started = cycletime.started_time(issue)&.to_date
-      stopped = cycletime.stopped_time(issue)&.to_date
-
-      rules.issue_hint = "(age: #{label_days (rules.current_date - started + 1).to_i})" if started
-
-      if stopped && started.nil? # We can't tell when it started
-        if stopped == rules.current_date
-          rules.label = 'Completed but not started'
-          rules.color = '#66FF66'
-          rules.group_priority = -1
-        elsif rules.current_date >= issue.created.to_date && rules.current_date < stopped
-          # We're past the creation date but it isn't done yet
-          rules.label = 'Cannot tell when it started'
-          rules.color = 'white'
-          rules.group_priority = 11
-          created_days = rules.current_date - issue.created.to_date + 1
-          rules.issue_hint = "(created: #{label_days created_days.to_i} earlier, stopped on #{stopped})"
-        end
-      elsif stopped == rules.current_date
-        rules.label = 'Completed'
-        rules.color = '#009900'
-        rules.group_priority = -2
-      else
-        age = rules.current_date - started + 1
-
-        case age
-        when ..0
-          puts 'Ignoring'
-          rules.ignore # It hasn't started yet
-        when 1
-          rules.label = 'Less than a day'
-          rules.color = '#aaaaaa'
-          rules.group_priority = 10 # Highest is top
-        when 2..7
-          rules.label = 'A week or less'
-          rules.color = '#80bfff'
-          rules.group_priority = 9
-        when 8..14
-          rules.label = 'Two weeks or less'
-          rules.color = '#ffd700'
-          rules.group_priority = 8
-        when 15..28
-          rules.label = 'Four weeks or less'
-          rules.color = '#ce6300'
-          rules.group_priority = 7
-        when (29..)
-          rules.label = 'More than four weeks'
-          rules.color = '#990000'
-          rules.group_priority = 6
-        end
-      end
-    end
   end
 
   def run
@@ -111,6 +53,9 @@ class DailyWipChart < ChartBase
 
     wrap_and_render(binding, __FILE__)
   end
+
+  def default_header_text = 'Daily WIP'
+  def default_description_text = ''
 
   def select_possible_rules issue_rules_by_active_date
     possible_rules = []
