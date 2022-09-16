@@ -145,7 +145,7 @@ class DailyWipChart < ChartBase
   end
 
   def make_data_set grouping_rule:, issue_rules_by_active_date:
-    positive = grouping_rule.group_priority.positive?
+    positive = grouping_rule.group_priority >= 0
 
     data = issue_rules_by_active_date.collect do |date, issue_rules|
       # issues = []

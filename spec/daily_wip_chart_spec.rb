@@ -13,6 +13,9 @@ def flatten_issue_groups issue_rules_by_active_dates
 end
 
 describe DailyWipChart do
+  let(:issue1) { load_issue 'SP-1' }
+  let(:issue2) { load_issue 'SP-2' }
+
   let(:subject) do
     empty_config_block = ->(_) {}
     chart = DailyWipChart.new empty_config_block
@@ -27,7 +30,6 @@ describe DailyWipChart do
     end
 
     it 'should return raise exception when no grouping rules set' do
-      issue1 = load_issue('SP-1')
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
@@ -36,7 +38,6 @@ describe DailyWipChart do
     end
 
     it 'should return nothing when grouping rules ignore everything' do
-      issue1 = load_issue('SP-1')
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
@@ -48,8 +49,6 @@ describe DailyWipChart do
     end
 
     it 'should make a single group for one issue' do
-      issue1 = load_issue('SP-1')
-
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
@@ -65,8 +64,6 @@ describe DailyWipChart do
     end
 
     it 'should skip and issue that neither started nor stopped' do
-      issue1 = load_issue('SP-1')
-
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil]
       ]
@@ -80,8 +77,6 @@ describe DailyWipChart do
     end
 
     it 'should include an issue that stopped but never started' do
-      issue1 = load_issue('SP-1')
-
       subject.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, to_time('2022-01-03T14:00:00')]
       ]
@@ -105,7 +100,6 @@ describe DailyWipChart do
     end
 
     it 'should return one group' do
-      issue1 = load_issue('SP-1')
       rules = DailyGroupingRules.new
       rules.label = 'foo'
       rules.color = 'red'
@@ -122,9 +116,6 @@ describe DailyWipChart do
     end
 
     it 'should return two different groups' do
-      issue1 = load_issue('SP-1')
-      issue2 = load_issue('SP-2')
-
       rule1 = DailyGroupingRules.new
       rule1.label = 'foo'
       rule1.color = 'red'
@@ -148,9 +139,6 @@ describe DailyWipChart do
     end
 
     it 'should return one group when the same one is used twice' do
-      issue1 = load_issue('SP-1')
-      issue2 = load_issue('SP-2')
-
       rule1 = DailyGroupingRules.new
       rule1.label = 'foo'
       rule1.color = 'red'
@@ -170,6 +158,70 @@ describe DailyWipChart do
       expect(subject.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
         %w[foo red]
       ])
+    end
+  end
+
+  context 'make_data_set' do
+    it 'positive' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.group_priority = 0
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [
+          [issue1, rule],
+          [issue2, rule]
+        ]
+      }
+
+      data_set = subject.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set).to eq({
+        backgroundColor: 'red',
+        borderColor: 'gray',
+        borderRadius: 0,
+        borderWidth: 0,
+        data: [
+          {
+            title: ['foo (2 issues)', 'SP-1 : Create new draft event ', 'SP-2 : Update existing event '],
+            x: to_date('2022-01-01'),
+            y: 2
+          }
+        ],
+        label: 'foo',
+        type: 'bar'
+      })
+    end
+
+    it 'negative' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'white'
+      rule.group_priority = -1
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [
+          [issue1, rule],
+          [issue2, rule]
+        ]
+      }
+
+      data_set = subject.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set).to eq({
+        backgroundColor: 'white',
+        borderColor: 'gray',
+        borderRadius: 5,
+        borderWidth: 1,
+        data: [
+          {
+            title: ['foo (2 issues)', 'SP-1 : Create new draft event ', 'SP-2 : Update existing event '],
+            x: to_date('2022-01-01'),
+            y: -2
+          }
+        ],
+        label: 'foo',
+        type: 'bar'
+      })
     end
   end
 end
