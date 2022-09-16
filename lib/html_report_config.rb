@@ -85,7 +85,7 @@ class HtmlReportConfig
   end
 
   def blocked_stalled_chart
-    puts 'Deprecated(blocked_stalled_chart). Use daily_wip_by_blocked_stalled instead.'
+    puts 'Deprecated(blocked_stalled_chart). Use daily_wip_by_blocked_stalled_chart instead.'
     execute_chart DailyWipByBlockedStalledChart.new
   end
 

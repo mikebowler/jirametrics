@@ -56,6 +56,9 @@ class DailyWipChart < ChartBase
 
   def default_header_text = 'Daily WIP'
   def default_description_text = ''
+  def default_grouping_rules issue:, rules:
+    raise 'If you use this class directly then you must provide grouping_rules'
+  end
 
   def select_possible_rules issue_rules_by_active_date
     possible_rules = []
