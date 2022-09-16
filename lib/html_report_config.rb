@@ -86,7 +86,7 @@ class HtmlReportConfig
 
   def blocked_stalled_chart
     puts 'Deprecated(blocked_stalled_chart). Use daily_wip_by_blocked_stalled instead.'
-    execute_chart BlockedStalledChart.new
+    execute_chart DailyWipByBlockedStalledChart.new
   end
 
   def expedited_chart priority_name = @expedited_priority_name
