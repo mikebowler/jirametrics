@@ -77,6 +77,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     <th>Completed</th>
     <th>Added</th>
     <th>Removed</th>
+    <th>Remaining</th>
     <th>Note</th>
   </thead>
   <tbody>
@@ -89,6 +90,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         <td><%= stats.completed %></td>
         <td><%= stats.added %></td>
         <td><%= stats.removed %></td>
+        <td><%= stats.remaining %></td>
         <td>
           <% if stats.points_values_changed %>
             Points values changed mid-sprint. Numbers may not add up

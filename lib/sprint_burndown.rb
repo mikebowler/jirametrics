@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 class SprintSummaryStats
-  attr_accessor :started, :added, :changed, :removed, :completed, :points_values_changed
+  attr_accessor :started, :added, :changed, :removed, :completed, :remaining, :points_values_changed
 
   def initialize
     @added = 0
     @completed = 0
     @removed = 0
     @started = 0
+    @remaining = 0
     @points_values_changed = false
   end
 end
@@ -242,6 +243,7 @@ class SprintBurndown < ChartBase
         x: chart_format(sprint.completed_time),
         title: "Sprint ended with #{story_points} points unfinished"
       }
+      summary_stats.remaining = story_points
     end
 
     @summary_stats[sprint] = summary_stats
@@ -314,6 +316,7 @@ class SprintBurndown < ChartBase
         x: chart_format(sprint.completed_time),
         title: "Sprint ended with #{issues_currently_in_sprint.size} stories unfinished"
       }
+      summary_stats.remaining = issues_currently_in_sprint.size
     end
 
     @summary_stats[sprint] = summary_stats
