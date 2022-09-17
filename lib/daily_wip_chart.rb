@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require './lib/chart_base'
-require './lib/daily_chart_item_generator'
 
 class DailyGroupingRules < GroupingRules
   attr_accessor :current_date, :group_priority, :issue_hint
@@ -56,7 +55,8 @@ class DailyWipChart < ChartBase
 
   def default_header_text = 'Daily WIP'
   def default_description_text = ''
-  def default_grouping_rules issue:, rules:
+
+  def default_grouping_rules issue:, rules: # rubocop:disable Lint/UnusedMethodArgument
     raise 'If you use this class directly then you must provide grouping_rules'
   end
 
@@ -70,7 +70,6 @@ class DailyWipChart < ChartBase
     possible_rules.sort_by!(&:group_priority)
   end
 
-  # TODO: Replaces DailyChartItemGenerator
   def group_issues_by_active_dates
     hash = {}
 

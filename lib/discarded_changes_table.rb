@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require './lib/chart_base'
-require './lib/daily_chart_item_generator'
 
 class DiscardedChangesTable < ChartBase
   attr_accessor :issues, :cycletime, :possible_statuses, :date_range
