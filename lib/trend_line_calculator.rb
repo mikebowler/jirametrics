@@ -22,7 +22,7 @@ class TrendLineCalculator
 
   def valid? = @valid
   def horizontal? = @slope.zero?
-  def vertical? = @slope.nan?
+  def vertical? = @slope.nan? || @slope.infinite?
 
   def calc_y x: # rubocop:disable Naming/MethodParameterName
     ((x * @slope) + @offset).to_i
