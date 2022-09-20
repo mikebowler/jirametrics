@@ -40,7 +40,8 @@ class FakeIssue
           name: ''
         },
         summary: RandomWord.phrases.next.gsub(/_/, ' '),
-        issuelinks: []
+        issuelinks: [],
+        fixVersions: []
       }
     }
 
@@ -169,6 +170,7 @@ class Generator
     issue = @issues.find { |i| i.worker == worker && !i.done? && !i.blocked? }
 
     # Then look for something that someone else started
+    issue = @issues.find { |i| i.worker != worker && !i.done? && !i.blocked? } if issue.nil? && lucky?(40)
 
     # Then start new work
     issue = FakeIssue.new(date: date, type: type, worker: worker) if issue.nil?
