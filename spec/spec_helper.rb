@@ -48,7 +48,7 @@ def load_complete_sample_board
 end
 
 def load_complete_sample_statuses
-  statuses = []
+  statuses = StatusCollection.new
 
   json = JSON.parse(File.read('./spec/complete_sample/sample_statuses.json'))
   json.each do |type_config|

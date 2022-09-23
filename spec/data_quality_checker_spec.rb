@@ -9,6 +9,7 @@ describe DataQualityChecker do
   let(:subject) do
     subject = DataQualityChecker.new
     subject.issues = [issue10, issue1]
+    subject.possible_statuses = load_complete_sample_statuses
 
     today = Date.parse('2021-12-17')
     block = lambda do |_|
@@ -72,7 +73,6 @@ describe DataQualityChecker do
   context 'backwards movement' do
     it 'should detect backwards status' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -93,7 +93,6 @@ describe DataQualityChecker do
 
     it 'should detect backwards status category' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -116,7 +115,6 @@ describe DataQualityChecker do
 
     it 'should detect statuses that just aren\'t on the board' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -133,7 +131,6 @@ describe DataQualityChecker do
 
     it 'should detect skip past changes that are moving right' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -154,7 +151,6 @@ describe DataQualityChecker do
   context 'scan_for_issues_not_created_in_the_right_status' do
     it 'should catch invalid starting status' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -171,7 +167,6 @@ describe DataQualityChecker do
 
     it 'should skip past valid status' do
       subject.board = load_complete_sample_board
-      subject.possible_statuses = load_complete_sample_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -206,6 +201,24 @@ describe DataQualityChecker do
           nil, nil
         ]
       ]
+    end
+  end
+
+  context 'format_status' do
+    it 'should raise exception when status not found' do
+      expect { subject.format_status 'Digging' }.to raise_error 'Expected exactly one match and got [] for "Digging"'
+    end
+
+    it 'should handle todo statuses' do
+      expect(subject.format_status 'Backlog').to eq "<span style='color: gray'>Backlog</span>"
+    end
+
+    it 'should handle in progress statuses' do
+      expect(subject.format_status 'Review').to eq "<span style='color: blue'>Review</span>"
+    end
+
+    it 'should handle done statuses' do
+      expect(subject.format_status 'Done').to eq "<span style='color: green'>Done</span>"
     end
   end
 end

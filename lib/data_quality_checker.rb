@@ -83,7 +83,7 @@ class DataQualityChecker
     detail = 'No status changes found at the time that this item was marked completed.'
     unless changes.empty?
       detail = changes.collect do |change|
-        "Status changed from [#{change.old_value}] to [#{change.value}] on [#{change.time}]."
+        "Status changed from #{format_status change.old_value} to #{format_status change.value} on #{change.time}."
       end.join ' '
     end
 
@@ -104,7 +104,7 @@ class DataQualityChecker
 
     problem = "This item was done on #{entry.stopped} but status changes continued after that."
     changes_after_done.each do |change|
-      problem << " Status change to #{change.value} on #{change.time}."
+      problem << " Status change to #{format_status change.value} on #{change.time}."
     end
     entry.report(
       problem_key: :status_changes_after_done,
@@ -124,7 +124,7 @@ class DataQualityChecker
       if index.nil?
         entry.report(
           problem_key: :status_not_on_board,
-          detail: "Status #{change.value.inspect} is not on the board"
+          detail: "Status #{format_status change.value} is not on the board"
         )
       elsif change.old_value.nil?
         # Do nothing
@@ -135,15 +135,18 @@ class DataQualityChecker
         if new_category == old_category
           entry.report(
             problem_key: :backwords_through_statuses,
-            detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+            detail: "The issue moved backwards from #{format_status change.old_value}" \
+              " to #{format_status change.value}" \
               " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
-            detail: "The issue moved backwards from #{change.old_value.inspect} to #{change.value.inspect}" \
+            detail: "The issue moved backwards from #{format_status change.old_value}" \
+              " to #{format_status change.value}" \
               " on #{change.time.to_date}, " \
-              " crossing status categories from #{old_category.inspect} to #{new_category.inspect}."
+              " crossing status categories from #{format_status old_category, is_category: true}" \
+              " to #{format_status new_category, is_category: true}."
           )
         end
       end
@@ -162,7 +165,7 @@ class DataQualityChecker
 
     entry.report(
       problem_key: :created_in_wrong_status,
-      detail: "Issue was created in #{creation_change.value.inspect} status on #{creation_change.time.to_date}"
+      detail: "Issue was created in #{format_status creation_change.value} status on #{creation_change.time.to_date}"
     )
   end
 
@@ -173,5 +176,21 @@ class DataQualityChecker
       problem_key: :stopped_before_started,
       detail: "The stopped time '#{entry.stopped}' is before the started time '#{entry.started}'"
     )
+  end
+
+  def format_status name_or_id, is_category: false
+    statuses = @possible_statuses.expand_statuses([name_or_id])
+    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" unless statuses.size == 1
+
+    status = statuses.first
+    color = case status.category_name
+    when 'To Do' then 'gray'
+    when 'In Progress' then 'blue'
+    when 'Done' then 'green'
+    else 'red'
+    end
+
+    text = is_category ? status.category_name : status.name
+    "<span style='color: #{color}'>#{text}</span>"
   end
 end
