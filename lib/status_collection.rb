@@ -26,11 +26,7 @@ class StatusCollection
 
     names_or_ids.each do |name_or_id|
       status = @list.find { |s| s.name == name_or_id || s.id == name_or_id }
-      if status.nil?
-        puts "Status name/id not found: #{name_or_id}"
-      else
-        result << status
-      end
+      result << status unless status.nil?
     end
     result
   end

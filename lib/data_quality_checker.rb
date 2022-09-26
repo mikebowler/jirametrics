@@ -180,10 +180,13 @@ class DataQualityChecker
 
   def format_status name_or_id, is_category: false
     statuses = @possible_statuses.expand_statuses([name_or_id])
-    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" unless statuses.size == 1
+    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
+
+    return "<span style='color: red'>#{name_or_id}</span>" if statuses.empty?
 
     status = statuses.first
     color = case status.category_name
+    when nil then 'black'
     when 'To Do' then 'gray'
     when 'In Progress' then 'blue'
     when 'Done' then 'green'

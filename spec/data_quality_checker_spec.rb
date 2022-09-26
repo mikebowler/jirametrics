@@ -205,8 +205,9 @@ describe DataQualityChecker do
   end
 
   context 'format_status' do
-    it 'should raise exception when status not found' do
-      expect { subject.format_status 'Digging' }.to raise_error 'Expected exactly one match and got [] for "Digging"'
+    it 'should make text red when status not found' do
+      expect(subject.format_status 'Digging').to eq "<span style='color: red'>Digging</span>"
+      # expect { subject.format_status 'Digging' }.to raise_error 'Expected exactly one match and got [] for "Digging"'
     end
 
     it 'should handle todo statuses' do
