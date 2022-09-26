@@ -114,6 +114,7 @@ class DataQualityChecker
 
   def scan_for_backwards_movement entry:
     issue = entry.issue
+    backlog_statuses = @possible_statuses.expand_statuses board.backlog_statuses
 
     # Moving backwards through statuses is bad. Moving backwards through status categories is almost always worse.
     last_index = -1
@@ -122,9 +123,14 @@ class DataQualityChecker
 
       index = board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
+        detail = "Status #{format_status change.value} is not on the board"
+        if @possible_statuses.expand_statuses(change.value).empty?
+          detail = "Status #{format_status change.value} cannot be found at all. Was it deleted?"
+        end
+
         entry.report(
           problem_key: :status_not_on_board,
-          detail: "Status #{format_status change.value} is not on the board"
+          detail: detail
         )
       elsif change.old_value.nil?
         # Do nothing

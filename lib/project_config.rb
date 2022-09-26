@@ -139,9 +139,9 @@ class ProjectConfig
       status_name = snippet['name']
       add_possible_status Status.new(
         name: status_name,
-        id: snippet['id'],
+        id: snippet['id'].to_i,
         category_name: category_config['name'],
-        category_id: category_config['id']
+        category_id: category_config['id'].to_i
       )
     end
   end
