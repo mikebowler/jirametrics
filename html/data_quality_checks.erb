@@ -67,7 +67,8 @@
   unless problems.empty? 
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items were created in the wrong status. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not.
+    <b>Data quality note:</b> <%= problems.size %> items were created in a status not designated as Backlog. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not. The backlog statuses are: 
+    <%= @possible_statuses.expand_statuses(current_board.backlog_statuses).collect {|s| s.name.inspect}.join(', ') %>.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
