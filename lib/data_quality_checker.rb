@@ -21,12 +21,15 @@ class DataQualityChecker
   def run
     initialize_entries
 
+    backlog_statuses = @possible_statuses.expand_statuses board.backlog_statuses
+
     @entries.each do |entry|
       scan_for_completed_issues_without_a_start_time entry: entry
       scan_for_status_change_after_done entry: entry
-      scan_for_backwards_movement entry: entry
+      scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
       scan_for_issues_not_created_in_the_right_status entry: entry
       scan_for_stopped_before_started entry: entry
+      # scan_for_issues_not_started_with_subtasks_that_have entry: entry
     end
 
     entries_with_problems = entries_with_problems()
@@ -112,9 +115,8 @@ class DataQualityChecker
     )
   end
 
-  def scan_for_backwards_movement entry:
+  def scan_for_backwards_movement entry:, backlog_statuses:
     issue = entry.issue
-    backlog_statuses = @possible_statuses.expand_statuses board.backlog_statuses
 
     # Moving backwards through statuses is bad. Moving backwards through status categories is almost always worse.
     last_index = -1
@@ -128,10 +130,10 @@ class DataQualityChecker
           detail = "Status #{format_status change.value} cannot be found at all. Was it deleted?"
         end
 
-        entry.report(
-          problem_key: :status_not_on_board,
-          detail: detail
-        )
+        # If it's been moved back to backlog then it's on a different report. Ignore it here.
+        detail = nil if backlog_statuses.any? { |s| s.name == change.value }
+
+        entry.report(problem_key: :status_not_on_board, detail: detail) unless detail.nil?
       elsif change.old_value.nil?
         # Do nothing
       elsif index < last_index
@@ -181,6 +183,22 @@ class DataQualityChecker
     entry.report(
       problem_key: :stopped_before_started,
       detail: "The stopped time '#{entry.stopped}' is before the started time '#{entry.started}'"
+    )
+  end
+
+  def scan_for_issues_not_started_with_subtasks_that_have entry:
+    return if entry.started
+
+    started_subtasks = []
+    entry.issue.subtasks.each do |subtask|
+      started_subtasks << subtask if @cycletime.started_time(subtask)
+    end
+
+    return if started_subtasks.empty?
+
+    entry.report(
+      problem_key: :issue_not_started_but_subtasks_have,
+      detail: "The following subtasks have started: #{started_subtasks.collect(&:key).join(', ')}"
     )
   end
 

@@ -73,6 +73,7 @@ describe DataQualityChecker do
   context 'backwards movement' do
     it 'should detect backwards status' do
       subject.board = load_complete_sample_board
+      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -84,7 +85,7 @@ describe DataQualityChecker do
         time: '2021-09-06', value_id: 10_001
       )
 
-      subject.scan_for_backwards_movement entry: entry
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -93,6 +94,7 @@ describe DataQualityChecker do
 
     it 'should detect backwards status category' do
       subject.board = load_complete_sample_board
+      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -106,7 +108,7 @@ describe DataQualityChecker do
         time: '2021-09-06', value_id: 3
       )
 
-      subject.scan_for_backwards_movement entry: entry
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -115,6 +117,7 @@ describe DataQualityChecker do
 
     it 'should detect statuses that just aren\'t on the board' do
       subject.board = load_complete_sample_board
+      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -122,7 +125,7 @@ describe DataQualityChecker do
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
 
-      subject.scan_for_backwards_movement entry: entry
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -131,6 +134,7 @@ describe DataQualityChecker do
 
     it 'should detect skip past changes that are moving right' do
       subject.board = load_complete_sample_board
+      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
       subject.initialize_entries
 
       entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
@@ -142,7 +146,7 @@ describe DataQualityChecker do
       )
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
 
-      subject.scan_for_backwards_movement entry: entry
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
 
       expect(entry.problems).to be_empty
     end
