@@ -41,7 +41,6 @@ class ExpeditedChart < ChartBase
         <%= @expedited_label.inspect %>
       </p>
     HTML
-    check_data_quality_for # none
   end
 
   def run

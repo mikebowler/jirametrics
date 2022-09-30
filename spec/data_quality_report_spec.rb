@@ -2,12 +2,14 @@
 
 require './spec/spec_helper'
 
-describe DataQualityChecker do
+describe DataQualityReport do
   let(:issue1) { load_issue('SP-1') }
   let(:issue2) { load_issue('SP-2') }
   let(:issue10) { load_issue('SP-10') }
+  let(:board) { load_complete_sample_board }
+
   let(:subject) do
-    subject = DataQualityChecker.new
+    subject = DataQualityReport.new
     subject.issues = [issue10, issue1]
     subject.possible_statuses = load_complete_sample_statuses
 
@@ -37,7 +39,7 @@ describe DataQualityChecker do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     subject.initialize_entries
 
-    entry = DataQualityChecker::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
+    entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
     subject.scan_for_completed_issues_without_a_start_time entry: entry
 
     expect(entry.problems.size).to eq 1
@@ -60,7 +62,7 @@ describe DataQualityChecker do
     issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
     subject.initialize_entries
 
-    entry = DataQualityChecker::Entry.new(
+    entry = DataQualityReport::Entry.new(
       started: nil, stopped: Time.parse('2021-09-06T04:34:26+00:00'), issue: issue10
     )
     subject.scan_for_status_change_after_done entry: entry
@@ -72,11 +74,10 @@ describe DataQualityChecker do
 
   context 'backwards movement' do
     it 'should detect backwards status' do
-      subject.board = load_complete_sample_board
-      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
@@ -85,7 +86,7 @@ describe DataQualityChecker do
         time: '2021-09-06', value_id: 10_001
       )
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -93,11 +94,10 @@ describe DataQualityChecker do
     end
 
     it 'should detect backwards status category' do
-      subject.board = load_complete_sample_board
-      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       # Rank is there just to ensure that it gets skipped appropriately
@@ -108,7 +108,7 @@ describe DataQualityChecker do
         time: '2021-09-06', value_id: 3
       )
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -116,16 +116,14 @@ describe DataQualityChecker do
     end
 
     it 'should detect statuses that just aren\'t on the board' do
-      subject.board = load_complete_sample_board
-      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
-
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -133,11 +131,10 @@ describe DataQualityChecker do
     end
 
     it 'should detect skip past changes that are moving right' do
-      subject.board = load_complete_sample_board
-      backlog_statuses = subject.possible_statuses.expand_statuses subject.board.backlog_statuses
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(
@@ -146,7 +143,7 @@ describe DataQualityChecker do
       )
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
+      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to be_empty
     end
@@ -154,10 +151,10 @@ describe DataQualityChecker do
 
   context 'scan_for_issues_not_created_in_the_right_status' do
     it 'should catch invalid starting status' do
-      subject.board = load_complete_sample_board
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
@@ -170,10 +167,10 @@ describe DataQualityChecker do
     end
 
     it 'should skip past valid status' do
-      subject.board = load_complete_sample_board
+      subject.all_boards = { 1 => board }
       subject.initialize_entries
 
-      entry = DataQualityChecker::Entry.new started: nil, stopped: nil, issue: issue1
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
@@ -186,7 +183,7 @@ describe DataQualityChecker do
 
   context 'scan_for_stopped_before_started' do
     it 'should accept correct data' do
-      entry = DataQualityChecker::Entry.new(
+      entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
       )
       subject.scan_for_stopped_before_started entry: entry
@@ -194,7 +191,7 @@ describe DataQualityChecker do
     end
 
     it 'should identify incorrect data' do
-      entry = DataQualityChecker::Entry.new(
+      entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-04'), stopped: to_time('2022-01-03'), issue: issue1
       )
       subject.scan_for_stopped_before_started entry: entry

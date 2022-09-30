@@ -22,14 +22,6 @@ class SprintBurndown < ChartBase
     @summary_stats = {}
     header_text 'Sprint burndown'
     description_text ''
-    check_data_quality_for(
-      :status_changes_after_done,
-      :completed_but_not_started,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board
-    )
   end
 
   def options= arg

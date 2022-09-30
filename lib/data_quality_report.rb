@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-class DataQualityChecker
-  attr_accessor :issues, :cycletime, :board, :possible_statuses
+class DataQualityReport < ChartBase
+  # attr_accessor :issues, :cycletime, :board, :possible_statuses
 
   class Entry
     attr_reader :started, :stopped, :issue, :problems
@@ -18,10 +18,24 @@ class DataQualityChecker
     end
   end
 
+  def initialize
+    super()
+
+    header_text 'Data Quality Report'
+    description_text <<-HTML
+      <p>
+        We have a tendency to assume that anything we see in a chart is 100% accurate, although that's
+        not always true. To understand the accuracy of the chart, we have to understand how accurate the 
+        initial data was and also how much of the original data set was used in the chart. This section
+        will hopefully give you enough information to make that decision.
+      </p>
+    HTML
+  end
+
   def run
     initialize_entries
 
-    backlog_statuses = @possible_statuses.expand_statuses board.backlog_statuses
+    backlog_statuses = @possible_statuses.expand_statuses current_board.backlog_statuses
 
     @entries.each do |entry|
       scan_for_completed_issues_without_a_start_time entry: entry
@@ -34,6 +48,8 @@ class DataQualityChecker
 
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
+
+    wrap_and_render(binding, __FILE__)
   end
 
   def problems_for key
@@ -123,7 +139,7 @@ class DataQualityChecker
     issue.changes.each do |change|
       next unless change.status?
 
-      index = board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
+      index = current_board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         detail = "Status #{format_status change.value} is not on the board"
         if @possible_statuses.expand_statuses(change.value).empty?
@@ -164,7 +180,7 @@ class DataQualityChecker
 
   # TODO: this is probably wanting the backlog statuses
   def scan_for_issues_not_created_in_the_right_status entry:
-    valid_initial_status_ids = board.backlog_statuses
+    valid_initial_status_ids = current_board.backlog_statuses
     return if valid_initial_status_ids.empty?
 
     creation_change = entry.issue.changes.find { |issue| issue.status? }

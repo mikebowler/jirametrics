@@ -27,15 +27,6 @@ class CycletimeScatterplot < ChartBase
         The gray vertical bars indicate weekends, when theoretically we aren't working.
       </p>
     HTML
-    check_data_quality_for(
-      :status_changes_after_done,
-      :completed_but_not_started,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
 
     init_configuration_block block do
       grouping_rules do |issue, rule|
@@ -54,7 +45,6 @@ class CycletimeScatterplot < ChartBase
     data_sets = create_datasets completed_issues
     overall_percent_line = calculate_percent_line(completed_issues)
     @percentage_lines << [overall_percent_line, 'gray']
-    data_quality = scan_data_quality(@issues.select { |issue| @cycletime.stopped_time(issue) })
 
     wrap_and_render(binding, __FILE__)
   end

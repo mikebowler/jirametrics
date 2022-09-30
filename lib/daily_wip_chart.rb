@@ -9,7 +9,6 @@ class DailyGroupingRules < GroupingRules
     super()
     @group_priority = 0
   end
-
 end
 
 class DailyWipChart < ChartBase
@@ -28,16 +27,6 @@ class DailyWipChart < ChartBase
         default_grouping_rules issue: issue, rules: rules
       end
     end
-
-    check_data_quality_for(
-      :completed_but_not_started,
-      :status_changes_after_done,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
   end
 
   def run
@@ -47,8 +36,6 @@ class DailyWipChart < ChartBase
     data_sets = possible_rules.collect do |grouping_rule|
       make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date
     end
-
-    data_quality = scan_data_quality @issues
 
     wrap_and_render(binding, __FILE__)
   end

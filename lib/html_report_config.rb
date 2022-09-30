@@ -26,6 +26,11 @@ class HtmlReportConfig
   def run
     instance_eval(&@block)
 
+    # The quality report has to be generated last because otherwise cycletime won't have been
+    # set. Then we have to rotate it to the first position so it's at the top of the report.
+    execute_chart DataQualityReport.new
+    @sections.rotate!(-1)
+
     File.open @file_config.output_filename, 'w' do |file|
       erb = ERB.new File.read('html/index.erb')
       file.puts erb.result(binding)

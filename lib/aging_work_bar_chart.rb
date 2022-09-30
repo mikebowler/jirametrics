@@ -26,20 +26,10 @@ class AgingWorkBarChart < ChartBase
         items in this time period. Anything that started to the left of that is now an outlier.
       </p>
     HTML
-    check_data_quality_for(
-      :status_changes_after_done,
-      :completed_but_not_started,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
   end
 
   def run
     aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
-    data_quality = scan_data_quality(aging_issues)
     @status_colors = pick_colors_for_statuses
 
     today = date_range.end

@@ -39,7 +39,7 @@ class ChartBase
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
     result << render(caller_binding, file)
-    result << ERB.new(File.read('html/data_quality_checks.erb')).result(caller_binding)
+    # result << ERB.new(File.read('html/data_quality_checks.erb')).result(caller_binding)
     result
   end
 
@@ -92,27 +92,6 @@ class ChartBase
     issue_descriptions.sort! { |a, b| a[0].key_as_i <=> b[0].key_as_i }
     erb = ERB.new File.read 'html/collapsible_issues_panel.erb'
     erb.result(binding)
-  end
-
-  def scan_data_quality issues
-    checker = DataQualityChecker.new
-    checker.issues = issues
-    checker.cycletime = cycletime
-    checker.board = current_board
-    checker.possible_statuses = possible_statuses
-    checker.run
-    @data_quality_checker = checker
-    checker
-  end
-
-  def check_data_quality_for *names
-    @data_quality_check_names = names
-  end
-
-  def data_quality_problems_for name
-    return [] unless @data_quality_check_names.include? name
-
-    @data_quality_checker.problems_for(name)
   end
 
   def holidays date_range: @date_range

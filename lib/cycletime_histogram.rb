@@ -17,15 +17,6 @@ class CycletimeHistogram < ChartBase
         lengths of time they take.
       </p>
     HTML
-    check_data_quality_for(
-      :status_changes_after_done,
-      :completed_but_not_started,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
@@ -37,9 +28,6 @@ class CycletimeHistogram < ChartBase
 
   def run
     stopped_issues = completed_issues_in_range include_unstarted: true
-
-    # For data quality, we need to look at everything that's stopped
-    data_quality = scan_data_quality(stopped_issues)
 
     # For the histogram, we only want to consider items that have both a start and a stop time.
     histogram_issues = stopped_issues.select { |issue| @cycletime.started_time(issue) }

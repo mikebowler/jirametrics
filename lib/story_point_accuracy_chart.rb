@@ -15,15 +15,6 @@ class StoryPointAccuracyChart < ChartBase
         The color coding indicates how many issues fell at that intersection of estimate and actual.
       </p>
     HTML
-    check_data_quality_for(
-      :status_changes_after_done,
-      :completed_but_not_started,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
 
     if configuration_block
       instance_eval(&configuration_block)
@@ -40,8 +31,6 @@ class StoryPointAccuracyChart < ChartBase
   end
 
   def run
-    scan_data_quality(completed_issues_in_range include_unstarted: true)
-
     data_sets = scan_issues
 
     # If no issues have story points then don't even show the chart.

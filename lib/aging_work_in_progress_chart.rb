@@ -21,14 +21,6 @@ class AgingWorkInProgressChart < ChartBase
         the gray area are outliers and they are the items that you should pay special attention to.
       </p>
     HTML
-    check_data_quality_for(
-      :status_changes_after_done,
-      :backwords_through_statuses,
-      :backwards_through_status_categories,
-      :created_in_wrong_status,
-      :status_not_on_board,
-      :stopped_before_started
-    )
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -44,8 +36,6 @@ class AgingWorkInProgressChart < ChartBase
   def run
     data_sets = make_data_sets
     column_headings = board_columns.collect(&:name)
-
-    data_quality = scan_data_quality @issues
 
     wrap_and_render(binding, __FILE__)
   end

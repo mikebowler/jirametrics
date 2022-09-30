@@ -1,10 +1,10 @@
 <% 
-  problems = data_quality_problems_for :completed_but_not_started
+  problems = problems_for :completed_but_not_started
   unless problems.empty?
     percentage_work_included = ((issues.size - problems.size).to_f / issues.size * 100).to_i
 %>
   <p>
-    <b>Data quality note:</b> <%= problems.size %> items were discarded from this data set as we couldn't determine when they started. 
+    <b>Data quality note:</b> <%= problems.size %> items were discarded from chart using cycletime (scatterplot, histogram, etc) as we couldn't determine when they started. 
     <% if percentage_work_included < 85 %>
       Consider whether looking at only <%= percentage_work_included %>% of the total data points is enough to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">Survivorship Bias</a>.
     <% end %>
@@ -15,7 +15,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :status_changes_after_done
+  problems = problems_for :status_changes_after_done
   unless problems.empty? 
 %>
   <p>
@@ -27,7 +27,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :backwords_through_statuses
+  problems = problems_for :backwords_through_statuses
   unless problems.empty? 
 %>
   <p>
@@ -39,7 +39,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :backwards_through_status_categories
+  problems = problems_for :backwards_through_status_categories
   unless problems.empty? 
 %>
   <p>
@@ -51,7 +51,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :status_not_on_board
+  problems = problems_for :status_not_on_board
   unless problems.empty? 
 %>
   <p>
@@ -63,7 +63,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :created_in_wrong_status
+  problems = problems_for :created_in_wrong_status
   unless problems.empty? 
 %>
   <p>
@@ -76,7 +76,7 @@
 %>
 
 <% 
-  problems = data_quality_problems_for :stopped_before_started
+  problems = problems_for :stopped_before_started
   unless problems.empty? 
 %>
   <p>
