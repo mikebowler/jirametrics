@@ -25,7 +25,7 @@ class DataQualityReport < ChartBase
     description_text <<-HTML
       <p>
         We have a tendency to assume that anything we see in a chart is 100% accurate, although that's
-        not always true. To understand the accuracy of the chart, we have to understand how accurate the 
+        not always true. To understand the accuracy of the chart, we have to understand how accurate the
         initial data was and also how much of the original data set was used in the chart. This section
         will hopefully give you enough information to make that decision.
       </p>
