@@ -231,7 +231,6 @@ class DataQualityReport < ChartBase
     when 'To Do' then 'gray'
     when 'In Progress' then 'blue'
     when 'Done' then 'green'
-    else 'red'
     end
 
     text = is_category ? status.category_name : status.name

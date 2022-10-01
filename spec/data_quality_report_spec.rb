@@ -221,6 +221,10 @@ describe DataQualityReport do
     it 'should handle done statuses' do
       expect(subject.format_status 'Done').to eq "<span style='color: green'>Done</span>"
     end
+
+    it 'should handle unknown statuses' do
+      expect(subject.format_status 'unknown').to eq "<span style='color: red'>unknown</span>"
+    end
   end
 
   context 'scan_for_issues_not_started_with_subtasks_that_have' do
@@ -276,6 +280,15 @@ describe DataQualityReport do
       subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
       expect(entry.problems).to be_empty
     end
+  end
 
+  context 'label_issues' do
+    it 'should handle singular' do
+      expect(subject.label_issues(1)).to eq '1 item'
+    end
+
+    it 'should handle plural' do
+      expect(subject.label_issues(2)).to eq '2 items'
+    end
   end
 end
