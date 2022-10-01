@@ -208,7 +208,6 @@ describe DataQualityReport do
   context 'format_status' do
     it 'should make text red when status not found' do
       expect(subject.format_status 'Digging').to eq "<span style='color: red'>Digging</span>"
-      # expect { subject.format_status 'Digging' }.to raise_error 'Expected exactly one match and got [] for "Digging"'
     end
 
     it 'should handle todo statuses' do
@@ -222,5 +221,61 @@ describe DataQualityReport do
     it 'should handle done statuses' do
       expect(subject.format_status 'Done').to eq "<span style='color: green'>Done</span>"
     end
+  end
+
+  context 'scan_for_issues_not_started_with_subtasks_that_have' do
+    let(:subtask) do
+      subtask = load_issue('SP-2')
+      subtask.raw['fields']['issuetype']['name'] = 'Sub-task'
+      subtask.changes.clear
+      subtask
+    end
+
+    it 'should ignore subtasks that also have not started' do
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: to_time('2022-01-03'), issue: issue1
+      )
+
+      issue1.subtasks << subtask
+
+      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      expect(entry.problems).to eq []
+    end
+
+    it 'should flag subtasks that are started when main issue is not' do
+      subject.cycletime = mock_cycletime_config stub_values: [
+        [subtask, to_time('2022-01-03'), nil]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: nil, issue: issue1
+      )
+
+      issue1.subtasks << subtask
+
+      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      expect(entry.problems).to eq [
+        [
+          :issue_not_started_but_subtasks_have,
+          "Started subtasks: <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>SP-2</a>",
+          nil,
+          nil
+        ]
+      ]
+    end
+
+    it 'should ignore subtasks that are started when the main issue is also started' do
+      subject.cycletime = mock_cycletime_config stub_values: [
+        [subtask, to_time('2022-01-03'), nil]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: to_time('2022-01-04'), stopped: nil, issue: issue1
+      )
+
+      issue1.subtasks << subtask
+
+      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      expect(entry.problems).to be_empty
+    end
+
   end
 end

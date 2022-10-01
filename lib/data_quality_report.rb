@@ -43,7 +43,7 @@ class DataQualityReport < ChartBase
       scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
       scan_for_issues_not_created_in_the_right_status entry: entry
       scan_for_stopped_before_started entry: entry
-      # scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      scan_for_issues_not_started_with_subtasks_that_have entry: entry
     end
 
     entries_with_problems = entries_with_problems()
@@ -207,6 +207,7 @@ class DataQualityReport < ChartBase
 
     started_subtasks = []
     entry.issue.subtasks.each do |subtask|
+      puts "Subtask: #{subtask.key} started=#{@cycletime.started_time(subtask).inspect}"
       started_subtasks << subtask if @cycletime.started_time(subtask)
     end
 
@@ -214,7 +215,7 @@ class DataQualityReport < ChartBase
 
     entry.report(
       problem_key: :issue_not_started_but_subtasks_have,
-      detail: "The following subtasks have started: #{started_subtasks.collect(&:key).join(', ')}"
+      detail: "Started subtasks: #{started_subtasks.collect { |s| link_to_issue(s) }.join(', ')}"
     )
   end
 
@@ -235,5 +236,11 @@ class DataQualityReport < ChartBase
 
     text = is_category ? status.category_name : status.name
     "<span style='color: #{color}'>#{text}</span>"
+  end
+
+  def label_issues number
+    return '1 item' if number == 1
+
+    "#{number} items"
   end
 end

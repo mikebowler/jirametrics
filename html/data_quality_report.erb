@@ -4,7 +4,7 @@
     percentage_work_included = ((issues.size - problems.size).to_f / issues.size * 100).to_i
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items were discarded from all charts using cycletime (scatterplot, histogram, etc) as we couldn't determine when they started. 
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were discarded from all charts using cycletime (scatterplot, histogram, etc) as we couldn't determine when they started. 
     <% if percentage_work_included < 85 %>
       Consider whether looking at only <%= percentage_work_included %>% of the total data points is enough to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">Survivorship Bias</a>.
     <% end %>
@@ -19,7 +19,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items had a status change after being identified as done. We should question whether they were really done at that point or if we stopped the clock too early.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> had a status change after being identified as done. We should question whether they were really done at that point or if we stopped the clock too early.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -31,7 +31,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items moved backwards across the board. Depending where we have set the start and end points, this may give us incorrect timing data. Note that these items did not cross a status category and in general, they don't skew the data by much.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board. Depending where we have set the start and end points, this may give us incorrect timing data. Note that these items did not cross a status category and in general, they don't skew the data by much.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -43,7 +43,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the end times are often taken at status category boundaries. You should assume that any timing measurements for this item are wrong.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the end times are often taken at status category boundaries. You should assume that any timing measurements for this item are wrong.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -55,7 +55,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were not visible on the board for some period of time. This may impact timings as the work was likely to have been forgotten if it wasn't visible.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -67,7 +67,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items were created in a status not designated as Backlog. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not. The backlog statuses are: 
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were created in a status not designated as Backlog. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not. The backlog statuses are: 
     <%= @possible_statuses.expand_statuses(current_board.backlog_statuses).collect {|s| s.name.inspect}.join(', ') %>.
     <%= collapsible_issues_panel problems %>
   </p>
@@ -80,10 +80,21 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= problems.size %> items were stopped before they were started and this will play havoc with any cycletime or WIP calculations.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were stopped before they were started and this will play havoc with any cycletime or WIP calculations.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
   end
 %>
 
+<% 
+  problems = problems_for :issue_not_started_but_subtasks_have
+  unless problems.empty? 
+%>
+  <p>
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> still not started while sub-tasks underneath them have. Although this isn't guaranteed to be a mistake, it likely is.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>

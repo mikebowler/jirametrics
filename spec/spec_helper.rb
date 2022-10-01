@@ -81,6 +81,9 @@ end
 # Pass in a list of [issue, start_time, stop_time] tuples
 def mock_cycletime_config stub_values: []
   stub_values.each do |line|
+    unless line[0].is_a? Issue
+      raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
+    end
     line[1] = Time.parse(line[1]) if line[1].is_a? String
     line[2] = Time.parse(line[2]) if line[2].is_a? String
   end
