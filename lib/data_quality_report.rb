@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DataQualityReport < ChartBase
-  # attr_accessor :issues, :cycletime, :board, :possible_statuses
+  attr_reader :original_issue_times # For testing purposes only
 
   class Entry
     attr_reader :started, :stopped, :issue, :problems
@@ -18,8 +18,10 @@ class DataQualityReport < ChartBase
     end
   end
 
-  def initialize
+  def initialize original_issue_times
     super()
+
+    @original_issue_times = original_issue_times
 
     header_text 'Data Quality Report'
     description_text <<-HTML
@@ -44,6 +46,7 @@ class DataQualityReport < ChartBase
       scan_for_issues_not_created_in_the_right_status entry: entry
       scan_for_stopped_before_started entry: entry
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      scan_for_discarded_data entry: entry
     end
 
     entries_with_problems = entries_with_problems()
@@ -207,7 +210,6 @@ class DataQualityReport < ChartBase
 
     started_subtasks = []
     entry.issue.subtasks.each do |subtask|
-      puts "Subtask: #{subtask.key} started=#{@cycletime.started_time(subtask).inspect}"
       started_subtasks << subtask if @cycletime.started_time(subtask)
     end
 
@@ -241,5 +243,27 @@ class DataQualityReport < ChartBase
     return '1 item' if number == 1
 
     "#{number} items"
+  end
+
+  def scan_for_discarded_data entry:
+    hash = @original_issue_times[entry.issue]
+    return if hash.nil?
+
+    old_start_time = hash[:started_time]
+    cutoff_time = hash[:cutoff_time]
+
+    old_start_date = old_start_time.to_date
+    cutoff_date = cutoff_time.to_date
+
+    days_ignored = (cutoff_date - old_start_date).to_i + 1
+    message = "Started: #{old_start_date}, Discarded: #{cutoff_date}, Ignored: #{label_days days_ignored}"
+
+    # If days_ignored is zero then we don't really care as it won't affect any of the calculations.
+    return if days_ignored == 1
+
+    entry.report(
+      problem_key: :discarded_changes,
+      detail: message
+    )
   end
 end

@@ -1,4 +1,18 @@
 <% 
+  problems = problems_for :discarded_changes
+  unless problems.empty? 
+%>
+  <p>
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> have had information discarded. This configuration is set
+    to "reset the clock" if an item is moved back to the backlog after it's been started. This hides important
+    information and makes the data less accurate. <b>Moving items back to the backlog is strongly discouraged.</b>
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
   problems = problems_for :completed_but_not_started
   unless problems.empty?
     percentage_work_included = ((issues.size - problems.size).to_f / issues.size * 100).to_i

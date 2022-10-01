@@ -9,7 +9,7 @@ describe DataQualityReport do
   let(:board) { load_complete_sample_board }
 
   let(:subject) do
-    subject = DataQualityReport.new
+    subject = DataQualityReport.new({})
     subject.issues = [issue10, issue1]
     subject.possible_statuses = load_complete_sample_statuses
 
@@ -289,6 +289,74 @@ describe DataQualityReport do
 
     it 'should handle plural' do
       expect(subject.label_issues(2)).to eq '2 items'
+    end
+  end
+
+  context 'scan_for_discarded_data' do
+    it 'should handle nothing discarded' do
+      entry = DataQualityReport::Entry.new(
+        started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
+      )
+      subject.scan_for_discarded_data entry: entry
+      expect(entry.problems).to eq []
+    end
+
+    it 'should handle discarded and restarted' do
+      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      subject.original_issue_times[issue1] = {
+        started_time: to_time('2022-01-01'),
+        cutoff_time: to_time('2022-01-03')
+      }
+      entry = DataQualityReport::Entry.new(
+        started: to_time('2022-01-05'), stopped: to_time('2022-02-03'), issue: issue1
+      )
+      subject.scan_for_discarded_data entry: entry
+      expect(entry.problems).to eq [
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+      ]
+    end
+
+    it 'should handle discarded with no restart' do
+      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      subject.original_issue_times[issue1] = {
+        started_time: to_time('2022-01-01'),
+        cutoff_time: to_time('2022-01-03')
+      }
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: nil, issue: issue1
+      )
+      subject.scan_for_discarded_data entry: entry
+      expect(entry.problems).to eq [
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+      ]
+    end
+
+    it 'should handle discarded with no restart' do
+      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      subject.original_issue_times[issue1] = {
+        started_time: to_time('2022-01-01'),
+        cutoff_time: to_time('2022-01-03')
+      }
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: nil, issue: issue1
+      )
+      subject.scan_for_discarded_data entry: entry
+      expect(entry.problems).to eq [
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+      ]
+    end
+
+    it 'should handle discarded that results in no days ignored' do
+      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      subject.original_issue_times[issue1] = {
+        started_time: to_time('2022-01-01T01:00:00'),
+        cutoff_time: to_time('2022-01-01T02:00:00')
+      }
+      entry = DataQualityReport::Entry.new(
+        started: to_time('2022-01-01T03:00:00'), stopped: nil, issue: issue1
+      )
+      subject.scan_for_discarded_data entry: entry
+      expect(entry.problems).to be_empty
     end
   end
 end

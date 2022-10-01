@@ -28,7 +28,7 @@ class HtmlReportConfig
 
     # The quality report has to be generated last because otherwise cycletime won't have been
     # set. Then we have to rotate it to the first position so it's at the top of the report.
-    execute_chart DataQualityReport.new
+    execute_chart DataQualityReport.new(@original_issue_times || {})
     @sections.rotate!(-1)
 
     File.open @file_config.output_filename, 'w' do |file|
@@ -125,12 +125,17 @@ class HtmlReportConfig
 
     @original_issue_times = {}
     issues_cutoff_times.each do |issue, cutoff_time|
-      @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: @cycletime.started_time(issue) }
+      started = @cycletime.started_time(issue)
+      if started && started <= cutoff_time
+        # We only need to log this if data was discarded
+        @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
+      end
     end
   end
 
   def discarded_changes_report
-    execute_chart DiscardedChangesTable.new(@original_issue_times || {})
+    puts 'Deprecated(discarded_changes_report) No need to specify this anymore as this information is ' \
+     'now included in the data quality checks.'
   end
 
   def dependency_chart &block
