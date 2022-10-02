@@ -162,17 +162,17 @@ class DataQualityReport < ChartBase
         if new_category == old_category
           entry.report(
             problem_key: :backwords_through_statuses,
-            detail: "The issue moved backwards from #{format_status change.old_value}" \
+            detail: "Moved from #{format_status change.old_value}" \
               " to #{format_status change.value}" \
               " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
-            detail: "The issue moved backwards from #{format_status change.old_value}" \
+            detail: "Moved from #{format_status change.old_value}" \
               " to #{format_status change.value}" \
               " on #{change.time.to_date}, " \
-              " crossing status categories from #{format_status old_category, is_category: true}" \
+              " crossing from category #{format_status old_category, is_category: true}" \
               " to #{format_status new_category, is_category: true}."
           )
         end

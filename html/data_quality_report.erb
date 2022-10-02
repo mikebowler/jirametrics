@@ -41,11 +41,11 @@
 %>
 
 <% 
-  problems = problems_for :backwords_through_statuses
+  problems = problems_for :backwards_through_status_categories
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board. Depending where we have set the start and end points, this may give us incorrect timing data. Note that these items did not cross a status category and in general, they don't skew the data by much.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the end times are often taken at status category boundaries. You should assume that any timing measurements for this item are wrong.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -53,11 +53,11 @@
 %>
 
 <% 
-  problems = problems_for :backwards_through_status_categories
+  problems = problems_for :backwords_through_statuses
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board, <b>crossing status categories</b>. This will almost certainly have impacted timings as the end times are often taken at status category boundaries. You should assume that any timing measurements for this item are wrong.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> moved backwards across the board. Depending where we have set the start and end points, this may give us incorrect timing data. Note that these items did not cross a status category and may not have affected metrics.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
