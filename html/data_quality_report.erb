@@ -94,7 +94,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were stopped before they were started and this will play havoc with any cycletime or WIP calculations.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were stopped before they were started and this will play havoc with any cycletime or WIP calculations. The most common case for this is when an item gets closed and then moved back into an in-progress status.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 
@@ -106,7 +106,8 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> still not started while sub-tasks underneath them have. Although this isn't guaranteed to be a mistake, it likely is.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> still showing 'not started' while sub-tasks underneath them have started. This is almost always a mistake; if we're working on subtasks, the top level
+    item should also have started.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 

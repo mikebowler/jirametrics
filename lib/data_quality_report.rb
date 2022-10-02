@@ -215,9 +215,12 @@ class DataQualityReport < ChartBase
 
     return if started_subtasks.empty?
 
+    subtask_labels = started_subtasks.collect do |subtask|
+      "Started subtask: #{link_to_issue(subtask)} (#{format_status subtask.status.name}) #{subtask.summary[..50].inspect}"
+    end
     entry.report(
       problem_key: :issue_not_started_but_subtasks_have,
-      detail: "Started subtasks: #{started_subtasks.collect { |s| link_to_issue(s) }.join(', ')}"
+      detail: subtask_labels.join('<br />')
     )
   end
 
