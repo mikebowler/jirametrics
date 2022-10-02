@@ -101,17 +101,15 @@ class DataQualityReport < ChartBase
   def scan_for_completed_issues_without_a_start_time entry:
     return unless entry.stopped && entry.started.nil?
 
-    changes = entry.issue.changes.select { |change| change.status? && change.time == entry.stopped }
-    detail = 'No status changes found at the time that this item was marked completed.'
-    unless changes.empty?
-      detail = changes.collect do |change|
-        "Status changed from #{format_status change.old_value} to #{format_status change.value} on #{change.time}."
-      end.join ' '
-    end
+    status_names = entry.issue.changes.collect do |change|
+      next unless change.status?
+
+      format_status change.value
+    end.compact
 
     entry.report(
       problem_key: :completed_but_not_started,
-      detail: detail
+      detail: "Status changes: #{status_names.join ' → '}"
     )
   end
 
