@@ -6,7 +6,6 @@ require_all 'lib'
 
 def to_time date
   Time.new date.year, date.month, date.day, rand(0..23), rand(0..59), rand(0..59)
-  # Time.new date.year, date.month, date.day, 0, 0, 0
 end
 
 class FakeIssue
@@ -20,8 +19,8 @@ class FakeIssue
         histories: []
       },
       fields: {
-        created: to_time(date).to_s,
-        updated: to_time(date).to_s,
+        created: to_time(date),
+        updated: to_time(date),
         creator: {
           displayName: 'George Jetson'
         },
@@ -72,14 +71,17 @@ class FakeIssue
     return unless done?
 
     change_status new_status: 'Done', new_status_id: 5, date: date
-    fix_change_timestamps
+    # fix_change_timestamps
   end
 
   def fix_change_timestamps
     # since the timestamps have random hours, it's possible for them to be issued out of order. Sort them now
     changes = @raw[:changelog][:histories]
-    times = changes.collect { |change| change[:created] }.sort
+    times = [@raw[:fields][:created]] + changes.collect { |change| change[:created] }
+    times.sort!
 
+    @raw[:fields][:created] = times.shift
+    @raw[:fields][:updated] = times[-1]
     changes.each do |change|
       change[:created] = times.shift
     end
@@ -139,6 +141,7 @@ class Generator
     end
 
     @issues.each do |issue|
+      issue.fix_change_timestamps
       File.open "target/fake_issues/#{issue.key}.json", 'w' do |file|
         file.puts JSON.pretty_generate(issue.raw)
       end
@@ -149,6 +152,7 @@ class Generator
       time_end: @date_range.end.to_time,
       'no-download': true
     })
+    puts "Created #{@issues.size} fake issues"
   end
 
   def remove_old_files
