@@ -54,11 +54,13 @@ describe DataQualityReport do
 
     issue1.changes.clear
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06T04:34:26+00:00')
 
     subject.issues << issue2
 
     issue10.changes.clear
-    issue10.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    issue10.changes << mock_change(field: 'resolution', value: 'Done',    time: '2021-09-06T04:34:26+00:00')
+    issue10.changes << mock_change(field: 'status', value: 'Done',        time: '2021-09-06T04:34:26+00:00')
     issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
     subject.initialize_entries
 

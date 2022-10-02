@@ -117,14 +117,15 @@ class DataQualityReport < ChartBase
     return unless entry.stopped
 
     changes_after_done = entry.issue.changes.select do |change|
-      change.status? && change.time > entry.stopped
+      change.status? && change.time >= entry.stopped
     end
+    done_status = changes_after_done.shift.value
 
     return if changes_after_done.empty?
 
-    problem = "This item was done on #{entry.stopped} but status changes continued after that."
+    problem = "Completed on #{entry.stopped.to_date} with status #{format_status done_status}."
     changes_after_done.each do |change|
-      problem << " Status change to #{format_status change.value} on #{change.time}."
+      problem << " Changed to #{format_status change.value} on #{change.time.to_date}."
     end
     entry.report(
       problem_key: :status_changes_after_done,
