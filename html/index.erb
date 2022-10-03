@@ -60,6 +60,7 @@
     <div>
       Page generated <%= (timezone_offset.nil? ? DateTime.now : DateTime.now.new_offset(timezone_offset)).strftime('%Y-%b-%d at %I:%M:%S%P') %>
     </div>
-    <%= "\n" + @sections.join("\n\n") %>
+    <%= "\n" + @sections.collect { |text, type| text if type == :header }.compact.join("\n\n") %>
+    <%= "\n" + @sections.collect { |text, type| text if type == :body }.compact.join("\n\n") %>
   </body>
 </html>

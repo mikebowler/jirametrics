@@ -7,7 +7,7 @@ class HtmlReportConfig
   include SelfOrIssueDispatcher
   include DiscardChangesBefore
 
-  attr_reader :file_config, :sections
+  attr_reader :file_config
 
   def initialize file_config:, block:
     @file_config = file_config
@@ -106,8 +106,10 @@ class HtmlReportConfig
     "\##{Random.bytes(3).unpack1('H*')}"
   end
 
-  def html string
-    @sections << string
+  def html string, type: :body
+    raise "Unexpected type: #{type}" unless [:body, :header].include? type
+
+    @sections << [string, type]
   end
 
   def sprint_burndown options = :points_and_counts
@@ -161,7 +163,7 @@ class HtmlReportConfig
 
     after_init_block&.call chart
 
-    @sections << chart.run
+    html chart.run
   end
 
   def find_board_id
