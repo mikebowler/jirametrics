@@ -7,7 +7,7 @@ class HtmlReportConfig
   include SelfOrIssueDispatcher
   include DiscardChangesBefore
 
-  attr_reader :file_config
+  attr_reader :file_config, :sections
 
   def initialize file_config:, block:
     @file_config = file_config

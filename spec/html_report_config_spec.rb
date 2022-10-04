@@ -29,7 +29,7 @@ describe HtmlReportConfig do
         'running'
       end
       config.execute_chart chart
-      expect(config.sections).to eq ['running']
+      expect(config.sections).to eq [['running', :body]]
     end
   end
 
