@@ -81,6 +81,7 @@ describe Issue do
 
     changes = [
       mock_change(field: 'status', value: 'Backlog', time: '2021-06-18T18:41:37.804+0000'),
+      mock_change(field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
       mock_change(field: 'status', value: 'Selected for Development', time: '2021-06-18T18:43:38+00:00')
     ]
 
@@ -91,6 +92,7 @@ describe Issue do
     issue = load_issue 'SP-10'
     changes = [
       mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
+      mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
       mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+00:00'),
       mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+00:00'),
       mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+00:00'),

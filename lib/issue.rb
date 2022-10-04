@@ -22,8 +22,12 @@ class Issue
     # versions of Server/Cloud return the changelog in different orders so we sort them.
     sort_changes!
 
-    # Initial creation isn't considered a change so Jira doesn't create an entry for that
-    @changes.insert 0, create_fake_change_for_creation(@changes)
+    # It's possible to have a ticket created with certain things already set and therefore
+    # not showing up in the change log. Create some artificial entries to capture those.
+    @changes = [
+      fabricate_change(field_name: 'status'),
+      fabricate_change(field_name: 'priority')
+    ].compact + @changes
   end
 
   def sort_changes!
@@ -78,21 +82,26 @@ class Issue
     @raw['fields']['components']&.collect { |component| component['name'] } || []
   end
 
-  def create_fake_change_for_creation existing_changes
+  def fabricate_change field_name:
+    first_status = nil
+    first_status_id = nil
+
     created_time = parse_time @raw['fields']['created']
-    first_change = existing_changes.find { |change| change.status? }
+    first_change = @changes.find { |change| change.field == field_name }
     if first_change.nil?
-      # There have been no status changes yet so we have to look at the current status
-      first_status = @raw['fields']['status']['name']
-      first_status_id = @raw['fields']['status']['id'].to_i
+      # There have been no changes of this type yet so we have to look at the current one
+      return nil unless @raw['fields'][field_name]
+
+      first_status = @raw['fields'][field_name]['name']
+      first_status_id = @raw['fields'][field_name]['id'].to_i
     else
-      # Otherwise, we look at what the first status had changed away from.
+      # Otherwise, we look at what the first one had changed away from.
       first_status = first_change.old_value
       first_status_id = first_change.old_value_id
     end
     ChangeItem.new time: created_time, artificial: true, author: author, raw: {
-      'field' => 'status',
-      'to' => first_status_id.to_s,
+      'field' => field_name,
+      'to' => first_status_id,
       'toString' => first_status
     }
   end
