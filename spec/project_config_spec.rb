@@ -142,4 +142,20 @@ describe ProjectConfig do
       expect(issue1.changes.collect(&:time)).to eq []
     end
   end
+
+  context 'name' do
+    it 'should allow name' do
+      project_config = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+      expect(project_config.name).to eq 'sample'
+    end
+
+    it 'should not require name' do
+      project_config = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      )
+      expect(project_config.name).to eq ''
+    end
+  end
 end
