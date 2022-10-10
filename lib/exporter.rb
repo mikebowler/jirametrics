@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Exporter
-  attr_reader :project_configs
+  attr_reader :project_configs, :name
 
   def self.configure &block
     exporter = Exporter.new
@@ -33,12 +33,12 @@ class Exporter
     end
   end
 
-  def project &block
+  def project name: nil, &block
     raise 'target_path was never set!' if @target_path.nil?
     raise 'jira_config not set' if @jira_config.nil?
 
     @project_configs << ProjectConfig.new(
-      exporter: self, target_path: @target_path, jira_config: @jira_config, block: block
+      exporter: self, target_path: @target_path, jira_config: @jira_config, block: block, name: name
     )
   end
 

@@ -7,10 +7,11 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
-    :download_config, :file_configs, :exporter, :data_version, :sprints_by_board
+    :download_config, :file_configs, :exporter, :data_version, :sprints_by_board,
+    :name
   attr_accessor :time_range
 
-  def initialize exporter:, jira_config:, block:, target_path: '.'
+  def initialize exporter:, jira_config:, block:, target_path: '.', name: nil
     @exporter = exporter
     @block = block
     @file_configs = []
@@ -20,6 +21,7 @@ class ProjectConfig
     @possible_statuses = StatusCollection.new
     @all_boards = {}
     @sprints_by_board = {}
+    @name = name
   end
 
   def evaluate_next_level
