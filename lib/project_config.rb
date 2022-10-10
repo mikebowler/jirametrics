@@ -11,7 +11,7 @@ class ProjectConfig
     :name
   attr_accessor :time_range
 
-  def initialize exporter:, jira_config:, block:, target_path: '.', name: nil
+  def initialize exporter:, jira_config:, block:, target_path: '.', name: ''
     @exporter = exporter
     @block = block
     @file_configs = []
