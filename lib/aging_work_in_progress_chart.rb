@@ -5,7 +5,7 @@ require './lib/groupable_issue_chart'
 
 class AgingWorkInProgressChart < ChartBase
   include GroupableIssueChart
-  attr_accessor :possible_statuses
+  attr_accessor :possible_statuses, :board_id
 
   def initialize block = nil
     super()
