@@ -2,6 +2,7 @@
 
 class Board
   attr_reader :backlog_statuses, :visible_columns, :raw
+  attr_accessor :cycletime
 
   def initialize raw:
     @raw = raw
@@ -42,5 +43,9 @@ class Board
 
   def id
     @raw['id'].to_i
+  end
+
+  def name
+    @raw['name']
   end
 end
