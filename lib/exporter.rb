@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Exporter
-  attr_reader :project_configs, :name
+  attr_reader :project_configs
 
   def self.configure &block
     exporter = Exporter.new
