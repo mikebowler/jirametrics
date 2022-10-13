@@ -19,9 +19,10 @@ class HtmlReportConfig
 
   def cycletime label = nil, &block
     # TODO: This is about to become deprecated
-    # raise 'Multiple cycletimes not supported yet' if @cycletime
 
     @file_config.project_config.all_boards.each do |_id, board|
+      raise 'Multiple cycletimes not supported yet' if board.cycletime
+
       board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
     end
   end
