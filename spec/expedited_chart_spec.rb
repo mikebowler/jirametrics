@@ -8,8 +8,9 @@ describe ExpeditedChart do
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-01-30')
     chart
   end
-  let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
-  let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
+  let(:board) { load_complete_sample_board }
+  let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
+  let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
   context 'prepare_expedite_data' do
     it 'should handle issue with no changes' do
@@ -91,18 +92,18 @@ describe ExpeditedChart do
   end
 
   context 'make_expedite_lines_data_set' do
-    xit 'should handle the case with no start or stop times or data' do
+    it 'should handle the case with no start or stop times or data' do
       config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
       config.start_at ->(_issue) {}
       config.stop_at  ->(_issue) {}
-      chart.cycletime = config
+      issue1.board.cycletime = config
 
       expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: [])).to be_nil
     end
 
-    xit 'should handle one of everything' do
+    it 'should handle one of everything' do
       base_date = Date.parse('2022-01-01')
-      chart.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
 
       expedite_data = [
         [base_date + 1, :expedite_start],
@@ -127,9 +128,9 @@ describe ExpeditedChart do
       })
     end
 
-    xit 'should handle an expedite that starts but doesnt end' do
+    it 'should handle an expedite that starts but doesnt end' do
       base_date = Date.parse('2022-01-01')
-      chart.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]]
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]]
 
       expedite_data = [
         [base_date + 1, :expedite_start]
@@ -152,8 +153,8 @@ describe ExpeditedChart do
       })
     end
 
-    xit 'should raise an exception for unexpected expedite data' do
-      chart.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+    it 'should raise an exception for unexpected expedite data' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
 
       expedite_data = [
         [Date.today, :invalid_state]
