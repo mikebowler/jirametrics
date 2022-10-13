@@ -100,6 +100,7 @@ describe ChartBase do
 
   context 'board_columns' do
     let(:raw_board) { { 'type' => 'scrum', 'columnConfig' => { 'columns' => [] } } }
+    let(:subject) { AgingWorkInProgressChart.new } # Not all charts have a board_id. Use one that does.
 
     it 'should raise exception if board cannot be determined' do
       subject.all_boards = {}

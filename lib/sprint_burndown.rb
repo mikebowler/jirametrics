@@ -15,6 +15,7 @@ end
 
 class SprintBurndown < ChartBase
   attr_reader :use_story_points, :use_story_counts
+  attr_accessor :board_id
 
   def initialize
     super()

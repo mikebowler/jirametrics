@@ -2,6 +2,7 @@
 
 class DataQualityReport < ChartBase
   attr_reader :original_issue_times # For testing purposes only
+  attr_accessor :board_id
 
   class Entry
     attr_reader :started, :stopped, :issue, :problems
