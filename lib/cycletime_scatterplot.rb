@@ -106,18 +106,18 @@ class CycletimeScatterplot < ChartBase
   end
 
   def data_for_issue issue
-    cycle_time = @cycletime.cycletime(issue)
+    cycle_time = issue.board.cycletime.cycletime(issue)
     @highest_cycletime = cycle_time if @highest_cycletime < cycle_time
 
     {
       y: cycle_time,
-      x: chart_format(@cycletime.stopped_time(issue)),
+      x: chart_format(issue.board.cycletime.stopped_time(issue)),
       title: ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
     }
   end
 
   def calculate_percent_line completed_issues
-    times = completed_issues.collect { |issue| @cycletime.cycletime(issue) }
+    times = completed_issues.collect { |issue| issue.board.cycletime.cycletime(issue) }
     index = times.size * 85 / 100
     times.sort[index]
   end

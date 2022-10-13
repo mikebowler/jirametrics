@@ -13,8 +13,9 @@ def flatten_issue_groups issue_rules_by_active_dates
 end
 
 describe DailyWipChart do
-  let(:issue1) { load_issue 'SP-1' }
-  let(:issue2) { load_issue 'SP-2' }
+  let(:board) { load_complete_sample_board }
+  let(:issue1) { load_issue 'SP-1', board: board }
+  let(:issue2) { load_issue 'SP-2', board: board }
 
   let(:subject) do
     empty_config_block = ->(_) {}
@@ -30,7 +31,7 @@ describe DailyWipChart do
     end
 
     it 'should return raise exception when no grouping rules set' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
       subject.issues = [issue1]
@@ -38,7 +39,7 @@ describe DailyWipChart do
     end
 
     it 'should return nothing when grouping rules ignore everything' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
       subject.issues = [issue1]
@@ -49,7 +50,7 @@ describe DailyWipChart do
     end
 
     it 'should make a single group for one issue' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
       subject.issues = [issue1]
@@ -64,7 +65,7 @@ describe DailyWipChart do
     end
 
     it 'should skip and issue that neither started nor stopped' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil]
       ]
       subject.issues = [issue1]
@@ -77,7 +78,7 @@ describe DailyWipChart do
     end
 
     it 'should include an issue that stopped but never started' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, to_time('2022-01-03T14:00:00')]
       ]
       subject.issues = [issue1]

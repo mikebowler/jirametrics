@@ -29,11 +29,16 @@ class AgingWorkBarChart < ChartBase
   end
 
   def run
-    aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
+    aging_issues = @issues.select do |issue|
+      cycletime = issue.board.cycletime
+      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
+    end
     @status_colors = pick_colors_for_statuses
 
     today = date_range.end
-    aging_issues.sort! { |a, b| @cycletime.age(b, today: today) <=> @cycletime.age(a, today: today) }
+    aging_issues.sort! do |a, b|
+      a.board.cycletime.age(b, today: today) <=> b.board.cycletime.age(a, today: today)
+    end
     data_sets = []
     aging_issues.each do |issue|
       new_dataset = data_sets_for issue: issue, today: today
@@ -49,9 +54,10 @@ class AgingWorkBarChart < ChartBase
   end
 
   def data_sets_for issue:, today:
-    y = "[#{label_days @cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
+    cycletime = issue.board.cycletime
+    y = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
 
-    issue_started_time = @cycletime.started_time(issue)
+    issue_started_time = cycletime.started_time(issue)
 
     previous_start = nil
     previous_status = nil
@@ -179,7 +185,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def calculate_percent_line percentage: 85
-    days = @issues.collect { |issue| cycletime.cycletime(issue) }.compact.sort
+    days = @issues.collect { |issue| issue.board.cycletime.cycletime(issue) }.compact.sort
     return nil if days.empty?
 
     days[days.length * percentage / 100]

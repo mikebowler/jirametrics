@@ -12,8 +12,9 @@ describe CycletimeScatterplot do
 
   context 'data_for_issue' do
     it '' do
-      issue = load_issue('SP-10')
-      chart.cycletime = default_cycletime_config
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
       expect(chart.data_for_issue issue).to eq({
         title: ['SP-10 : Check in people at an event (81 days)'],
         x: chart_format(issue.last_resolution),
@@ -33,9 +34,10 @@ describe CycletimeScatterplot do
   end
 
   it 'should create_datasets' do
-    issue = load_issue('SP-10')
+    board = load_complete_sample_board
+    issue = load_issue('SP-10', board: board)
 
-    chart.cycletime = default_cycletime_config
+    board.cycletime = default_cycletime_config
     chart.issues = [issue]
 
     expect(chart.create_datasets [issue]).to eq([
@@ -68,7 +70,8 @@ describe CycletimeScatterplot do
   end
 
   context 'group_issues' do
-    let(:issue1) { load_issue 'SP-1' }
+    let(:board) { load_complete_sample_board }
+    let(:issue1) { load_issue 'SP-1', board: board }
 
     it 'should render when no rules specified' do
       expected_rules = GroupingRules.new

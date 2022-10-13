@@ -3,13 +3,14 @@
 require 'time'
 
 class Issue
-  attr_reader :changes, :raw, :subtasks
+  attr_reader :changes, :raw, :subtasks, :board
 
-  def initialize raw:, timezone_offset: '+00:00'
+  def initialize raw:, timezone_offset: '+00:00', board: nil
     @raw = raw
     @timezone_offset = timezone_offset
     @subtasks = []
     @changes = []
+    @board = board
 
     return unless @raw['changelog']
 

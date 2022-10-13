@@ -6,6 +6,7 @@ def mock_config
   exporter = Exporter.new
   project = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
   project.file_prefix 'sample'
+  project.load_all_boards
 
   project.status_category_mapping status: 'Backlog', category: 'ready'
   project.status_category_mapping status: 'Selected for Development', category: 'ready'

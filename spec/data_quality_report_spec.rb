@@ -3,22 +3,25 @@
 require './spec/spec_helper'
 
 describe DataQualityReport do
-  let(:issue1) { load_issue('SP-1') }
-  let(:issue2) { load_issue('SP-2') }
-  let(:issue10) { load_issue('SP-10') }
-  let(:board) { load_complete_sample_board }
+  let(:board) do
+    load_complete_sample_board.tap do |board|
+      today = Date.parse('2021-12-17')
+      block = lambda do |_|
+      start_at first_status_change_after_created
+      stop_at last_resolution
+    end
+
+      board.cycletime = CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
+    end
+  end
+  let(:issue1) { load_issue('SP-1', board: board) }
+  let(:issue2) { load_issue('SP-2', board: board) }
+  let(:issue10) { load_issue('SP-10', board: board) }
 
   let(:subject) do
     subject = DataQualityReport.new({})
     subject.issues = [issue10, issue1]
     subject.possible_statuses = load_complete_sample_statuses
-
-    today = Date.parse('2021-12-17')
-    block = lambda do |_|
-      start_at first_status_change_after_created
-      stop_at last_resolution
-    end
-    subject.cycletime = CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
 
     subject
   end
@@ -231,7 +234,7 @@ describe DataQualityReport do
 
   context 'scan_for_issues_not_started_with_subtasks_that_have' do
     let(:subtask) do
-      subtask = load_issue('SP-2')
+      subtask = load_issue('SP-2', board: board)
       subtask.raw['fields']['issuetype']['name'] = 'Sub-task'
       subtask.changes.clear
       subtask
@@ -249,16 +252,16 @@ describe DataQualityReport do
     end
 
     it 'should flag subtasks that are started when main issue is not' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [subtask, to_time('2022-01-03'), nil]
       ]
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: nil, issue: issue1
       )
-
       issue1.subtasks << subtask
 
       subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+
       expect(entry.problems).to eq [
         [
           :issue_not_started_but_subtasks_have,
@@ -271,7 +274,7 @@ describe DataQualityReport do
     end
 
     it 'should ignore subtasks that are started when the main issue is also started' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [subtask, to_time('2022-01-03'), nil]
       ]
       entry = DataQualityReport::Entry.new(

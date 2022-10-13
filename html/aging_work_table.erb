@@ -27,7 +27,7 @@
   <tbody>
     <% aging_issues.each do |issue| %>
       <tr>
-        <td style="text-align: right;"><%= cycletime.age(issue, today: @today) || 'Not started' %></td>
+        <td style="text-align: right;"><%= issue.board.cycletime.age(issue, today: @today) || 'Not started' %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>

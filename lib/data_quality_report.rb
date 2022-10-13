@@ -35,6 +35,9 @@ class DataQualityReport < ChartBase
   end
 
   def run
+    # TODO: For the moment we just disable the quality report for aggregated projects. 
+    return '' if aggregate_project
+
     initialize_entries
 
     backlog_statuses = @possible_statuses.expand_statuses current_board.backlog_statuses
@@ -80,9 +83,10 @@ class DataQualityReport < ChartBase
 
   def initialize_entries
     @entries = @issues.collect do |issue|
+      cycletime = issue.board.cycletime
       Entry.new(
-        started: @cycletime.started_time(issue),
-        stopped: @cycletime.stopped_time(issue),
+        started: cycletime.started_time(issue),
+        stopped: cycletime.stopped_time(issue),
         issue: issue
       )
     end
@@ -209,7 +213,7 @@ class DataQualityReport < ChartBase
 
     started_subtasks = []
     entry.issue.subtasks.each do |subtask|
-      started_subtasks << subtask if @cycletime.started_time(subtask)
+      started_subtasks << subtask if subtask.board.cycletime.started_time(subtask)
     end
 
     return if started_subtasks.empty?

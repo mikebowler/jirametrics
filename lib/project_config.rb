@@ -19,7 +19,6 @@ class ProjectConfig
     @target_path = target_path
     @jira_config = jira_config
     @possible_statuses = StatusCollection.new
-    @all_boards = {}
     @sprints_by_board = {}
     @name = name
   end
@@ -29,10 +28,10 @@ class ProjectConfig
   end
 
   def run
-    load_project_metadata
-    load_all_boards
-    load_status_category_mappings
-    load_sprints
+    load_all_boards unless aggregate_project?
+    load_project_metadata unless aggregate_project?
+    load_status_category_mappings unless aggregate_project?
+    load_sprints unless aggregate_project?
     anonymize_data if @anonymizer_needed
 
     @file_configs.each do |file_config|
@@ -40,14 +39,27 @@ class ProjectConfig
     end
   end
 
+  def aggregate_project?
+    !!@aggregate_config
+  end
+
   def download &block
     raise 'Not allowed to have multiple download blocks in one project' if @download_config
+    raise 'Not allowed to have both an aggregate and a download section. Pick only one.' if @aggregate_config
 
     @download_config = DownloadConfig.new project_config: self, block: block
   end
 
   def file &block
     @file_configs << FileConfig.new(project_config: self, block: block)
+  end
+
+  def aggregate &block
+    raise 'Not allowed to have multiple aggregate blocks in one project' if @aggregate_config
+    raise 'Not allowed to have both an aggregate and a download section. Pick only one.' if @download_config
+
+    @aggregate_config = AggregateConfig.new project_config: self, block: block
+    @aggregate_config.evaluate_next_level
   end
 
   def file_prefix prefix = nil
@@ -74,10 +86,11 @@ class ProjectConfig
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
+    raise "No boards found in #{@target_path.inspect}" if @all_boards.nil?
   end
 
   def load_board board_id:, filename:
-    @all_boards[board_id] = Board.new raw: JSON.parse(File.read(filename))
+    (@all_boards ||= {})[board_id] = Board.new raw: JSON.parse(File.read(filename))
   end
 
   def category_for status_name:
@@ -196,10 +209,12 @@ class ProjectConfig
   end
 
   def guess_board_id
-    unless all_boards.size == 1
+    return nil if aggregate_project?
+
+    unless all_boards&.size == 1
       message = "If the board_id isn't set then we look for all board configurations in the target" \
         ' directory. '
-      if all_boards.empty?
+      if all_boards.nil? || all_boards.empty?
         message += ' In this case, we couldn\'t find any configuration files in the target directory.'
       else
         message += 'If there is only one, we use that. In this case we found configurations for' \
@@ -218,8 +233,20 @@ class ProjectConfig
     board
   end
 
+  # To be used by the aggregate_config only. Not intended to be part of the public API
+  def add_issues issues_list
+    @issues = [] if @issues.nil?
+    @issues += issues_list
+  end
+
   def issues
+    raise "issues are being loaded before boards in project #{name.inspect}" if all_boards.nil? && !aggregate_project?
     unless @issues
+      if @aggregate_config
+        raise 'This is an aggregated project and issues should have been included with the include_issues_from ' \
+          'declaration but none are here. Check your config.'
+      end
+
       timezone_offset = exporter.timezone_offset
 
       issues_path = "#{@target_path}#{file_prefix}_issues/"
@@ -239,13 +266,6 @@ class ProjectConfig
     @issues
   end
 
-  def include_issues_from project_name
-    project = @exporter.project_configs.find { |project| project.name == project_name }
-    raise "include_issues_from(#{project_name.inspect}) Can't find project with that name." if project.nil?
-
-    @issues = (@issues || []) + project.issues
-  end
-
   def attach_subtasks issues
     issues.each do |issue|
       issue.raw['fields']['subtasks']&.each do |subtask_element|
@@ -256,14 +276,29 @@ class ProjectConfig
     end
   end
 
+  def find_default_board
+    default_board = all_boards.values.first
+    if all_boards.empty?
+      raise "No boards found for project #{name.inspect}"
+    elsif all_boards.size != 1
+      puts "Multiple boards are in use for project #{name.inspect}. Picked #{(default_board.name).inspect} to attach issues to."
+    end
+    default_board
+  end
+
   def load_issues_from_target_directory path:, timezone_offset:
-    puts 'Deprecated: issues in the target directory. Download again and this should fix itself.'
+    puts "Deprecated: issues in the target directory for project #{@name}. " \
+      'Download again and this should fix itself.'
+
+    default_board = find_default_board
 
     issues = []
     Dir.foreach(path) do |filename|
       if filename =~ /#{file_prefix}_\d+\.json/
         content = JSON.parse File.read("#{path}#{filename}")
-        content['issues'].each { |issue| issues << Issue.new(raw: issue, timezone_offset: timezone_offset) }
+        content['issues'].each do |issue|
+          issues << Issue.new(raw: issue, timezone_offset: timezone_offset, board: default_board)
+        end
       end
     end
     issues
@@ -271,10 +306,12 @@ class ProjectConfig
 
   def load_issues_from_issues_directory path:, timezone_offset:
     issues = []
+    default_board = find_default_board
+
     Dir.foreach(path) do |filename|
       if filename =~ /-\d+\.json$/
         content = JSON.parse File.read("#{path}#{filename}")
-        issues << Issue.new(raw: content, timezone_offset: timezone_offset)
+        issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: default_board)
       end
     end
     issues

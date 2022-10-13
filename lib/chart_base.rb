@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_boards, :cycletime, :issues, :date_range,
-    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
+  attr_accessor :timezone_offset, :board_id, :all_boards, :issues, :date_range,
+    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates,
+    :aggregate_project
 
   @@chart_counter = 0
 
@@ -133,6 +134,7 @@ class ChartBase
 
   def completed_issues_in_range include_unstarted:
     issues.select do |issue|
+      cycletime = issue.board.cycletime
       stopped_time = cycletime.stopped_time(issue)
       stopped_time && date_range.include?(stopped_time.to_date) && (include_unstarted || cycletime.started_time(issue))
     end

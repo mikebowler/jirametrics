@@ -30,7 +30,7 @@ class CycletimeHistogram < ChartBase
     stopped_issues = completed_issues_in_range include_unstarted: true
 
     # For the histogram, we only want to consider items that have both a start and a stop time.
-    histogram_issues = stopped_issues.select { |issue| @cycletime.started_time(issue) }
+    histogram_issues = stopped_issues.select { |issue| issue.board.cycletime.started_time(issue) }
     rules_to_issues = group_issues histogram_issues
 
     data_sets = rules_to_issues.keys.collect do |rules|
@@ -47,7 +47,7 @@ class CycletimeHistogram < ChartBase
   def histogram_data_for issues:
     count_hash = {}
     issues.each do |issue|
-      days = @cycletime.cycletime(issue)
+      days = issue.board.cycletime.cycletime(issue)
       count_hash[days] = (count_hash[days] || 0) + 1
     end
     count_hash

@@ -9,11 +9,12 @@ describe DailyWipByBlockedStalledChart do
       chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-01')
       chart
     end
-    let(:issue1) { load_issue('SP-1').tap { |i| i.changes.clear } }
+    let(:board) { load_complete_sample_board }
+    let(:issue1) { load_issue('SP-1', board: board).tap { |i| i.changes.clear } }
 
     it 'should handle active items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-02-02').to_s
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, to_date('2022-01-05')]
       ]
       rules = DailyGroupingRules.new
@@ -24,7 +25,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is active' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
@@ -36,7 +37,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is blocked and not stalled' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
@@ -50,7 +51,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is stalled and not blocked' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
@@ -64,7 +65,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is both stalled and blocked' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))

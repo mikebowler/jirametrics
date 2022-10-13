@@ -19,7 +19,8 @@ class AgingWorkTable < ChartBase
     aging_issues = select_aging_issues
 
     expedited_but_not_started = @issues.select do |issue|
-      @cycletime.started_time(issue).nil? && @cycletime.stopped_time(issue).nil? && expedited?(issue)
+      cycletime = issue.board.cycletime
+      cycletime.started_time(issue).nil? && cycletime.stopped_time(issue).nil? && expedited?(issue)
     end
     aging_issues += expedited_but_not_started.sort_by(&:created)
 
@@ -27,8 +28,11 @@ class AgingWorkTable < ChartBase
   end
 
   def select_aging_issues
-    aging_issues = @issues.select { |issue| @cycletime.started_time(issue) && @cycletime.stopped_time(issue).nil? }
-    aging_issues.sort { |a, b| @cycletime.age(b, today: @today) <=> @cycletime.age(a, today: @today) }
+    aging_issues = @issues.select do |issue|
+      cycletime = issue.board.cycletime
+      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
+    end
+    aging_issues.sort { |a, b| a.board.cycletime.age(b, today: @today) <=> b.board.cycletime.age(a, today: @today) }
   end
 
   def expedited? issue
@@ -48,7 +52,7 @@ class AgingWorkTable < ChartBase
   def blocked_text issue
     if issue.blocked_on_date? @today
       icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon
-    elsif issue.stalled_on_date?(@today, @stalled_threshold) && @cycletime.started_time(issue)
+    elsif issue.stalled_on_date?(@today, @stalled_threshold) && issue.board.cycletime.started_time(issue)
       icon_span(
         title: "Stalled: Hasn&apos;t had any activity in #{@stalled_threshold} days and isn&apos;t explicitly " \
           'marked as blocked',

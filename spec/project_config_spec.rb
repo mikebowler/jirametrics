@@ -12,6 +12,7 @@ describe ProjectConfig do
       config.file_prefix 'sample'
       config.status_category_mapping status: 'Doing', category: 'In progress'
       config.status_category_mapping status: 'Done', category: 'Done'
+      config.load_all_boards
       expect { config.category_for status_name: 'Foo' }
         .to raise_error(/^Could not determine categories for some/)
     end
@@ -74,7 +75,9 @@ describe ProjectConfig do
     end
   end
 
-  context 'download config' do
+  context 'download/aggregate config' do
+    let(:empty_block) { ->(_) {} }
+
     it 'should fail if a second download is set' do
       config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
       config.download do
@@ -82,6 +85,30 @@ describe ProjectConfig do
       end
       expect { config.download { file_suffix 'a' } }.to raise_error(
         'Not allowed to have multiple download blocks in one project'
+      )
+    end
+
+    it 'should fail if a second aggregate is set' do
+      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config.aggregate(&empty_block)
+      expect { config.aggregate(&empty_block) }.to raise_error(
+        'Not allowed to have multiple aggregate blocks in one project'
+      )
+    end
+
+    it 'should fail if download and and then an aggregate is set' do
+      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config.download(&empty_block)
+      expect { config.aggregate(&empty_block) }.to raise_error(
+        'Not allowed to have both an aggregate and a download section. Pick only one.'
+      )
+    end
+
+    it 'should fail if aggregate and and then a downoad is set' do
+      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
+      config.aggregate(&empty_block)
+      expect { config.download(&empty_block) }.to raise_error(
+        'Not allowed to have both an aggregate and a download section. Pick only one.'
       )
     end
   end
@@ -120,6 +147,7 @@ describe ProjectConfig do
 
       project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_all_boards
       project_config.issues << issue1
 
       project_config.discard_changes_before status_becomes: 'backlog'
@@ -136,6 +164,7 @@ describe ProjectConfig do
 
       project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_all_boards
       project_config.issues << issue1
 
       project_config.discard_changes_before { |_issue| Time.parse('2022-01-02T09:00:00') }

@@ -19,6 +19,7 @@ describe HtmlReportConfig do
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
       project_config.file_prefix 'sample'
+      project_config.load_all_boards
       project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
       config = HtmlReportConfig.new file_config: file_config, block: nil
@@ -33,9 +34,13 @@ describe HtmlReportConfig do
     end
   end
 
-  it 'shouldnt allow multiple cycletimes (yet)' do
+  xit 'shouldnt allow multiple cycletimes (yet)' do
     empty_block = ->(_) {}
-    config = HtmlReportConfig.new file_config: nil, block: nil
+    project_config = ProjectConfig.new(
+      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
+    )
+    file_config = FileConfig.new project_config: project_config, block: nil
+    config = HtmlReportConfig.new file_config: file_config, block: nil
     config.cycletime '1st', &empty_block
     expect { config.cycletime '2nd', &empty_block }.to raise_error 'Multiple cycletimes not supported yet'
   end

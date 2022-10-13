@@ -12,15 +12,18 @@ class HtmlReportConfig
   def initialize file_config:, block:
     @file_config = file_config
     @block = block
-    @cycletimes = []
+    # @cycletimes = []
     @sections = []
     @expedited_priority_name = 'Highest'
   end
 
   def cycletime label = nil, &block
-    raise 'Multiple cycletimes not supported yet' if @cycletime
+    # TODO: This is about to become deprecated
+    # raise 'Multiple cycletimes not supported yet' if @cycletime
 
-    @cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
+    @file_config.project_config.all_boards.each do |_id, board|
+      board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
+    end
   end
 
   def run
@@ -123,11 +126,11 @@ class HtmlReportConfig
   end
 
   def discard_changes_before_hook issues_cutoff_times
-    raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
+    # raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
 
     @original_issue_times = {}
     issues_cutoff_times.each do |issue, cutoff_time|
-      started = @cycletime.started_time(issue)
+      started = issue.board.cycletime.started_time(issue)
       if started && started <= cutoff_time
         # We only need to log this if data was discarded
         @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
@@ -148,18 +151,18 @@ class HtmlReportConfig
     project_config = @file_config.project_config
 
     chart.issues = issues
-    chart.cycletime = @cycletime
     chart.time_range = project_config.time_range
     chart.possible_statuses = project_config.possible_statuses
     chart.timezone_offset = timezone_offset
     chart.sprints_by_board = project_config.sprints_by_board
 
     chart.all_boards = project_config.all_boards
-    chart.board_id = find_board_id
+    chart.board_id = find_board_id if chart.respond_to? :board_id=
     chart.holiday_dates = project_config.exporter.holiday_dates
 
     time_range = @file_config.project_config.time_range
     chart.date_range = time_range.begin.to_date..time_range.end.to_date
+    chart.aggregate_project = project_config.aggregate_project?
 
     after_init_block&.call chart
 

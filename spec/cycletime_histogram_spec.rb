@@ -3,9 +3,10 @@
 require './spec/spec_helper'
 
 describe ColumnsConfig do
-  let(:issue1) { load_issue 'SP-1' }
-  let(:issue2) { load_issue 'SP-2' }
-  let(:issue10) { load_issue 'SP-10' }
+  let(:board) { load_complete_sample_board }
+  let(:issue1) { load_issue 'SP-1', board: board }
+  let(:issue2) { load_issue 'SP-2', board: board }
+  let(:issue10) { load_issue 'SP-10', board: board }
 
   context 'histogram_data_for' do
     it 'should handle no issues' do
@@ -15,7 +16,7 @@ describe ColumnsConfig do
 
     it 'should handle a mix of issues' do
       chart = CycletimeHistogram.new
-      chart.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2022-01-01', '2022-01-04'],
         [issue2, '2022-01-01', '2022-01-04'],
         [issue10, '2022-01-01', '2022-01-01']

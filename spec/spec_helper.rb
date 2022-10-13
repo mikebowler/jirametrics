@@ -16,8 +16,8 @@ def make_test_filename basename
   "spec/tmp/#{basename}"
 end
 
-def load_issue key
-  Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")))
+def load_issue key, board: nil
+  Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")), board: board)
 end
 
 def default_cycletime_config
@@ -30,12 +30,12 @@ def default_cycletime_config
   CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
 end
 
-def load_complete_sample_issues
+def load_complete_sample_issues board:
   result = []
   Dir.each_child './spec/complete_sample/sample_issues' do |file|
     next unless file =~ /SP-.+/
 
-    result << Issue.new(raw: JSON.parse(File.read("./spec/complete_sample/sample_issues/#{file}")))
+    result << Issue.new(raw: JSON.parse(File.read("./spec/complete_sample/sample_issues/#{file}")), board: board)
   end
 
   # Sort them back into the order they would have come from Jira because some of the tests are order dependant.

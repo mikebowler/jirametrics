@@ -45,15 +45,16 @@ describe Sprint do
   end
 
   context 'changes_for_one_issue' do
-    let(:issue) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
 
     it 'should return empty list for no changes' do
-      subject.cycletime = mock_cycletime_config stub_values: []
+      board.cycletime = mock_cycletime_config stub_values: []
       expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
     it 'should return start and end only' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-02-01']
       ]
       issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
@@ -69,7 +70,7 @@ describe Sprint do
     end
 
     it 'should change points at various times for item that was in sprint from the beginning' do
-      subject.cycletime = mock_cycletime_config stub_values: [
+      board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
       issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')

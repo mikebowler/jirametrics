@@ -25,7 +25,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    started = cycletime.started_time(issue)
+    started = issue.board.cycletime.started_time(issue)
     if started.nil?
       rules.label = 'Start date unknown'
       rules.color = 'white'

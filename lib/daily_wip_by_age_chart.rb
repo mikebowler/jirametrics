@@ -24,6 +24,7 @@ class DailyWipByAgeChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
+    cycletime = issue.board.cycletime
     started = cycletime.started_time(issue)&.to_date
     stopped = cycletime.stopped_time(issue)&.to_date
 

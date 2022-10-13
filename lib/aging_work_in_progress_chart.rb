@@ -41,7 +41,7 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def make_data_sets
-    aging_issues = @issues.select { |issue| @cycletime.in_progress? issue }
+    aging_issues = @issues.select { |issue| issue.board.cycletime.in_progress? issue }
 
     percentage = 85
     rules_to_issues = group_issues aging_issues
@@ -51,7 +51,7 @@ class AgingWorkInProgressChart < ChartBase
         'type' => 'line',
         'label' => rules.label,
         'data' => rules_to_issues[rules].collect do |issue|
-            age = @cycletime.age(issue)
+            age = issue.board.cycletime.age(issue)
             column = column_for issue: issue
             next if column.nil?
 
@@ -93,7 +93,7 @@ class AgingWorkInProgressChart < ChartBase
   def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
     issues.collect do |issue|
       stop = issue.first_time_in_status(*status_ids)
-      start = @cycletime.started_time(issue)
+      start = issue.board.cycletime.started_time(issue)
 
       # Skip if either it hasn't crossed the boundary or we can't tell when it started.
       next if stop.nil? || start.nil?

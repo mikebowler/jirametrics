@@ -130,25 +130,26 @@ describe ChartBase do
   end
 
   context 'completed_issues_in_range' do
-    let(:issue1) { load_issue('SP-1') }
+    let(:board) { load_complete_sample_board }
+    let(:issue1) { load_issue('SP-1', board: board) }
 
     it 'should return empty when no issues match' do
       subject.issues = [issue1]
-      subject.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
       expect(subject.completed_issues_in_range include_unstarted: true).to be_empty
     end
 
     it 'should return empty when one issue finished but outside the range' do
       subject.issues = [issue1]
       subject.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
-      subject.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2000-01-02']]
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2000-01-02']]
       expect(subject.completed_issues_in_range include_unstarted: true).to be_empty
     end
 
     it 'should return one when issue finished' do
       subject.issues = [issue1]
       subject.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
-      subject.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-02']]
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-02']]
       expect(subject.completed_issues_in_range include_unstarted: true).to eq [issue1]
     end
   end

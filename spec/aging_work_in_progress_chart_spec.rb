@@ -8,18 +8,19 @@ def complete_sample_board_columns
 end
 
 describe AgingWorkInProgressChart do
+  let(:board) { load_complete_sample_board }
   let :chart do
     chart = AgingWorkInProgressChart.new
     chart.board_id = 1
     chart.all_boards = { 1 => load_complete_sample_board }
-    chart.cycletime = default_cycletime_config
-    chart.issues = load_complete_sample_issues
+    board.cycletime = default_cycletime_config
+    chart.issues = load_complete_sample_issues board: board
     chart
   end
 
   context 'accumulated_status_ids_per_column' do
     it 'should accumulate properly' do
-      chart.issues = load_complete_sample_issues.select { |issue| chart.cycletime.in_progress? issue }
+      chart.issues = load_complete_sample_issues(board: board).select { |issue| board.cycletime.in_progress? issue }
 
       actual = chart.accumulated_status_ids_per_column
       expect(actual).to eq [

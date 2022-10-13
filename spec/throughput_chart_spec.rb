@@ -4,9 +4,10 @@ require './spec/spec_helper'
 require './lib/throughput_chart'
 
 describe ThroughputChart do
-  let(:issue1) { load_issue 'SP-1' }
-  let(:issue2) { load_issue 'SP-2' }
-  let(:issue10) { load_issue 'SP-10' }
+  let(:board) { load_complete_sample_board }
+  let(:issue1) { load_issue 'SP-1', board: board }
+  let(:issue2) { load_issue 'SP-2', board: board }
+  let(:issue10) { load_issue 'SP-10', board: board }
 
   context 'calculate_time_periods' do
     # October 11 is a Monday
@@ -57,7 +58,7 @@ describe ThroughputChart do
 
       subject = ThroughputChart.new
       subject.issues = [issue1, issue2, issue10]
-      subject.cycletime = default_cycletime_config
+      board.cycletime = default_cycletime_config
 
       dataset = subject.throughput_dataset(
         periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],

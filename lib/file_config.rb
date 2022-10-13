@@ -9,10 +9,10 @@ class FileConfig
     @project_config = project_config
     @block = block
     @columns = nil
-    @issues = project_config.issues.dup
   end
 
   def run
+    @issues = project_config.issues.dup
     instance_eval(&@block)
 
     if @columns

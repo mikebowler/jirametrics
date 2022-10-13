@@ -10,11 +10,8 @@ describe AgingWorkTable do
     end
   end
 
-  let(:issue) do
-    load_issue('SP-1').tap do |issue|
-      issue.changes.clear
-    end
-  end
+  let(:board) { load_complete_sample_board }
+  let(:issue) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
 
   context 'icon_span' do
     it 'should work' do
@@ -43,7 +40,7 @@ describe AgingWorkTable do
     end
 
     it 'should handle stalled' do
-      table.cycletime = mock_cycletime_config stub_values: { issue => 10 }
+      board.cycletime = mock_cycletime_config stub_values: { issue => 10 }
       expect(table.blocked_text issue).to eq(
         table.icon_span(
           title: 'Stalled: Hasn&apos;t had any activity in 5 days and isn&apos;t explicitly marked as blocked',
@@ -54,13 +51,13 @@ describe AgingWorkTable do
 
     it 'should handle started but neither blocked nor stalled' do
       issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
-      table.cycletime = mock_cycletime_config stub_values: { issue => ['2021-01-01', nil] }
+      board.cycletime = mock_cycletime_config stub_values: { issue => ['2021-01-01', nil] }
       expect(table.blocked_text issue).to be_nil
     end
 
     it 'should handle not started and also neither blocked nor stalled' do
       issue.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
-      table.cycletime = mock_cycletime_config stub_values: { issue => [nil, nil] }
+      board.cycletime = mock_cycletime_config stub_values: { issue => [nil, nil] }
       expect(table.blocked_text issue).to be_nil
     end
   end
