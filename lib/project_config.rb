@@ -28,10 +28,12 @@ class ProjectConfig
   end
 
   def run
-    load_all_boards unless aggregate_project?
-    load_project_metadata unless aggregate_project?
-    load_status_category_mappings unless aggregate_project?
-    load_sprints unless aggregate_project?
+    unless aggregate_project?
+      load_all_boards
+      load_project_metadata
+      load_status_category_mappings
+      load_sprints
+    end
     anonymize_data if @anonymizer_needed
 
     @file_configs.each do |file_config|
