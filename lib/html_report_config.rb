@@ -163,7 +163,7 @@ class HtmlReportConfig
 
     time_range = @file_config.project_config.time_range
     chart.date_range = time_range.begin.to_date..time_range.end.to_date
-    chart.aggregate_project = project_config.aggregate_project?
+    chart.aggregated_project = project_config.aggregated_project?
 
     after_init_block&.call chart
 

@@ -2,8 +2,8 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :issues, :date_range,
-    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates,
-    :aggregate_project
+    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
+  attr_writer :aggregated_project
 
   @@chart_counter = 0
 
@@ -21,6 +21,10 @@ class ChartBase
       'light:Epic' => '#fafad2',
       'light:Spike' => '#DDA0DD' # light purple
     }
+  end
+
+  def aggregated_project?
+    @aggregated_project
   end
 
   def render caller_binding, file

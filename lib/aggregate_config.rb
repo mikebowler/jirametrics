@@ -12,6 +12,7 @@ class AggregateConfig
 
   def evaluate_next_level
     instance_eval(&@block)
+    fix_all_links
   end
 
   def include_issues_from project_name
@@ -26,5 +27,10 @@ class AggregateConfig
     end_of_last_day = Time.new(range.end.year, range.end.month, range.end.day, 23, 59, 59, @timezone_offset)
 
     @project_config.time_range = start_of_first_day..end_of_last_day
+  end
+
+  # When links were first created, we may have created stub issues if we didn't have the original. After
+  # aggregating it's possible that now we do have the original so substitute it now.
+  def fix_all_links
   end
 end

@@ -37,7 +37,7 @@ class DataQualityReport < ChartBase
 
   def run
     # TODO: For the moment we just disable the quality report for aggregated projects. 
-    return '' if aggregate_project
+    return '' if aggregated_project?
 
     initialize_entries
 

@@ -28,7 +28,7 @@ class ProjectConfig
   end
 
   def run
-    unless aggregate_project?
+    unless aggregated_project?
       load_all_boards
       load_project_metadata
       load_status_category_mappings
@@ -41,7 +41,7 @@ class ProjectConfig
     end
   end
 
-  def aggregate_project?
+  def aggregated_project?
     !!@aggregate_config
   end
 
@@ -211,7 +211,7 @@ class ProjectConfig
   end
 
   def guess_board_id
-    return nil if aggregate_project?
+    return nil if aggregated_project?
 
     unless all_boards&.size == 1
       message = "If the board_id isn't set then we look for all board configurations in the target" \
@@ -242,7 +242,7 @@ class ProjectConfig
   end
 
   def issues
-    raise "issues are being loaded before boards in project #{name.inspect}" if all_boards.nil? && !aggregate_project?
+    raise "issues are being loaded before boards in project #{name.inspect}" if all_boards.nil? && !aggregated_project?
     unless @issues
       if @aggregate_config
         raise 'This is an aggregated project and issues should have been included with the include_issues_from ' \
