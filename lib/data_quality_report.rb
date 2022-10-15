@@ -37,17 +37,24 @@ class DataQualityReport < ChartBase
 
   def run
     # TODO: For the moment we just disable the quality report for aggregated projects. 
-    return '' if aggregated_project?
+    # return '' if aggregated_project?
 
     initialize_entries
-
-    backlog_statuses = @possible_statuses.expand_statuses current_board.backlog_statuses
+    backlog_statuses_by_board = {}
+    # backlog_statuses = @possible_statuses.expand_statuses current_board.backlog_statuses
 
     @entries.each do |entry|
+      board = entry.issue.board
+      backlog_statuses = backlog_statuses_by_board[board]
+      if backlog_statuses.nil?
+        backlog_statuses = @possible_statuses.expand_statuses board.backlog_statuses
+        backlog_statuses_by_board[board] = backlog_statuses
+      end
+
       scan_for_completed_issues_without_a_start_time entry: entry
       scan_for_status_change_after_done entry: entry
       scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
-      scan_for_issues_not_created_in_the_right_status entry: entry
+      scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_status_ids: backlog_statuses.collect(&:id)
       scan_for_stopped_before_started entry: entry
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
       scan_for_discarded_data entry: entry
@@ -146,7 +153,7 @@ class DataQualityReport < ChartBase
     issue.changes.each do |change|
       next unless change.status?
 
-      index = current_board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
+      index = entry.issue.board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         detail = "Status #{format_status change.value} is not on the board"
         if @possible_statuses.expand_statuses(change.value).empty?
@@ -185,14 +192,12 @@ class DataQualityReport < ChartBase
     end
   end
 
-  # TODO: this is probably wanting the backlog statuses
-  def scan_for_issues_not_created_in_the_right_status entry:
-    valid_initial_status_ids = current_board.backlog_statuses
-    return if valid_initial_status_ids.empty?
+  def scan_for_issues_not_created_in_a_backlog_status entry:, backlog_status_ids:
+    return if backlog_status_ids.empty?
 
     creation_change = entry.issue.changes.find { |issue| issue.status? }
 
-    return if valid_initial_status_ids.include? creation_change.value_id
+    return if backlog_status_ids.include? creation_change.value_id
 
     entry.report(
       problem_key: :created_in_wrong_status,

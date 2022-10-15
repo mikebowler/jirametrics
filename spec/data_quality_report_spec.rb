@@ -164,14 +164,14 @@ describe DataQualityReport do
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
-      subject.scan_for_issues_not_created_in_the_right_status entry: entry
+      subject.scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_status_ids: [10_000]
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
       expect(problem_key).to eq :created_in_wrong_status
     end
 
-    it 'should skip past valid status' do
+    it 'should be ok when issue created in a correct backlog status' do
       subject.all_boards = { 1 => board }
       subject.initialize_entries
 
@@ -180,7 +180,7 @@ describe DataQualityReport do
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
 
-      subject.scan_for_issues_not_created_in_the_right_status entry: entry
+      subject.scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_status_ids: [10_000] 
 
       expect(entry.problems).to be_empty
     end
