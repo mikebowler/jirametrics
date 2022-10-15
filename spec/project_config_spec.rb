@@ -87,30 +87,6 @@ describe ProjectConfig do
         'Not allowed to have multiple download blocks in one project'
       )
     end
-
-    it 'should fail if a second aggregate is set' do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      config.aggregate(&empty_block)
-      expect { config.aggregate(&empty_block) }.to raise_error(
-        'Not allowed to have multiple aggregate blocks in one project'
-      )
-    end
-
-    it 'should fail if download and and then an aggregate is set' do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      config.download(&empty_block)
-      expect { config.aggregate(&empty_block) }.to raise_error(
-        'Not allowed to have both an aggregate and a download section. Pick only one.'
-      )
-    end
-
-    it 'should fail if aggregate and and then a downoad is set' do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      config.aggregate(&empty_block)
-      expect { config.download(&empty_block) }.to raise_error(
-        'Not allowed to have both an aggregate and a download section. Pick only one.'
-      )
-    end
   end
 
   context 'evaluate_next_level' do
