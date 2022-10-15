@@ -61,6 +61,8 @@ class ProjectConfig
     raise 'Not allowed to have both an aggregate and a download section. Pick only one.' if @download_config
 
     @aggregate_config = AggregateConfig.new project_config: self, block: block
+    return if @exporter.downloading?
+
     @aggregate_config.evaluate_next_level
   end
 

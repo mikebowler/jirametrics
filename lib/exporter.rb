@@ -16,6 +16,7 @@ class Exporter
     @timezone_offset = '+00:00'
     @target_path = '.'
     @holiday_dates = []
+    @downloading = false
   end
 
   def export
@@ -26,13 +27,20 @@ class Exporter
   end
 
   def download
+    @downloading = true
     @project_configs.each do |project|
       project.evaluate_next_level
+      next if project.aggregated_project?
+
       project.download_config.run
       Downloader.new(download_config: project.download_config).run
     end
   end
 
+  def downloading?
+    @downloading
+  end
+  
   def project name: nil, &block
     raise 'target_path was never set!' if @target_path.nil?
     raise 'jira_config not set' if @jira_config.nil?
