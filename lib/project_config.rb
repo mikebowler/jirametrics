@@ -310,14 +310,25 @@ class ProjectConfig
 
   def load_issues_from_issues_directory path:, timezone_offset:
     issues = []
-    default_board = find_default_board
+    default_board = nil
 
     Dir.foreach(path) do |filename|
+      case filename
+      when /-\d+-(\d+)\.json/
+        board = all_boards[$1.to_i]
+        raise "Unable to find board for filename #{filename}" if board.nil?
+      when /-\d+\.json/
+        board = (default_board ||= find_default_board)
+      else
+        next
+      end
+
       if filename =~ /-\d+\.json$/
-        content = JSON.parse File.read("#{path}#{filename}")
-        issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: default_board)
+        content = JSON.parse File.read(File.join(path, filename))
+        issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
       end
     end
+
     issues
   end
 
