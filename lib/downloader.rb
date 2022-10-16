@@ -73,7 +73,10 @@ class Downloader
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
-        write_json(issue_json, "#{path}#{issue_json['key']}.json")
+        file = issue_json['key']
+        # file += "-#{board_id}" if board_id
+        file += '.json'
+        write_json(issue_json, File.join(path, file))
       end
 
       total = json['total'].to_i
@@ -158,7 +161,9 @@ class Downloader
     hash = JSON.parse(File.read metadata_pathname)
 
     # Only use the saved metadata if the version number is the same one that we're currently using.
-    if (hash['version'] || 0) == CURRENT_METADATA_VERSION
+    # If the cached data is in an older format then we're going to throw most of it away.
+    @cached_data_format_is_current = (hash['version'] || 0) == CURRENT_METADATA_VERSION
+    if @cached_data_format_is_current
       hash.each do |key, value|
         value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
         @metadata[key] = value
@@ -195,6 +200,17 @@ class Downloader
       next unless file =~ /^#{file_prefix}_\d+\.json$/
 
       File.unlink "#{@target_path}#{file}"
+    end
+
+    unless @cached_data_format_is_current
+      # Also throw away all the previously downloaded issues.
+      path = File.join @target_path, "#{file_prefix}_issues"
+      Dir.foreach path do |file|
+        next unless file =~ /\.json$/
+
+        puts "--Deleting #{File.join(path, file)}"
+        File.unlink File.join(path, file)
+      end
     end
   end
 
