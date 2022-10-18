@@ -116,7 +116,7 @@ class DataQualityReport < ChartBase
     status_names = entry.issue.changes.collect do |change|
       next unless change.status?
 
-      format_status change.value
+      format_status change.value, board: entry.issue.board
     end.compact
 
     entry.report(
@@ -135,9 +135,10 @@ class DataQualityReport < ChartBase
 
     return if changes_after_done.empty?
 
-    problem = "Completed on #{entry.stopped.to_date} with status #{format_status done_status}."
+    board = entry.issue.board
+    problem = "Completed on #{entry.stopped.to_date} with status #{format_status done_status, board: board}."
     changes_after_done.each do |change|
-      problem << " Changed to #{format_status change.value} on #{change.time.to_date}."
+      problem << " Changed to #{format_status change.value, board: board} on #{change.time.to_date}."
     end
     entry.report(
       problem_key: :status_changes_after_done,
@@ -153,11 +154,15 @@ class DataQualityReport < ChartBase
     issue.changes.each do |change|
       next unless change.status?
 
+      board = entry.issue.board
       index = entry.issue.board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
-        detail = "Status #{format_status change.value} is not on the board"
-        if @possible_statuses.expand_statuses(change.value).empty?
-          detail = "Status #{format_status change.value} cannot be found at all. Was it deleted?"
+        # If it's a backlog status then ignore it. Not supposed to be visible.
+        next if entry.issue.board.backlog_statuses.include? change.value_id
+
+        detail = "Status #{format_status change.value, board: board} is not on the board"
+        if issue.board.possible_statuses.expand_statuses(change.value).empty?
+          detail = "Status #{format_status change.value, board: board} cannot be found at all. Was it deleted?"
         end
 
         # If it's been moved back to backlog then it's on a different report. Ignore it here.
@@ -173,18 +178,18 @@ class DataQualityReport < ChartBase
         if new_category == old_category
           entry.report(
             problem_key: :backwords_through_statuses,
-            detail: "Moved from #{format_status change.old_value}" \
-              " to #{format_status change.value}" \
+            detail: "Moved from #{format_status change.old_value, board: board}" \
+              " to #{format_status change.value, board:board}" \
               " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
-            detail: "Moved from #{format_status change.old_value}" \
-              " to #{format_status change.value}" \
+            detail: "Moved from #{format_status change.old_value, board: board}" \
+              " to #{format_status change.value, board: board}" \
               " on #{change.time.to_date}, " \
-              " crossing from category #{format_status old_category, is_category: true}" \
-              " to #{format_status new_category, is_category: true}."
+              " crossing from category #{format_status old_category, board: board, is_category: true}" \
+              " to #{format_status new_category, board: board, is_category: true}."
           )
         end
       end
@@ -201,7 +206,8 @@ class DataQualityReport < ChartBase
 
     entry.report(
       problem_key: :created_in_wrong_status,
-      detail: "Issue was created in #{format_status creation_change.value} status on #{creation_change.time.to_date}"
+      detail: "Issue was created in #{format_status creation_change.value, board: entry.issue.board} " \
+        "status on #{creation_change.time.to_date}"
     )
   end
 
@@ -225,7 +231,8 @@ class DataQualityReport < ChartBase
     return if started_subtasks.empty?
 
     subtask_labels = started_subtasks.collect do |subtask|
-      "Started subtask: #{link_to_issue(subtask)} (#{format_status subtask.status.name}) #{subtask.summary[..50].inspect}"
+      "Started subtask: #{link_to_issue(subtask)} (#{format_status subtask.status.name, board: entry.issue.board}) " \
+        "#{subtask.summary[..50].inspect}"
     end
     entry.report(
       problem_key: :issue_not_started_but_subtasks_have,
@@ -233,8 +240,8 @@ class DataQualityReport < ChartBase
     )
   end
 
-  def format_status name_or_id, is_category: false
-    statuses = @possible_statuses.expand_statuses([name_or_id])
+  def format_status name_or_id, board:, is_category: false
+    statuses = board.possible_statuses.expand_statuses([name_or_id])
     raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
 
     return "<span style='color: red'>#{name_or_id}</span>" if statuses.empty?

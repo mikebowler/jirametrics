@@ -11,7 +11,11 @@
   <tbody>
     <% issue_descriptions.each do |issue, description| %>
       <tr>
-        <td><%= link_to_issue issue %></td>
+        <td><%= link_to_issue issue %>
+          <% if aggregated_project? %>
+            <br /><span style="font-size: 0.8em; font-style: italic;"><%= issue.board.name %></span>
+          <% end %>
+        </td>
         <td><%= issue.type %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= description %></td>

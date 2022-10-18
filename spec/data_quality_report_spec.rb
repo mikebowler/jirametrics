@@ -212,23 +212,24 @@ describe DataQualityReport do
 
   context 'format_status' do
     it 'should make text red when status not found' do
-      expect(subject.format_status 'Digging').to eq "<span style='color: red'>Digging</span>"
+      expect(subject.format_status 'Digging', board: board).to eq "<span style='color: red'>Digging</span>"
     end
 
     it 'should handle todo statuses' do
-      expect(subject.format_status 'Backlog').to eq "<span style='color: gray'>Backlog</span>"
+      expect(subject.format_status 'Backlog', board: board).to eq "<span style='color: gray'>Backlog</span>"
     end
 
     it 'should handle in progress statuses' do
-      expect(subject.format_status 'Review').to eq "<span style='color: blue'>Review</span>"
+      expect(subject.format_status 'Review', board: board).to eq "<span style='color: blue'>Review</span>"
     end
 
     it 'should handle done statuses' do
-      expect(subject.format_status 'Done').to eq "<span style='color: green'>Done</span>"
+      puts board.possible_statuses.todo.inspect
+      expect(subject.format_status 'Done', board: board).to eq "<span style='color: green'>Done</span>"
     end
 
     it 'should handle unknown statuses' do
-      expect(subject.format_status 'unknown').to eq "<span style='color: red'>unknown</span>"
+      expect(subject.format_status 'unknown', board: board).to eq "<span style='color: red'>unknown</span>"
     end
   end
 

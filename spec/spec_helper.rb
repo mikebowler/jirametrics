@@ -44,7 +44,7 @@ end
 
 def load_complete_sample_board
   json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
-  Board.new raw: json
+  Board.new raw: json, possible_statuses: load_complete_sample_statuses
 end
 
 def load_complete_sample_statuses

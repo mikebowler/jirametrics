@@ -94,7 +94,9 @@ class ProjectConfig
   end
 
   def load_board board_id:, filename:
-    (@all_boards ||= {})[board_id] = Board.new raw: JSON.parse(File.read(filename))
+    (@all_boards ||= {})[board_id] = Board.new(
+      raw: JSON.parse(File.read(filename)), possible_statuses: @possible_statuses
+    )
   end
 
   def category_for status_name:
@@ -168,6 +170,7 @@ class ProjectConfig
   def load_sprints
     Dir.foreach(@target_path) do |file|
       next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
+      
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
       JSON.parse(File.read("#{target_path}#{file}"))['values'].each do |json|
