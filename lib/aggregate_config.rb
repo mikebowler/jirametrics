@@ -15,7 +15,9 @@ class AggregateConfig
   def evaluate_next_level
     instance_eval(&@block)
 
-    raise "#{@project}: When aggregating, you must include at least one other project" if @included_projects.empty?
+    if @included_projects.empty?
+      raise "#{@project_config.name}: When aggregating, you must include at least one other project"
+    end
 
     # If the date range wasn't set then calculate it now
     @project_config.time_range = find_time_range projects: @included_projects if @project_config.time_range.nil?
@@ -23,7 +25,11 @@ class AggregateConfig
 
   def include_issues_from project_name
     project = @project_config.exporter.project_configs.find { |p| p.name == project_name }
-    raise "include_issues_from(#{project_name.inspect}) Can't find project with that name." if project.nil?
+    if project.nil?
+      puts "Warning: Aggregated project #{@project_config.name.inspect} is attempting to load " \
+        "project #{project_name.inspect} but it can't be found. Is it disabled?"
+      return
+    end
 
     @included_projects << project
     @project_config.add_issues project.issues
