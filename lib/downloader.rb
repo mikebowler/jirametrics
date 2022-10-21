@@ -202,15 +202,17 @@ class Downloader
       File.unlink "#{@target_path}#{file}"
     end
 
-    unless @cached_data_format_is_current
-      # Also throw away all the previously downloaded issues.
-      path = File.join @target_path, "#{file_prefix}_issues"
-      Dir.foreach path do |file|
-        next unless file =~ /\.json$/
+    return if @cached_data_format_is_current
 
-        puts "--Deleting #{File.join(path, file)}"
-        File.unlink File.join(path, file)
-      end
+    # Also throw away all the previously downloaded issues.
+    path = File.join @target_path, "#{file_prefix}_issues"
+    return unless File.exist? path
+
+    Dir.foreach path do |file|
+      next unless file =~ /\.json$/
+
+      # puts "--Deleting #{File.join(path, file)}"
+      File.unlink File.join(path, file)
     end
   end
 
