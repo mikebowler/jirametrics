@@ -317,20 +317,22 @@ class ProjectConfig
 
     group_filenames_and_board_ids(path: path).each do |filename, board_ids|
       if board_ids == :unknown
-        board = (default_board ||= find_default_board)
+        boards = [(default_board ||= find_default_board)]
       else
         # TODO: We're assuming the first board is correct. This is incorrect but will have to do
         # until we fully support multiple boards in an issue.
-        board = all_boards[board_ids.first]
+        boards = board_ids.collect { |id| all_boards[id] }
       end
       content = JSON.parse File.read(File.join(path, filename))
-      issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
+      issues << Issue.new(raw: content, timezone_offset: timezone_offset, boards: boards)
     end
 
     issues
   end
 
-  # Scan through the issues directory (path), select the filenames to be loaded and map them to board ids
+  # Scan through the issues directory (path), select the filenames to be loaded and map them to board ids.
+  # It's ok if there are multiple files for the same issue. We load the newest one and map all the other
+  # board ids appropriately.
   def group_filenames_and_board_ids path:
     hash = {}
     Dir.foreach(path) do |filename|

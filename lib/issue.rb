@@ -3,14 +3,19 @@
 require 'time'
 
 class Issue
-  attr_reader :changes, :raw, :subtasks, :board
+  attr_reader :changes, :raw, :subtasks, :boards
 
-  def initialize raw:, timezone_offset: '+00:00', board: nil
+  def initialize raw:, timezone_offset: '+00:00', boards: [], board: nil
     @raw = raw
     @timezone_offset = timezone_offset
     @subtasks = []
     @changes = []
-    @board = board
+    @boards = boards
+    unless board.nil?
+      puts "Deprecated: pass boards (plural) into the constructor of issue, not board (singular)\n-> Called at #{caller[0]}"
+
+      @boards = [board]
+    end
 
     return unless @raw['changelog']
 
@@ -302,6 +307,11 @@ class Issue
     @raw['fields']['fixVersions'].collect do |fix_version|
       FixVersion.new fix_version
     end
+  end
+
+  def board
+    # puts("Deprecated: Issue.board replaced with Issues.boards since there may be multiples\nCalled at #{caller[0]}")
+    @boards.first
   end
 
   private
