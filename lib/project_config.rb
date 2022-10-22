@@ -315,28 +315,56 @@ class ProjectConfig
     issues = []
     default_board = nil
 
-    Dir.foreach(path) do |filename|
-      case filename
-      when /-\d+-(\d+)\.json/
-        board = all_boards[$1.to_i]
-        raise "Unable to find board for filename #{filename}" if board.nil?
-      when /-\d+\.json/
+    group_filenames_and_board_ids(path: path).each do |filename, board_ids|
+      if board_ids == :unknown
         board = (default_board ||= find_default_board)
       else
-        next
+        # TODO: We're assuming the first board is correct. This is incorrect but will have to do
+        # until we fully support multiple boards in an issue.
+        board = all_boards[board_ids.first]
       end
-
-      if filename =~ /-\d+\.json$/
-        content = JSON.parse File.read(File.join(path, filename))
-        issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
-      end
+      content = JSON.parse File.read(File.join(path, filename))
+      issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
     end
 
     issues
   end
 
+  # Scan through the issues directory (path), select the filenames to be loaded and map them to board ids
   def group_filenames_and_board_ids path:
-    []
+    hash = {}
+    Dir.foreach(path) do |filename|
+      # Matches either FAKE-123.json or FAKE-123-456.json
+      if /^(?<key>[^-]+-\d+)(?<_>-(?<board_id>\d+))?\.json$/ =~ filename
+        (hash[key] ||= []) << [filename, board_id&.to_i || :unknown]
+      end
+    end
+
+    result = {}
+    hash.values.collect do |list|
+      if list.size == 1
+        filename, board_id = *list.first
+        result[filename] = board_id == :unknown ? board_id : [board_id]
+      else
+        max_time = nil
+        max_board_id = nil
+        max_filename = nil
+        all_board_ids = []
+
+        list.each do |filename, board_id|
+          mtime = File.mtime(File.join(path, filename))
+          if max_time.nil? || mtime > max_time
+            max_time = mtime
+            max_board_id = board_id
+            max_filename = filename
+          end
+          all_board_ids << board_id unless board_id == :unknown
+        end
+
+        result[max_filename] = all_board_ids
+      end
+    end
+    result
   end
 
   def anonymize

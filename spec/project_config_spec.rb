@@ -167,5 +167,48 @@ describe ProjectConfig do
 
       expect(subject.group_filenames_and_board_ids path: issue_path).to be_empty
     end
+
+    it 'one file with a board id' do
+      File.write(File.join([issue_path, 'FAKE-123-456.json']), 'content')
+      expect(subject.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123-456.json' => [456]
+      })
+    end
+
+    it 'one file without a board id' do
+      File.write(File.join([issue_path, 'FAKE-123.json']), 'content')
+      expect(subject.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123.json' => :unknown
+      })
+    end
+
+    it 'multiple files, all with board ids' do
+      FileUtils.touch File.join(issue_path, 'FAKE-123-456.json'), mtime: Time.now - 1000
+      FileUtils.touch File.join(issue_path, 'FAKE-123-789.json'), mtime: Time.now - 2000
+
+      expect(subject.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123-456.json' => [456, 789]
+      })
+    end
+
+    it 'multiple files, one without board id' do
+      FileUtils.touch File.join(issue_path, 'FAKE-123-456.json'), mtime: Time.now - 1000
+      FileUtils.touch File.join(issue_path, 'FAKE-123.json'), mtime: Time.now - 2000
+
+      expect(subject.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123-456.json' => [456]
+      })
+    end
+
+    it 'complex example with multiple keys' do
+      FileUtils.touch File.join(issue_path, 'FAKE-333-444.json'), mtime: Time.now - 1000
+      FileUtils.touch File.join(issue_path, 'FAKE-123-456.json'), mtime: Time.now - 1000
+      FileUtils.touch File.join(issue_path, 'FAKE-123.json'), mtime: Time.now - 2000
+
+      expect(subject.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123-456.json' => [456],
+        'FAKE-333-444.json' => [444]
+      })
+    end
   end
 end
