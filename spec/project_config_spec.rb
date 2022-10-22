@@ -5,34 +5,32 @@ require './spec/spec_helper'
 describe ProjectConfig do
   let(:exporter) { Exporter.new }
   let(:target_path) { 'spec/testdata/' }
+  let(:subject) { ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil }
 
   context 'category_for' do
     it "where mapping doesn't exist" do
-      config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
-      config.file_prefix 'sample'
-      config.status_category_mapping status: 'Doing', category: 'In progress'
-      config.status_category_mapping status: 'Done', category: 'Done'
-      config.load_all_boards
-      expect { config.category_for status_name: 'Foo' }
+      subject.file_prefix 'sample'
+      subject.status_category_mapping status: 'Doing', category: 'In progress'
+      subject.status_category_mapping status: 'Done', category: 'Done'
+      subject.load_all_boards
+      expect { subject.category_for status_name: 'Foo' }
         .to raise_error(/^Could not determine categories for some/)
     end
 
     it 'where mapping does exist' do
-      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
-      config.file_prefix 'sample'
-      config.status_category_mapping status: 'Doing', category: 'InProgress'
-      expect(config.category_for(status_name: 'Doing')).to eql 'InProgress'
+      subject.file_prefix 'sample'
+      subject.status_category_mapping status: 'Doing', category: 'InProgress'
+      expect(subject.category_for(status_name: 'Doing')).to eql 'InProgress'
     end
   end
 
   context 'board_configuration' do
     it 'should load' do
-      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
-      config.file_prefix 'sample'
-      config.load_all_boards
-      expect(config.all_boards.keys).to eq [1]
+      subject.file_prefix 'sample'
+      subject.load_all_boards
+      expect(subject.all_boards.keys).to eq [1]
 
-      contents = config.all_boards[1].visible_columns.collect do |column|
+      contents = subject.all_boards[1].visible_columns.collect do |column|
         [column.name, column.status_ids, column.min, column.max]
       end
 
@@ -49,15 +47,13 @@ describe ProjectConfig do
 
   context 'possible_statuses' do
     it 'should degrade gracefully when mappings not found' do
-      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
-      config.load_status_category_mappings
-      expect(config.possible_statuses).to be_empty
+      subject.load_status_category_mappings
+      expect(subject.possible_statuses).to be_empty
     end
 
     it 'should load' do
-      config = ProjectConfig.new exporter: nil, target_path: target_path, jira_config: nil, block: nil
-      config.file_prefix 'sample'
-      config.load_status_category_mappings
+      subject.file_prefix 'sample'
+      subject.load_status_category_mappings
 
       expected = [
         ['Backlog', 'To Do'],
@@ -67,7 +63,7 @@ describe ProjectConfig do
         ['Selected for Development', 'In Progress']
       ]
 
-      actual = config.possible_statuses.collect do |status|
+      actual = subject.possible_statuses.collect do |status|
         [status.name, status.category_name]
       end
 
@@ -79,11 +75,10 @@ describe ProjectConfig do
     let(:empty_block) { ->(_) {} }
 
     it 'should fail if a second download is set' do
-      config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      config.download do
+      subject.download do
         file_suffix 'a'
       end
-      expect { config.download { file_suffix 'a' } }.to raise_error(
+      expect { subject.download { file_suffix 'a' } }.to raise_error(
         'Not allowed to have multiple download blocks in one project'
       )
     end
@@ -98,17 +93,14 @@ describe ProjectConfig do
 
   context 'guess_board_id' do
     it 'should fail if no board id set and there are no boards' do
-      project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-
-      expect { project_config.guess_board_id }.to raise_error %r{we couldn't find any configuration files}
+      expect { subject.guess_board_id }.to raise_error %r{we couldn't find any configuration files}
     end
 
     it 'should fail if no board id set and there are multiple boards' do
-      project_config = ProjectConfig.new exporter: nil, target_path: nil, jira_config: nil, block: nil
-      project_config.load_board(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
-      project_config.load_board(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
+      subject.load_board(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
+      subject.load_board(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
-      expect { project_config.guess_board_id }.to raise_error %r{following board ids and this is ambiguous}
+      expect { subject.guess_board_id }.to raise_error %r{following board ids and this is ambiguous}
     end
   end
 
@@ -121,12 +113,11 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02')
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
 
-      project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_all_boards
-      project_config.issues << issue1
+      subject.file_prefix 'sample'
+      subject.load_all_boards
+      subject.issues << issue1
 
-      project_config.discard_changes_before status_becomes: 'backlog'
+      subject.discard_changes_before status_becomes: 'backlog'
       expect(issue1.changes.collect(&:time)).to eq [
         Time.parse('2022-01-03')
       ]
@@ -138,12 +129,11 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02T08:00:00')
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T09:00:00')
 
-      project_config = ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_all_boards
-      project_config.issues << issue1
+      subject.file_prefix 'sample'
+      subject.load_all_boards
+      subject.issues << issue1
 
-      project_config.discard_changes_before { |_issue| Time.parse('2022-01-02T09:00:00') }
+      subject.discard_changes_before { |_issue| Time.parse('2022-01-02T09:00:00') }
       expect(issue1.changes.collect(&:time)).to eq []
     end
   end
@@ -157,10 +147,25 @@ describe ProjectConfig do
     end
 
     it 'should not require name' do
-      project_config = ProjectConfig.new(
-        exporter: exporter, target_path: target_path, jira_config: nil, block: nil
-      )
-      expect(project_config.name).to eq ''
+      expect(subject.name).to eq ''
+    end
+  end
+
+  context 'group_filenames_and_board_ids' do
+    let(:issue_path) { File.join %w[spec tmp] }
+    before(:each) do
+      # Empty the directory so we can insert our own here
+      Dir.foreach(issue_path) do |filename|
+        full_path = File.join(issue_path, filename)
+        File.unlink(full_path) unless filename.start_with?('.') || File.directory?(full_path)
+      end
+    end
+
+    it 'should ignore files that do not match the file convention' do
+      # FAKE-123.json and FAKE-123-456.json are both valid filenames
+      File.write(File.join([issue_path, 'foo']), 'content')
+
+      expect(subject.group_filenames_and_board_ids path: issue_path).to be_empty
     end
   end
 end

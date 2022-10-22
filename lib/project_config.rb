@@ -335,6 +335,10 @@ class ProjectConfig
     issues
   end
 
+  def group_filenames_and_board_ids path:
+    []
+  end
+
   def anonymize
     @anonymizer_needed = true
   end
