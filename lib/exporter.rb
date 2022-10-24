@@ -1,5 +1,15 @@
 # frozen_string_literal: true
 
+class Object
+  def deprecated date:, message:
+    text = String.new
+    text << 'Deprecated: '
+    text << message
+    text << "\n-> Called from #{caller[1]}"
+    warn text
+  end
+end
+
 class Exporter
   attr_reader :project_configs
 
