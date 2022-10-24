@@ -4,6 +4,7 @@ require 'time'
 
 class IssueLink
   attr_reader :origin, :raw
+  attr_writer :other_issue
 
   def initialize origin:, raw:
     @origin = origin

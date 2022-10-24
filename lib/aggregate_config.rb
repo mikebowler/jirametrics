@@ -21,6 +21,20 @@ class AggregateConfig
 
     # If the date range wasn't set then calculate it now
     @project_config.time_range = find_time_range projects: @included_projects if @project_config.time_range.nil?
+
+    adjust_issue_links
+  end
+
+  def adjust_issue_links
+    issues = @project_config.issues
+    issues.each do |issue|
+      issue.issue_links.each do |link|
+        other_issue_key = link.other_issue.key
+        other_issue = issues.find { |i| i.key == other_issue_key }
+
+        link.other_issue = other_issue if other_issue
+      end
+    end
   end
 
   def include_issues_from project_name
