@@ -298,15 +298,21 @@ class Issue
   end
 
   def issue_links
-    @raw['fields']['issuelinks'].collect do |issue_link|
-      IssueLink.new origin: self, raw: issue_link
+    if @issue_links.nil?
+      @issue_links = @raw['fields']['issuelinks'].collect do |issue_link|
+        IssueLink.new origin: self, raw: issue_link
+      end
     end
+    @issue_links
   end
 
   def fix_versions
-    @raw['fields']['fixVersions'].collect do |fix_version|
-      FixVersion.new fix_version
+    if @fix_versions.nil?
+      @fix_versions = @raw['fields']['fixVersions']&.collect do |fix_version|
+        FixVersion.new fix_version
+      end || []
     end
+    @fix_versions
   end
 
   def board
