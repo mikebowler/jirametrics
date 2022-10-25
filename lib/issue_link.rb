@@ -12,7 +12,8 @@ class IssueLink
   end
 
   def other_issue
-    Issue.new raw: (inward? ? raw['inwardIssue'] : raw['outwardIssue'])
+    @other_issue = Issue.new(raw: (inward? ? raw['inwardIssue'] : raw['outwardIssue'])) if @other_issue.nil?
+    @other_issue
   end
 
   def direction
