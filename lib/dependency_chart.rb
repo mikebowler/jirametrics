@@ -193,8 +193,15 @@ class DependencyChart < ChartBase
   end
 
   def word_wrap text, max_width: 50, separator: '<BR/>'
-    text.lines.collect do |line|
+    text.chomp.lines.collect do |line|
       line.chomp!
+
+      # The following characters all cause problems when passed to graphviz
+      line.gsub!(/[{<]/, '[')
+      line.gsub!(/[}>]/, ']')
+      line.gsub!(/\s*&\s*/, ' and ')
+      line.gsub!('|', '')
+
       if line.length > max_width
         line.gsub(/(.{1,#{max_width}})(\s+|$)/, "\\1#{separator}").strip
       else
