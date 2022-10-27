@@ -177,4 +177,8 @@ class HtmlReportConfig
   def issues
     @file_config.issues
   end
+
+  def find_board id
+    @file_config.project_config.all_boards[id]
+  end
 end
