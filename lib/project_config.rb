@@ -319,23 +319,13 @@ class ProjectConfig
       content = File.read(File.join(path, filename))
       if board_ids == :unknown
         boards = [(default_board ||= find_default_board)]
-        # issues << Issue.new(raw: JSON.parse(content), timezone_offset: timezone_offset, board: board)
       else
         boards = board_ids.collect { |b| all_boards[b] }
-        # board_ids.each do |id|
-        #   board = all_boards[id]
-        #   issues << Issue.new(raw: JSON.parse(content), timezone_offset: timezone_offset, board: board)
-        # end
-        # # # TODO: We're assuming the first board is correct. This is incorrect but will have to do
-        # # until we fully support multiple boards in an issue.
-        # boards = board_ids.collect { |id| all_boards[id] }
       end
-  
+
       boards.each do |board|
         issues << Issue.new(raw: JSON.parse(content), timezone_offset: timezone_offset, board: board)
       end
-      # content = JSON.parse File.read(File.join(path, filename))
-      # issues << Issue.new(raw: content, timezone_offset: timezone_offset, boards: boards)
     end
 
     issues
