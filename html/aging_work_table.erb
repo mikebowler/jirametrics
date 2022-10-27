@@ -7,6 +7,13 @@
   If there are expedited items that haven't yet started then they're at the bottom of the table. By the
   very definition of expedited, if we haven't started them already, we'd better get on that.
 </p>
+<p>
+  <% if age_cutoff > 0 %>
+    Items less than <%= label_days age_cutoff %> old have been excluded from this chart to provide more
+    focus on the older items. The exception are items that are either expedited or blocked - these are
+    shown no matter how old they are.
+  <% end %>
+</p>
 
 <table class='standard'>
   <thead>
@@ -18,10 +25,11 @@
       <th>Type</th>
       <th>Status</th>
       <th>Fix versions</th>
-      <% if current_board.scrum? %>
+      <% if any_scrum_boards? %>
           <th>Sprints</th>
-        <% end %>      <th>Summary</th>
-      <th>Who</th>
+      <% end %>
+      <th>Summary</th>
+      <th><%= aggregated_project? ? 'Board' : 'Who' %></th>
     </tr>
   </thead>
   <tbody>
@@ -32,13 +40,13 @@
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>
         <td><%= issue.type %></td>
-        <td><%= issue.status.name %><%= unmapped_status_text(issue) unless status_visible? issue.status %></td>
+        <td><%= issue.status.name %><%= unmapped_status_text(issue) unless current_status_visible? issue %></td>
         <td><%= fix_versions_text(issue) %></td>
-        <% if current_board.scrum? %>
+        <% if any_scrum_boards? %>
           <td><%= sprints_text(issue) %></td>
         <% end %>
         <td><i><%= issue.summary.inspect %></i></td>
-        <td><%= issue.assigned_to %></td>
+        <td><%= aggregated_project? ? issue.board.name : issue.assigned_to %></td>
       </tr>
     <% end %>
   </tbody>

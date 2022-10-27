@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe AgingWorkTable do
   let(:table) do
-    AgingWorkTable.new('Highest').tap do |table|
+    AgingWorkTable.new('Highest', nil).tap do |table|
       table.date_range = Date.parse('2021-01-01')..Date.parse('2021-01-31')
       table.today = table.date_range.end + 1
     end

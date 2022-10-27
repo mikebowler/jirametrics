@@ -5,13 +5,16 @@ require './lib/chart_base'
 class AgingWorkTable < ChartBase
   attr_accessor :today, :board_id
 
-  def initialize expedited_priority_name
+  def initialize expedited_priority_name, block
     super()
     @expedited_priority_name = expedited_priority_name
     @blocked_icon = '🛑'
     @expedited_icon = '🔥'
     @stalled_icon = '🟧'
     @stalled_threshold = 5
+    @age_cutoff = 0
+
+    instance_eval(&block) if block
   end
 
   def run
@@ -30,9 +33,16 @@ class AgingWorkTable < ChartBase
   def select_aging_issues
     aging_issues = @issues.select do |issue|
       cycletime = issue.board.cycletime
-      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
+      started = cycletime.started_time(issue)
+      stopped = cycletime.stopped_time(issue)
+      next false if started.nil? || stopped
+      next true if issue.blocked_on_date?(@today) || expedited?(issue)
+
+      age = (@today - started.to_date).to_i + 1
+      age > @age_cutoff
     end
-    aging_issues.sort { |a, b| a.board.cycletime.age(b, today: @today) <=> b.board.cycletime.age(a, today: @today) }
+    @any_scrum_boards = aging_issues.any? { |issue| issue.board.scrum? }
+    aging_issues.sort { |a, b| b.board.cycletime.age(b, today: @today) <=> a.board.cycletime.age(a, today: @today) }
   end
 
   def expedited? issue
@@ -101,7 +111,16 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
-  def status_visible? status
-    current_board.visible_columns.any? { |column| column.status_ids.include? status.id }
+  def current_status_visible? issue
+    issue.board.visible_columns.any? { |column| column.status_ids.include? issue.status.id }
+  end
+
+  def age_cutoff age = nil
+    @age_cutoff = age.to_i if age
+    @age_cutoff
+  end
+
+  def any_scrum_boards?
+    @any_scrum_boards
   end
 end

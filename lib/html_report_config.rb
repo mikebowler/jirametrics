@@ -60,8 +60,8 @@ class HtmlReportConfig
     execute_chart AgingWorkBarChart.new
   end
 
-  def aging_work_table priority_name = @expedited_priority_name
-    execute_chart AgingWorkTable.new(priority_name)
+  def aging_work_table priority_name = @expedited_priority_name, &block
+    execute_chart AgingWorkTable.new(priority_name, block)
   end
 
   def cycletime_scatterplot &block
