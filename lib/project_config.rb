@@ -7,8 +7,7 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
-    :download_config, :file_configs, :exporter, :data_version, :sprints_by_board,
-    :name
+    :download_config, :file_configs, :exporter, :data_version, :name
   attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: ''
@@ -19,7 +18,6 @@ class ProjectConfig
     @target_path = target_path
     @jira_config = jira_config
     @possible_statuses = StatusCollection.new
-    @sprints_by_board = {}
     @name = name
   end
 
@@ -170,16 +168,16 @@ class ProjectConfig
   def load_sprints
     Dir.foreach(@target_path) do |file|
       next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
-      
+
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
       JSON.parse(File.read("#{target_path}#{file}"))['values'].each do |json|
-        (@sprints_by_board[board_id] ||= []) << Sprint.new(raw: json, timezone_offset: timezone_offset)
+        @all_boards[board_id].sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
     end
 
-    @sprints_by_board.each do |board_id, sprints|
-      sprints.sort_by!(&:id)
+    @all_boards.values.each do |board|
+      board.sprints.sort_by!(&:id)
     end
   end
 

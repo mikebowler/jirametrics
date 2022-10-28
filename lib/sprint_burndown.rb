@@ -42,7 +42,7 @@ class SprintBurndown < ChartBase
   end
 
   def run
-    sprints = sprints_in_time_range
+    sprints = sprints_in_time_range all_boards[board_id]
     return nil if sprints.empty?
 
     change_data_by_sprint = {}

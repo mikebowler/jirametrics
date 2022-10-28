@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :issues, :date_range,
-    :time_range, :sprints_by_board, :data_quality, :possible_statuses, :holiday_dates
+    :time_range, :data_quality, :possible_statuses, :holiday_dates
   attr_writer :aggregated_project
 
   @@chart_counter = 0
@@ -144,8 +144,8 @@ class ChartBase
     end
   end
 
-  def sprints_in_time_range
-    sprints_by_board[board_id]&.select do |sprint|
+  def sprints_in_time_range board
+    board.sprints.select do |sprint|
       time_range.include?(sprint.start_time) # && time_range.include?(sprint.end_time)
     end || []
   end
