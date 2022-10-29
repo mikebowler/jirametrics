@@ -15,9 +15,9 @@ class DownloadConfig
     instance_eval(&@block)
   end
 
-  def project_key key = nil
-    @project_key = key unless key.nil?
-    @project_key
+  def project_key _key = nil
+    raise 'project, filter, and jql directives are no longer supported. See ' \
+      'https://github.com/mikebowler/jira-export/wiki/Deprecated#project-filter-and-jql-are-no-longer-supported-in-the-download-section'
   end
 
   def board_ids *ids
@@ -25,14 +25,12 @@ class DownloadConfig
     @board_ids
   end
 
-  def filter_name filter = nil
-    @filter_name = filter unless filter.nil?
-    @filter_name
+  def filter_name _filter = nil
+    project_key
   end
 
-  def jql query = nil
-    @jql = query unless query.nil?
-    @jql
+  def jql _query = nil
+    project_key
   end
 
   def rolling_date_count count = nil

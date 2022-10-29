@@ -176,7 +176,7 @@ class ProjectConfig
       end
     end
 
-    @all_boards.values.each do |board|
+    @all_boards.each_value do |board|
       board.sprints.sort_by!(&:id)
     end
   end

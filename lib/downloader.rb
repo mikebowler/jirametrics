@@ -4,7 +4,7 @@ require 'cgi'
 require 'json'
 
 class Downloader
-  CURRENT_METADATA_VERSION = 2
+  CURRENT_METADATA_VERSION = 3
 
   attr_accessor :metadata, :quiet_mode # Used only for testing
 
@@ -16,6 +16,7 @@ class Downloader
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
     @json_file_loader = json_file_loader
+    @board_id_to_filter_id = {}
   end
 
   def run
@@ -27,10 +28,15 @@ class Downloader
       return
     end
 
+    board_ids = @download_config.board_ids
+    raise "Board ids must be specified" if board_ids.empty?
+
     remove_old_files
     download_statuses
-    download_board_configuration unless @download_config.board_ids.empty?
-    download_issues
+    board_ids.each do |id|
+      download_board_configuration board_id: id
+      download_issues board_id: id
+    end
     save_metadata
   end
 
@@ -56,12 +62,15 @@ class Downloader
     command
   end
 
-  def download_issues
+  def download_issues board_id:
     path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
-    puts "Creating path #{path}"
-    Dir.mkdir(path) unless Dir.exist?(path)
+    unless Dir.exist?(path)
+      puts "Creating path #{path}"
+      Dir.mkdir(path)
+    end
 
-    escaped_jql = CGI.escape make_jql
+    filter_id = @board_id_to_filter_id[board_id]
+    escaped_jql = CGI.escape make_jql(filter_id: filter_id)
     max_results = 100
     start_at = 0
     total = 1
@@ -73,9 +82,7 @@ class Downloader
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
-        file = issue_json['key']
-        # file += "-#{board_id}" if board_id
-        file += '.json'
+        file = "#{issue_json['key']}-#{board_id}.json"
         write_json(issue_json, File.join(path, file))
       end
 
@@ -108,23 +115,22 @@ class Downloader
     write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
   end
 
-  def download_board_configuration
-    @download_config.board_ids.each do |board_id|
-      command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+  def download_board_configuration board_id:
+    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
 
-      json = JSON.parse call_command(command)
-      exit_if_call_failed json
+    json = JSON.parse call_command(command)
+    exit_if_call_failed json
 
-      @board_configuration = json if @download_config.board_ids.size == 1
+    @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
+    # @board_configuration = json if @download_config.board_ids.size == 1
 
-      file_prefix = @download_config.project_config.file_prefix
-      write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+    file_prefix = @download_config.project_config.file_prefix
+    write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
 
-      download_sprints board_id if json['type'] == 'scrum'
-    end
+    download_sprints board_id: board_id if json['type'] == 'scrum'
   end
 
-  def download_sprints board_id
+  def download_sprints board_id:
     file_prefix = @download_config.project_config.file_prefix
     max_results = 100
     start_at = 0
@@ -175,8 +181,6 @@ class Downloader
   end
 
   def save_metadata
-    # raise "We didn't run any queries. Why are we saving metadata again?" unless @start_date_in_query
-
     @metadata['version'] = CURRENT_METADATA_VERSION
     @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
@@ -216,19 +220,9 @@ class Downloader
     end
   end
 
-  def make_jql today: Date.today, board_configuration: @board_configuration
+  def make_jql filter_id:, today: Date.today
     segments = []
-    segments << "project=#{@download_config.project_key.inspect}" unless @download_config.project_key.nil?
-    segments << "filter=#{@download_config.filter_name.inspect}" unless @download_config.filter_name.nil?
-    segments << @download_config.jql if @download_config.jql
-
-    if segments.empty? && board_configuration
-      # Build the query from the filter in the board configuration
-      filter_id = board_configuration['filter']['id']
-      segments << "filter=#{filter_id}"
-    end
-
-    raise 'Unable to query: Must specify project or filter or jql' if segments.empty?
+    segments << "filter=#{filter_id}"
 
     unless @download_config.rolling_date_count.nil?
       @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date

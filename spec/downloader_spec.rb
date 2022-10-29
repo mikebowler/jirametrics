@@ -52,44 +52,15 @@ describe Downloader do
   end
 
   context 'make_jql' do
-    it 'makes from project' do
-      download_config.project_key 'a'
-      expect(downloader.make_jql).to eql(
-        'project="a"'
-      )
-    end
-
-    it 'makes from project and rolling date count' do
-      download_config.rolling_date_count 90
-      download_config.project_key 'SP'
-      today = Time.parse('2021-08-01 00:00:00 +0000')
-      expected = 'project="SP" AND ((updated >= "2021-05-03 00:00" AND updated <= "2021-08-01 23:59") ' \
-        'OR ((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      expect(downloader.make_jql(today: today)).to eql expected
-    end
-
-    it 'makes from filter' do
-      download_config.filter_name 'a'
-      expect(downloader.make_jql).to eql(
-        'filter="a"'
-      )
-    end
-
-    it 'makes from jql' do
-      download_config.jql 'project=foo'
-      expect(downloader.make_jql).to eql 'project=foo'
-    end
-
     it 'should only pull deltas if we have a previous download' do
       downloader.metadata.clear
       downloader.metadata['date_end'] = Date.parse('2021-07-20')
 
       download_config.rolling_date_count 90
-      download_config.project_key 'SP'
       today = Time.parse('2021-08-01')
-      expected = 'project="SP" AND ((updated >= "2021-07-20 00:00" AND updated <= "2021-08-01 23:59") OR ' \
+      expected = 'filter=5 AND ((updated >= "2021-07-20 00:00" AND updated <= "2021-08-01 23:59") OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      expect(downloader.make_jql(today: today)).to eql expected
+      expect(downloader.make_jql(today: today, filter_id: 5)).to eql expected
 
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
@@ -99,13 +70,9 @@ describe Downloader do
       expected = 'filter=5 AND ((updated >= "2021-05-03 00:00" AND updated <= "2021-08-01 23:59") OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
 
-      jql = downloader.make_jql(today: Time.parse('2021-08-01'), board_configuration: { 'filter' => { 'id' => 5 } })
+      jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
       expect(jql).to eql expected
     end
 
-    it 'should fail if nothing else set' do
-      download_config.rolling_date_count 90
-      expect { downloader.make_jql }.to raise_error 'Unable to query: Must specify project or filter or jql'
-    end
   end
 end
