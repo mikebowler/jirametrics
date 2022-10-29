@@ -91,7 +91,6 @@ class AgingWorkTable < ChartBase
 
   def sprints_text issue
     sprint_ids = []
-    sprints = issue.board.sprints
 
     issue.changes.each do |change|
       next unless change.sprint?
@@ -100,7 +99,7 @@ class AgingWorkTable < ChartBase
     end
     sprint_ids.flatten!
 
-    sprints.select { |s| sprint_ids.include? s.id }.collect do |sprint|
+    issue.board.sprints.select { |s| sprint_ids.include? s.id }.collect do |sprint|
       icon_text = nil
       if sprint.active?
         icon_text = icon_span title: 'Active sprint', icon: '➡️'
