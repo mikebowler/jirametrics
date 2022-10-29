@@ -227,8 +227,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :stopped_before_started,
-          "The stopped time '2022-01-03 00:00:00 +0000' is before the started time '2022-01-04 00:00:00 +0000'",
-          nil, nil
+          "The stopped time '2022-01-03 00:00:00 +0000' is before the started time '2022-01-04 00:00:00 +0000'"
         ]
       ]
     end
@@ -291,9 +290,7 @@ describe DataQualityReport do
         [
           :issue_not_started_but_subtasks_have,
           "Started subtask: <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>SP-2</a>" \
-            " (<span style='color: blue'>Selected for Development</span>) \"Update existing event\"",
-          nil,
-          nil
+            " (<span style='color: blue'>Selected for Development</span>) \"Update existing event\""
         ]
       ]
     end
@@ -343,7 +340,7 @@ describe DataQualityReport do
       )
       subject.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq [
-        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
       ]
     end
 
@@ -358,7 +355,7 @@ describe DataQualityReport do
       )
       subject.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq [
-        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
       ]
     end
 
@@ -373,7 +370,7 @@ describe DataQualityReport do
       )
       subject.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq [
-        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days', nil, nil]
+        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
       ]
     end
 
@@ -420,7 +417,7 @@ describe DataQualityReport do
       subject.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
 
       expect(entry1.problems).to eq [
-        [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"', nil, nil]
+        [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"']
       ]
       expect(entry2.problems).to be_empty
     end

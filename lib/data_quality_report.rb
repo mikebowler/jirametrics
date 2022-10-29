@@ -14,8 +14,8 @@ class DataQualityReport < ChartBase
       @problems = []
     end
 
-    def report problem_key: nil, detail: nil, problem: nil, impact: nil
-      @problems << [problem_key, detail, problem, impact]
+    def report problem_key: nil, detail: nil
+      @problems << [problem_key, detail]
     end
   end
 
