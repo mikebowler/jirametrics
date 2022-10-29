@@ -91,7 +91,7 @@ class AgingWorkTable < ChartBase
 
   def sprints_text issue
     sprint_ids = []
-    sprints = sprints_by_board[issue.board.id]
+    sprints = issue.board.sprints
 
     issue.changes.each do |change|
       next unless change.sprint?
