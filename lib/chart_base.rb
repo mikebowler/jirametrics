@@ -90,7 +90,7 @@ class ChartBase
     end
   end
 
-  def collapsible_issues_panel issue_descriptions
+  def collapsible_issues_panel issue_descriptions, *args
     link_id = next_id
     issues_id = next_id
 

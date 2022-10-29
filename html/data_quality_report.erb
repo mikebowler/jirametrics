@@ -120,7 +120,7 @@
 %>
   <p>
     <span class="quality_note_bullet">⮕</span> For <%= label_issues problems.size %>, we have an issue that shows up on more than one board. This could result in more data points showing up on a chart then there really should be.
-    <%= collapsible_issues_panel problems %>
+    <%= collapsible_issues_panel problems, :hide_board_column %>
   </p>
 <% 
   end

@@ -68,7 +68,7 @@ class DataQualityReport < ChartBase
     result = []
     @entries.each do |entry|
       entry.problems.each do |problem_key, detail|
-        result << [entry.issue, detail] if problem_key == key
+        result << [entry.issue, detail, key] if problem_key == key
       end
     end
     result

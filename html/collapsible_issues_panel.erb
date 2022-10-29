@@ -6,10 +6,14 @@
       <th>Type</th>
       <th>Summary</th>
       <th>Description</th>
+      <% unless args.include? :hide_board_column %>
+        <th>Board</th>
+      <% end %>
+
     </tr>
   </thead>
   <tbody>
-    <% issue_descriptions.each do |issue, description| %>
+    <% issue_descriptions.each do |issue, description, problem_key| %>
       <tr>
         <td><%= link_to_issue issue %>
           <% if aggregated_project? %>
@@ -19,6 +23,9 @@
         <td><%= issue.type %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= description %></td>
+        <% unless args.include? :hide_board_column %>
+          <td><%= issue.board.name %></td>
+        <% end %>
       </tr>
     <% end %>
   </tbody>
