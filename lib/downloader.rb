@@ -215,7 +215,6 @@ class Downloader
     Dir.foreach path do |file|
       next unless file =~ /\.json$/
 
-      # puts "--Deleting #{File.join(path, file)}"
       File.unlink File.join(path, file)
     end
   end
