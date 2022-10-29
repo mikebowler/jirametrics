@@ -22,7 +22,7 @@ describe DataQualityReport do
     subject = DataQualityReport.new({})
     subject.issues = [issue10, issue1]
     subject.possible_statuses = load_complete_sample_statuses
-
+    subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
     subject
   end
 
@@ -35,6 +35,30 @@ describe DataQualityReport do
     ]
 
     expect(subject.entries_with_problems).to be_empty
+  end
+
+  it 'should ignore entries that finished before the range' do
+    board.cycletime = mock_cycletime_config stub_values: [
+      [issue1, nil, to_time('2021-05-01')],
+      [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
+    ]
+    subject.initialize_entries
+
+    expect(subject.testable_entries).to eq [
+      ['2021-08-29 00:00:00 +0000', '2021-09-06 00:00:00 +0000', issue10]
+    ]
+  end
+
+  it 'should ignore entries that started after the range' do
+    board.cycletime = mock_cycletime_config stub_values: [
+      [issue1, to_time('2022-01-01'), nil],
+      [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
+    ]
+    subject.initialize_entries
+
+    expect(subject.testable_entries).to eq [
+      ['2021-08-29 00:00:00 +0000', '2021-09-06 00:00:00 +0000', issue10]
+    ]
   end
 
   it 'should identify items with completed but not started' do

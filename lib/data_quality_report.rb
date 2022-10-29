@@ -92,12 +92,13 @@ class DataQualityReport < ChartBase
   def initialize_entries
     @entries = @issues.collect do |issue|
       cycletime = issue.board.cycletime
-      Entry.new(
-        started: cycletime.started_time(issue),
-        stopped: cycletime.stopped_time(issue),
-        issue: issue
-      )
-    end
+      started = cycletime.started_time(issue)
+      stopped = cycletime.stopped_time(issue)
+      next if stopped && stopped < time_range.begin
+      next if started && started > time_range.end
+
+      Entry.new started: started, stopped: stopped, issue: issue
+    end.compact
 
     @entries.sort! do |a, b|
       a.issue.key =~ /.+-(\d+)$/
