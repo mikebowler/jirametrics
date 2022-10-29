@@ -36,12 +36,8 @@ class DataQualityReport < ChartBase
   end
 
   def run
-    # TODO: For the moment we just disable the quality report for aggregated projects. 
-    # return '' if aggregated_project?
-
     initialize_entries
     backlog_statuses_by_board = {}
-    # backlog_statuses = @possible_statuses.expand_statuses current_board.backlog_statuses
 
     @entries.each do |entry|
       board = entry.issue.board
@@ -59,6 +55,8 @@ class DataQualityReport < ChartBase
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
       scan_for_discarded_data entry: entry
     end
+
+    scan_for_issues_on_multiple_boards entries: @entries
 
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
@@ -285,5 +283,18 @@ class DataQualityReport < ChartBase
       problem_key: :discarded_changes,
       detail: message
     )
+  end
+
+  def scan_for_issues_on_multiple_boards entries:
+    grouped_entries = entries.group_by { |entry| entry.issue.key }
+    grouped_entries.each_value do |entry_list|
+      next if entry_list.size == 1
+
+      board_names = entry_list.collect { |entry| entry.issue.board.name.inspect }
+      entry_list.first.report(
+        problem_key: :issue_on_multiple_boards,
+        detail: "Found on boards: #{board_names.join(', ')}"
+      )
+    end
   end
 end

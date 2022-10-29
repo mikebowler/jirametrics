@@ -390,4 +390,39 @@ describe DataQualityReport do
       expect(entry.problems).to be_empty
     end
   end
+
+  context 'scan_for_issues_on_multiple_boards' do
+    it 'should not report errors when no duplicates' do
+      entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
+      entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue2)
+      subject.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
+
+      expect(entry1.problems).to be_empty
+      expect(entry2.problems).to be_empty
+    end
+
+    it 'should not report errors when no duplicates' do
+      board2 = Board.new raw: {
+        'name' => 'bar',
+        'type' => 'kanban',
+        'columnConfig' => {
+          'columns' => [
+            {
+              'name' => 'Backlog',
+              'statuses' => []
+            }
+          ]
+        }
+      }
+      issue1a = load_issue 'SP-1', board: board2
+      entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
+      entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1a)
+      subject.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
+
+      expect(entry1.problems).to eq [
+        [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"', nil, nil]
+      ]
+      expect(entry2.problems).to be_empty
+    end
+  end
 end
