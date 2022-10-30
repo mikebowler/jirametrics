@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Object
-  def deprecated date:, message:
+  def deprecated message:, date: nil
     text = String.new
     text << 'Deprecated: '
     text << message

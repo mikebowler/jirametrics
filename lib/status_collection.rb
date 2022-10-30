@@ -53,10 +53,15 @@ class StatusCollection
     end
   end
 
+  def find_by_name name
+    find { |status| status.name == name }
+  end
+
   def find(&block)= @list.find(&block)
   def collect(&block) = @list.collect(&block)
   def each(&block) = @list.each(&block)
   def select(&block) = @list.select(&block)
   def <<(arg) = @list << arg
   def empty? = @list.empty?
+  def clear = @list.clear
 end

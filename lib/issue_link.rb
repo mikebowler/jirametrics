@@ -12,7 +12,9 @@ class IssueLink
   end
 
   def other_issue
-    @other_issue = Issue.new(raw: (inward? ? raw['inwardIssue'] : raw['outwardIssue'])) if @other_issue.nil?
+    if @other_issue.nil?
+      @other_issue = Issue.new(raw: (inward? ? raw['inwardIssue'] : raw['outwardIssue']), board: origin.board)
+    end
     @other_issue
   end
 

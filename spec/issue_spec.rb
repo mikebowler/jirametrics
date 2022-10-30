@@ -2,22 +2,6 @@
 
 require './spec/spec_helper'
 
-def mock_config
-  exporter = Exporter.new
-  project = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-  project.file_prefix 'sample'
-  project.load_all_boards
-
-  project.status_category_mapping status: 'Backlog', category: 'ready'
-  project.status_category_mapping status: 'Selected for Development', category: 'ready'
-  project.status_category_mapping status: 'In Progress', category: 'in-flight'
-  project.status_category_mapping status: 'Review', category: 'in-flight'
-  project.status_category_mapping status: 'Done', category: 'finished'
-
-  file = FileConfig.new project_config: project, block: nil
-  ColumnsConfig.new file_config: file, block: nil
-end
-
 def empty_issue created:
   Issue.new(
     raw: {
@@ -33,11 +17,24 @@ def empty_issue created:
           'displayName' => 'Tolkien'
         }
       }
-    }
+    },
+    board: sample_board
   )
 end
 
 describe Issue do
+  let(:board) do
+    board = sample_board
+    statuses = board.possible_statuses
+    statuses.clear
+    statuses << Status.new(name: 'Backlog', id: 1, category_name: 'ready', category_id: 2)
+    statuses << Status.new(name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4)
+    statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8)
+    statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10)
+    board
+  end
+
   it 'gets key' do
     issue = load_issue 'SP-2'
     expect(issue.key).to eql 'SP-2'
@@ -70,7 +67,7 @@ describe Issue do
         }
       }
     }
-    issue = Issue.new raw: raw
+    issue = Issue.new raw: raw, board: sample_board
     expect([issue.created, issue.updated]).to eq [
       Time.parse('2021-08-29T18:00:00+00:00'),
       Time.parse('2021-09-29T18:00:00+00:00')
@@ -147,7 +144,7 @@ describe Issue do
         }
       }
     }
-    issue = Issue.new raw: raw
+    issue = Issue.new raw: raw, board: sample_board
     expect(issue.first_time_not_in_status('BrandNew!')).to be_nil
   end
 
@@ -162,8 +159,15 @@ describe Issue do
   end
 
   it 'first time in status category' do
-    issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status_category(mock_config, 'finished').to_s).to eq '2021-09-06 04:34:26 +0000'
+    issue = load_issue 'SP-10', board: board
+    issue.board.possible_statuses << Status.new(
+      name: 'Done',
+      id: 1,
+      category_name: 'finished',
+      category_id: 2
+    )
+
+    expect(issue.first_time_in_status_category('finished').to_s).to eq '2021-09-06 04:34:26 +0000'
   end
 
   it 'first status change after created' do
@@ -187,7 +191,7 @@ describe Issue do
 
       }
     }
-    issue = Issue.new raw: raw
+    issue = Issue.new raw: raw, board: sample_board
     expect(issue.first_status_change_after_created).to be_nil
   end
 
@@ -236,39 +240,39 @@ describe Issue do
 
   context 'currently_in_status_category' do
     it 'item moved to done and then back to in progress' do
-      issue = load_issue 'SP-10'
+      issue = load_issue 'SP-10', board: board
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue.currently_in_status_category(mock_config, 'finished')).to be_nil
+      expect(issue.currently_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue = load_issue 'SP-10'
+      issue = load_issue 'SP-10', board: board
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.currently_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      expect(issue.currently_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
   end
 
   context 'still_in_status_category' do
     it 'item moved to done and then back to in progress' do
-      issue = load_issue 'SP-10'
+      issue = load_issue 'SP-10', board: board
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue.still_in_status_category(mock_config, 'finished')).to be_nil
+      expect(issue.still_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue = load_issue 'SP-10'
+      issue = load_issue 'SP-10', board: board
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      expect(issue.still_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
 
     it 'item moved to done twice should return first time only' do
-      issue = load_issue 'SP-10'
+      issue = load_issue 'SP-10', board: board
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
-      expect(issue.still_in_status_category(mock_config, 'finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      expect(issue.still_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
     end
   end
 
@@ -511,7 +515,8 @@ describe Issue do
             'hierarchyLevel' => 0
           }
         }
-      }
+      },
+      board: sample_board
     end
 
     it 'gets key' do

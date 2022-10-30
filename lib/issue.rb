@@ -5,7 +5,7 @@ require 'time'
 class Issue
   attr_reader :changes, :raw, :subtasks, :board
 
-  def initialize raw:, timezone_offset: '+00:00', board: nil
+  def initialize raw:, board:, timezone_offset: '+00:00'
     @raw = raw
     @timezone_offset = timezone_offset
     @subtasks = []
@@ -140,10 +140,10 @@ class Issue
   end
 
   # If it ever entered one of these categories and it's still there then what was the last time it entered
-  def still_in_status_category config, *category_names
+  def still_in_status_category *category_names
     still_in do |change|
-      category = config.file_config.project_config.category_for status_name: change.value
-      category_names.include? category
+      status = find_status_by_name change.value
+      category_names.include? status.category_name
     end
   end
 
@@ -158,21 +158,28 @@ class Issue
   end
 
   # Are we currently in this status category? If yes, then return the time of the most recent status change.
-  def currently_in_status_category config, *category_names
+  def currently_in_status_category *category_names
     change = most_recent_status_change
-    category = config.file_config.project_config.category_for status_name: change.value
-    return change.time if category_names.include? category
+    status = find_status_by_name change.value
+    return change.time if status && category_names.include?(status.category_name)
+  end
+
+  def find_status_by_name name
+    status = board.possible_statuses.find_by_name(name)
+    return status if status
+
+    raise "Status name #{name.inspect} not found in #{board.possible_statuses.collect(&:name).inspect}"
   end
 
   def first_status_change_after_created
     @changes.find { |change| change.status? && change.artificial? == false }&.time
   end
 
-  def first_time_in_status_category config, *category_names
+  def first_time_in_status_category *category_names
     @changes.each do |change|
       next unless change.status?
 
-      category = config.file_config.project_config.category_for status_name: change.value
+      category = board.possible_statuses.find_by_name(change.value).category_name
       return change.time if category_names.include? category
     end
     nil

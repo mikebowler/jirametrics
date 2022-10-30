@@ -7,23 +7,6 @@ describe ProjectConfig do
   let(:target_path) { 'spec/testdata/' }
   let(:subject) { ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil }
 
-  context 'category_for' do
-    it "where mapping doesn't exist" do
-      subject.file_prefix 'sample'
-      subject.status_category_mapping status: 'Doing', category: 'In progress'
-      subject.status_category_mapping status: 'Done', category: 'Done'
-      subject.load_all_boards
-      expect { subject.category_for status_name: 'Foo' }
-        .to raise_error(/^Could not determine categories for some/)
-    end
-
-    it 'where mapping does exist' do
-      subject.file_prefix 'sample'
-      subject.status_category_mapping status: 'Doing', category: 'InProgress'
-      expect(subject.category_for(status_name: 'Doing')).to eql 'InProgress'
-    end
-  end
-
   context 'board_configuration' do
     it 'should load' do
       subject.file_prefix 'sample'

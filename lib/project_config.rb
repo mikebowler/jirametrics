@@ -19,6 +19,7 @@ class ProjectConfig
     @jira_config = jira_config
     @possible_statuses = StatusCollection.new
     @name = name
+    @board_configs = []
   end
 
   def evaluate_next_level
@@ -34,9 +35,13 @@ class ProjectConfig
     end
     anonymize_data if @anonymizer_needed
 
+    @board_configs.each do |board_config|
+      board_config.run
+    end
     @file_configs.each do |file_config|
       file_config.run
     end
+
   end
 
   def aggregated_project?
@@ -62,6 +67,11 @@ class ProjectConfig
     return if @exporter.downloading?
 
     @aggregate_config.evaluate_next_level
+  end
+
+  def board id:, &block
+    config = BoardConfig.new(id: id, block: block, project_config: self)
+    @board_configs << config
   end
 
   def file_prefix prefix = nil
@@ -92,16 +102,10 @@ class ProjectConfig
   end
 
   def load_board board_id:, filename:
-    (@all_boards ||= {})[board_id] = Board.new(
+    board = Board.new(
       raw: JSON.parse(File.read(filename)), possible_statuses: @possible_statuses
     )
-  end
-
-  def category_for status_name:
-    status = find_status name: status_name
-    raise_with_message_about_missing_category_information if status.nil? || status.category_name.nil?
-
-    status.category_name
+    (@all_boards ||= {})[board_id] = board
   end
 
   def raise_with_message_about_missing_category_information
@@ -196,7 +200,7 @@ class ProjectConfig
   end
 
   def find_status name:
-    @possible_statuses.find { |status| status.name == name }
+    @possible_statuses.find_by_name name
   end
 
   def load_project_metadata

@@ -16,7 +16,17 @@ def make_test_filename basename
   "spec/tmp/#{basename}"
 end
 
+def sample_board
+  statuses = StatusCollection.new
+  statuses << Status.new(name: 'Backlog', id: 1, category_name: 'To Do', category_id: 2)
+  statuses << Status.new(name: 'Doing', id: 3, category_name: 'In Progress', category_id: 4)
+  statuses << Status.new(name: 'Done', id: 5, category_name: 'Done', category_id: 6)
+
+  Board.new raw: JSON.parse(File.read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
+end
+
 def load_issue key, board: nil
+  board = sample_board if board.nil?
   Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")), board: board)
 end
 
@@ -84,6 +94,7 @@ def mock_cycletime_config stub_values: []
     unless line[0].is_a? Issue
       raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
     end
+
     line[1] = Time.parse(line[1]) if line[1].is_a? String
     line[2] = Time.parse(line[2]) if line[2].is_a? String
   end

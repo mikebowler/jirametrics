@@ -25,10 +25,6 @@ class CycleTimeConfig
     @stop_at
   end
 
-  def file_config
-    @parent_config.file_config
-  end
-
   def in_progress? issue
     started_time(issue) && stopped_time(issue).nil?
   end
