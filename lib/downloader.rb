@@ -41,8 +41,12 @@ class Downloader
 
   def find_board_ids
     ids = @download_config.project_config.board_configs.collect(&:id)
-    ids = @download_config.board_ids if ids.empty?
-    raise "Board ids must be specified" if ids.empty?
+    if ids.empty?
+      deprecated 'board_ids in the download block have been deprecated. See https://github.com/mikebowler/jira-export/wiki/Deprecated'
+      ids = @download_config.board_ids
+    end
+    raise 'Board ids must be specified' if ids.empty?
+
     ids
   end
 
