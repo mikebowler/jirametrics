@@ -21,6 +21,7 @@ class DownloadConfig
   end
 
   def board_ids *ids
+    deprecated message: 'board_ids in the download block are deprecated. See https://github.com/mikebowler/jira-export/wiki/Deprecated'
     @board_ids = ids unless ids.empty?
     @board_ids
   end
