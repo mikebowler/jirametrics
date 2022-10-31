@@ -14,13 +14,12 @@ class BoardConfig
   end
 
   def cycletime label = nil, &block
-    @project_config.all_boards.each do |_id, board|
-      if board.cycletime
-        raise 'Cycletime has already been set. Did you also set it inside the html_report? If so, remove it from there.'
-      end
-
-      board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
+    board = @project_config.all_boards[id]
+    if board.cycletime
+      raise "Cycletime has already been set for board #{id}. Did you also set it inside the html_report? " \
+        'If so, remove it from there.'
     end
-  end
 
+    board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
+  end
 end
