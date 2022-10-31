@@ -7,7 +7,7 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
-    :download_config, :file_configs, :exporter, :data_version, :name
+    :download_config, :file_configs, :exporter, :data_version, :name, :board_configs
   attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: ''

@@ -28,16 +28,22 @@ class Downloader
       return
     end
 
-    board_ids = @download_config.board_ids
-    raise "Board ids must be specified" if board_ids.empty?
+    # board_ids = @download_config.board_ids
 
     remove_old_files
     download_statuses
-    board_ids.each do |id|
+    find_board_ids.each do |id|
       download_board_configuration board_id: id
       download_issues board_id: id
     end
     save_metadata
+  end
+
+  def find_board_ids
+    ids = @download_config.project_config.board_configs.collect(&:id)
+    ids = @download_config.board_ids if ids.empty?
+    raise "Board ids must be specified" if ids.empty?
+    ids
   end
 
   def load_jira_config jira_config
