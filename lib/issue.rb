@@ -154,14 +154,18 @@ class Issue
   # Are we currently in this status? If yes, then return the time of the most recent status change.
   def currently_in_status *status_names
     change = most_recent_status_change
-    return change.time if change.matches_status status_names
+    return false if change.nil?
+
+    change.time if change.matches_status status_names
   end
 
   # Are we currently in this status category? If yes, then return the time of the most recent status change.
   def currently_in_status_category *category_names
     change = most_recent_status_change
+    return false if change.nil?
+
     status = find_status_by_name change.value
-    return change.time if status && category_names.include?(status.category_name)
+    change.time if status && category_names.include?(status.category_name)
   end
 
   def find_status_by_name name
