@@ -185,7 +185,7 @@ class HtmlReportConfig
     @file_config.project_config.name
   end
 
-  def board_ids
+  def boards
     @file_config.project_config.board_ids.collect(&:id).collect { |id| find_board id }
   end
 end
