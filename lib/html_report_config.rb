@@ -180,4 +180,12 @@ class HtmlReportConfig
   def find_board id
     @file_config.project_config.all_boards[id]
   end
+
+  def project_name
+    @file_config.project_config.name
+  end
+
+  def board_ids
+    @file_config.project_config.board_ids.collect(&:id).collect { |id| find_board id }
+  end
 end
