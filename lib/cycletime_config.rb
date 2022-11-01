@@ -58,6 +58,12 @@ class CycleTimeConfig
   end
 
   def possible_statuses
-    parent_config.file_config.project_config.possible_statuses
+    if parent_config.is_a? BoardConfig
+      project_config = parent_config.project_config
+    else
+      # TODO: This will go away when cycletimes are no longer supported inside html_reports
+      project_config = parent_config.file_config.project_config
+    end
+    project_config.possible_statuses
   end
 end
