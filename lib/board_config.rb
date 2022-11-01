@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BoardConfig
-  attr_reader :id
+  attr_reader :id, :project_config
 
   def initialize id:, block:, project_config:
     @id = id
