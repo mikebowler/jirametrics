@@ -6,7 +6,8 @@ describe Sprint do
   let(:subject) do
     SprintBurndown.new.tap do |chart|
       # Larger than the sprint
-      chart.date_range = Date.parse('2022-03-01')..Date.parse('2022-04-11')
+      chart.time_range = to_time('2022-03-01')..to_time('2022-04-11T23:59:59 +00:00')
+      chart.date_range = chart.time_range.begin.to_date..chart.time_range.end.to_date
     end
   end
 
@@ -105,7 +106,8 @@ describe Sprint do
     it 'should handle an empty active sprint' do
       change_data = []
       expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' }
+        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
+        { x: '2022-04-11T23:59:59+0000', y: 0.0, title: 'Sprint still active. 0.0 points still in progress.' }
       ]
     end
 
@@ -151,7 +153,8 @@ describe Sprint do
       expect(subject.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
         { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0 points to 5.0 points' },
-        { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' }
+        { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' },
+        { x: '2022-04-11T23:59:59+0000', y: 21.0, title: 'Sprint still active. 21.0 points still in progress.' }
       ]
     end
 
@@ -274,7 +277,8 @@ describe Sprint do
     it 'should handle an empty active sprint' do
       change_data = []
       expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' }
+        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
+        { x: '2022-04-11T23:59:59+0000', y: 0, title: 'Sprint still active. 0 issues in progress.' }
       ]
     end
 
@@ -303,7 +307,8 @@ describe Sprint do
       ]
       expect(subject.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
         { x: '2022-03-26T00:00:00+0000', y: 1.0, title: 'Sprint started with 1 stories' },
-        { x: '2022-03-28T00:00:00+0000', y: 2.0, title: 'SP-2 Added to sprint' }
+        { x: '2022-03-28T00:00:00+0000', y: 2.0, title: 'SP-2 Added to sprint' },
+        { x: '2022-04-11T23:59:59+0000', y: 2.0, title: 'Sprint still active. 2 issues in progress.' }
       ]
     end
 

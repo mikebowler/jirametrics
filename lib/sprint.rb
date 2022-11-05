@@ -13,6 +13,11 @@ class Sprint
   def id = @raw['id']
   def active? = (@raw['state'] == 'active')
 
+  def completed_at? time
+    completed_at = completed_time
+    completed_at && completed_at <= time
+  end
+
   def start_time
     parse_time(@raw['activatedDate'] || @raw['startDate'])
   end

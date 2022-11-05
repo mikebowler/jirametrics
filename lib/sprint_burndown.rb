@@ -239,6 +239,14 @@ class SprintBurndown < ChartBase
       summary_stats.remaining = story_points
     end
 
+    unless sprint.completed_at?(time_range.end)
+      data_set << {
+        y: story_points,
+        x: chart_format(time_range.end),
+        title: "Sprint still active. #{story_points} points still in progress."
+      }
+    end
+
     @summary_stats[sprint] = summary_stats
     data_set
   end
@@ -310,6 +318,15 @@ class SprintBurndown < ChartBase
         title: "Sprint ended with #{issues_currently_in_sprint.size} stories unfinished"
       }
       summary_stats.remaining = issues_currently_in_sprint.size
+    end
+
+    unless sprint.completed_at?(time_range.end)
+      # If the sprint is still active then we draw one final line to the end of the time range
+      data_set << {
+        y: issues_currently_in_sprint.size,
+        x: chart_format(time_range.end),
+        title: "Sprint still active. #{issues_currently_in_sprint.size} issues in progress."
+      }
     end
 
     @summary_stats[sprint] = summary_stats
