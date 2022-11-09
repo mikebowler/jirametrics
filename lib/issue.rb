@@ -303,6 +303,22 @@ class Issue
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 
+  # Return the last time there was any activity on this ticket. Starting from "now" and going backwards
+  def last_activity now: Time.now
+    last_change = @changes.find do |change|
+      change.artificial? == false && change.time <= now
+    end
+
+    result = last_change&.time
+
+    @subtasks.each do |subtask|
+      subtask_last_activity = subtask.last_activity now: now
+      result = subtask_last_activity if result.nil? || subtask_last_activity < result
+    end
+
+    result
+  end
+
   def issue_links
     if @issue_links.nil?
       @issue_links = @raw['fields']['issuelinks'].collect do |issue_link|

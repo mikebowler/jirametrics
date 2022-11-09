@@ -539,4 +539,36 @@ describe Issue do
       )
     end
   end
+
+  context 'last_activity' do
+    let(:issue) { empty_issue created: '2020-01-01' }
+
+    it 'should handle no activity, ever' do
+      expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
+    end
+
+    it 'should pick oldest change' do
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02T00:00:00+00:00')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03T00:00:00+00:00')
+      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-02')
+    end
+
+    it 'should handle subtask with no changes' do
+      subtask = empty_issue created: '2020-01-02'
+      issue.subtasks << subtask
+      expect(issue.last_activity now: to_time('2021-01-01')).to be_nil
+    end
+
+    it 'should handle multiple subtasks, each with changes' do
+      subtask1 = empty_issue created: '2020-01-02'
+      subtask1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03T00:00:00+00:00')
+      issue.subtasks << subtask1
+
+      subtask2 = empty_issue created: '2020-01-02'
+      subtask2.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-04T00:00:00+00:00')
+      issue.subtasks << subtask2
+
+      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-03')
+    end
+  end
 end
