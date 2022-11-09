@@ -62,10 +62,10 @@ describe Sprint do
       issue.changes << mock_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
-          action: :enter_sprint, time: Time.parse('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
+          action: :enter_sprint, time: to_time('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
         ),
         SprintIssueChangeData.new(
-          action: :leave_sprint, time: Time.parse('2022-01-04'), value: 0.0, issue: issue, story_points: 0.0
+          action: :leave_sprint, time: to_time('2022-01-04'), value: 0.0, issue: issue, story_points: 0.0
         )
       ]
     end
@@ -84,16 +84,16 @@ describe Sprint do
 
       expect(subject.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
-          action: :enter_sprint, time: Time.parse('2022-01-01'), value: 0.0, issue: issue, story_points: 0.0
+          action: :enter_sprint, time: to_time('2022-01-01'), value: 0.0, issue: issue, story_points: 0.0
         ),
         SprintIssueChangeData.new(
-          action: :story_points, time: Time.parse('2022-01-02'), value: 2.0, issue: issue, story_points: 2.0
+          action: :story_points, time: to_time('2022-01-02'), value: 2.0, issue: issue, story_points: 2.0
         ),
         SprintIssueChangeData.new(
-          action: :story_points, time: Time.parse('2022-01-04'), value: 2.0, issue: issue, story_points: 4.0
+          action: :story_points, time: to_time('2022-01-04'), value: 2.0, issue: issue, story_points: 4.0
         ),
         SprintIssueChangeData.new(
-          action: :issue_stopped, time: Time.parse('2022-01-05'), value: -4.0, issue: issue, story_points: 4.0
+          action: :issue_stopped, time: to_time('2022-01-05'), value: -4.0, issue: issue, story_points: 4.0
         )
       ]
     end

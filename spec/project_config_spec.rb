@@ -102,7 +102,7 @@ describe ProjectConfig do
 
       subject.discard_changes_before status_becomes: 'backlog'
       expect(issue1.changes.collect(&:time)).to eq [
-        Time.parse('2022-01-03')
+        to_time('2022-01-03')
       ]
     end
 
@@ -116,7 +116,7 @@ describe ProjectConfig do
       subject.load_all_boards
       subject.issues << issue1
 
-      subject.discard_changes_before { |_issue| Time.parse('2022-01-02T09:00:00') }
+      subject.discard_changes_before { |_issue| to_time('2022-01-02T09:00:00') }
       expect(issue1.changes.collect(&:time)).to eq []
     end
   end

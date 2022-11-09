@@ -8,7 +8,7 @@ def empty_issue created:
       'key' => 'SP-1',
       'changelog' => { 'histories' => [] },
       'fields' => {
-        'created' => created,
+        'created' => to_time(created).to_s,
         'status' => {
           'name' => 'BrandNew!',
           'id' => '999'
@@ -451,25 +451,25 @@ describe Issue do
       issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
 
       expect([issue.first_resolution, issue.last_resolution]).to eq [
-        Time.parse('2021-10-03T01:00:00+00:00'),
-        Time.parse('2021-10-07T01:00:00+00:00')
+        to_time('2021-10-03T01:00:00+00:00'),
+        to_time('2021-10-07T01:00:00+00:00')
       ]
     end
 
     it 'should handle the case where there are no resolutions' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue = empty_issue created: '2021-10-01'
       expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
     end
   end
 
   context 'resolution' do
     it 'should return nil when not resolved' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue = empty_issue created: '2021-10-01'
       expect(issue.resolution).to be_nil
     end
 
     it 'should work' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
+      issue = empty_issue created: '2021-10-01'
       issue.raw['fields']['resolution'] = { 'name' => 'Done' }
       expect(issue.resolution).to eq 'Done'
     end
@@ -547,28 +547,37 @@ describe Issue do
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
 
-    it 'should pick oldest change' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02T00:00:00+00:00')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03T00:00:00+00:00')
-      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-02')
+    it 'should pick most recent change' do
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
+      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-03')
     end
 
     it 'should handle subtask with no changes' do
       subtask = empty_issue created: '2020-01-02'
       issue.subtasks << subtask
-      expect(issue.last_activity now: to_time('2021-01-01')).to be_nil
+      expect(issue.last_activity now: to_time('2021-02-01')).to eq to_time('2020-01-02')
     end
 
     it 'should handle multiple subtasks, each with changes' do
       subtask1 = empty_issue created: '2020-01-02'
-      subtask1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03T00:00:00+00:00')
+      subtask1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
       issue.subtasks << subtask1
 
       subtask2 = empty_issue created: '2020-01-02'
-      subtask2.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-04T00:00:00+00:00')
+      subtask2.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-04')
       issue.subtasks << subtask2
 
-      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-03')
+      expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-04')
+    end
+
+    it 'should handle no activity on the subtask but activity on the main issue' do
+      subtask = empty_issue created: '2020-01-01'
+      issue.subtasks << subtask
+
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02')
+
+      expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
   end
 end

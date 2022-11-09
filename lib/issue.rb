@@ -304,16 +304,16 @@ class Issue
   end
 
   # Return the last time there was any activity on this ticket. Starting from "now" and going backwards
+  # Returns nil if there was no activity before that time.
   def last_activity now: Time.now
-    last_change = @changes.find do |change|
-      change.artificial? == false && change.time <= now
-    end
+    result = @changes.reverse.find { |change| change.time <= now }&.time
 
-    result = last_change&.time
+    # The only condition where this could be nil is if "now" is before creation
+    return nil if result.nil?
 
     @subtasks.each do |subtask|
       subtask_last_activity = subtask.last_activity now: now
-      result = subtask_last_activity if result.nil? || subtask_last_activity < result
+      result = subtask_last_activity if subtask_last_activity && subtask_last_activity > result
     end
 
     result
