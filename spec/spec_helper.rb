@@ -88,9 +88,11 @@ def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id
   }
 end
 
-# Pass in a list of [issue, start_time, stop_time] tuples
 def mock_cycletime_config stub_values: []
+  raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
+
   stub_values.each do |line|
+
     unless line[0].is_a? Issue
       raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
     end

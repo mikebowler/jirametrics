@@ -12,6 +12,8 @@ class AgingWorkTable < ChartBase
     @expedited_icon = '🔥'
     @stalled_icon = '🟧'
     @stalled_threshold = 5
+    @dead_icon = '⬛'
+    @dead_threshold = 45
     @age_cutoff = 0
 
     instance_eval(&block) if block
@@ -60,11 +62,22 @@ class AgingWorkTable < ChartBase
   end
 
   def blocked_text issue
-    if issue.blocked_on_date? @today
-      icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon
-    elsif issue.stalled_on_date?(@today, @stalled_threshold) && issue.board.cycletime.started_time(issue)
+    return icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon if issue.blocked_on_date? @today
+
+    started_time = issue.board.cycletime.started_time(issue)
+    return nil if started_time.nil? || started_time.to_date >= @today
+
+    days_since_last_activity = (@today - issue.last_activity(now: @today.to_time).to_date).to_i
+
+    # elsif issue.stalled_on_date?(@today, @stalled_threshold) && issue.board.cycletime.started_time(issue)
+    if days_since_last_activity > @dead_threshold
       icon_span(
-        title: "Stalled: Hasn&apos;t had any activity in #{@stalled_threshold} days and isn&apos;t explicitly " \
+        title: "Dead? Hasn&apos;t had any activity in #{label_days days_since_last_activity}. Does anyone still care about this?",
+        icon: @dead_icon
+      )
+    elsif days_since_last_activity > @stalled_threshold
+      icon_span(
+        title: "Stalled: Hasn&apos;t had any activity in #{days_since_last_activity} days and isn&apos;t explicitly " \
           'marked as blocked',
         icon: @stalled_icon
       )
