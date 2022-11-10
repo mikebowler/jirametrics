@@ -425,7 +425,7 @@ describe Issue do
       expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
     end
 
-    xit 'should be stalled before the updated time' do
+    it 'should be stalled before the updated time' do
       issue = empty_issue created: '2021-10-01'
       issue.raw['fields']['updated'] = '2021-11-02T00:00:00'
 
