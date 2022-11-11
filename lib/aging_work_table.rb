@@ -69,7 +69,6 @@ class AgingWorkTable < ChartBase
 
     days_since_last_activity = (@today - issue.last_activity(now: @today.to_time).to_date).to_i
 
-    # elsif issue.stalled_on_date?(@today, @stalled_threshold) && issue.board.cycletime.started_time(issue)
     if days_since_last_activity > @dead_threshold
       icon_span(
         title: "Dead? Hasn&apos;t had any activity in #{label_days days_since_last_activity}. Does anyone still care about this?",

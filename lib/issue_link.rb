@@ -19,10 +19,12 @@ class IssueLink
   end
 
   def direction
-    # There are both just validating my assumptions of how Jira works. They'll be removed at some point if
-    # I'm right that there can't be both an inward and outward in the same link.
-    raise "Found both inward and outward: #{raw}" if raw['inwardIssue'] && raw['outwardIssue']
-    raise "Found neither inward nor outward: #{raw}" if raw['inwardIssue'].nil? && raw['outwardIssue'].nil?
+    assert_jira_behaviour_false(raw['inwardIssue'].nil? && raw['outwardIssue'].nil?) do
+      "Found an issue link with neither inward nor outward references: #{raw}"
+    end
+    assert_jira_behaviour_false(raw['inwardIssue'] && raw['outwardIssue']) do
+      "Found an issue link that has both inward and outward references in the same link: #{raw}"
+    end
 
     if raw['inwardIssue']
       :inward

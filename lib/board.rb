@@ -16,7 +16,9 @@ class Board
     # visible on the board. If the board is configured to have a kanban backlog then it will have
     # statuses matched to it and otherwise, there will be no statuses.
     if kanban?
-      raise "Expected first column to be called Backlog: #{raw}" unless columns[0]['name'] == 'Backlog'
+      assert_jira_behaviour_true(columns[0]['name'] == 'Backlog') do
+        "Expected first column to be called Backlog: #{raw}"
+      end
 
       @backlog_statuses = statuses_from_column columns[0]
       columns = columns[1..]
