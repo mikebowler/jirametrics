@@ -107,6 +107,8 @@ class CycletimeScatterplot < ChartBase
 
   def data_for_issue issue
     cycle_time = issue.board.cycletime.cycletime(issue)
+    return nil if cycle_time < 1 # These will get called out on the quality report
+
     @highest_cycletime = cycle_time if @highest_cycletime < cycle_time
 
     {
