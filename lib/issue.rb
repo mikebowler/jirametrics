@@ -337,6 +337,25 @@ class Issue
     @fix_versions
   end
 
+  def parent_key
+    # Although Atlassian is trying to standardize on one way to determine the parent, today it's a mess.
+    # We try a variety of ways to get the parent and hopefully one of them will work. See this link:
+    # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
+
+    fields = @raw['fields']
+
+    # At some point in the future, this will be the only way to retrieve the parent so we try this first.
+    parent = fields['parent']&.[]('key')
+
+    # The epic field
+    parent = fields['epic']&.[]('key') if parent.nil?
+
+    # Otherwise the parent link will be stored in one of the custom fields. We've seen different custom fields
+    # used for parent_link vs epic_link so we have to support more than one.
+
+    parent
+  end
+
   private
 
   def assemble_author raw

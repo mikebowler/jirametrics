@@ -580,4 +580,41 @@ describe Issue do
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
   end
+
+  context 'parent_link' do
+    let(:issue) { empty_issue created: '2020-01-01' }
+
+    it 'should return nil when no parent found' do
+      expect(issue.parent_key).to be_nil
+    end
+
+    it 'should get the new parent link' do
+      issue.raw['fields']['parent'] = {
+        'id' => '10097',
+        'key' => 'ABC-1',
+        'self' => 'https://{your_jira_site}.com/rest/api/3/issue/10097',
+        'fields' => {
+        }
+      }
+      expect(issue.parent_key).to eq 'ABC-1'
+    end
+
+    it 'should get the epic link' do
+      # Note that I haven't seen this in production yet but it's in the documentation at:
+      # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
+
+      issue.raw['fields']['epic'] = {
+        'id' => 10001,
+        'key' => 'ABC-1',
+        'self' => 'https://{your_jira_site}/rest/agile/1.0/epic/10001',
+        'name' => 'epic',
+        'summary' => 'epic',
+        'color' => {
+            'key' => 'color_1'
+        },
+        'done' => false
+      }
+      expect(issue.parent_key).to eq 'ABC-1'
+    end
+  end
 end
