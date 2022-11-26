@@ -604,7 +604,7 @@ describe Issue do
       # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
 
       issue.raw['fields']['epic'] = {
-        'id' => 10001,
+        'id' => 10_001,
         'key' => 'ABC-1',
         'self' => 'https://{your_jira_site}/rest/agile/1.0/epic/10001',
         'name' => 'epic',
@@ -615,6 +615,28 @@ describe Issue do
         'done' => false
       }
       expect(issue.parent_key).to eq 'ABC-1'
+    end
+
+    context 'custom fields' do
+      let(:exporter) { Exporter.new }
+      let(:target_path) { 'spec/testdata/' }
+      let(:project_config) do
+        ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      end
+
+      it 'should determine multiple custom fields from settings and get the parent from there' do
+        project_config.settings['customfield_parent_links'] = %w[customfield_1 customfield_2]
+        issue.board.project_config = project_config
+        issue.raw['fields']['customfield_2'] = 'ABC-2'
+        expect(issue.parent_key).to eq 'ABC-2'
+      end
+
+      it 'should determine single custom fields from settings and get the parent from there' do
+        project_config.settings['customfield_parent_links'] = 'customfield_1'
+        issue.board.project_config = project_config
+        issue.raw['fields']['customfield_1'] = 'ABC-1'
+        expect(issue.parent_key).to eq 'ABC-1'
+      end
     end
   end
 end

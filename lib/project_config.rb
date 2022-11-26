@@ -7,7 +7,7 @@ class ProjectConfig
   include DiscardChangesBefore
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
-    :download_config, :file_configs, :exporter, :data_version, :name, :board_configs
+    :download_config, :file_configs, :exporter, :data_version, :name, :board_configs, :settings
   attr_accessor :time_range
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: ''
@@ -20,6 +20,7 @@ class ProjectConfig
     @possible_statuses = StatusCollection.new
     @name = name
     @board_configs = []
+    @settings = {}
   end
 
   def evaluate_next_level
@@ -105,6 +106,7 @@ class ProjectConfig
     board = Board.new(
       raw: JSON.parse(File.read(filename)), possible_statuses: @possible_statuses
     )
+    board.project_config = self
     (@all_boards ||= {})[board_id] = board
   end
 

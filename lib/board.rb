@@ -2,7 +2,7 @@
 
 class Board
   attr_reader :backlog_statuses, :visible_columns, :raw, :possible_statuses, :sprints
-  attr_accessor :cycletime
+  attr_accessor :cycletime, :project_config
 
   def initialize raw:, possible_statuses: StatusCollection.new
     @raw = raw
