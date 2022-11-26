@@ -45,6 +45,8 @@ class Issue
 
   def type = @raw['fields']['issuetype']['name']
 
+  def type_icon_url = @raw['fields']['issuetype']['iconUrl']
+
   def summary = @raw['fields']['summary']
 
   def status

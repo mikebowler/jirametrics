@@ -39,7 +39,7 @@
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
         <td><%= link_to_issue issue %></td>
-        <td><%= issue.type %></td>
+        <td><img src="<%= issue.type_icon_url %>" /> <%= issue.type %></td>
         <td><%= issue.status.name %><%= unmapped_status_text(issue) unless current_status_visible? issue %></td>
         <td><%= fix_versions_text(issue) %></td>
         <% if any_scrum_boards? %>

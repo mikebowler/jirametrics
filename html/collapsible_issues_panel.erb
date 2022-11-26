@@ -20,7 +20,7 @@
             <br /><span style="font-size: 0.8em; font-style: italic;"><%= issue.board.name %></span>
           <% end %>
         </td>
-        <td><%= issue.type %></td>
+        <td><img src="<%= issue.type_icon_url %>" />&nbsp;<%= issue.type %></td>
         <td><i><%= issue.summary.inspect %></i></td>
         <td><%= description %></td>
         <% unless args.include? :hide_board_column %>
