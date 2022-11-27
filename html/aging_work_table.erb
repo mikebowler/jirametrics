@@ -22,13 +22,12 @@
       <th>E</th>
       <th>B</th>
       <th>Issue</th>
-      <th>Type</th>
+      <th>Summary</th>
       <th>Status</th>
       <th>Fix versions</th>
       <% if any_scrum_boards? %>
-          <th>Sprints</th>
+        <th>Sprints</th>
       <% end %>
-      <th>Summary</th>
       <th><%= aggregated_project? ? 'Board' : 'Who' %></th>
     </tr>
   </thead>
@@ -38,14 +37,13 @@
         <td style="text-align: right;"><%= issue.board.cycletime.age(issue, today: @today) || 'Not started' %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
-        <td><%= link_to_issue issue %></td>
-        <td><img src="<%= issue.type_icon_url %>" />&nbsp;<%= issue.type %></td>
+        <td><img src="<%= issue.type_icon_url %>" title="<%= issue.type %>"/>&nbsp;<%= link_to_issue issue %></td>
+        <td><i><%= issue.summary.strip.inspect %></i></td>
         <td><%= format_status issue.status.name, board: issue.board %><%= unmapped_status_text(issue) unless current_status_visible? issue %></td>
         <td><%= fix_versions_text(issue) %></td>
         <% if any_scrum_boards? %>
           <td><%= sprints_text(issue) %></td>
         <% end %>
-        <td><i><%= issue.summary.inspect %></i></td>
         <td><%= aggregated_project? ? issue.board.name : issue.assigned_to %></td>
       </tr>
     <% end %>
