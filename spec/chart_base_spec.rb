@@ -191,4 +191,39 @@ describe ChartBase do
       expect(subject.format_integer 999_999_999).to eq '999,999,999'
     end
   end
+
+  context 'format_status' do
+    let(:board) do
+      load_complete_sample_board.tap do |board|
+        today = Date.parse('2021-12-17')
+        block = lambda do |_|
+          start_at first_status_change_after_created
+          stop_at last_resolution
+        end
+
+        board.cycletime = CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
+      end
+    end
+    
+    it 'should make text red when status not found' do
+      expect(subject.format_status 'Digging', board: board).to eq "<span style='color: red'>Digging</span>"
+    end
+
+    it 'should handle todo statuses' do
+      expect(subject.format_status 'Backlog', board: board).to eq "<span style='color: gray'>Backlog</span>"
+    end
+
+    it 'should handle in progress statuses' do
+      expect(subject.format_status 'Review', board: board).to eq "<span style='color: blue'>Review</span>"
+    end
+
+    it 'should handle done statuses' do
+      puts board.possible_statuses.todo.inspect
+      expect(subject.format_status 'Done', board: board).to eq "<span style='color: green'>Done</span>"
+    end
+
+    it 'should handle unknown statuses' do
+      expect(subject.format_status 'unknown', board: board).to eq "<span style='color: red'>unknown</span>"
+    end
+  end
 end

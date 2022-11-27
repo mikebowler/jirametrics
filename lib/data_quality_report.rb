@@ -239,24 +239,6 @@ class DataQualityReport < ChartBase
     )
   end
 
-  def format_status name_or_id, board:, is_category: false
-    statuses = board.possible_statuses.expand_statuses([name_or_id])
-    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
-
-    return "<span style='color: red'>#{name_or_id}</span>" if statuses.empty?
-
-    status = statuses.first
-    color = case status.category_name
-    when nil then 'black'
-    when 'To Do' then 'gray'
-    when 'In Progress' then 'blue'
-    when 'Done' then 'green'
-    end
-
-    text = is_category ? status.category_name : status.name
-    "<span style='color: #{color}'>#{text}</span>"
-  end
-
   def label_issues number
     return '1 item' if number == 1
 
