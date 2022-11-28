@@ -359,7 +359,7 @@ class Issue
       customfield_names = [customfield_names] if customfield_names.is_a? String
       customfield_names&.each do |custom_field_name|
         parent = fields[custom_field_name]
-        next if parent
+        break if parent
       end
     end
 
