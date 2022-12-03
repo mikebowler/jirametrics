@@ -11,9 +11,12 @@ class InfoDumper
   def run key
     find_file_prefixes.each do |prefix|
       path = "#{@target_dir}#{prefix}_issues/#{key}.json"
-      if File.exist?(path)
-        issue = Issue.new raw: JSON.parse(File.read(path))
-        dump issue
+      path = "#{@target_dir}#{prefix}_issues"
+      Dir.foreach path do |file|
+        if file =~ /^#{key}.+\.json$/
+          issue = Issue.new raw: JSON.parse(File.read(File.join(path, file))), board: nil
+          dump issue
+        end
       end
     end
   end
