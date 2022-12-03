@@ -34,6 +34,7 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def run
+    @header_text += " on board: #{@all_boards[@board_id].name}"
     data_sets = make_data_sets
     column_headings = board_columns.collect(&:name)
 
@@ -41,12 +42,14 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def make_data_sets
-    aging_issues = @issues.select { |issue| issue.board.cycletime.in_progress? issue }
+    aging_issues = @issues.select do |issue|
+      board = issue.board
+      board.id == @board_id && board.cycletime.in_progress?(issue)
+    end
 
     percentage = 85
     rules_to_issues = group_issues aging_issues
     data_sets = rules_to_issues.keys.collect do |rules|
-      # aging_issues.collect(&:type).uniq.each do |type|
       {
         'type' => 'line',
         'label' => rules.label,
