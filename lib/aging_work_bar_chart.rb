@@ -41,8 +41,28 @@ class AgingWorkBarChart < ChartBase
     end
     data_sets = []
     aging_issues.each do |issue|
-      new_dataset = data_sets_for issue: issue, today: today
-      new_dataset.each do |data|
+      cycletime = issue.board.cycletime
+      issue_start_date = cycletime.started_time(issue).to_date
+      issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
+      [
+        status_data_sets(issue: issue, label: issue_label, today: today),
+        data_sets_by_block(
+          issue: issue,
+          issue_label: issue_label,
+          title_label: 'Blocked',
+          stack: 'blocked',
+          color: 'red',
+          start_date: issue_start_date
+        ) { |day| issue.blocked_on_date? day },
+        data_sets_by_block(
+          issue: issue,
+          issue_label: issue_label,
+          title_label: 'Stalled',
+          stack: 'blocked',
+          color: 'orange',
+          start_date: issue_start_date
+        ) { |day| issue.stalled_on_date? day }
+      ].flatten.each do |data|
         data_sets << data
       end
     end
@@ -53,9 +73,8 @@ class AgingWorkBarChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
-  def data_sets_for issue:, today:
+  def status_data_sets issue:, label:, today:
     cycletime = issue.board.cycletime
-    y = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
 
     issue_started_time = cycletime.started_time(issue)
 
@@ -73,12 +92,13 @@ class AgingWorkBarChart < ChartBase
           label: "#{issue.key}-#{@@next_id += 1}",
           data: [{
             x: [chart_format(previous_start), chart_format(change.time)],
-            y: y,
+            y: label,
             title: "#{issue.type} : #{change.value}"
           }],
           backgroundColor: color_for(status_name: change.value),
           borderRadius: 0,
-          stacked: true
+          stacked: true,
+          stack: 'status'
         }
         data << hash if date_range.include?(change.time.to_date)
       end
@@ -93,16 +113,50 @@ class AgingWorkBarChart < ChartBase
         label: "#{issue.key}-#{@@next_id += 1}",
         data: [{
           x: [chart_format(previous_start), chart_format(today)],
-          y: y,
+          y: label,
           title: "#{issue.type} : #{previous_status}"
         }],
         backgroundColor: color_for(status_name: previous_status),
         borderRadius: 0,
-        stacked: true
+        stacked: true,
+        stack: 'status'
       }
     end
 
     data
+  end
+
+  def data_sets_by_block issue:, issue_label:, title_label:, stack:, color:, start_date:, &block
+    started = nil
+    ended = nil
+    data_sets = []
+
+    (start_date..date_range.end).each do |day|
+      marked = block.call(day)
+      if marked
+        started = day if started.nil?
+        ended = day
+      elsif ended
+        data_sets << {
+          type: 'bar',
+          label: "#{issue.key}-#{@@next_id += 1}",
+          data: [{
+            x: [chart_format(started), chart_format(ended)],
+            y: issue_label,
+            title: "#{issue.type} : #{title_label} #{label_days (ended - started).to_i + 1}"
+          }],
+          backgroundColor: color,
+          borderRadius: 0,
+          stacked: true,
+          stack: stack
+        }
+
+        started = nil
+        ended = nil
+      end
+    end
+
+    data_sets
   end
 
   def color_for status_name:
