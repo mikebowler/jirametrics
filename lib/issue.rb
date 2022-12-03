@@ -359,7 +359,8 @@ class Issue
       customfield_names = [customfield_names] if customfield_names.is_a? String
       customfield_names&.each do |custom_field_name|
         parent = fields[custom_field_name]
-        break if parent
+        # A break would be more appropriate than a return but the runtime caused an error when we do that
+        return parent if parent
       end
     end
 
