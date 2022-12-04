@@ -355,10 +355,11 @@ class Issue
     # Otherwise the parent link will be stored in one of the custom fields. We've seen different custom fields
     # used for parent_link vs epic_link so we have to support more than one.
     if parent.nil? && @board.project_config
-      customfield_names = @board.project_config.settings['customfield_parent_links']
-      customfield_names = [customfield_names] if customfield_names.is_a? String
-      customfield_names&.each do |custom_field_name|
-        parent = fields[custom_field_name]
+      custom_field_names = @board.project_config.settings['customfield_parent_links']
+      custom_field_names = [custom_field_names] if custom_field_names.is_a? String
+
+      custom_field_names&.each do |field_name|
+        parent = fields[field_name]
         # A break would be more appropriate than a return but the runtime caused an error when we do that
         return parent if parent
       end
