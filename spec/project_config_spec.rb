@@ -194,4 +194,15 @@ describe ProjectConfig do
       })
     end
   end
+
+  context 'add_issues' do
+    it 'should add both boards and issues' do
+      board = sample_board
+      issue = load_issue('SP-1', board: board)
+      subject.add_issues([issue])
+
+      expect(subject.all_boards.collect { |id, b| [id, b.id] }).to eql([[1, 1]])
+      expect(subject.issues).to eql([issue])
+    end
+  end
 end
