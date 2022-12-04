@@ -3,14 +3,6 @@
 require './spec/spec_helper'
 
 class Issue
-  def one config
-    "one-#{config.class}"
-  end
-
-  def two config, arg1
-    "two-#{config.class}-#{arg1}"
-  end
-
   def three arg1
     "three-#{arg1}"
   end
@@ -27,22 +19,6 @@ describe SelfOrIssueDispatcher do
       project_config.file_prefix 'sample'
       project_config.load_all_boards
       FileConfig.new project_config: project_config, block: nil
-    end
-
-    it 'should call a method with config but no args' do
-      columns = ColumnsConfig.new file_config: file, block: nil
-      proc = columns.one
-
-      expect(proc).to be_a Proc
-      expect(proc.call(issue)).to eql 'one-ColumnsConfig'
-    end
-
-    it 'should call a method with config and args' do
-      columns = ColumnsConfig.new file_config: file, block: nil
-      proc = columns.two 2
-
-      expect(proc).to be_a Proc
-      expect(proc.call(issue)).to eql 'two-ColumnsConfig-2'
     end
 
     it 'should call a method without config and no args' do
