@@ -61,7 +61,7 @@ class AgingWorkBarChart < ChartBase
           stack: 'blocked',
           color: 'orange',
           start_date: issue_start_date
-        ) { |day| issue.stalled_on_date? day }
+        ) { |day| issue.stalled_on_date?(day) && !issue.blocked_on_date?(day) }
       ].flatten.each do |data|
         data_sets << data
       end
