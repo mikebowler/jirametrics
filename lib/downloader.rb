@@ -19,12 +19,16 @@ class Downloader
     @board_id_to_filter_id = {}
   end
 
-  def run
+  def run logfile
+    @logfile = logfile
+    log '', both: true
+    log @download_config.project_config.name, both: true
+
     load_jira_config(@download_config.project_config.jira_config)
     load_metadata
 
     if @metadata['no-download']
-      puts "Skipping download of #{@download_config.project_config.file_prefix}. Found no-download in meta file"
+      log '  Skipping download. Found no-download in meta file', both: true
       return
     end
 
@@ -37,6 +41,11 @@ class Downloader
       download_issues board_id: id
     end
     save_metadata
+  end
+
+  def log text, both: false
+    @logfile.puts text if @logfile
+    puts text if both
   end
 
   def find_board_ids
@@ -58,12 +67,18 @@ class Downloader
   end
 
   def call_command command
-    puts '----', command.gsub(/\s+/, ' '), ''
-    `#{command}`
+    log "  #{command.gsub(/\s+/, ' ')}"
+    result = `#{command}`
+    log result
+    return result if $?.success?
+
+    log "Failed call with exit status #{$?.exitstatus}. See #{@log_name} for details", both: true
+    exit $?.exitstatus
   end
 
   def make_curl_command url:
     command = 'curl'
+    command += ' -s'
     command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
     command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_email
     command += ' --request GET'
@@ -75,7 +90,7 @@ class Downloader
   def download_issues board_id:
     path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
     unless Dir.exist?(path)
-      puts "Creating path #{path}"
+      log "  Creating path #{path}"
       Dir.mkdir(path)
     end
 
@@ -99,22 +114,18 @@ class Downloader
       total = json['total'].to_i
       max_results = json['maxResults']
 
-      message = " Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
-      puts_banner message
+      message = "  Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
+      log message, both: true
 
       start_at += json['issues'].size
     end
-  end
-
-  def puts_banner message
-    puts ('=' * message.length), message, ('=' * message.length) unless @quiet_mode
   end
 
   def exit_if_call_failed json
     # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
     return unless json['errorMessages'] || json['errorMessage']
 
-    puts JSON.pretty_generate(json)
+    log "  #{JSON.pretty_generate(json)}"
     exit 1
   end
 
@@ -195,7 +206,7 @@ class Downloader
     @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
     if @download_date_range.nil?
-      puts_banner "Making up a date range in meta since one wasn't specified. You'll want to change that."
+      log "Making up a date range in meta since one wasn't specified. You'll want to change that.", both: true
       today = Date.today
       @download_date_range = (today - 7)..today
     end
@@ -239,7 +250,7 @@ class Downloader
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.
       @start_date_in_query = metadata['date_end'] || @download_date_range.begin
-      puts_banner "Incremental download only. Pulling from #{@start_date_in_query}" if metadata['date_end']
+      log "  Incremental download only. Pulling from #{@start_date_in_query}", both: true if metadata['date_end']
 
       # Catch-all to pick up anything that's been around since before the range started but hasn't
       # had an update during the range.
@@ -256,4 +267,5 @@ class Downloader
 
     segments.join ' AND '
   end
+
 end

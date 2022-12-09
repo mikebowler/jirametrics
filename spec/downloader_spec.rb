@@ -22,19 +22,19 @@ describe Downloader do
   context 'Build curl command' do
     it 'should generate with url only' do
       downloader.load_jira_config({})
-      expected = 'curl --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -s --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
 
     it 'should generate with cookies' do
       downloader.load_jira_config({ 'cookies' => { 'a' => 'b' } })
-      expected = 'curl --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
 
     it 'should generate with api-token' do
       downloader.load_jira_config({ 'email' => 'fred@flintstone', 'api_token' => 'bedrock' })
-      expected = 'curl --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
   end

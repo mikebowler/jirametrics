@@ -58,19 +58,23 @@ class Exporter
 
   def download
     @downloading = true
-    @project_configs.each do |project|
-      project.evaluate_next_level
-      next if project.aggregated_project?
+    logfile_name = File.join(@target_path, 'downloader.log')
+    File.open logfile_name, 'w' do |logfile|
+      @project_configs.each do |project|
+        project.evaluate_next_level
+        next if project.aggregated_project?
 
-      project.download_config.run
-      Downloader.new(download_config: project.download_config).run
+        project.download_config.run
+        Downloader.new(download_config: project.download_config).run logfile
+      end
     end
+    puts "Full output from downloader in #{logfile_name}"
   end
 
   def downloading?
     @downloading
   end
-  
+
   def project name: nil, &block
     raise 'target_path was never set!' if @target_path.nil?
     raise 'jira_config not set' if @jira_config.nil?
