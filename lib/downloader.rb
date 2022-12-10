@@ -40,6 +40,7 @@ class Downloader
       download_board_configuration board_id: id
       download_issues board_id: id
     end
+
     save_metadata
   end
 
@@ -215,6 +216,8 @@ class Downloader
 
     @metadata['date_start'] = @download_date_range.begin
     @metadata['date_end'] = @download_date_range.end
+
+    @metadata['jira_url'] = @jira_url
 
     write_json @metadata, metadata_pathname
   end

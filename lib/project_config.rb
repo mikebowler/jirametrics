@@ -8,7 +8,7 @@ class ProjectConfig
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs, :settings
-  attr_accessor :time_range
+  attr_accessor :time_range, :jira_url
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: ''
     @exporter = exporter
@@ -214,6 +214,8 @@ class ProjectConfig
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
     @time_range = (Time.parse(start)..Time.parse(stop))
+
+    @jira_url = json['jira_url']
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise
