@@ -371,9 +371,9 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
 
       actual = [
-        issue.blocked_on_date?(Date.parse('2021-10-02')),
-        issue.blocked_on_date?(Date.parse('2021-10-03')),
-        issue.blocked_on_date?(Date.parse('2021-10-04'))
+        issue.blocked_on_date?(to_date('2021-10-02')),
+        issue.blocked_on_date?(to_date('2021-10-03')),
+        issue.blocked_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, true, false]
     end
@@ -384,9 +384,9 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03')
 
       actual = [
-        issue.blocked_on_date?(Date.parse('2021-10-02')),
-        issue.blocked_on_date?(Date.parse('2021-10-03')),
-        issue.blocked_on_date?(Date.parse('2021-10-04'))
+        issue.blocked_on_date?(to_date('2021-10-02')),
+        issue.blocked_on_date?(to_date('2021-10-03')),
+        issue.blocked_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, true, true]
     end
@@ -399,9 +399,9 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03')
 
       actual = [
-        issue.blocked_on_date?(Date.parse('2021-10-02')),
-        issue.blocked_on_date?(Date.parse('2021-10-03')),
-        issue.blocked_on_date?(Date.parse('2021-10-04'))
+        issue.blocked_on_date?(to_date('2021-10-02')),
+        issue.blocked_on_date?(to_date('2021-10-03')),
+        issue.blocked_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, false, false]
     end
@@ -410,27 +410,27 @@ describe Issue do
   context 'stalled_on_date?' do
     it 'should show stalled if the updated date is within the threshold' do
       issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-10-01T00:00:00'
+      issue.raw['fields']['updated'] = '2021-10-01T00:00:00+00:00'
 
-      expect(issue.stalled_on_date? Date.parse('2021-12-01')).to be_truthy
-      expect(issue.stalled_on_date? Date.parse('2021-10-02')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-12-01')).to be_truthy
+      expect(issue.stalled_on_date? to_date('2021-10-02')).to be_falsey
     end
 
     it 'should be stalled after a gap' do
       issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-10-01T00:00:00'
+      issue.raw['fields']['updated'] = '2021-10-01T00:00:00+00:00'
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-11-02')
 
-      expect(issue.stalled_on_date? Date.parse('2021-11-01')).to be_truthy
-      expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-11-01')).to be_truthy
+      expect(issue.stalled_on_date? to_date('2021-11-02')).to be_falsey
     end
 
     it 'should be stalled before the updated time' do
       issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-11-02T00:00:00'
+      issue.raw['fields']['updated'] = '2021-11-02T00:00:00+00:00'
 
-      expect(issue.stalled_on_date? Date.parse('2021-11-01')).to be_truthy
-      expect(issue.stalled_on_date? Date.parse('2021-11-02')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-11-01')).to be_truthy
+      expect(issue.stalled_on_date? to_date('2021-11-02')).to be_falsey
     end
   end
 
