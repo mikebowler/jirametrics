@@ -339,7 +339,7 @@ class Issue
     @fix_versions
   end
 
-  def parent_key
+  def parent_key project_config: @board.project_config
     # Although Atlassian is trying to standardize on one way to determine the parent, today it's a mess.
     # We try a variety of ways to get the parent and hopefully one of them will work. See this link:
     # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
@@ -354,8 +354,8 @@ class Issue
 
     # Otherwise the parent link will be stored in one of the custom fields. We've seen different custom fields
     # used for parent_link vs epic_link so we have to support more than one.
-    if parent.nil? && @board.project_config
-      custom_field_names = @board.project_config.settings['customfield_parent_links']
+    if parent.nil? && project_config
+      custom_field_names = project_config.settings['customfield_parent_links']
       custom_field_names = [custom_field_names] if custom_field_names.is_a? String
 
       custom_field_names&.each do |field_name|

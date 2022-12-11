@@ -17,6 +17,9 @@ class Downloader
     @target_path = @download_config.project_config.target_path
     @json_file_loader = json_file_loader
     @board_id_to_filter_id = {}
+
+    @issue_keys_downloaded_in_current_run = Set.new
+    @issue_keys_pending_download = Set.new
   end
 
   def run logfile
@@ -108,6 +111,7 @@ class Downloader
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
+        identify_other_issues_to_be_downloaded issue_json
         file = "#{issue_json['key']}-#{board_id}.json"
         write_json(issue_json, File.join(path, file))
       end
@@ -119,6 +123,26 @@ class Downloader
       log message, both: true
 
       start_at += json['issues'].size
+    end
+    # puts @issue_keys_pending_download.inspect
+  end
+
+  def identify_other_issues_to_be_downloaded raw_issue
+    issue = Issue.new raw: raw_issue, board: nil
+    @issue_keys_downloaded_in_current_run << issue.key
+
+    # Parent
+    parent_key = issue.parent_key(project_config: @download_config.project_config)
+    @issue_keys_pending_download << parent_key if parent_key
+
+    # Sub-tasks
+    issue.raw['fields']['subtasks'].each do |raw_subtask|
+      @issue_keys_pending_download << raw_subtask['key']
+    end
+
+    # Links
+    issue.raw['fields']['issuelinks'].each do |raw_link|
+      @issue_keys_pending_download << IssueLink(raw: raw_link).other_issue.key
     end
   end
 
