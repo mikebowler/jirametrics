@@ -260,6 +260,7 @@ class ProjectConfig
 
   def issues
     raise "issues are being loaded before boards in project #{name.inspect}" if all_boards.nil? && !aggregated_project?
+
     unless @issues
       if @aggregate_config
         raise 'This is an aggregated project and issues should have been included with the include_issues_from ' \
@@ -277,29 +278,49 @@ class ProjectConfig
         puts "Can't find issues in either #{path} or #{@target_path}"
       end
 
-      attach_subtasks issues
+      # Attach related issues
+      issues.each do |i|
+        attach_subtasks issue: i, all_issues: issues
+        attach_parent issue: i, all_issues: issues
+        attach_linked_issues issue: i, all_issues: issues
+      end
 
-      @issues = issues
+      # We'll have some issues that are in the list that weren't part of the initial query. Once we've
+      # attached them in the appropriate places, remove any that aren't part of that initial set.
+      @issues = issues.select { |i| i.in_initial_query? }
     end
 
     @issues
   end
 
-  def attach_subtasks issues
-    issues.each do |issue|
-      issue.raw['fields']['subtasks']&.each do |subtask_element|
-        subtask_key = subtask_element['key']
-        subtask = issues.find { |i| i.key == subtask_key }
-        issue.subtasks << subtask if subtask
+  def attach_subtasks issue:, all_issues:
+    issue.raw['fields']['subtasks']&.each do |subtask_element|
+      subtask_key = subtask_element['key']
+      subtask = all_issues.find { |i| i.key == subtask_key }
+      issue.subtasks << subtask if subtask
+    end
+  end
+
+  def attach_parent issue:, all_issues:
+    parent_key = issue.parent_key
+    parent = all_issues.find { |i| i.key == parent_key }
+    issue.parent = parent if parent
+  end
+
+  def attach_linked_issues issue:, all_issues:
+    issue.issue_links.each do |link|
+      if link.other_issue.artificial?
+        other = all_issues.find { |i| i.key == link.other_issue.key }
+        link.other_issue = other if other
       end
     end
   end
 
   def find_default_board
     default_board = all_boards.values.first
-    if all_boards.empty?
-      raise "No boards found for project #{name.inspect}"
-    elsif all_boards.size != 1
+    raise "No boards found for project #{name.inspect}" if all_boards.empty?
+
+    if all_boards.size != 1
       puts "Multiple boards are in use for project #{name.inspect}. Picked #{(default_board.name).inspect} to attach issues to."
     end
     default_board

@@ -4,6 +4,7 @@ require 'time'
 
 class Issue
   attr_reader :changes, :raw, :subtasks, :board
+  attr_accessor :parent
 
   def initialize raw:, board:, timezone_offset: '+00:00'
     @raw = raw
@@ -366,6 +367,15 @@ class Issue
     end
 
     parent
+  end
+
+  def in_initial_query?
+    @raw['exporter'].nil? || @raw['exporter']['in_initial_query']
+  end
+
+  # It's artificial if it wasn't downloaded from a Jira instance.
+  def artificial?
+    @raw['exporter'].nil?
   end
 
   private

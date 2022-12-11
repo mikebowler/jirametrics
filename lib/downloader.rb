@@ -2,6 +2,7 @@
 
 require 'cgi'
 require 'json'
+require 'english'
 
 class Downloader
   CURRENT_METADATA_VERSION = 3
@@ -18,8 +19,8 @@ class Downloader
     @json_file_loader = json_file_loader
     @board_id_to_filter_id = {}
 
-    @issue_keys_downloaded_in_current_run = Set.new
-    @issue_keys_pending_download = Set.new
+    @issue_keys_downloaded_in_current_run = []
+    @issue_keys_pending_download = []
   end
 
   def run logfile
@@ -48,7 +49,7 @@ class Downloader
   end
 
   def log text, both: false
-    @logfile.puts text if @logfile
+    @logfile&.puts text
     puts text if both
   end
 
@@ -73,11 +74,11 @@ class Downloader
   def call_command command
     log "  #{command.gsub(/\s+/, ' ')}"
     result = `#{command}`
-    log result
-    return result if $?.success?
+    log result unless $CHILD_STATUS.success?
+    return result if $CHILD_STATUS.success?
 
-    log "Failed call with exit status #{$?.exitstatus}. See #{@log_name} for details", both: true
-    exit $?.exitstatus
+    log "Failed call with exit status #{$CHILD_STATUS.exitstatus}. See #{@log_name} for details", both: true
+    exit $CHILD_STATUS.exitstatus
   end
 
   def make_curl_command url:
@@ -92,6 +93,7 @@ class Downloader
   end
 
   def download_issues board_id:
+    log "  Downloading issues for board #{board_id}", both: true
     path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
     unless Dir.exist?(path)
       log "  Creating path #{path}"
@@ -99,7 +101,26 @@ class Downloader
     end
 
     filter_id = @board_id_to_filter_id[board_id]
-    escaped_jql = CGI.escape make_jql(filter_id: filter_id)
+    jql = make_jql(filter_id: filter_id)
+    jira_search_by_jql(jql: jql, initial_query: true, board_id: board_id, path: path)
+
+    loop do
+      puts "issue_keys_pending_download=#{@issue_keys_pending_download.to_a.inspect}"
+      @issue_keys_pending_download.reject! { |key| @issue_keys_downloaded_in_current_run.include? key }
+      puts "issue_keys_pending_download=#{@issue_keys_pending_download.to_a.inspect}"
+      break if @issue_keys_pending_download.empty?
+
+      keys_to_request = @issue_keys_pending_download[0..99]
+      @issue_keys_pending_download.reject! { |key| keys_to_request.include? key }
+      jql = "key in (#{keys_to_request.join(', ')})"
+      jira_search_by_jql(jql: jql, initial_query: false, board_id: board_id, path: path)
+    end
+  end
+
+  def jira_search_by_jql jql:, initial_query:, board_id:, path:
+    log "  #{jql}"
+    escaped_jql = CGI.escape jql
+
     max_results = 100
     start_at = 0
     total = 1
@@ -111,6 +132,9 @@ class Downloader
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
+        issue_json['exporter'] = {
+          'in_initial_query' => initial_query
+        }
         identify_other_issues_to_be_downloaded issue_json
         file = "#{issue_json['key']}-#{board_id}.json"
         write_json(issue_json, File.join(path, file))
@@ -119,12 +143,11 @@ class Downloader
       total = json['total'].to_i
       max_results = json['maxResults']
 
-      message = "  Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
+      message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
       log message, both: true
 
       start_at += json['issues'].size
     end
-    # puts @issue_keys_pending_download.inspect
   end
 
   def identify_other_issues_to_be_downloaded raw_issue
@@ -141,9 +164,11 @@ class Downloader
     end
 
     # Links
-    issue.raw['fields']['issuelinks'].each do |raw_link|
-      @issue_keys_pending_download << IssueLink(raw: raw_link).other_issue.key
-    end
+    # We shouldn't blindly follow links as some, like cloners, aren't valuable and are just wasting time/effort
+    # to download
+    # issue.raw['fields']['issuelinks'].each do |raw_link|
+    #   @issue_keys_pending_download << IssueLink(raw: raw_link).other_issue.key
+    # end
   end
 
   def exit_if_call_failed json
@@ -277,7 +302,7 @@ class Downloader
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.
       @start_date_in_query = metadata['date_end'] || @download_date_range.begin
-      log "  Incremental download only. Pulling from #{@start_date_in_query}", both: true if metadata['date_end']
+      log "    Incremental download only. Pulling from #{@start_date_in_query}", both: true if metadata['date_end']
 
       # Catch-all to pick up anything that's been around since before the range started but hasn't
       # had an update during the range.
@@ -294,5 +319,4 @@ class Downloader
 
     segments.join ' AND '
   end
-
 end
