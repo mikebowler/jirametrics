@@ -5,7 +5,7 @@ require 'json'
 require 'english'
 
 class Downloader
-  CURRENT_METADATA_VERSION = 3
+  CURRENT_METADATA_VERSION = 4
 
   attr_accessor :metadata, :quiet_mode # Used only for testing
 
@@ -105,9 +105,7 @@ class Downloader
     jira_search_by_jql(jql: jql, initial_query: true, board_id: board_id, path: path)
 
     loop do
-      puts "issue_keys_pending_download=#{@issue_keys_pending_download.to_a.inspect}"
       @issue_keys_pending_download.reject! { |key| @issue_keys_downloaded_in_current_run.include? key }
-      puts "issue_keys_pending_download=#{@issue_keys_pending_download.to_a.inspect}"
       break if @issue_keys_pending_download.empty?
 
       keys_to_request = @issue_keys_pending_download[0..99]
