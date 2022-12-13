@@ -22,7 +22,6 @@
       <th>E</th>
       <th>B</th>
       <th>Issue</th>
-      <th>Summary</th>
       <th>Status</th>
       <th>Fix versions</th>
       <% if any_scrum_boards? %>
@@ -37,8 +36,18 @@
         <td style="text-align: right;"><%= issue.board.cycletime.age(issue, today: @today) || 'Not started' %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
-        <td><img src="<%= issue.type_icon_url %>" title="<%= issue.type %>"/>&nbsp;<%= link_to_issue issue %></td>
-        <td><i><%= issue.summary.strip.inspect %></i></td>
+        <td>
+          <% parent_hierarchy(issue).each_with_index do |parent, index| %>
+            <% color = (parent == issue ? 'black' : 'gray') %>
+            <div style="padding-left: <%= index %>em; color: <%= color %>">
+              <span style="white-space: nowrap;">
+                <img src="<%= parent.type_icon_url %>" title="<%= parent.type %>"/>
+                <%= link_to_issue parent, style: "color: #{color}" %>
+              </span>
+              <i><%= parent.summary.strip.inspect %></i>
+            </div>
+          <% end %>
+        </td>
         <td><%= format_status issue.status.name, board: issue.board %><%= unmapped_status_text(issue) unless current_status_visible? issue %></td>
         <td><%= fix_versions_text(issue) %></td>
         <% if any_scrum_boards? %>

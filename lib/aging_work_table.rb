@@ -134,4 +134,18 @@ class AgingWorkTable < ChartBase
   def any_scrum_boards?
     @any_scrum_boards
   end
+
+  def parent_hierarchy issue
+    result = []
+
+    while issue
+      # Break on cyclical dependencies
+      break if result.include? issue
+
+      result << issue
+      issue = issue.parent
+    end
+
+    result.reverse
+  end
 end
