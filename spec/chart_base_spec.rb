@@ -204,7 +204,7 @@ describe ChartBase do
         board.cycletime = CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
       end
     end
-    
+
     it 'should make text red when status not found' do
       expect(subject.format_status 'Digging', board: board).to eq "<span style='color: red'>Digging</span>"
     end
@@ -224,6 +224,22 @@ describe ChartBase do
 
     it 'should handle unknown statuses' do
       expect(subject.format_status 'unknown', board: board).to eq "<span style='color: red'>unknown</span>"
+    end
+  end
+
+  context 'link_to_issue' do
+    let(:issue1) { load_issue('SP-1') }
+
+    it 'should handle easy case' do
+      expect(subject.link_to_issue issue1).to eq(
+        "<a href='https://improvingflow.atlassian.net/browse/SP-1' class='issue_key'>SP-1</a>"
+      )
+    end
+
+    it 'should handle style parameter' do
+      expect(subject.link_to_issue issue1, style: 'color: gray').to eq(
+        "<a href='https://improvingflow.atlassian.net/browse/SP-1' class='issue_key' style='color: gray'>SP-1</a>"
+      )
     end
   end
 end
