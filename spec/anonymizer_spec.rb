@@ -20,7 +20,7 @@ describe Anonymizer do
     )
     project_config.file_prefix 'sample'
     project_config.load_all_boards
-    project_config.anonymize
+    # project_config.anonymize
     # project_config.run
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
   end
@@ -49,8 +49,9 @@ describe Anonymizer do
     end
 
     it 'should have changed links' do
-      issue = anonymizer.project_config.issues.first
-      issue.raw['fields']['issuelinks'] = [
+      issue1 = load_issue('SP-1')
+      anonymizer.project_config.issues << issue1
+      issue1.raw['fields']['issuelinks'] = [
         {
           'inwardIssue' => {
             'key' => 'SP-15',
@@ -61,8 +62,8 @@ describe Anonymizer do
         }
       ]
 
-      anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
-      links = issue.issue_links
+      anonymizer.anonymize_issue_keys_and_titles(issues: [issue1])
+      links = issue1.issue_links
       expect(links.size).to eq 1
 
       other_issue = links.first.other_issue

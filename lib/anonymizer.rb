@@ -44,6 +44,8 @@ class Anonymizer
 
       issue.issue_links.each do |link|
         other_issue = link.other_issue
+        next if other_issue.key =~ /^ANON-\d+$/ # Already anonymized?
+
         other_issue.raw['key'] = "ANON-#{counter += 1}"
         other_issue.raw['fields']['summary'] = random_phrase
       end
