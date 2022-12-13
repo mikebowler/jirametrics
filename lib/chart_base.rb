@@ -82,12 +82,12 @@ class ChartBase
     }
   end
 
-  def link_to_issue issue
-    if issue.url
-      "<a href='#{issue.url}' class='issue_key'>#{issue.key}</a>"
-    else
-      issue.key
-    end
+  def link_to_issue issue, args = {}
+    attributes = { class: 'issue_key' }
+      .merge(args)
+      .collect { |key, value| "#{key}='#{value}'" }
+      .join(' ')
+    "<a href='#{issue.url}' #{attributes}>#{issue.key}</a>"
   end
 
   def collapsible_issues_panel issue_descriptions, *args
