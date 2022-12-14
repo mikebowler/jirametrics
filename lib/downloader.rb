@@ -93,7 +93,7 @@ class Downloader
   end
 
   def download_issues board_id:
-    log "  Downloading issues for board #{board_id}", both: true
+    log "  Downloading primary issues for board #{board_id}", both: true
     path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
     unless Dir.exist?(path)
       log "  Creating path #{path}"
@@ -104,6 +104,7 @@ class Downloader
     jql = make_jql(filter_id: filter_id)
     jira_search_by_jql(jql: jql, initial_query: true, board_id: board_id, path: path)
 
+    log "  Downloading linked issues for board #{board_id}", both: true
     loop do
       @issue_keys_pending_download.reject! { |key| @issue_keys_downloaded_in_current_run.include? key }
       break if @issue_keys_pending_download.empty?
@@ -178,6 +179,7 @@ class Downloader
   end
 
   def download_statuses
+    log '  Downloading all statuses', both: true
     command = make_curl_command url: "\"#{@jira_url}/rest/api/2/status\""
     json = JSON.parse call_command(command)
 
@@ -185,6 +187,7 @@ class Downloader
   end
 
   def download_board_configuration board_id:
+    log "  Downloading board configuration for board #{board_id}", both: true
     command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
 
     json = JSON.parse call_command(command)
@@ -200,6 +203,7 @@ class Downloader
   end
 
   def download_sprints board_id:
+    log "  Downloading sprints for board #{board_id}", both: true
     file_prefix = @download_config.project_config.file_prefix
     max_results = 100
     start_at = 0
