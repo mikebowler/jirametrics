@@ -139,10 +139,11 @@ class AgingWorkTable < ChartBase
     result = []
 
     while issue
-      # Break on cyclical dependencies
-      break if result.include? issue
-
+      cyclical_parent_links = result.include? issue
       result << issue
+
+      break if cyclical_parent_links
+
       issue = issue.parent
     end
 
