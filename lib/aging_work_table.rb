@@ -48,7 +48,8 @@ class AgingWorkTable < ChartBase
   end
 
   def expedited? issue
-    issue.raw['fields']['priority']['name'] == @expedited_priority_name
+    # Surprisingly, issues are not guaranteed to have a priority field. We've seen this in Epics
+    issue.raw['fields']['priority']&.[]('name') == @expedited_priority_name
   end
 
   def icon_span title:, icon:
