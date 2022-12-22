@@ -196,4 +196,8 @@ class HtmlReportConfig
   def boards
     @file_config.project_config.board_configs.collect(&:id).collect { |id| find_board id }
   end
+
+  def find_project_by_name name
+    @file_config.project_config.exporter.project_configs.find { |p| p.name == name }
+  end
 end
