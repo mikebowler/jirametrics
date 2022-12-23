@@ -101,7 +101,7 @@ class DailyWipChart < ChartBase
       type: 'bar',
       label: grouping_rule.label,
       data: data,
-      backgroundColor: grouping_rule.color,
+      backgroundColor: grouping_rule.color || random_color,
       borderColor: 'gray',
       borderWidth: grouping_rule.color == 'white' ? 1 : 0,
       borderRadius: positive ? 0 : 5

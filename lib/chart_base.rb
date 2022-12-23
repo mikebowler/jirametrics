@@ -140,7 +140,12 @@ class ChartBase
     issues.select do |issue|
       cycletime = issue.board.cycletime
       stopped_time = cycletime.stopped_time(issue)
-      stopped_time && date_range.include?(stopped_time.to_date) && (include_unstarted || cycletime.started_time(issue))
+      started_time = cycletime.started_time(issue)
+
+      stopped_time &&
+        date_range.include?(stopped_time.to_date) && # Remove outside range
+        (include_unstarted || (started_time && (stopped_time >= started_time)))
+        # (started_time.nil? || (stopped_time >= started_time) # Remove obviously bad data
     end
   end
 
@@ -189,4 +194,7 @@ class ChartBase
     "<span style='color: #{color}'>#{text}</span>"
   end
 
+  def random_color
+    "\##{Random.bytes(3).unpack1('H*')}"
+  end
 end
