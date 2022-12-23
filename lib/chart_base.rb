@@ -136,7 +136,7 @@ class ChartBase
     @all_boards[@board_id]
   end
 
-  def completed_issues_in_range include_unstarted:
+  def completed_issues_in_range include_unstarted: false
     issues.select do |issue|
       cycletime = issue.board.cycletime
       stopped_time = cycletime.stopped_time(issue)
