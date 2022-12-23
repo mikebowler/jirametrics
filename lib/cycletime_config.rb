@@ -46,6 +46,8 @@ class CycleTimeConfig
     stop = stopped_time(issue)
     return nil if start.nil? || stop.nil?
 
+    raise "#{issue.key}: Stopped before starting" if stop < start
+
     (stop.to_date - start.to_date).to_i + 1
   end
 
