@@ -174,6 +174,7 @@ class Downloader
     # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
     return unless json['errorMessages'] || json['errorMessage']
 
+    log "Download failed. See #{@log_name} for details.", both: true
     log "  #{JSON.pretty_generate(json)}"
     exit 1
   end
