@@ -197,4 +197,14 @@ class ChartBase
   def random_color
     "\##{Random.bytes(3).unpack1('H*')}"
   end
+
+  def canvas width:, height:, responsive: true
+    @canvas_width = width
+    @canvas_height = height
+    @canvas_responsive = responsive
+  end
+
+  def canvas_width = @canvas_width || 800
+  def canvas_height = @canvas_width || 200
+  def canvas_responsive? = @canvas_responsive || true
 end

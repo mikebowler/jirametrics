@@ -1,5 +1,5 @@
 <div>
-  <canvas id="<%= chart_id %>" width="800" height="200"></canvas>
+  <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
@@ -12,7 +12,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       display: true,
       text: "Cycletime Scatterplot"
     },
-    responsive: true, // If responsive is true then it fills the screen
+    responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen
     scales: {
       x: {
         type: "time",
