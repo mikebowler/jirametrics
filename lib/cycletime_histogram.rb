@@ -48,7 +48,7 @@ class CycletimeHistogram < ChartBase
     count_hash = {}
     issues.each do |issue|
       days = issue.board.cycletime.cycletime(issue)
-      count_hash[days] = (count_hash[days] || 0) + 1
+      count_hash[days] = (count_hash[days] || 0) + 1 if days.positive?
     end
     count_hash
   end
