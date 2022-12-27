@@ -306,6 +306,18 @@ class Issue
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 
+  def expedited?
+    names = @board&.expedited_priority_names
+    return false unless names
+
+    current_priority = raw['fields']['priority']&.[]('name')
+    names.include? current_priority
+  end
+
+  # def expedited_on_date?
+  #   false
+  # end
+
   # Return the last time there was any activity on this ticket. Starting from "now" and going backwards
   # Returns nil if there was no activity before that time.
   def last_activity now: Time.now

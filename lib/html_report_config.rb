@@ -14,7 +14,6 @@ class HtmlReportConfig
     @block = block
     # @cycletimes = []
     @sections = []
-    @expedited_priority_name = 'Highest'
   end
 
   def cycletime label = nil, &block
@@ -68,8 +67,13 @@ class HtmlReportConfig
     execute_chart AgingWorkBarChart.new
   end
 
-  def aging_work_table priority_name = @expedited_priority_name, &block
-    execute_chart AgingWorkTable.new(priority_name, block)
+  def aging_work_table priority_name = nil, &block
+    if priority_name
+      deprecated message: 'priority name should no longer be passed into the chart. Specify it in the ' \
+        'board declaration. See https://github.com/mikebowler/jira-export/wiki/Deprecated',
+        date: '2022-12-26'
+    end
+    execute_chart AgingWorkTable.new(block)
   end
 
   def cycletime_scatterplot &block
@@ -106,7 +110,12 @@ class HtmlReportConfig
     execute_chart DailyWipByBlockedStalledChart.new
   end
 
-  def expedited_chart priority_name = @expedited_priority_name
+  def expedited_chart priority_name = nil
+    if priority_name
+      deprecated message: 'priority name should no longer be passed into the chart. Specify it in the ' \
+        'board declaration. See https://github.com/mikebowler/jira-export/wiki/Deprecated',
+        date: '2022-12-26'
+    end
     execute_chart ExpeditedChart.new(priority_name)
   end
 

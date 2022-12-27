@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe AgingWorkTable do
   let(:table) do
-    AgingWorkTable.new('Highest', nil).tap do |table|
+    AgingWorkTable.new(nil).tap do |table|
       table.date_range = Date.parse('2021-01-01')..Date.parse('2021-01-31')
       table.today = table.date_range.end + 1
     end
@@ -28,6 +28,7 @@ describe AgingWorkTable do
 
     it 'should work when expedited' do
       issue1.raw['fields']['priority']['name'] = 'Highest'
+      issue1.board.expedited_priority_names = ['Highest']
       expect(table.expedited_text issue1).to eq(
         table.icon_span title: 'Expedited: Has a priority of &quot;Highest&quot;', icon: '🔥'
       )

@@ -639,4 +639,26 @@ describe Issue do
       end
     end
   end
+
+  context 'expedited?' do
+    let(:issue) { empty_issue created: '2020-01-01' }
+
+    it 'no priority set' do
+      expect(issue.expedited?).to be_falsey
+    end
+
+    it 'priority set but not expedited' do
+      issue.raw['fields']['priority'] = 'high'
+      expect(issue.expedited?).to be_falsey
+    end
+
+    it 'priority set to expedited' do
+      issue.raw['fields']['priority'] = { 'name' => 'high' }
+      issue.board.expedited_priority_names = ['high']
+      expect(issue.expedited?).to be_truthy
+    end
+  end
+
+  context 'expedited_on_date?' do
+  end
 end
