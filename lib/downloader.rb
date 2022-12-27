@@ -245,7 +245,7 @@ class Downloader
     @cached_data_format_is_current = (hash['version'] || 0) == CURRENT_METADATA_VERSION
     if @cached_data_format_is_current
       hash.each do |key, value|
-        value = Date.parse(value) if value =~ /^\d{4}-\d{2}-\d{2}$/
+        value = Date.parse(value) if value.is_a?(String) && value =~ /^\d{4}-\d{2}-\d{2}$/
         @metadata[key] = value
       end
     end
