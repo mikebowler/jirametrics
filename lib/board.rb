@@ -34,6 +34,13 @@ class Board
     end.compact
   end
 
+  def url
+    # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
+    raise "Cannot parse self: #{@raw['self']}" unless @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
+
+    "#{$1}/secure/RapidBoard.jspa?rapidView=#{id}"
+  end
+
   def statuses_from_column column
     column['statuses'].collect { |status| status['id'].to_i }
   end
