@@ -2,7 +2,7 @@
 
 require './spec/spec_helper'
 
-def empty_issue created:
+def empty_issue created:, board: sample_board
   Issue.new(
     raw: {
       'key' => 'SP-1',
@@ -18,7 +18,7 @@ def empty_issue created:
         }
       }
     },
-    board: sample_board
+    board: board
   )
 end
 
@@ -643,6 +643,10 @@ describe Issue do
   context 'expedited?' do
     let(:issue) { empty_issue created: '2020-01-01' }
 
+    it 'no board' do
+      expect(empty_issue(created: '2020-01-01', board: nil).expedited?).to be_falsey
+    end
+
     it 'no priority set' do
       expect(issue.expedited?).to be_falsey
     end
@@ -660,5 +664,41 @@ describe Issue do
   end
 
   context 'expedited_on_date?' do
+    it 'should return false if no board was set' do
+      issue = empty_issue created: '2021-10-01', board: nil
+      expect(issue.expedited_on_date? to_date('2021-10-02')).to be_falsey
+    end
+
+    it 'should work when expedited turns on and off on same day' do
+      issue = empty_issue created: '2021-10-01'
+      issue.board.expedited_priority_names = ['high']
+
+      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'priority', value: '',     time: '2021-10-03T00:02:00')
+
+      actual = [
+        issue.expedited_on_date?(to_date('2021-10-02')),
+        issue.expedited_on_date?(to_date('2021-10-03')),
+        issue.expedited_on_date?(to_date('2021-10-04'))
+      ]
+      expect(actual).to eq [false, true, false]
+    end
+
+    it 'should work when one expedite follows another' do
+      issue = empty_issue created: '2021-10-01'
+      issue.board.expedited_priority_names = ['high', 'higher']
+      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+      issue.changes << mock_change(field: 'priority', value: 'higher', time: '2021-10-03T00:02:00')
+      issue.changes << mock_change(field: 'priority', value: '', time: '2021-10-03T00:04:00')
+
+      actual = [
+        issue.expedited_on_date?(to_date('2021-10-01')),
+        issue.expedited_on_date?(to_date('2021-10-02')),
+        issue.expedited_on_date?(to_date('2021-10-03')),
+        issue.expedited_on_date?(to_date('2021-10-04'))
+      ]
+      expect(actual).to eq [false, true, true, false]
+    end
+
   end
 end

@@ -314,9 +314,25 @@ class Issue
     names.include? current_priority
   end
 
-  # def expedited_on_date?
-  #   false
-  # end
+  def expedited_on_date? date
+    expedited_start = nil
+    expedited_names = @board&.expedited_priority_names
+
+    changes.each do |change|
+      next unless change.priority?
+
+      if expedited_names.include? change.value
+        expedited_start = change.time.to_date if expedited_start.nil?
+      else
+
+        return true if (expedited_start..change.time.to_date).include? date
+
+        expedited_start = nil
+      end
+    end
+
+    false
+  end
 
   # Return the last time there was any activity on this ticket. Starting from "now" and going backwards
   # Returns nil if there was no activity before that time.
