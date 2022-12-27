@@ -686,7 +686,8 @@ describe Issue do
 
     it 'should work when one expedite follows another' do
       issue = empty_issue created: '2021-10-01'
-      issue.board.expedited_priority_names = ['high', 'higher']
+      issue.board.expedited_priority_names = %w[high higher]
+
       issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       issue.changes << mock_change(field: 'priority', value: 'higher', time: '2021-10-03T00:02:00')
       issue.changes << mock_change(field: 'priority', value: '', time: '2021-10-03T00:04:00')
