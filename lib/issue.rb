@@ -324,14 +324,15 @@ class Issue
       if expedited_names.include? change.value
         expedited_start = change.time.to_date if expedited_start.nil?
       else
-
-        return true if (expedited_start..change.time.to_date).include? date
+        return true if expedited_start && (expedited_start..change.time.to_date).include?(date)
 
         expedited_start = nil
       end
     end
 
-    false
+    return false if expedited_start.nil?
+
+    expedited_start <= date
   end
 
   # Return the last time there was any activity on this ticket. Starting from "now" and going backwards

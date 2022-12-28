@@ -701,5 +701,17 @@ describe Issue do
       expect(actual).to eq [false, true, true, false]
     end
 
+    it 'should work when still expedited at end of data' do
+      issue = empty_issue created: '2021-10-01'
+      issue.board.expedited_priority_names = %w[high higher]
+
+      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+
+      actual = [
+        issue.expedited_on_date?(to_date('2021-10-01')),
+        issue.expedited_on_date?(to_date('2021-10-02')),
+      ]
+      expect(actual).to eq [false, true]
+    end
   end
 end

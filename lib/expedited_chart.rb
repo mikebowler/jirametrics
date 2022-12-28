@@ -17,9 +17,8 @@ class ExpeditedChart < ChartBase
   attr_accessor :issues, :cycletime, :possible_statuses, :date_range
   attr_reader :expedited_label
 
-  def initialize priority_name
+  def initialize
     super()
-    @expedited_label = priority_name
 
     header_text 'Expedited work'
     description_text <<-HTML
@@ -36,10 +35,6 @@ class ExpeditedChart < ChartBase
         was started and green dots represent the completion date. Lastly, the vertical height of the
         lines/dots indicates how long it's been since this issue was created.
       </p>
-      <p>
-        In this report, an item is considered expedited if it has the priority of
-        <%= @expedited_label.inspect %>
-      </p>
     HTML
   end
 
@@ -49,8 +44,7 @@ class ExpeditedChart < ChartBase
     end.compact
 
     if data_sets.empty?
-      '<h1>Expedited work</h1>There is no expedited work in this time period. In this report, an item is considered expedited ' \
-      "if it has the priority of #{@expedited_label.inspect}"
+      '<h1>Expedited work</h1>There is no expedited work in this time period.'
     else
       wrap_and_render(binding, __FILE__)
     end
@@ -59,11 +53,12 @@ class ExpeditedChart < ChartBase
   def prepare_expedite_data issue
     expedite_start = nil
     result = []
+    expedited_priority_names = issue.board.expedited_priority_names
 
     issue.changes.each do |change|
       next unless change.priority?
 
-      if change.value == expedited_label
+      if expedited_priority_names.include? change.value
         expedite_start = change.time
       elsif expedite_start
         start_date = expedite_start.to_date

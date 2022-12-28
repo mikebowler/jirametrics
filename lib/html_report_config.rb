@@ -116,7 +116,7 @@ class HtmlReportConfig
         'board declaration. See https://github.com/mikebowler/jira-export/wiki/Deprecated',
         date: '2022-12-26'
     end
-    execute_chart ExpeditedChart.new(priority_name)
+    execute_chart ExpeditedChart.new
   end
 
   def cycletime_histogram &block

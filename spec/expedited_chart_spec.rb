@@ -4,11 +4,11 @@ require './spec/spec_helper'
 
 describe ExpeditedChart do
   let(:chart) do
-    chart = ExpeditedChart.new('expedite')
+    chart = ExpeditedChart.new
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-01-30')
     chart
   end
-  let(:board) { load_complete_sample_board }
+  let(:board) { load_complete_sample_board.tap { |b| b.expedited_priority_names = ['expedite'] } }
   let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
   let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
