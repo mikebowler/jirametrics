@@ -51,7 +51,7 @@ class AgingWorkBarChart < ChartBase
           issue_label: issue_label,
           title_label: 'Blocked',
           stack: 'blocked',
-          color: 'red',
+          color: '#FF7400',
           start_date: issue_start_date
         ) { |day| issue.blocked_on_date? day },
         data_set_by_block(
@@ -142,8 +142,7 @@ class AgingWorkBarChart < ChartBase
     data = []
 
     (start_date..end_date).each do |day|
-      marked = block.call(day)
-      if marked
+      if block.call(day)
         started = day if started.nil?
         ended = day
       elsif ended
@@ -156,6 +155,14 @@ class AgingWorkBarChart < ChartBase
         started = nil
         ended = nil
       end
+    end
+
+    if started
+      data << {
+        x: [chart_format(started), chart_format(ended)],
+        y: issue_label,
+        title: "#{issue.type} : Still #{title_label}"
+      }
     end
 
     return nil if data.empty?

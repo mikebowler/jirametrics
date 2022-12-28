@@ -116,5 +116,22 @@ describe AgingWorkBarChart do
         }
       ])
     end
+
+    it 'never becomes unblocked' do
+      issue = load_issue('SP-1')
+      data_set = subject.data_set_by_block(
+        issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
+        color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
+      ) { |_day| true }
+
+      # Only checking the data section as the full wrapper was tested above.
+      expect(data_set[:data]).to eq([
+        {
+          title: 'Story : Still Blocked',
+          x: %w[2022-01-01 2022-01-10],
+          y: 'SP-1'
+        }
+      ])
+    end
   end
 end
