@@ -43,10 +43,10 @@ class AgingWorkBarChart < ChartBase
     aging_issues.each do |issue|
       cycletime = issue.board.cycletime
       issue_start_date = cycletime.started_time(issue).to_date
-      issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key} : #{issue.summary}"
+      issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
       [
         status_data_sets(issue: issue, label: issue_label, today: today),
-        data_sets_by_block(
+        data_set_by_block(
           issue: issue,
           issue_label: issue_label,
           title_label: 'Blocked',
@@ -54,15 +54,23 @@ class AgingWorkBarChart < ChartBase
           color: 'red',
           start_date: issue_start_date
         ) { |day| issue.blocked_on_date? day },
-        data_sets_by_block(
+        data_set_by_block(
           issue: issue,
           issue_label: issue_label,
           title_label: 'Stalled',
           stack: 'blocked',
           color: 'orange',
           start_date: issue_start_date
-        ) { |day| issue.stalled_on_date?(day) && !issue.blocked_on_date?(day) }
-      ].flatten.each do |data|
+        ) { |day| issue.stalled_on_date?(day) && !issue.blocked_on_date?(day) },
+        data_set_by_block(
+          issue: issue,
+          issue_label: issue_label,
+          title_label: 'Expedited',
+          stack: 'expedited',
+          color: 'red',
+          start_date: issue_start_date
+        ) { |day| issue.expedited_on_date?(day) }
+      ].compact.flatten.each do |data|
         data_sets << data
       end
     end
@@ -126,29 +134,23 @@ class AgingWorkBarChart < ChartBase
     data
   end
 
-  def data_sets_by_block issue:, issue_label:, title_label:, stack:, color:, start_date:, &block
+  def data_set_by_block(
+    issue:, issue_label:, title_label:, stack:, color:, start_date:, end_date: date_range.end, &block
+  )
     started = nil
     ended = nil
-    data_sets = []
+    data = []
 
-    (start_date..date_range.end).each do |day|
+    (start_date..end_date).each do |day|
       marked = block.call(day)
       if marked
         started = day if started.nil?
         ended = day
       elsif ended
-        data_sets << {
-          type: 'bar',
-          label: "#{issue.key}-#{@@next_id += 1}",
-          data: [{
-            x: [chart_format(started), chart_format(ended)],
-            y: issue_label,
-            title: "#{issue.type} : #{title_label} #{label_days (ended - started).to_i + 1}"
-          }],
-          backgroundColor: color,
-          borderRadius: 0,
-          stacked: true,
-          stack: stack
+        data << {
+          x: [chart_format(started), chart_format(ended)],
+          y: issue_label,
+          title: "#{issue.type} : #{title_label} #{label_days (ended - started).to_i + 1}"
         }
 
         started = nil
@@ -156,7 +158,15 @@ class AgingWorkBarChart < ChartBase
       end
     end
 
-    data_sets
+    return nil if data.empty?
+
+    {
+      type: 'bar',
+      data: data,
+      backgroundColor: color,
+      stacked: true,
+      stack: stack
+    }
   end
 
   def color_for status_name:
