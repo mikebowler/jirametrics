@@ -190,8 +190,6 @@ class ChartBase
   end
 
   def status_category_color status
-    return 'black' if status.nil?
-
     case status.category_name
     when nil then 'black'
     when 'To Do' then 'gray'
