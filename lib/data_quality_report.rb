@@ -173,7 +173,7 @@ class DataQualityReport < ChartBase
           entry.report(
             problem_key: :backwords_through_statuses,
             detail: "Moved from #{format_status change.old_value, board: board}" \
-              " to #{format_status change.value, board:board}" \
+              " to #{format_status change.value, board: board}" \
               " on #{change.time.to_date}"
           )
         else
@@ -198,10 +198,11 @@ class DataQualityReport < ChartBase
 
     return if backlog_statuses.any? { |status| status.id == creation_change.value_id }
 
+    status_string = backlog_statuses.collect { |s| format_status s.name, board: entry.issue.board }.join(', ')
     entry.report(
       problem_key: :created_in_wrong_status,
-      detail: "Issue was created in #{format_status creation_change.value, board: entry.issue.board} " \
-        "status on #{creation_change.time.to_date}"
+      detail: "Created in #{format_status creation_change.value, board: entry.issue.board}, " \
+        "which is not one of the backlog statuses for this board: #{status_string}"
     )
   end
 
