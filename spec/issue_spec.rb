@@ -2,26 +2,6 @@
 
 require './spec/spec_helper'
 
-def empty_issue created:, board: sample_board
-  Issue.new(
-    raw: {
-      'key' => 'SP-1',
-      'changelog' => { 'histories' => [] },
-      'fields' => {
-        'created' => to_time(created).to_s,
-        'status' => {
-          'name' => 'BrandNew!',
-          'id' => '999'
-        },
-        'creator' => {
-          'displayName' => 'Tolkien'
-        }
-      }
-    },
-    board: board
-  )
-end
-
 describe Issue do
   let(:board) do
     board = sample_board

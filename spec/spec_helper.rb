@@ -32,6 +32,29 @@ def load_issue key, board: nil
   Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")), board: board)
 end
 
+def empty_issue created:, board: sample_board
+  Issue.new(
+    raw: {
+      'key' => 'SP-1',
+      'changelog' => { 'histories' => [] },
+      'fields' => {
+        'created' => to_time(created).to_s,
+        'status' => {
+          'name' => 'BrandNew!',
+          'id' => '999'
+        },
+        'issuetype' => {
+          'name' => 'Bug'
+        },
+        'creator' => {
+          'displayName' => 'Tolkien'
+        }
+      }
+    },
+    board: board
+  )
+end
+
 def default_cycletime_config
   today = Date.parse('2021-12-17')
 
