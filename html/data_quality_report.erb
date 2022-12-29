@@ -81,8 +81,7 @@
   unless problems.empty? 
 %>
   <p>
-    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were created in a status not designated as Backlog. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not. The backlog statuses are: 
-    <%= @possible_statuses.expand_statuses(current_board.backlog_statuses).collect {|s| s.name.inspect}.join(', ') %>.
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> were created in a status not designated as Backlog. This will impact the measurement of start times and will therefore impact whether it's shown as in progress or not.
     <%= collapsible_issues_panel problems %>
   </p>
 <% 

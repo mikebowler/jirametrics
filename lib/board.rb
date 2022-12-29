@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Board
-  attr_reader :backlog_statuses, :visible_columns, :raw, :possible_statuses, :sprints
+  attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :backlog_statuses
   attr_accessor :cycletime, :project_config, :expedited_priority_names
 
   def initialize raw:, possible_statuses: StatusCollection.new
@@ -21,7 +21,7 @@ class Board
         "Expected first column to be called Backlog: #{raw}"
       end
 
-      @backlog_statuses = statuses_from_column columns[0]
+      @backlog_statuses = @possible_statuses.expand_statuses(status_ids_from_column columns[0])
       columns = columns[1..]
     else
       # We currently don't know how to get the backlog status for a Scrum board
@@ -30,7 +30,7 @@ class Board
 
     @visible_columns = columns.collect do |column|
       # It's possible for a column to be defined without any statuses and in this case, it won't be visible.
-      BoardColumn.new column unless statuses_from_column(column).empty?
+      BoardColumn.new column unless status_ids_from_column(column).empty?
     end.compact
   end
 
@@ -41,7 +41,7 @@ class Board
     "#{$1}/secure/RapidBoard.jspa?rapidView=#{id}"
   end
 
-  def statuses_from_column column
+  def status_ids_from_column column
     column['statuses'].collect { |status| status['id'].to_i }
   end
 

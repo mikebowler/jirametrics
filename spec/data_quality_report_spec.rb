@@ -21,7 +21,6 @@ describe DataQualityReport do
   let(:subject) do
     subject = DataQualityReport.new({})
     subject.issues = [issue10, issue1]
-    subject.possible_statuses = load_complete_sample_statuses
     subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
     subject
   end
@@ -188,7 +187,10 @@ describe DataQualityReport do
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
-      subject.scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_status_ids: [10_000]
+      board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
+      subject.scan_for_issues_not_created_in_a_backlog_status(
+        entry: entry, backlog_statuses: board.backlog_statuses
+      )
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
@@ -203,8 +205,10 @@ describe DataQualityReport do
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
-
-      subject.scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_status_ids: [10_000] 
+      board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
+      subject.scan_for_issues_not_created_in_a_backlog_status(
+        entry: entry, backlog_statuses: board.backlog_statuses
+      )
 
       expect(entry.problems).to be_empty
     end
