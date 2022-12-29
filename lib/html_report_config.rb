@@ -170,7 +170,7 @@ class HtmlReportConfig
 
     chart.issues = issues
     chart.time_range = project_config.time_range
-    chart.possible_statuses = project_config.possible_statuses
+    # chart.possible_statuses = project_config.possible_statuses
     chart.timezone_offset = timezone_offset
 
     chart.all_boards = project_config.all_boards

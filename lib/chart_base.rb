@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :issues, :date_range,
-    :time_range, :data_quality, :possible_statuses, :holiday_dates
+    :time_range, :data_quality, :holiday_dates
   attr_writer :aggregated_project
 
   @@chart_counter = 0
@@ -183,15 +183,21 @@ class ChartBase
     return "<span style='color: red'>#{name_or_id}</span>" if statuses.empty?
 
     status = statuses.first
-    color = case status.category_name
+    color = status_category_color status
+
+    text = is_category ? status.category_name : status.name
+    "<span style='color: #{color}'>#{text}</span>"
+  end
+
+  def status_category_color status
+    return 'black' if status.nil?
+
+    case status.category_name
     when nil then 'black'
     when 'To Do' then 'gray'
     when 'In Progress' then 'blue'
     when 'Done' then 'green'
     end
-
-    text = is_category ? status.category_name : status.name
-    "<span style='color: #{color}'>#{text}</span>"
   end
 
   def random_color
