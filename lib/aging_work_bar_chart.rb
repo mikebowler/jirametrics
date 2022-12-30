@@ -123,9 +123,9 @@ class AgingWorkBarChart < ChartBase
       data_sets << {
         type: 'bar',
         data: [{
-          x: [chart_format(previous_start), chart_format(today)],
+          x: [chart_format(previous_start), chart_format("#{today}T00:00:00#{@timezone_offset}")],
           y: label,
-          title: "#{issue.type} : #{previous_status}"
+          title: "#{issue.type} : #{previous_status.name}"
         }],
         backgroundColor: status_category_color(previous_status),
         stacked: true,
