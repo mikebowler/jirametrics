@@ -40,7 +40,7 @@ def empty_issue created:, board: sample_board
       'fields' => {
         'created' => to_time(created).to_s,
         'status' => {
-          'name' => 'BrandNew!',
+          'name' => 'Backlog',
           'id' => '999'
         },
         'issuetype' => {

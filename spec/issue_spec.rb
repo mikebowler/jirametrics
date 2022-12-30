@@ -90,7 +90,7 @@ describe Issue do
   it "should default the first status if there really hasn't been any yet" do
     issue = empty_issue created: '2021-08-29T18:00:00+00:00'
     expect(issue.changes).to eq [
-      mock_change(field: 'status', value: 'BrandNew!', time: '2021-08-29T18:00:00+00:00')
+      mock_change(field: 'status', value: 'Backlog', time: '2021-08-29T18:00:00+00:00')
     ]
   end
 
