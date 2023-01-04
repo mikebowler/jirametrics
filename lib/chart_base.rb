@@ -209,6 +209,6 @@ class ChartBase
   end
 
   def canvas_width = @canvas_width || 800
-  def canvas_height = @canvas_width || 200
+  def canvas_height = @canvas_height || 200
   def canvas_responsive? = @canvas_responsive || true
 end
