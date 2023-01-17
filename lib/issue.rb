@@ -186,7 +186,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = board.possible_statuses.find_by_name(change.value).category_name
+      category = find_status_by_name(change.value).category_name
       return change.time if category_names.include? category
     end
     nil

@@ -92,16 +92,7 @@ class AgingWorkBarChart < ChartBase
     issue.changes.each do |change|
       next unless change.status?
 
-      status = issue.board.possible_statuses.find_by_name change.value
-
-      # In the situation where the status is no longer in the mapping then just
-      # skip past this. There's no way to determine what the proper colour should
-      # be in this case.
-      if status.nil?
-        warn "AgingWorkBarChart: Unable to determine the category for status #{change.value}. " \
-          'Use a status_category_mapping declaration to have this rendered properly'
-        next
-      end
+      status = issue.find_status_by_name change.value
 
       unless previous_start.nil? || previous_start < issue_started_time
         hash = {
