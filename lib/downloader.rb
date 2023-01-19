@@ -92,6 +92,7 @@ class Downloader
   def make_curl_command url:
     command = 'curl'
     command += ' -s'
+    command += ' -k' if @download_config.project_config.settings['ignore_ssl_errors']
     command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
     command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
     command += " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token

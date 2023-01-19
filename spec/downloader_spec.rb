@@ -108,5 +108,12 @@ describe Downloader do
       )
     end
 
+    it 'should ignore SSL errors' do
+      downloader.load_jira_config({})
+      download_config.project_config.settings['ignore_ssl_errors'] = true
+      expect(downloader.make_curl_command url: 'http://foo').to eq(
+        %(curl -s -k --request GET --header "Accept: application/json" --url "http://foo")
+      )
+    end
   end
 end
