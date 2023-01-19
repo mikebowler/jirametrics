@@ -69,6 +69,13 @@ class Downloader
     @jira_email = jira_config['email']
     @jira_api_token = jira_config['api_token']
     @jira_personal_access_token = jira_config['personal_access_token']
+
+    raise 'When specifying an api-token, you must also specify email' if @jira_api_token && !@jira_email
+
+    if @jira_api_token && @jira_personal_access_token
+      raise "You can't specify both an api-token and a personal-access-token. They don't work together."
+    end
+
     @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
   end
 
@@ -86,7 +93,7 @@ class Downloader
     command = 'curl'
     command += ' -s'
     command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
-    command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_email
+    command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
     command += " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
     command += ' --request GET'
     command += ' --header "Accept: application/json"'

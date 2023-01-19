@@ -73,6 +73,40 @@ describe Downloader do
       jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
       expect(jql).to eql expected
     end
+  end
+
+  context 'load_jira_config' do
+    it 'should fail when api-key specified but not email' do
+      expect do
+        downloader.load_jira_config({
+          'api_token' => 'xx'
+        })
+      end.to raise_error(
+        'When specifying an api-token, you must also specify email'
+      )
+    end
+
+    it 'should fail when api-key and personal-access-token are both specified' do
+      expect do
+        downloader.load_jira_config({
+          'api_token' => 'xx',
+          'email' => 'aa',
+          'personal_access_token' => 'yy'
+        })
+      end.to raise_error(
+        "You can't specify both an api-token and a personal-access-token. They don't work together."
+      )
+    end
+  end
+
+  context 'make_curl_command' do
+    it 'should handle empty config' do
+      downloader.load_jira_config({})
+
+      expect(downloader.make_curl_command url: 'http://foo').to eq(
+        %(curl -s --request GET --header "Accept: application/json" --url "http://foo")
+      )
+    end
 
   end
 end
