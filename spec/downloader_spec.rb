@@ -115,5 +115,14 @@ describe Downloader do
         %(curl -s -k --request GET --header "Accept: application/json" --url "http://foo")
       )
     end
+
+    it 'work with personal_access_token' do
+      downloader.load_jira_config({
+        'personal_access_token' => 'yy'
+      })
+      expect(downloader.make_curl_command url: 'http://foo').to eq(
+        %(curl -s -H \"Authorization: Bearer yy\" --request GET --header "Accept: application/json" --url "http://foo")
+      )
+    end
   end
 end
