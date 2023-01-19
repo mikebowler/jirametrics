@@ -68,6 +68,7 @@ class Downloader
     @jira_url = jira_config['url']
     @jira_email = jira_config['email']
     @jira_api_token = jira_config['api_token']
+    @jira_personal_access_token = jira_config['personal_access_token']
     @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
   end
 
@@ -86,6 +87,7 @@ class Downloader
     command += ' -s'
     command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
     command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_email
+    command += " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
     command += ' --request GET'
     command += ' --header "Accept: application/json"'
     command += " --url \"#{url}\""
@@ -117,6 +119,9 @@ class Downloader
   end
 
   def jira_search_by_jql jql:, initial_query:, board_id:, path:
+    intercept_jql = @download_config.project_config.settings['intercept_jql']
+    jql = intercept_jql.call jql if intercept_jql
+
     log "  #{jql}"
     escaped_jql = CGI.escape jql
 
