@@ -145,13 +145,14 @@ class ChartBase
       stopped_time &&
         date_range.include?(stopped_time.to_date) && # Remove outside range
         (include_unstarted || (started_time && (stopped_time >= started_time)))
-        # (started_time.nil? || (stopped_time >= started_time) # Remove obviously bad data
     end
   end
 
   def sprints_in_time_range board
     board.sprints.select do |sprint|
-      time_range.include?(sprint.start_time) # && time_range.include?(sprint.end_time)
+      sprint_end_time = sprint.completed_time || sprint.end_time
+      time_range.include?(sprint.start_time) || time_range.include?(sprint_end_time) ||
+        (sprint.start_time < time_range.begin && sprint_end_time > time_range.end)
     end || []
   end
 
