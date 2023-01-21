@@ -213,12 +213,18 @@ class ProjectConfig
 
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
-    @time_range = (Time.parse(start)..Time.parse(stop))
+    seconds_per_day = 24 * 60 * 60
+    @time_range = to_time(start)..(to_time(stop) + seconds_per_day)
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
     puts "== Can't load files from the target directory. Did you forget to download first? =="
     raise
+  end
+
+  def to_time string
+    string = "#{string}T00:00:00#{@timezone_offset}" if string =~ /^\d{4}-\d{2}\d{2}$/
+    Time.parse string
   end
 
   def guess_board_id
