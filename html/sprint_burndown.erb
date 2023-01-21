@@ -68,8 +68,13 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 });
 </script>
 
-<div style="border: 1px solid gray; padding: 0.5em;">
-<table class='standard'>
+<%
+  link_id = next_id
+  issues_id = next_id
+%>
+[<a id='<%= link_id %>' href="#" onclick='expand_collapse("<%= link_id %>", "<%= issues_id %>"); return false;'>Show details</a>]
+<div id="<%= issues_id %>" style="display: none;">
+<table class='standard' style="margin-left: 1em;">
   <thead>
     <th>Sprint</th>
     <th>State</th>
