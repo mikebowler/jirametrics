@@ -151,8 +151,11 @@ class ChartBase
   def sprints_in_time_range board
     board.sprints.select do |sprint|
       sprint_end_time = sprint.completed_time || sprint.end_time
-      time_range.include?(sprint.start_time) || time_range.include?(sprint_end_time) ||
-        (sprint.start_time < time_range.begin && sprint_end_time > time_range.end)
+      sprint_start_time = sprint.start_time
+      next false if sprint_start_time.nil?
+
+      time_range.include?(sprint_start_time) || time_range.include?(sprint_end_time) ||
+        (sprint_start_time < time_range.begin && sprint_end_time > time_range.end)
     end || []
   end
 
