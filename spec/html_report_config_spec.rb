@@ -19,6 +19,7 @@ describe HtmlReportConfig do
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
@@ -40,6 +41,7 @@ describe HtmlReportConfig do
       exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )
     project_config.file_prefix 'sample'
+    project_config.load_status_category_mappings
     project_config.load_all_boards
     file_config = FileConfig.new project_config: project_config, block: nil
     config = HtmlReportConfig.new file_config: file_config, block: nil

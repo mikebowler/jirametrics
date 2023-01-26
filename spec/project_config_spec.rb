@@ -10,6 +10,7 @@ describe ProjectConfig do
   context 'board_configuration' do
     it 'should load' do
       subject.file_prefix 'sample'
+      subject.load_status_category_mappings
       subject.load_all_boards
       expect(subject.all_boards.keys).to eq [1]
 
@@ -80,6 +81,8 @@ describe ProjectConfig do
     end
 
     it 'should fail if no board id set and there are multiple boards' do
+      subject.file_prefix 'sample'
+      subject.load_status_category_mappings
       subject.load_board(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
       subject.load_board(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
@@ -97,6 +100,7 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
 
       subject.file_prefix 'sample'
+      subject.load_status_category_mappings
       subject.load_all_boards
       subject.issues << issue1
 
@@ -113,6 +117,7 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T09:00:00')
 
       subject.file_prefix 'sample'
+      subject.load_status_category_mappings
       subject.load_all_boards
       subject.issues << issue1
 

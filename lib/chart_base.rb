@@ -181,10 +181,14 @@ class ChartBase
   end
 
   def format_status name_or_id, board:, is_category: false
-    statuses = board.possible_statuses.expand_statuses([name_or_id])
-    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
+    begin
+      statuses = board.possible_statuses.expand_statuses([name_or_id])
+    rescue RuntimeError => e
+      return "<span style='color: red'>#{name_or_id}</span>" if e.message =~ /^Status not found:/
 
-    return "<span style='color: red'>#{name_or_id}</span>" if statuses.empty?
+      throw e
+    end
+    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
 
     status = statuses.first
     color = status_category_color status

@@ -17,6 +17,7 @@ describe SelfOrIssueDispatcher do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
       FileConfig.new project_config: project_config, block: nil
     end

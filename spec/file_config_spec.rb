@@ -7,6 +7,7 @@ describe FileConfig do
   let(:config) do
     project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
     project_config.file_prefix 'sample'
+    project_config.load_status_category_mappings
     project_config.load_all_boards
     FileConfig.new project_config: project_config, block: nil
   end
@@ -38,6 +39,7 @@ describe FileConfig do
     it 'should create filename' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
 
       file_config = FileConfig.new project_config: project_config, block: nil
@@ -50,6 +52,7 @@ describe FileConfig do
     it 'should prepare grid without headers' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
 
       file_config = FileConfig.new project_config: project_config, block: nil
@@ -70,6 +73,7 @@ describe FileConfig do
     it 'should prepare grid with headers' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns do
@@ -91,6 +95,7 @@ describe FileConfig do
     it 'should prepare grid only_use_row_if' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.only_use_row_if do |row|
@@ -114,6 +119,7 @@ describe FileConfig do
     it 'should raise error if multiples are set' do
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
       project_config.load_all_boards
       file_config = FileConfig.new project_config: project_config, block: nil
       file_config.columns { 'a' }

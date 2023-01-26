@@ -19,11 +19,12 @@ def make_test_filename basename
 end
 
 def sample_board
-  statuses = StatusCollection.new
-  statuses << Status.new(name: 'Backlog', id: 1, category_name: 'To Do', category_id: 2)
-  statuses << Status.new(name: 'Doing', id: 3, category_name: 'In Progress', category_id: 4)
-  statuses << Status.new(name: 'Done', id: 5, category_name: 'Done', category_id: 6)
+  # statuses = StatusCollection.new
+  # statuses << Status.new(name: 'Backlog', id: 1, category_name: 'To Do', category_id: 2)
+  # statuses << Status.new(name: 'Doing', id: 3, category_name: 'In Progress', category_id: 4)
+  # statuses << Status.new(name: 'Done', id: 5, category_name: 'Done', category_id: 6)
 
+  statuses = load_statuses './spec/testdata/sample_statuses.json'
   Board.new raw: JSON.parse(File.read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
 end
 
@@ -83,15 +84,19 @@ def load_complete_sample_board
 end
 
 def load_complete_sample_statuses
+  load_statuses './spec/complete_sample/sample_statuses.json'
+end
+
+def load_statuses input_file
   statuses = StatusCollection.new
 
-  json = JSON.parse(File.read('./spec/complete_sample/sample_statuses.json'))
+  json = JSON.parse(File.read(input_file))
   json.each do |type_config|
     type_config['statuses'].each do |status_config|
       category_config = status_config['statusCategory']
       statuses << Status.new(
-        name: status_config['name'], id: status_config['id'],
-        category_name: category_config['name'], category_id: category_config['id']
+        name: status_config['name'], id: status_config['id'].to_i,
+        category_name: category_config['name'], category_id: category_config['id'].to_i
       )
     end
   end

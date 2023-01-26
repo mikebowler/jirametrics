@@ -25,8 +25,15 @@ class StatusCollection
     names_or_ids = [names_or_ids] unless names_or_ids.is_a? Array
 
     names_or_ids.each do |name_or_id|
+      raise "No statuses found. Looking for: #{name_or_id}" if @list.empty?
+
       status = @list.find { |s| s.name == name_or_id || s.id == name_or_id }
-      result << status unless status.nil?
+      if status.nil?
+        all_status_names = @list.collect { |s| "#{s.name.inspect}:#{s.id.inspect}" }.uniq.sort.join(', ')
+        raise "Status not found: #{name_or_id}. Possible statuses are: #{all_status_names}"
+      end
+
+      result << status
     end
     result
   end

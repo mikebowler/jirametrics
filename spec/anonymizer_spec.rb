@@ -19,9 +19,9 @@ describe Anonymizer do
       exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )
     project_config.file_prefix 'sample'
+    project_config.load_status_category_mappings
     project_config.load_all_boards
-    # project_config.anonymize
-    # project_config.run
+
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
   end
 
