@@ -100,6 +100,7 @@ class AgingWorkInProgressChart < ChartBase
 
       # Skip if either it hasn't crossed the boundary or we can't tell when it started.
       next if stop.nil? || start.nil?
+      next if stop < start
 
       (stop.to_date - start.to_date).to_i + 1
     end.compact
