@@ -7,7 +7,7 @@ require 'english'
 class Downloader
   CURRENT_METADATA_VERSION = 4
 
-  attr_accessor :metadata, :quiet_mode # Used only for testing
+  attr_accessor :metadata, :quiet_mode, :logfile, :logfile_name
 
   # For testing only
   attr_reader :start_date_in_query
@@ -23,8 +23,7 @@ class Downloader
     @issue_keys_pending_download = []
   end
 
-  def run logfile
-    @logfile = logfile
+  def run
     log '', both: true
     log @download_config.project_config.name, both: true
 
@@ -85,7 +84,7 @@ class Downloader
     log result unless $CHILD_STATUS.success?
     return result if $CHILD_STATUS.success?
 
-    log "Failed call with exit status #{$CHILD_STATUS.exitstatus}. See #{@log_name} for details", both: true
+    log "Failed call with exit status #{$CHILD_STATUS.exitstatus}. See #{@logfile_name} for details", both: true
     exit $CHILD_STATUS.exitstatus
   end
 
@@ -187,7 +186,7 @@ class Downloader
     # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
     return unless json['errorMessages'] || json['errorMessage']
 
-    log "Download failed. See #{@log_name} for details.", both: true
+    log "Download failed. See #{@logfile_name} for details.", both: true
     log "  #{JSON.pretty_generate(json)}"
     exit 1
   end
