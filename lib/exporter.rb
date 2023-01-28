@@ -58,14 +58,17 @@ class Exporter
 
   def download
     @downloading = true
-    logfile_name = File.join(@target_path, 'downloader.log')
+    logfile_name = 'downloader.log'
     File.open logfile_name, 'w' do |logfile|
       @project_configs.each do |project|
         project.evaluate_next_level
         next if project.aggregated_project?
 
         project.download_config.run
-        Downloader.new(download_config: project.download_config).run logfile
+        downloader = Downloader.new(download_config: project.download_config)
+        downloader.logfile = logfile
+        downloader.logfile_name = logfile_name
+        downloader.run
       end
     end
     puts "Full output from downloader in #{logfile_name}"
