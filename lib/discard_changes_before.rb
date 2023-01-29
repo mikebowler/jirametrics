@@ -5,18 +5,18 @@ module DiscardChangesBefore
     if status_becomes
       status_becomes = [status_becomes] unless status_becomes.is_a? Array
 
-      status_becomes = status_becomes.collect do |status_name|
-        if status_name == :backlog
-          expand_backlog_statuses
-        else
-          status_name
-        end
-      end.flatten
-
       block = lambda do |issue|
+        trigger_statuses = status_becomes.collect do |status_name|
+          if status_name == :backlog
+            issue.board.backlog_statuses.collect(&:name)
+          else
+            status_name
+          end
+        end.flatten
+
         time = nil
         issue.changes.each do |change|
-          time = change.time if change.status? && status_becomes.include?(change.value) && change.artificial? == false
+          time = change.time if change.status? && trigger_statuses.include?(change.value) && change.artificial? == false
         end
         time
       end
@@ -33,11 +33,5 @@ module DiscardChangesBefore
     issues_cutoff_times.each do |issue, cutoff_time|
       issue.changes.reject! { |change| change.status? && change.time <= cutoff_time && change.artificial? == false }
     end
-  end
-
-  def expand_backlog_statuses
-    project_config = @file_config.project_config
-    statuses = project_config.all_boards[find_board_id].backlog_statuses
-    statuses.collect { |s| s.name }
   end
 end

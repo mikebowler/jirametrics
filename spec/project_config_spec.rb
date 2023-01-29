@@ -124,6 +124,26 @@ describe ProjectConfig do
       subject.discard_changes_before { |_issue| to_time('2022-01-02T09:00:00') }
       expect(issue1.changes.collect(&:time)).to eq []
     end
+
+    it 'should expand :backlog to the backlog statuses on the board' do
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-01')
+      issue1.changes << mock_change(field: 'status', value: 'Backlog', time: '2022-01-02')
+      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
+
+      # Verify that Backlog is the only status in backlog statuses
+      expect(issue1.board.backlog_statuses.collect(&:name)).to eq ['Backlog']
+
+      subject.file_prefix 'sample'
+      subject.load_status_category_mappings
+      subject.load_all_boards
+      subject.issues << issue1
+
+      subject.discard_changes_before status_becomes: [:backlog]
+      expect(issue1.changes.collect(&:time)).to eq [
+        to_time('2022-01-03')
+      ]
+    end
   end
 
   context 'name' do
