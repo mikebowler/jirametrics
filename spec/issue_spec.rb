@@ -54,125 +54,132 @@ describe Issue do
     ]
   end
 
-  it 'gets simple history with a single status' do
-    issue = load_issue 'SP-2'
+  context 'changes' do
+    it 'gets simple history with a single status' do
+      issue = load_issue 'SP-2'
 
-    changes = [
-      mock_change(field: 'status', value: 'Backlog', time: '2021-06-18T18:41:37.804+0000'),
-      mock_change(field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
-      mock_change(field: 'status', value: 'Selected for Development', time: '2021-06-18T18:43:38+00:00')
-    ]
+      changes = [
+        mock_change(field: 'status', value: 'Backlog', time: '2021-06-18T18:41:37.804+0000'),
+        mock_change(field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
+        mock_change(field: 'status', value: 'Selected for Development', time: '2021-06-18T18:43:38+00:00')
+      ]
 
-    expect(issue.changes).to eq changes
+      expect(issue.changes).to eq changes
+    end
+
+    it 'gets complex history with a mix of field types' do
+      issue = load_issue 'SP-10'
+      changes = [
+        mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
+        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
+        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+00:00'),
+        mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+00:00'),
+        mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+00:00'),
+        mock_change(field: 'status',     value: 'In Progress',              time: '2021-08-29T18:06:55+00:00'),
+        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-09-06T04:33:11+00:00'),
+        mock_change(field: 'Flagged',    value: 'Impediment',               time: '2021-09-06T04:33:30+00:00'),
+        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-09-06T04:33:50+00:00'),
+        mock_change(field: 'Flagged',    value: '',                         time: '2021-09-06T04:33:55+00:00'),
+        mock_change(field: 'status',     value: 'In Progress',              time: '2021-09-06T04:34:02+00:00'),
+        mock_change(field: 'status',     value: 'Review',                   time: '2021-09-06T04:34:21+00:00'),
+        mock_change(field: 'status',     value: 'Done',                     time: '2021-09-06T04:34:26+00:00'),
+        mock_change(field: 'resolution', value: 'Done',                     time: '2021-09-06T04:34:26+00:00')
+       ]
+      expect(issue.changes).to eq changes
+    end
+
+    it "should default the first status if there really hasn't been any yet" do
+      issue = empty_issue created: '2021-08-29T18:00:00+00:00'
+      expect(issue.changes).to eq [
+        mock_change(field: 'status', value: 'Backlog', time: '2021-08-29T18:00:00+00:00')
+      ]
+    end
   end
 
-  it 'gets complex history with a mix of field types' do
-    issue = load_issue 'SP-10'
-    changes = [
-      mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
-      mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
-      mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+00:00'),
-      mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+00:00'),
-      mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+00:00'),
-      mock_change(field: 'status',     value: 'In Progress',              time: '2021-08-29T18:06:55+00:00'),
-      mock_change(field: 'status',     value: 'Selected for Development', time: '2021-09-06T04:33:11+00:00'),
-      mock_change(field: 'Flagged',    value: 'Impediment',               time: '2021-09-06T04:33:30+00:00'),
-      mock_change(field: 'priority',   value: 'Medium',                   time: '2021-09-06T04:33:50+00:00'),
-      mock_change(field: 'Flagged',    value: '',                         time: '2021-09-06T04:33:55+00:00'),
-      mock_change(field: 'status',     value: 'In Progress',              time: '2021-09-06T04:34:02+00:00'),
-      mock_change(field: 'status',     value: 'Review',                   time: '2021-09-06T04:34:21+00:00'),
-      mock_change(field: 'status',     value: 'Done',                     time: '2021-09-06T04:34:26+00:00'),
-      mock_change(field: 'resolution', value: 'Done',                     time: '2021-09-06T04:34:26+00:00')
-     ]
-    expect(issue.changes).to eq changes
+  context 'first_time_in_status' do
+    it 'first time in status' do
+      issue = load_issue 'SP-10'
+      expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29 18:06:55 +0000'
+    end
+
+    it "first time in status that doesn't match any" do
+      issue = load_issue 'SP-10'
+      expect(issue.first_time_in_status('NoStatus')).to be_nil
+    end
   end
 
-  it "should default the first status if there really hasn't been any yet" do
-    issue = empty_issue created: '2021-08-29T18:00:00+00:00'
-    expect(issue.changes).to eq [
-      mock_change(field: 'status', value: 'Backlog', time: '2021-08-29T18:00:00+00:00')
-    ]
-  end
+  context 'first_time_not_in_status' do
+    it 'first time not in status' do
+      issue = load_issue 'SP-10'
+      expect(issue.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29 18:06:28 +0000'
+    end
 
-  it 'first time in status' do
-    issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status('In Progress').to_s).to eql '2021-08-29 18:06:55 +0000'
-  end
-
-  it "first time in status that doesn't match any" do
-    issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status('NoStatus')).to be_nil
-  end
-
-  it 'first time not in status' do
-    issue = load_issue 'SP-10'
-    expect(issue.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29 18:06:28 +0000'
-  end
-
-  it "first time not in status where it's never in that status" do
-    raw = {
-      'key' => 'SP-1',
-      'changelog' => { 'histories' => [] },
-      'fields' => {
-        'created' => '2021-08-29T18:00:00+00:00',
-        'status' => {
-          'name' => 'BrandNew!',
-          'id' => '999'
-        },
-        'creator' => {
-          'displayName' => 'Tolkien'
+    it "first time not in status where it's never in that status" do
+      raw = {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [] },
+        'fields' => {
+          'created' => '2021-08-29T18:00:00+00:00',
+          'status' => {
+            'name' => 'BrandNew!',
+            'id' => '999'
+          },
+          'creator' => {
+            'displayName' => 'Tolkien'
+          }
         }
       }
-    }
-    issue = Issue.new raw: raw, board: sample_board
-    expect(issue.first_time_not_in_status('BrandNew!')).to be_nil
+      issue = Issue.new raw: raw, board: sample_board
+      expect(issue.first_time_not_in_status('BrandNew!')).to be_nil
+    end
   end
 
-  it "first time in status that doesn't match any" do
-    issue = load_issue 'SP-10'
-    expect(issue.first_time_in_status('NoStatus')).to be_nil
+  context 'first_status_change_after_created' do
+    it "first time for any status change - created doesn't count as status change" do
+      issue = load_issue 'SP-10'
+      expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
+    end
   end
 
-  it "first time for any status change - created doesn't count as status change" do
-    issue = load_issue 'SP-10'
-    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
+  context 'first_time_in_status_category' do
+    it 'first time in status category' do
+      issue = load_issue 'SP-10', board: board
+      issue.board.possible_statuses << Status.new(
+        name: 'Done',
+        id: 1,
+        category_name: 'finished',
+        category_id: 2
+      )
+
+      expect(issue.first_time_in_status_category('finished').to_s).to eq '2021-09-06 04:34:26 +0000'
+    end
   end
 
-  it 'first time in status category' do
-    issue = load_issue 'SP-10', board: board
-    issue.board.possible_statuses << Status.new(
-      name: 'Done',
-      id: 1,
-      category_name: 'finished',
-      category_id: 2
-    )
+  context 'first_status_change_after_created' do
+    it 'first status change after created' do
+      issue = load_issue 'SP-10'
+      expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
+    end
 
-    expect(issue.first_time_in_status_category('finished').to_s).to eq '2021-09-06 04:34:26 +0000'
-  end
+    it %(first status change after created, where there isn't anything after created) do
+      raw = {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [] },
+        'fields' => {
+          'created' => '2021-08-29T18:00:00+00:00',
+          'status' => {
+            'name' => 'BrandNew!',
+            'id' => '999'
+          },
+          'creator' => {
+            'displayName' => 'Tolkien'
+          }
 
-  it 'first status change after created' do
-    issue = load_issue 'SP-10'
-    expect(issue.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
-  end
-
-  it %(first status change after created, where there isn't anything after created) do
-    raw = {
-      'key' => 'SP-1',
-      'changelog' => { 'histories' => [] },
-      'fields' => {
-        'created' => '2021-08-29T18:00:00+00:00',
-        'status' => {
-          'name' => 'BrandNew!',
-          'id' => '999'
-        },
-        'creator' => {
-          'displayName' => 'Tolkien'
         }
-
       }
-    }
-    issue = Issue.new raw: raw, board: sample_board
-    expect(issue.first_status_change_after_created).to be_nil
+      issue = Issue.new raw: raw, board: sample_board
+      expect(issue.first_status_change_after_created).to be_nil
+    end
   end
 
   context 'currently_in_status' do
