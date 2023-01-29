@@ -118,6 +118,14 @@ class Issue
     @changes.find { |change| change.status? && status_names.include?(change.value) == false }&.time
   end
 
+  def first_time_in_or_right_of_column column_name
+    first_time_in_status(*board.status_ids_in_or_right_of_column(column_name))
+  end
+
+  def still_in_or_right_of_column column_name
+    still_in_status(*board.status_ids_in_or_right_of_column(column_name))
+  end
+
   def still_in
     time = nil
     @changes.each do |change|
@@ -138,7 +146,7 @@ class Issue
   # If it ever entered one of these statuses and it's still there then what was the last time it entered
   def still_in_status *status_names
     still_in do |change|
-      status_names.include?(change.value)
+      status_names.include?(change.value) || status_names.include?(change.value_id)
     end
   end
 
@@ -146,7 +154,7 @@ class Issue
   def still_in_status_category *category_names
     still_in do |change|
       status = find_status_by_name change.value
-      category_names.include? status.category_name
+      category_names.include?(status.category_name) || category_names.include?(status.category_id)
     end
   end
 

@@ -125,11 +125,44 @@ describe Issue do
     end
   end
 
-  # context 'first_time_in_or_right_of_column' do
-  #   it '' do
+  context 'first_time_in_or_right_of_column' do
+    it 'should fail for invalid column name' do
+      expect { issue1.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
+        'No visible column with name: NoSuchColumn'
+      )
+    end
 
-  #   end
-  # end
+    it 'should work for happy path' do
+      # The second column is called "In Progress" and it's only mapped to status 3
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
+      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-07-18')
+
+      expect(issue1.first_time_in_or_right_of_column 'In Progress').to eq to_time('2021-07-18')
+    end
+
+    it 'should return nil when no matches' do
+      # The second column is called "In Progress" and it's only mapped to status 3
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
+
+      expect(issue1.first_time_in_or_right_of_column 'In Progress').to be_nil
+    end
+  end
+
+  context 'still_in_or_right_of_column' do
+    it 'should work for happy path' do
+      # The second column is called "In Progress" and it's only mapped to status 3
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-01')
+      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-02')
+      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-03')
+      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-04')
+      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
+
+      expect(issue1.still_in_or_right_of_column 'In Progress').to eq to_time('2021-06-04')
+    end
+  end
 
   context 'first_status_change_after_created' do
     it "first time for any status change - created doesn't count as status change" do

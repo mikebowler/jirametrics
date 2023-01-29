@@ -45,6 +45,20 @@ class Board
     column['statuses'].collect { |status| status['id'].to_i }
   end
 
+  def status_ids_in_or_right_of_column column_name
+    status_ids = []
+    found_it = false
+
+    @visible_columns.each do |column|
+      found_it = true if column.name == column_name
+      status_ids += column.status_ids if found_it
+    end
+
+    raise "No visible column with name: #{column_name}" unless found_it
+
+    status_ids
+  end
+
   def kanban?
     @board_type == 'kanban'
   end
