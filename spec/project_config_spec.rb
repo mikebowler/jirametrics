@@ -131,7 +131,7 @@ describe ProjectConfig do
       issue1.changes << mock_change(field: 'status', value: 'Backlog', time: '2022-01-02')
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
 
-      # Verify that Backlog is the only status in backlog statuses
+      # Verify that Backlog is the only status in backlog statuses. Otherwise the test is meaningless.
       expect(issue1.board.backlog_statuses.collect(&:name)).to eq ['Backlog']
 
       subject.file_prefix 'sample'
