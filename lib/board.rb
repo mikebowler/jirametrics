@@ -54,8 +54,10 @@ class Board
       status_ids += column.status_ids if found_it
     end
 
-    raise "No visible column with name: #{column_name}" unless found_it
-
+    unless found_it
+      column_names = @visible_columns.collect(&:name).collect(&:inspect).join(', ')
+      raise "No visible column with name: #{column_name.inspect} Possible options are: #{column_names}"
+    end
     status_ids
   end
 

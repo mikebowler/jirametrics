@@ -128,7 +128,7 @@ describe Issue do
   context 'first_time_in_or_right_of_column' do
     it 'should fail for invalid column name' do
       expect { issue1.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
-        'No visible column with name: NoSuchColumn'
+        'No visible column with name: "NoSuchColumn" Possible options are: "Ready", "In Progress", "Review", "Done"'
       )
     end
 
