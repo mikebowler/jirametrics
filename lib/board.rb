@@ -21,7 +21,12 @@ class Board
         "Expected first column to be called Backlog: #{raw}"
       end
 
-      @backlog_statuses = @possible_statuses.expand_statuses(status_ids_from_column columns[0])
+      @backlog_statuses = @possible_statuses.expand_statuses(status_ids_from_column columns[0]) do |unknown_status|
+        # Yet another "theoretically impossible and yet we've seen it in production" moment
+        puts "Status #{unknown_status.inspect} is defined as being in the backlog for board #{name.inspect}:#{id} " \
+          'and yet it\'s not defined in the list of possible statuses available to the project. Check your Jira ' \
+          'configuration'
+      end
       columns = columns[1..]
     else
       # We currently don't know how to get the backlog status for a Scrum board

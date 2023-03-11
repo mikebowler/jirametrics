@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class ChartBase
-  attr_accessor :timezone_offset, :board_id, :all_boards, :issues, :date_range,
+  attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates
   attr_writer :aggregated_project
+  attr_reader :issues
 
   @@chart_counter = 0
 
@@ -219,4 +220,16 @@ class ChartBase
   def canvas_width = @canvas_width || 800
   def canvas_height = @canvas_height || 200
   def canvas_responsive? = @canvas_responsive || true
+
+  def filter_issues &block
+    @filter_issues_block = block
+  end
+
+  def issues= issues
+    @issues = issues
+    return unless @filter_issues_block
+
+    @issues = issues.collect { |i| @filter_issues_block.call(i) }.compact.uniq
+    puts @issues.collect(&:key).join(', ')
+  end
 end

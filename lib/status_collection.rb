@@ -25,12 +25,15 @@ class StatusCollection
     names_or_ids = [names_or_ids] unless names_or_ids.is_a? Array
 
     names_or_ids.each do |name_or_id|
-      raise "No statuses found. Looking for: #{name_or_id}" if @list.empty?
-
       status = @list.find { |s| s.name == name_or_id || s.id == name_or_id }
       if status.nil?
-        all_status_names = @list.collect { |s| "#{s.name.inspect}:#{s.id.inspect}" }.uniq.sort.join(', ')
-        raise "Status not found: #{name_or_id}. Possible statuses are: #{all_status_names}"
+        if block_given?
+          yield name_or_id
+          next
+        else
+          all_status_names = @list.collect { |s| "#{s.name.inspect}:#{s.id.inspect}" }.uniq.sort.join(', ')
+          raise "Status not found: #{name_or_id}. Possible statuses are: #{all_status_names}"
+        end
       end
 
       result << status
@@ -48,16 +51,6 @@ class StatusCollection
 
   def done including: nil, excluding: nil
     filter_status_names category_name: 'Done', including: including, excluding: excluding
-  end
-
-  def print_all
-    category_names = @list.collect(&:category_name).uniq.sort.reverse
-    category_names.each do |category|
-      puts category
-      filter_status_names(category_name: category).sort.each do |status_name|
-        puts "  #{status_name}"
-      end
-    end
   end
 
   def find_by_name name

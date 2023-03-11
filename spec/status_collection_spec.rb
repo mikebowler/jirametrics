@@ -59,4 +59,22 @@ describe StatusCollection do
       expect(subject.done).to eq ['d']
     end
   end
+
+  context 'expand_statuses' do
+    # Most variations are covered by tests in other classes
+
+    it 'should raise error when status not found' do
+      expect { subject.expand_statuses [2000] }.to raise_error(
+        'Status not found: 2000. Possible statuses are: "a":1, "b":2, "c":3, "d":4'
+      )
+    end
+
+    it 'should yield when block passed and status not found' do
+      actual_unknown_statuses = []
+      subject.expand_statuses([2000]) do |unknown_status|
+        actual_unknown_statuses << unknown_status
+      end
+      expect(actual_unknown_statuses).to eq [2000]
+    end
+  end
 end
