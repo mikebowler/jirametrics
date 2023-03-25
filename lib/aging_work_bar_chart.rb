@@ -34,7 +34,8 @@ class AgingWorkBarChart < ChartBase
       cycletime = issue.board.cycletime
       cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
     end
-    # @status_colors = pick_colors_for_statuses
+
+    grow_chart_height_if_too_many_issues aging_issues.size
 
     today = date_range.end
     aging_issues.sort! do |a, b|
@@ -80,6 +81,13 @@ class AgingWorkBarChart < ChartBase
     percentage_line_x = date_range.end - calculate_percent_line if percentage
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def grow_chart_height_if_too_many_issues aging_issue_count
+    px_per_bar = 8
+    bars_per_issue = 3
+    preferred_height = aging_issue_count * px_per_bar * bars_per_issue
+    @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
   end
 
   def status_data_sets issue:, label:, today:
