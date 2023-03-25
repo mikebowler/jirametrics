@@ -5,7 +5,7 @@ require './lib/chart_base'
 class AgingWorkBarChart < ChartBase
   @@next_id = 0
 
-  def initialize
+  def initialize block=nil
     super()
 
     header_text 'Aging Work Bar Chart'
@@ -25,6 +25,8 @@ class AgingWorkBarChart < ChartBase
         items in this time period. Anything that started to the left of that is now an outlier.
       </p>
     HTML
+
+    instance_eval(&block) if block
   end
 
   def run

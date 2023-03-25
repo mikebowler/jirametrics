@@ -63,8 +63,8 @@ class HtmlReportConfig
     end
   end
 
-  def aging_work_bar_chart
-    execute_chart AgingWorkBarChart.new
+  def aging_work_bar_chart &block
+    execute_chart AgingWorkBarChart.new(block)
   end
 
   def aging_work_table priority_name = nil, &block
