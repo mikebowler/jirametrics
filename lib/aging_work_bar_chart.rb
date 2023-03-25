@@ -5,7 +5,7 @@ require './lib/chart_base'
 class AgingWorkBarChart < ChartBase
   @@next_id = 0
 
-  def initialize block=nil
+  def initialize block = nil
     super()
 
     header_text 'Aging Work Bar Chart'
