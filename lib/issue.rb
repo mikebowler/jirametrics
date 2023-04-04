@@ -111,7 +111,7 @@ class Issue
   end
 
   def first_time_in_status *status_names
-    @changes.find { |change| change.matches_status status_names }&.time
+    @changes.find { |change| change.current_status_matches *status_names }&.time
   end
 
   def first_time_not_in_status *status_names
@@ -167,7 +167,7 @@ class Issue
     change = most_recent_status_change
     return false if change.nil?
 
-    change.time if change.matches_status status_names
+    change.time if change.current_status_matches *status_names
   end
 
   # Are we currently in this status category? If yes, then return the time of the most recent status change.
@@ -265,6 +265,10 @@ class Issue
   end
 
   def blocked_on_date? date
+    flagged_on_date?(date) # || in_blocked_status_on_date?(date)
+  end
+
+  def flagged_on_date? date
     blocked_start = nil
     changes.each do |change|
       next unless change.flagged?
@@ -292,6 +296,34 @@ class Issue
       false
     end
   end
+
+  def in_blocked_status_on_date? date, project_config: @board.project_config
+    blocked_statuses = project_config.possible_statuses.expand_statuses(
+      project_config.settings['blocked_statuses']
+    )
+
+    enabled_hash = {}
+    blocked_statuses.each { |status| enabled_hash[status.id] = false }
+
+    changes.each do |change|
+      next unless change.status?
+
+      change_date = change.time.to_date
+      return true if change_date >= date && enabled_hash.any? { |_status_name, blocked| blocked }
+      return false if change_date > date
+
+      if change.current_status_matches(*blocked_statuses)
+        enabled_hash[change.value_id] = true
+      elsif change.old_status_matches(*blocked_statuses)
+        enabled_hash[change.old_value_id] = false
+      end
+    end
+
+    enabled_hash.any? { |_status_name, blocked| blocked }
+  end
+
+  # def has_active_blocked_link_on_date? link_name:, date:
+  # end
 
   def stalled_on_date? date, stalled_threshold = 5
     # Did any changes happen within the threshold

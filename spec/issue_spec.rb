@@ -3,6 +3,11 @@
 require './spec/spec_helper'
 
 describe Issue do
+  let(:exporter) { Exporter.new }
+  let(:target_path) { 'spec/testdata/' }
+  let(:project_config) do
+    ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+  end
   let(:board) do
     board = sample_board
     statuses = board.possible_statuses
@@ -366,7 +371,7 @@ describe Issue do
     end
   end
 
-  context 'blocked_on_date?' do
+  context 'flagged_on_date?' do
     it 'should work when blocked and unblocked on same day' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
@@ -374,9 +379,9 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
 
       actual = [
-        issue.blocked_on_date?(to_date('2021-10-02')),
-        issue.blocked_on_date?(to_date('2021-10-03')),
-        issue.blocked_on_date?(to_date('2021-10-04'))
+        issue.flagged_on_date?(to_date('2021-10-02')),
+        issue.flagged_on_date?(to_date('2021-10-03')),
+        issue.flagged_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, true, false]
     end
@@ -387,9 +392,9 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03')
 
       actual = [
-        issue.blocked_on_date?(to_date('2021-10-02')),
-        issue.blocked_on_date?(to_date('2021-10-03')),
-        issue.blocked_on_date?(to_date('2021-10-04'))
+        issue.flagged_on_date?(to_date('2021-10-02')),
+        issue.flagged_on_date?(to_date('2021-10-03')),
+        issue.flagged_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, true, true]
     end
@@ -402,11 +407,64 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03')
 
       actual = [
-        issue.blocked_on_date?(to_date('2021-10-02')),
-        issue.blocked_on_date?(to_date('2021-10-03')),
-        issue.blocked_on_date?(to_date('2021-10-04'))
+        issue.flagged_on_date?(to_date('2021-10-02')),
+        issue.flagged_on_date?(to_date('2021-10-03')),
+        issue.flagged_on_date?(to_date('2021-10-04'))
       ]
       expect(actual).to eq [false, false, false]
+    end
+  end
+
+  context 'in_blocked_status_on_date?' do
+    let(:blocked_status) { Status.new(name: 'Blocked', id: 20_000, category_name: 'foo', category_id: 20_001) }
+    let(:in_progress_status) { project_config.possible_statuses.find { |s| s.name == 'In Progress' } }
+
+    it 'should return false if no blocked statuses specified' do
+      date = to_date('2021-10-01')
+      issue = empty_issue created: date
+
+      expect(issue.in_blocked_status_on_date? date, project_config: project_config).to be_falsey
+    end
+
+    it 'should work when blocked and unblocked on same day' do
+      project_config.possible_statuses << blocked_status
+      project_config.settings['blocked_statuses'] = [blocked_status.name]
+
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status', value: in_progress_status, time: '2021-10-02')
+      issue.changes << mock_change(
+        field: 'status', value: blocked_status, old_value: in_progress_status, time: '2021-10-03T00:01:00'
+      )
+      issue.changes << mock_change(
+        field: 'status', value: in_progress_status, old_value: blocked_status, time: '2021-10-03T00:02:00'
+      )
+
+      actual = [
+        issue.in_blocked_status_on_date?(to_date('2021-10-02'), project_config: project_config),
+        issue.in_blocked_status_on_date?(to_date('2021-10-03'), project_config: project_config),
+        issue.in_blocked_status_on_date?(to_date('2021-10-04'), project_config: project_config)
+      ]
+      expect(actual).to eq [false, true, false]
+    end
+
+    it 'should still be blocked the day after' do
+      project_config.possible_statuses << blocked_status
+      project_config.settings['blocked_statuses'] = [blocked_status.name]
+
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'status', value: in_progress_status, time: '2021-10-02'
+      )
+      issue.changes << mock_change(
+        field: 'status', value: blocked_status, old_value: in_progress_status, time: '2021-10-03'
+      )
+
+      actual = [
+        issue.in_blocked_status_on_date?(to_date('2021-10-02'), project_config: project_config),
+        issue.in_blocked_status_on_date?(to_date('2021-10-03'), project_config: project_config),
+        issue.in_blocked_status_on_date?(to_date('2021-10-04'), project_config: project_config)
+      ]
+      expect(actual).to eq [false, true, true]
     end
   end
 
@@ -621,12 +679,6 @@ describe Issue do
     end
 
     context 'custom fields' do
-      let(:exporter) { Exporter.new }
-      let(:target_path) { 'spec/testdata/' }
-      let(:project_config) do
-        ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
-      end
-
       it 'should determine multiple custom fields from settings and get the parent from there' do
         project_config.settings['customfield_parent_links'] = %w[customfield_1 customfield_2]
         issue.board.project_config = project_config

@@ -46,11 +46,33 @@ class ChangeItem
     field.eql?(other.field) && value.eql?(other.value) && time.to_s.eql?(other.time.to_s)
   end
 
-  def matches_status status_names_or_ids
+  def current_status_matches *status_names_or_ids
     return false unless status?
 
     status_names_or_ids.any? do |name_or_id|
-      @value == name_or_id || @value_id == name_or_id # rubocop:disable Style/MultipleComparison
+      case name_or_id
+      when Status
+        name_or_id.id == @value_id
+      when String
+        name_or_id == @value
+      else
+        name_or_id == @value_id
+      end
+    end
+  end
+
+  def old_status_matches *status_names_or_ids
+    return false unless status?
+
+    status_names_or_ids.any? do |name_or_id|
+      case name_or_id
+      when Status
+        name_or_id.id == @old_value_id
+      when String
+        name_or_id == @old_value
+      else
+        name_or_id == @old_value_id
+      end
     end
   end
 end
