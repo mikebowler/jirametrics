@@ -297,10 +297,12 @@ class Issue
     end
   end
 
-  def in_blocked_status_on_date? date, project_config: @board.project_config
-    blocked_statuses = project_config.possible_statuses.expand_statuses(
-      project_config.settings['blocked_statuses']
-    )
+  def in_blocked_status_on_date?(
+    date, blocked_status_names: @board.project_config&.settings&.[]('blocked_statuses')
+  )
+    return false if blocked_status_names.nil?
+
+    blocked_statuses = @board.possible_statuses.expand_statuses(blocked_status_names)
 
     enabled_hash = {}
     blocked_statuses.each { |status| enabled_hash[status.id] = false }

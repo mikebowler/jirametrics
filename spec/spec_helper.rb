@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+RSpec.configure do |config|
+  config.formatter = :documentation
+end
+
 ENV['RACK_ENV'] = 'test'
 
 require 'simplecov'
@@ -33,10 +37,10 @@ def load_issue key, board: nil
   Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")), board: board)
 end
 
-def empty_issue created:, board: sample_board
+def empty_issue created:, board: sample_board, key: 'SP-1'
   Issue.new(
     raw: {
-      'key' => 'SP-1',
+      'key' => key,
       'changelog' => { 'histories' => [] },
       'fields' => {
         'created' => to_time(created).to_s,
@@ -107,7 +111,17 @@ def load_complete_sample_date_range
   to_time('2021-09-14T00:00:00+00:00')..to_time('2021-12-13T23:59:59+00:00')
 end
 
+# If either value or old_value are statuses then the name and id will be pulled from that object
 def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil, artificial: false
+  if value.is_a? Status
+    value_id = value.id
+    value = value.name
+  end
+  if old_value.is_a? Status
+    old_value_id = old_value.id
+    old_value = old_value.name
+  end
+
   time = to_time(time) if time.is_a? String
   ChangeItem.new time: time, author: 'Tolkien', artificial: artificial, raw: {
     'field' => field,
@@ -148,7 +162,9 @@ def chart_format object
 end
 
 def to_time string
-  if string =~ /^(\d{4})-(\d{2})-(\d{2})$/
+  if string.is_a? Date
+    Time.new string.year, string.month, string.day, 0, 0, 0, '+00:00'
+  elsif string =~ /^(\d{4})-(\d{2})-(\d{2})$/
     Time.new $1.to_i, $2.to_i, $3.to_i, 0, 0, 0, '+00:00'
   elsif string =~ /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
     Time.new $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, '+00:00'

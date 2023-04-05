@@ -417,20 +417,19 @@ describe Issue do
 
   context 'in_blocked_status_on_date?' do
     let(:blocked_status) { Status.new(name: 'Blocked', id: 20_000, category_name: 'foo', category_id: 20_001) }
-    let(:in_progress_status) { project_config.possible_statuses.find { |s| s.name == 'In Progress' } }
+    let(:in_progress_status) { board.possible_statuses.find { |s| s.name == 'In Progress' } }
 
     it 'should return false if no blocked statuses specified' do
       date = to_date('2021-10-01')
       issue = empty_issue created: date
+      issue.board.possible_statuses << blocked_status
 
-      expect(issue.in_blocked_status_on_date? date, project_config: project_config).to be_falsey
+      expect(issue.in_blocked_status_on_date? date, blocked_status_names: %w[Blocked]).to be_falsey
     end
 
     it 'should work when blocked and unblocked on same day' do
-      project_config.possible_statuses << blocked_status
-      project_config.settings['blocked_statuses'] = [blocked_status.name]
-
       issue = empty_issue created: '2021-10-01'
+      issue.board.possible_statuses << blocked_status
       issue.changes << mock_change(field: 'status', value: in_progress_status, time: '2021-10-02')
       issue.changes << mock_change(
         field: 'status', value: blocked_status, old_value: in_progress_status, time: '2021-10-03T00:01:00'
@@ -440,18 +439,16 @@ describe Issue do
       )
 
       actual = [
-        issue.in_blocked_status_on_date?(to_date('2021-10-02'), project_config: project_config),
-        issue.in_blocked_status_on_date?(to_date('2021-10-03'), project_config: project_config),
-        issue.in_blocked_status_on_date?(to_date('2021-10-04'), project_config: project_config)
+        issue.in_blocked_status_on_date?(to_date('2021-10-02'), blocked_status_names: %w[Blocked]),
+        issue.in_blocked_status_on_date?(to_date('2021-10-03'), blocked_status_names: %w[Blocked]),
+        issue.in_blocked_status_on_date?(to_date('2021-10-04'), blocked_status_names: %w[Blocked])
       ]
       expect(actual).to eq [false, true, false]
     end
 
     it 'should still be blocked the day after' do
-      project_config.possible_statuses << blocked_status
-      project_config.settings['blocked_statuses'] = [blocked_status.name]
-
       issue = empty_issue created: '2021-10-01'
+      issue.board.possible_statuses << blocked_status
       issue.changes << mock_change(
         field: 'status', value: in_progress_status, time: '2021-10-02'
       )
@@ -460,9 +457,9 @@ describe Issue do
       )
 
       actual = [
-        issue.in_blocked_status_on_date?(to_date('2021-10-02'), project_config: project_config),
-        issue.in_blocked_status_on_date?(to_date('2021-10-03'), project_config: project_config),
-        issue.in_blocked_status_on_date?(to_date('2021-10-04'), project_config: project_config)
+        issue.in_blocked_status_on_date?(to_date('2021-10-02'), blocked_status_names: %w[Blocked]),
+        issue.in_blocked_status_on_date?(to_date('2021-10-03'), blocked_status_names: %w[Blocked]),
+        issue.in_blocked_status_on_date?(to_date('2021-10-04'), blocked_status_names: %w[Blocked])
       ]
       expect(actual).to eq [false, true, true]
     end
