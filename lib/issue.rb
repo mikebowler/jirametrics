@@ -265,7 +265,7 @@ class Issue
   end
 
   def blocked_on_date? date
-    flagged_on_date?(date) # || in_blocked_status_on_date?(date)
+    flagged_on_date?(date) || in_blocked_status_on_date?(date)
   end
 
   def flagged_on_date? date
