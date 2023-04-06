@@ -58,7 +58,10 @@ class AgingWorkTable < ChartBase
   end
 
   def blocked_text issue
-    return icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon if issue.blocked_on_date? @today
+    return icon_span title: 'Blocked: Has the flag set', icon: @blocked_icon if issue.flagged_on_date? @today
+
+    blocked_status = issue.in_blocked_status_on_date? @today
+    return icon_span title: "Blocked: in status #{blocked_status.inspect}", icon: @blocked_icon if blocked_status
 
     started_time = issue.board.cycletime.started_time(issue)
     return nil if started_time.nil? || started_time.to_date >= @today
@@ -67,7 +70,8 @@ class AgingWorkTable < ChartBase
 
     if days_since_last_activity > @dead_threshold
       icon_span(
-        title: "Dead? Hasn&apos;t had any activity in #{label_days days_since_last_activity}. Does anyone still care about this?",
+        title: "Dead? Hasn&apos;t had any activity in #{label_days days_since_last_activity}. " \
+          'Does anyone still care about this?',
         icon: @dead_icon
       )
     elsif days_since_last_activity > @stalled_threshold

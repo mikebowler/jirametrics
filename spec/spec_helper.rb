@@ -84,7 +84,12 @@ end
 
 def load_complete_sample_board
   json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
-  Board.new raw: json, possible_statuses: load_complete_sample_statuses
+  board = Board.new raw: json, possible_statuses: load_complete_sample_statuses
+  board.project_config = ProjectConfig.new(
+    exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
+  )
+
+  board
 end
 
 def load_complete_sample_statuses

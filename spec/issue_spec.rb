@@ -443,7 +443,7 @@ describe Issue do
         issue.in_blocked_status_on_date?(to_date('2021-10-03'), blocked_status_names: %w[Blocked]),
         issue.in_blocked_status_on_date?(to_date('2021-10-04'), blocked_status_names: %w[Blocked])
       ]
-      expect(actual).to eq [false, true, false]
+      expect(actual).to eq [false, blocked_status.name, false]
     end
 
     it 'should still be blocked the day after' do
@@ -461,7 +461,7 @@ describe Issue do
         issue.in_blocked_status_on_date?(to_date('2021-10-03'), blocked_status_names: %w[Blocked]),
         issue.in_blocked_status_on_date?(to_date('2021-10-04'), blocked_status_names: %w[Blocked])
       ]
-      expect(actual).to eq [false, true, true]
+      expect(actual).to eq [false, blocked_status.name, blocked_status.name]
     end
   end
 
