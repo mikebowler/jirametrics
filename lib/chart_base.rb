@@ -4,7 +4,7 @@ class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates
   attr_writer :aggregated_project
-  attr_reader :issues
+  attr_reader :issues, :canvas_width, :canvas_height
 
   @@chart_counter = 0
 
@@ -22,6 +22,9 @@ class ChartBase
       'light:Epic' => '#fafad2',
       'light:Spike' => '#DDA0DD' # light purple
     }
+    @canvas_width = 800
+    @canvas_height = 200
+    @canvas_responsive = true
   end
 
   def aggregated_project?
@@ -45,7 +48,6 @@ class ChartBase
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
     result << render(caller_binding, file)
-    # result << ERB.new(File.read('html/data_quality_checks.erb')).result(caller_binding)
     result
   end
 
@@ -217,9 +219,9 @@ class ChartBase
     @canvas_responsive = responsive
   end
 
-  def canvas_width = @canvas_width || 800
-  def canvas_height = @canvas_height || 200
-  def canvas_responsive? = @canvas_responsive || true
+  def canvas_responsive?
+    @canvas_responsive
+  end
 
   def filter_issues &block
     @filter_issues_block = block

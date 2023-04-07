@@ -26,6 +26,9 @@ class AgingWorkBarChart < ChartBase
       </p>
     HTML
 
+    # Because this one will size itself as needed, we start with a smaller default size
+    @canvas_height = 80
+
     instance_eval(&block) if block
   end
 
