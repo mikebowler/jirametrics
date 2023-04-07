@@ -13,7 +13,13 @@ describe AgingWorkBarChart do
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |_day| false }
 
-      expect(data_sets).to be_nil
+      expect(data_sets).to eq({
+        backgroundColor: 'red',
+        data: [],
+        stack: 'blocked',
+        stacked: true,
+        type: 'bar'
+      })
     end
 
     it 'should handle a single blocked range completely within the date range' do
