@@ -54,7 +54,7 @@ class ChartBase
   end
 
   def color_for type:, shade: :dark
-    @chart_colors["#{shade}:#{type}"] || 'red'
+    @chart_colors["#{shade}:#{type}"] ||= random_color
   end
 
   def label_days days
