@@ -323,35 +323,6 @@ class Issue
 
     current_blocked_status
   end
-  # def in_blocked_status_on_date?(
-  #   date, blocked_status_names: @board.project_config&.settings&.[]('blocked_statuses')
-  # )
-  #   return false if blocked_status_names.nil?
-
-  #   blocked_statuses = @board.possible_statuses.expand_statuses(blocked_status_names)
-
-  #   enabled_hash = {}
-  #   blocked_statuses.each { |status| enabled_hash[status.id] = false }
-
-  #   changes.each do |change|
-  #     next unless change.status?
-
-  #     change_date = change.time.to_date
-  #     return true if change_date >= date && enabled_hash.any? { |_status_name, blocked| blocked }
-  #     return false if change_date > date
-
-  #     if change.current_status_matches(*blocked_statuses)
-  #       enabled_hash[change.value_id] = true
-  #     elsif change.old_status_matches(*blocked_statuses)
-  #       enabled_hash[change.old_value_id] = false
-  #     end
-  #   end
-
-  #   enabled_hash.any? { |_status_name, blocked| blocked }
-  # end
-
-  # def has_active_blocked_link_on_date? link_name:, date:
-  # end
 
   def stalled_on_date? date, stalled_threshold = 5
     # Did any changes happen within the threshold
