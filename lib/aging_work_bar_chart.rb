@@ -181,8 +181,6 @@ class AgingWorkBarChart < ChartBase
       }
     end
 
-    # return nil if data.empty?
-
     {
       type: 'bar',
       data: data,
