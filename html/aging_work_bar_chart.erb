@@ -15,7 +15,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       x: {
         type: 'time',
         min: '<%= @date_range.begin.to_s %>',
-        max: '<%= (@date_range.end + 1).to_s %>',
+        max: '<%= (@date_range.end ).to_s %>',
         stacked: false,
         title: {
           display: false

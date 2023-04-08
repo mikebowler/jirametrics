@@ -3,9 +3,9 @@
 require './spec/spec_helper'
 
 describe AgingWorkBarChart do
-  context 'data_set_by_block' do
-    let(:subject) { AgingWorkBarChart.new }
+  let(:subject) { AgingWorkBarChart.new }
 
+  context 'data_set_by_block' do
     it 'should handle nothing blocked at all' do
       issue = load_issue('SP-1')
       data_sets = subject.data_set_by_block(
@@ -87,8 +87,6 @@ describe AgingWorkBarChart do
   end
 
   context 'status_data_sets' do
-    let(:subject) { AgingWorkBarChart.new }
-
     it 'should return nil if no status' do
       subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       subject.timezone_offset = '+0000'
@@ -108,6 +106,33 @@ describe AgingWorkBarChart do
             }
           ],
           stack: 'status',
+          stacked: true,
+          type: 'bar'
+        }
+      ])
+    end
+  end
+
+  context 'blocked_data_sets' do
+    it 'should handle blocked by flag' do
+      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      subject.timezone_offset = '+0000'
+      issue = empty_issue created: '2021-01-01', board: sample_board
+      issue.changes << mock_change(field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
+
+      data_sets = subject.blocked_data_sets issue: issue, stack: 'blocked', color: 'pink', issue_label: 'SP-1'
+      expect(data_sets).to eq([
+        {
+          backgroundColor: 'pink',
+          data: [
+            {
+              title: 'Flagged',
+              x: ['2021-01-02T00:00:00+0000', '2021-01-02T23:59:59+0000'],
+              y: 'SP-1'
+            }
+          ],
+          stack: 'blocked',
           stacked: true,
           type: 'bar'
         }

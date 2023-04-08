@@ -51,14 +51,12 @@ class AgingWorkBarChart < ChartBase
       issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
       [
         status_data_sets(issue: issue, label: issue_label, today: today),
-        data_set_by_block(
+        blocked_data_sets(
           issue: issue,
           issue_label: issue_label,
-          title_label: 'Blocked',
           stack: 'blocked',
-          color: '#FF7400',
-          start_date: issue_start_date
-        ) { |day| issue.blocked_on_date? day },
+          color: '#FF7400'
+        ),
         data_set_by_block(
           issue: issue,
           issue_label: issue_label,
@@ -147,6 +145,33 @@ class AgingWorkBarChart < ChartBase
       }
     end
 
+    data_sets
+  end
+
+  def blocked_data_sets issue:, issue_label:, stack:, color:
+    data_sets = []
+    date_range.each do |date|
+      reasons = []
+      reasons << 'Flagged' if issue.flagged_on_date? date
+      blocked_status = issue.in_blocked_status_on_date? date
+      reasons << "Status: #{blocked_status}" if blocked_status
+
+      next if reasons.empty?
+
+      data_sets << {
+        backgroundColor: color,
+        data: [
+          {
+            title: reasons.join(', '),
+            x: ["#{date}T00:00:00+0000", "#{date}T23:59:59+0000"],
+            y: issue_label
+          }
+        ],
+        stack: stack,
+        stacked: true,
+        type: 'bar'
+      }
+    end
     data_sets
   end
 
