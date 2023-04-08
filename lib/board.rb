@@ -55,7 +55,8 @@ class Board
     found_it = false
 
     @visible_columns.each do |column|
-      found_it = true if column.name == column_name
+      # Check both the current name and also the original raw name in case anonymization has happened.
+      found_it = true if column.name == column_name || column.raw['name'] == column_name
       status_ids += column.status_ids if found_it
     end
 

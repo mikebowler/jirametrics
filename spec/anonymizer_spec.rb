@@ -71,4 +71,20 @@ describe Anonymizer do
       expect(other_issue.summary).to eq 'random_phrase'
     end
   end
+
+  context 'Board.status_ids_in_or_right_of_column' do
+    let(:board) { anonymizer.project_config.all_boards[1] }
+
+    it 'should work when not anonymized' do
+      expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
+      expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+    end
+
+    it 'should still work after anonymization' do
+      anonymizer.anonymize_column_names
+      expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
+      expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+    end
+  end
+
 end
