@@ -54,7 +54,10 @@ class DependencyChart < ChartBase
   def run
     instance_eval(&@rules_block) if @rules_block
 
-    svg = execute_graphviz(build_dot_graph.join("\n"))
+    dot_graph = build_dot_graph
+    return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if dot_graph.nil?
+
+    svg = execute_graphviz(dot_graph.join("\n"))
     "<h1>#{@header_text}</h1><div>#{@description_text}</div>#{shrink_svg svg}"
   end
 
@@ -155,6 +158,8 @@ class DependencyChart < ChartBase
 
     dot_graph += link_graph
     dot_graph << '}'
+
+    return nil if visible_issues.empty?
     dot_graph
   end
 
