@@ -14,11 +14,7 @@ describe DependencyChart do
   context 'build_dot_graph' do
     it 'should handle no issues' do
       subject.issues = []
-      expect(subject.build_dot_graph).to eq [
-        'digraph mygraph {',
-        'rankdir=LR',
-        '}'
-      ]
+      expect(subject.build_dot_graph).to be_nil
     end
 
     it 'should handle simple graph of relationships with default configuration' do
