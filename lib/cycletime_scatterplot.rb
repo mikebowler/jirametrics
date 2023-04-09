@@ -46,6 +46,8 @@ class CycletimeScatterplot < ChartBase
     overall_percent_line = calculate_percent_line(completed_issues)
     @percentage_lines << [overall_percent_line, 'gray']
 
+    return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
+
     wrap_and_render(binding, __FILE__)
   end
 
