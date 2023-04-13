@@ -111,7 +111,7 @@ class Issue
   end
 
   def first_time_in_status *status_names
-    @changes.find { |change| change.current_status_matches *status_names }&.time
+    @changes.find { |change| change.current_status_matches(*status_names) }&.time
   end
 
   def first_time_not_in_status *status_names
@@ -167,7 +167,7 @@ class Issue
     change = most_recent_status_change
     return false if change.nil?
 
-    change.time if change.current_status_matches *status_names
+    change.time if change.current_status_matches(*status_names)
   end
 
   # Are we currently in this status category? If yes, then return the time of the most recent status change.
@@ -183,7 +183,7 @@ class Issue
     status = board.possible_statuses.find_by_name(name)
     return status if status
 
-    raise "Status name #{name.inspect} not found in #{board.possible_statuses.collect(&:name).inspect}"
+    raise "Status name #{name.inspect} for issue #{key} not found in #{board.possible_statuses.collect(&:name).inspect}"
   end
 
   def first_status_change_after_created
