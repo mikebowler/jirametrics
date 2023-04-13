@@ -24,7 +24,7 @@ class SprintIssueChangeData
     result << 'SprintIssueChangeData('
     result << instance_variables.collect do |variable|
       "#{variable}=#{instance_variable_get(variable).inspect}"
-    end.join(', ')
+    end.sort.join(', ')
     result << ')'
     result
   end
