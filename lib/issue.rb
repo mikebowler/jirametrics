@@ -345,6 +345,35 @@ class Issue
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 
+  def blocked_stalled_changes settings: @board.project_config.settings
+    blocked_statuses = settings['blocked_statuses'] || []
+
+    result = []
+    last_type = :active
+
+    changes.each do |change|
+      type = :active
+      details = nil
+
+      next if change.artificial?
+
+      if change.flagged? && change.value != ''
+        type = :flagged
+        details = { flagged: change.value }
+      elsif change.status? && blocked_statuses.include?(change.value)
+        type = :blocked_status
+        details = { status: change.value }
+      end
+
+      # We don't want to dump two actives in a row. That would just be noise.
+      next if type == :active && last_type == :active
+
+      last_type = type
+      result << BlockedStalledChange.new(type: type, details: details, time: change.time)
+    end
+    result
+  end
+
   def expedited?
     names = @board&.expedited_priority_names
     return false unless names

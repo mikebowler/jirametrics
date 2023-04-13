@@ -492,6 +492,61 @@ describe Issue do
     end
   end
 
+  context 'blocked_stalled_changes' do
+    let(:issue) { empty_issue created: '2021-10-01' }
+    let(:settings) { { 'blocked_statuses' => ['Blocked', 'Blocked2'] } }
+
+    it 'should handle never blocked' do
+      issue = empty_issue created: '2021-10-01'
+      expect(issue.blocked_stalled_changes settings: settings).to be_empty
+    end
+
+    it 'should handle flagged and unflagged' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      expect(issue.blocked_stalled_changes settings: settings).to eq [
+        BlockedStalledChange.new(type: :flagged, details: { flagged: 'Blocked' }, time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(type: :active, time: to_time('2021-10-03T00:02:00'))
+      ]
+    end
+
+    it 'should handle blocked status' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
+      expect(issue.blocked_stalled_changes settings: settings).to eq [
+        BlockedStalledChange.new(
+          type: :blocked_status, details: { status: 'Blocked' }, time: to_time('2021-10-03')
+        ),
+        BlockedStalledChange.new(
+          type: :blocked_status, details: { status: 'Blocked2' }, time: to_time('2021-10-04')
+        ),
+        BlockedStalledChange.new(
+          type: :active, time: to_time('2021-10-05')
+        )
+      ]
+    end
+
+    it 'should handle contiguous blocked statuses' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
+      expect(issue.blocked_stalled_changes settings: settings).to eq [
+        BlockedStalledChange.new(
+          type: :blocked_status, details: { status: 'Blocked' }, time: to_time('2021-10-03')
+        ),
+        BlockedStalledChange.new(
+          type: :active, time: to_time('2021-10-04')
+        )
+      ]
+    end
+  end
+
   context 'inspect' do
     it 'should return a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
