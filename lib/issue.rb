@@ -348,17 +348,27 @@ class Issue
   def blocked_stalled_changes settings: @board.project_config.settings
     blocked_statuses = settings['blocked_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []
+    stalled_threshold = settings['stalled_threshold']
 
     blocking_issue_keys = []
 
     result = []
     previous_was_active = true
+    previous_change_time = created
 
     changes.each do |change|
       next if change.artificial?
 
       blocking_status = nil
       flag = nil
+
+      # Stalled check
+      days = (change.time.to_date - previous_change_time.to_date).to_i
+      if days >= stalled_threshold
+        an_hour_later = previous_change_time + (60 * 60)
+        result << BlockedStalledChange.new(stalled_days: days, time: an_hour_later)
+        previous_was_active = false
+      end
 
       if change.flagged? && change.value != ''
         flag = change.value
@@ -390,6 +400,7 @@ class Issue
       result << new_change unless new_change.active? && previous_was_active
 
       previous_was_active = new_change.active?
+      previous_change_time = change.time
     end
 
     result

@@ -170,8 +170,8 @@ class HtmlReportConfig
 
     chart.issues = issues
     chart.time_range = project_config.time_range
-    # chart.possible_statuses = project_config.possible_statuses
     chart.timezone_offset = timezone_offset
+    chart.settings = project_config.settings
 
     chart.all_boards = project_config.all_boards
     chart.board_id = find_board_id if chart.respond_to? :board_id=

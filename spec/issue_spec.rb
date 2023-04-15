@@ -497,7 +497,8 @@ describe Issue do
     let(:settings) do
       {
         'blocked_statuses' => %w[Blocked Blocked2],
-        'blocked_link_text' => ['is blocked by']
+        'blocked_link_text' => ['is blocked by'],
+        'stalled_threshold' => 5
       }
     end
 
@@ -552,6 +553,20 @@ describe Issue do
       expect(issue.blocked_stalled_changes settings: settings).to eq [
         BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
         BlockedStalledChange.new(time: to_time('2021-10-03'))
+      ]
+    end
+
+    it 'should handle stalled' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-02'
+      )
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing2', time: '2021-10-12'
+      )
+      expect(issue.blocked_stalled_changes settings: settings).to eq [
+        BlockedStalledChange.new(stalled_days: 10, time: to_time('2021-10-02T01:00:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-12'))
       ]
     end
   end

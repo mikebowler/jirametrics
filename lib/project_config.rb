@@ -20,7 +20,13 @@ class ProjectConfig
     @possible_statuses = StatusCollection.new
     @name = name
     @board_configs = []
-    @settings = {}
+    @settings = {
+      'stalled_threshold' => 5,
+      'colors' => {
+        'stalled' => 'orange',
+        'blocked' => '#FF7400'
+      }
+    }
   end
 
   def evaluate_next_level

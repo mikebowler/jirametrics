@@ -123,16 +123,20 @@ describe AgingWorkBarChart do
     end
 
     it 'should handle blocked by flag' do
+      subject.settings = board.project_config.settings
       subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
       subject.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
       issue.changes << mock_change(field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
-      data_sets = subject.blocked_data_sets issue: issue, stack: 'blocked', color: 'pink', issue_label: 'SP-1'
+      data_sets = subject.blocked_data_sets(
+        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      )
       expect(data_sets).to eq([
         {
-          backgroundColor: 'pink',
+          backgroundColor: '#FF7400',
           data: [
             {
               title: 'Flagged',
@@ -148,17 +152,21 @@ describe AgingWorkBarChart do
     end
 
     it 'should handle blocked by status' do
-      board.project_config.settings['blocked_statuses'] = ['Blocked']
+      subject.settings = board.project_config.settings
+      subject.settings['blocked_statuses'] = ['Blocked']
       subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
       subject.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2021-01-02')
       issue.changes << mock_change(field: 'status', value: 'Doing',   time: '2021-01-03')
 
-      data_sets = subject.blocked_data_sets issue: issue, stack: 'blocked', color: 'pink', issue_label: 'SP-1'
+      data_sets = subject.blocked_data_sets(
+        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      )
       expect(data_sets).to eq([
         {
-          backgroundColor: 'pink',
+          backgroundColor: '#FF7400',
           data: [
             {
               title: 'Blocked by status: Blocked',
@@ -174,9 +182,11 @@ describe AgingWorkBarChart do
     end
 
     it 'should handle blocked by issue' do
-      board.project_config.settings['blocked_link_text'] = ['is blocked by']
+      subject.settings = board.project_config.settings
+      subject.settings['blocked_link_text'] = ['is blocked by']
 
       subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
       subject.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(
@@ -186,10 +196,12 @@ describe AgingWorkBarChart do
         field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 
-      data_sets = subject.blocked_data_sets issue: issue, stack: 'blocked', color: 'pink', issue_label: 'SP-1'
+      data_sets = subject.blocked_data_sets(
+        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      )
       expect(data_sets).to eq([
         {
-          backgroundColor: 'pink',
+          backgroundColor: '#FF7400',
           data: [
             {
               title: 'Blocked by issues: SP-10',

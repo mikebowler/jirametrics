@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
-    :time_range, :data_quality, :holiday_dates
+    :time_range, :data_quality, :holiday_dates, :settings
   attr_writer :aggregated_project
   attr_reader :issues, :canvas_width, :canvas_height
 

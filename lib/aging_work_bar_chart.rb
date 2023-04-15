@@ -47,7 +47,8 @@ class AgingWorkBarChart < ChartBase
     data_sets = []
     aging_issues.each do |issue|
       cycletime = issue.board.cycletime
-      issue_start_date = cycletime.started_time(issue).to_date
+      issue_start_time = cycletime.started_time(issue)
+      issue_start_date = issue_start_time.to_date
       issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
       [
         status_data_sets(issue: issue, label: issue_label, today: today),
@@ -55,16 +56,8 @@ class AgingWorkBarChart < ChartBase
           issue: issue,
           issue_label: issue_label,
           stack: 'blocked',
-          color: '#FF7400'
+          issue_start_time: issue_start_time
         ),
-        data_set_by_block(
-          issue: issue,
-          issue_label: issue_label,
-          title_label: 'Stalled',
-          stack: 'blocked',
-          color: 'orange',
-          start_date: issue_start_date
-        ) { |day| issue.stalled_on_date?(day) && !issue.blocked_on_date?(day) },
         data_set_by_block(
           issue: issue,
           issue_label: issue_label,
@@ -148,13 +141,15 @@ class AgingWorkBarChart < ChartBase
     data_sets
   end
 
-  def one_block_change_data_set starting_change:, ending_time:, color:, issue_label:, stack:
+  def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:
+    color = settings['colors']['blocked']
+    color = settings['colors']['stalled'] if starting_change.stalled?
     {
       backgroundColor: color,
       data: [
         {
           title: starting_change.reasons,
-          x: [chart_format(starting_change.time), chart_format(ending_time)],
+          x: [chart_format([issue_start_time, starting_change.time].max), chart_format(ending_time)],
           y: issue_label
         }
       ],
@@ -164,29 +159,39 @@ class AgingWorkBarChart < ChartBase
     }
   end
 
-  def blocked_data_sets issue:, issue_label:, stack:, color:
+  def blocked_data_sets issue:, issue_label:, issue_start_time:, stack:
     data_sets = []
     starting_change = nil
 
     issue.blocked_stalled_changes.each do |change|
-      puts change.inspect if change.blocking_issue_keys
-      if starting_change.nil?
+      if starting_change.nil? || starting_change.active?
         starting_change = change
         next
       end
 
-      data_sets << one_block_change_data_set(
-        starting_change: starting_change, ending_time: change.time,
-        color: color, issue_label: issue_label, stack: stack
-      )
+      if change.time >= issue_start_time
+        data_sets << one_block_change_data_set(
+          starting_change: starting_change, ending_time: change.time,
+          issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
+        )
+      end
 
-      starting_change = nil if change.active?
+      # starting_change = nil if change.active?
+      starting_change = change
     end
 
-    if starting_change
+    if starting_change && !starting_change.active?
       data_sets << one_block_change_data_set(
         starting_change: starting_change, ending_time: time_range.end,
-        color: color, issue_label: issue_label, stack: stack
+        issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
+      )
+    end
+
+    stalled_threshold = settings['stalled_threshold']
+    if starting_change && (starting_change.time - time_range.end).to_i > stalled_threshold
+      data_sets << one_block_change_data_set(
+        starting_change: starting_change, ending_time: time_range.end,
+        issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
       )
     end
 

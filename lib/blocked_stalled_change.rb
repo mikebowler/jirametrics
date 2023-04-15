@@ -25,9 +25,11 @@ class BlockedStalledChange
 
   def reasons
     result = []
+    result << "Stalled: #{@stalled_days} days" if stalled?
     result << 'Flagged' if @flag
     result << "Blocked by status: #{@blocking_status}" if @blocking_status
     result << "Blocked by issues: #{@blocking_issue_keys.join(', ')}" if @blocking_issue_keys
+
     result.join(', ')
   end
 end
