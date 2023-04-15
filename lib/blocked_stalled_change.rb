@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BlockedStalledChange
-  attr_reader :action
+  attr_reader :action, :time, :type, :details
 
   def initialize type:, time:, details: nil
     possible_types = %i[flagged blocked_status blocked_link stalled active]

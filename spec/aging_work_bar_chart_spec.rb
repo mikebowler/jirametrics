@@ -114,10 +114,18 @@ describe AgingWorkBarChart do
   end
 
   context 'blocked_data_sets' do
+    let(:board) do
+      board = sample_board
+      board.project_config = ProjectConfig.new(
+        exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
+      )
+      board
+    end
+
     it 'should handle blocked by flag' do
       subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       subject.timezone_offset = '+0000'
-      issue = empty_issue created: '2021-01-01', board: sample_board
+      issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
       issue.changes << mock_change(field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
@@ -128,7 +136,7 @@ describe AgingWorkBarChart do
           data: [
             {
               title: 'Flagged',
-              x: ['2021-01-02T00:00:00+0000', '2021-01-02T23:59:59+0000'],
+              x: ['2021-01-02T01:00:00+0000', '2021-01-02T02:00:00+0000'],
               y: 'SP-1'
             }
           ],

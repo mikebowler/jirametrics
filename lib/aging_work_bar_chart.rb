@@ -148,7 +148,56 @@ class AgingWorkBarChart < ChartBase
     data_sets
   end
 
+  def one_block_change_data_set starting_change:, ending_time:, color:, issue_label:, stack:
+    reasons = []
+
+    reasons << 'Flagged' if starting_change.type == :flagged
+    reasons << "Status: #{starting_change.details[:status]}" if starting_change.type == :blocked_status
+
+    {
+      backgroundColor: color,
+      data: [
+        {
+          title: reasons.join(', '),
+          x: [chart_format(starting_change.time), chart_format(ending_time)],
+          y: issue_label
+        }
+      ],
+      stack: stack,
+      stacked: true,
+      type: 'bar'
+    }
+  end
+
   def blocked_data_sets issue:, issue_label:, stack:, color:
+    data_sets = []
+    starting_change = nil
+
+    issue.blocked_stalled_changes.each do |change|
+      if starting_change.nil?
+        starting_change = change
+        next
+      end
+
+      data_sets << one_block_change_data_set(
+        starting_change: starting_change, ending_time: change.time,
+        color: color, issue_label: issue_label, stack: stack
+      )
+
+      starting_change = nil if change.active?
+    end
+
+    if starting_change
+      data_sets << one_block_change_data_set(
+        starting_change: starting_change, ending_time: time_range.end,
+        color: color, issue_label: issue_label, stack: stack
+      )
+    end
+
+    data_sets
+  end
+
+  def xblocked_data_sets issue:, issue_label:, stack:, color:
     data_sets = []
     date_range.each do |date|
       reasons = []
