@@ -146,5 +146,31 @@ describe AgingWorkBarChart do
         }
       ])
     end
+
+    it 'should handle blocked by status' do
+      board.project_config.settings['blocked_statuses'] = ['Blocked']
+      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      subject.timezone_offset = '+0000'
+      issue = empty_issue created: '2021-01-01', board: board
+      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2021-01-02')
+      issue.changes << mock_change(field: 'status', value: 'Doing',   time: '2021-01-03')
+
+      data_sets = subject.blocked_data_sets issue: issue, stack: 'blocked', color: 'pink', issue_label: 'SP-1'
+      expect(data_sets).to eq([
+        {
+          backgroundColor: 'pink',
+          data: [
+            {
+              title: 'Blocking status: Blocked',
+              x: ['2021-01-02T00:00:00+0000', '2021-01-03T00:00:00+0000'],
+              y: 'SP-1'
+            }
+          ],
+          stack: 'blocked',
+          stacked: true,
+          type: 'bar'
+        }
+      ])
+    end
   end
 end

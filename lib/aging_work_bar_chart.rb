@@ -152,7 +152,7 @@ class AgingWorkBarChart < ChartBase
     reasons = []
 
     reasons << 'Flagged' if starting_change.type == :flagged
-    reasons << "Status: #{starting_change.details[:status]}" if starting_change.type == :blocked_status
+    reasons << "Blocking status: #{starting_change.details[:status]}" if starting_change.type == :blocked_status
 
     {
       backgroundColor: color,
@@ -194,33 +194,6 @@ class AgingWorkBarChart < ChartBase
       )
     end
 
-    data_sets
-  end
-
-  def xblocked_data_sets issue:, issue_label:, stack:, color:
-    data_sets = []
-    date_range.each do |date|
-      reasons = []
-      reasons << 'Flagged' if issue.flagged_on_date? date
-      blocked_status = issue.in_blocked_status_on_date? date
-      reasons << "Status: #{blocked_status}" if blocked_status
-
-      next if reasons.empty?
-
-      data_sets << {
-        backgroundColor: color,
-        data: [
-          {
-            title: reasons.join(', '),
-            x: ["#{date}T00:00:00+0000", "#{date}T23:59:59+0000"],
-            y: issue_label
-          }
-        ],
-        stack: stack,
-        stacked: true,
-        type: 'bar'
-      }
-    end
     data_sets
   end
 
