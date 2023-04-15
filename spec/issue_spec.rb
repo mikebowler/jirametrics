@@ -494,7 +494,12 @@ describe Issue do
 
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01' }
-    let(:settings) { { 'blocked_statuses' => ['Blocked', 'Blocked2'] } }
+    let(:settings) do
+      {
+        'blocked_statuses' => %w[Blocked Blocked2],
+        'blocked_link_text' => ['is blocked by']
+      }
+    end
 
     it 'should handle never blocked' do
       issue = empty_issue created: '2021-10-01'
@@ -507,8 +512,8 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
       expect(issue.blocked_stalled_changes settings: settings).to eq [
-        BlockedStalledChange.new(type: :flagged, details: { flagged: 'Blocked' }, time: to_time('2021-10-03T00:01:00')),
-        BlockedStalledChange.new(type: :active, time: to_time('2021-10-03T00:02:00'))
+        BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00'))
       ]
     end
 
@@ -519,15 +524,9 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings).to eq [
-        BlockedStalledChange.new(
-          type: :blocked_status, details: { status: 'Blocked' }, time: to_time('2021-10-03')
-        ),
-        BlockedStalledChange.new(
-          type: :blocked_status, details: { status: 'Blocked2' }, time: to_time('2021-10-04')
-        ),
-        BlockedStalledChange.new(
-          type: :active, time: to_time('2021-10-05')
-        )
+        BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
+        BlockedStalledChange.new(blocking_status: 'Blocked2', time: to_time('2021-10-04')),
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
       ]
     end
 
@@ -537,12 +536,22 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings).to eq [
-        BlockedStalledChange.new(
-          type: :blocked_status, details: { status: 'Blocked' }, time: to_time('2021-10-03')
-        ),
-        BlockedStalledChange.new(
-          type: :active, time: to_time('2021-10-04')
-        )
+        BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
+        BlockedStalledChange.new(time: to_time('2021-10-04'))
+      ]
+    end
+
+    it 'should handle blocked on issues' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02'
+      )
+      issue.changes << mock_change(
+        field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
+      )
+      expect(issue.blocked_stalled_changes settings: settings).to eq [
+        BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
+        BlockedStalledChange.new(time: to_time('2021-10-03'))
       ]
     end
   end

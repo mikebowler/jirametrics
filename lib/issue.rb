@@ -347,29 +347,49 @@ class Issue
 
   def blocked_stalled_changes settings: @board.project_config.settings
     blocked_statuses = settings['blocked_statuses'] || []
+    blocked_link_texts = settings['blocked_link_text'] || []
+
+    blocking_issue_keys = []
 
     result = []
-    last_type = :active
+    previous_was_active = true
 
     changes.each do |change|
-      type = :active
-      details = nil
-
       next if change.artificial?
 
+      blocking_status = nil
+      flag = nil
+
       if change.flagged? && change.value != ''
-        type = :flagged
-        details = { flagged: change.value }
+        flag = change.value
       elsif change.status? && blocked_statuses.include?(change.value)
-        type = :blocked_status
-        details = { status: change.value }
+        blocking_status = change.value
+      elsif change.link?
+        unless /^This issue (?<link_text>.+) (?<issue_key>.+)$/ =~ (change.value || change.old_value)
+          puts "Can't parse link text: #{change.value || change.old_value}"
+          next
+        end
+
+        if blocked_link_texts.include? link_text
+          if change.value
+            blocking_issue_keys << issue_key
+          else
+            blocking_issue_keys.delete issue_key
+          end
+        end
       end
 
-      # We don't want to dump two actives in a row. That would just be noise.
-      next if type == :active && last_type == :active
+      new_change = BlockedStalledChange.new(
+        flagged: flag,
+        blocking_status: blocking_status,
+        blocking_issue_keys: (blocking_issue_keys.empty? ? nil : blocking_issue_keys.dup),
+        time: change.time
+      )
 
-      last_type = type
-      result << BlockedStalledChange.new(type: type, details: details, time: change.time)
+      # We don't want to dump two actives in a row. That would just be noise.
+      result << new_change unless new_change.active? && previous_was_active
+
+      previous_was_active = new_change.active?
     end
 
     result

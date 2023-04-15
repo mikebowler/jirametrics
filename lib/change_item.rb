@@ -33,6 +33,8 @@ class ChangeItem
 
   def story_points? = (field == 'Story Points')
 
+  def link? = (field == 'Link')
+
   def to_s
     message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: \"#{@time}\""
     message += ', artificial' if artificial?

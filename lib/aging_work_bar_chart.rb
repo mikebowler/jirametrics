@@ -149,16 +149,11 @@ class AgingWorkBarChart < ChartBase
   end
 
   def one_block_change_data_set starting_change:, ending_time:, color:, issue_label:, stack:
-    reasons = []
-
-    reasons << 'Flagged' if starting_change.type == :flagged
-    reasons << "Blocking status: #{starting_change.details[:status]}" if starting_change.type == :blocked_status
-
     {
       backgroundColor: color,
       data: [
         {
-          title: reasons.join(', '),
+          title: starting_change.reasons,
           x: [chart_format(starting_change.time), chart_format(ending_time)],
           y: issue_label
         }
@@ -174,6 +169,7 @@ class AgingWorkBarChart < ChartBase
     starting_change = nil
 
     issue.blocked_stalled_changes.each do |change|
+      puts change.inspect if change.blocking_issue_keys
       if starting_change.nil?
         starting_change = change
         next
