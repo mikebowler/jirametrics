@@ -371,6 +371,7 @@ class Issue
       last_type = type
       result << BlockedStalledChange.new(type: type, details: details, time: change.time)
     end
+
     result
   end
 
