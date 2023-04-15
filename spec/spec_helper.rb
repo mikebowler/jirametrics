@@ -23,11 +23,6 @@ def make_test_filename basename
 end
 
 def sample_board
-  # statuses = StatusCollection.new
-  # statuses << Status.new(name: 'Backlog', id: 1, category_name: 'To Do', category_id: 2)
-  # statuses << Status.new(name: 'Doing', id: 3, category_name: 'In Progress', category_id: 4)
-  # statuses << Status.new(name: 'Done', id: 5, category_name: 'Done', category_id: 6)
-
   statuses = load_statuses './spec/testdata/sample_statuses.json'
   Board.new raw: JSON.parse(File.read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
 end
