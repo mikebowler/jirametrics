@@ -504,7 +504,9 @@ describe Issue do
 
     it 'should handle never blocked' do
       issue = empty_issue created: '2021-10-01'
-      expect(issue.blocked_stalled_changes settings: settings).to be_empty
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
+      ]
     end
 
     it 'should handle flagged and unflagged' do
@@ -512,9 +514,10 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
-      expect(issue.blocked_stalled_changes settings: settings).to eq [
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
         BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
-        BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00'))
+        BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
       ]
     end
 
@@ -524,10 +527,11 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
-      expect(issue.blocked_stalled_changes settings: settings).to eq [
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
         BlockedStalledChange.new(blocking_status: 'Blocked2', time: to_time('2021-10-04')),
-        BlockedStalledChange.new(time: to_time('2021-10-05'))
+        BlockedStalledChange.new(time: to_time('2021-10-05')),
+        BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
     end
 
@@ -536,9 +540,10 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
-      expect(issue.blocked_stalled_changes settings: settings).to eq [
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
-        BlockedStalledChange.new(time: to_time('2021-10-04'))
+        BlockedStalledChange.new(time: to_time('2021-10-04')),
+        BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
     end
 
@@ -550,9 +555,10 @@ describe Issue do
       issue.changes << mock_change(
         field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
       )
-      expect(issue.blocked_stalled_changes settings: settings).to eq [
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-04')).to eq [
         BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
-        BlockedStalledChange.new(time: to_time('2021-10-03'))
+        BlockedStalledChange.new(time: to_time('2021-10-03')),
+        BlockedStalledChange.new(time: to_time('2021-10-04'))
       ]
     end
 
@@ -562,12 +568,34 @@ describe Issue do
         field: 'status', value: 'Doing', time: '2021-10-02'
       )
       issue.changes << mock_change(
-        field: 'status', value: 'Doing2', time: '2021-10-12'
+        field: 'status', value: 'Doing2', time: '2021-10-08'
       )
-      expect(issue.blocked_stalled_changes settings: settings).to eq [
-        BlockedStalledChange.new(stalled_days: 10, time: to_time('2021-10-02T01:00:00')),
-        BlockedStalledChange.new(time: to_time('2021-10-12'))
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
+        BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-08')),
+        BlockedStalledChange.new(time: to_time('2021-10-10'))
       ]
+    end
+
+    xit 'should not report stalled if subtasks were active' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-02'
+      )
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing2', time: '2021-10-08'
+      )
+
+      subtask = empty_issue created: '2021-10-01'
+      subtask.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-06'
+      )
+
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to be_empty
+    end
+
+    xit 'should split stalled into sections if subtasks were active in between' do
+      fail
     end
   end
 

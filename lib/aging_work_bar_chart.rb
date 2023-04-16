@@ -163,7 +163,7 @@ class AgingWorkBarChart < ChartBase
     data_sets = []
     starting_change = nil
 
-    issue.blocked_stalled_changes.each do |change|
+    issue.blocked_stalled_changes(end_time: time_range.end).each do |change|
       if starting_change.nil? || starting_change.active?
         starting_change = change
         next
@@ -176,23 +176,7 @@ class AgingWorkBarChart < ChartBase
         )
       end
 
-      # starting_change = nil if change.active?
       starting_change = change
-    end
-
-    if starting_change && !starting_change.active?
-      data_sets << one_block_change_data_set(
-        starting_change: starting_change, ending_time: time_range.end,
-        issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
-      )
-    end
-
-    stalled_threshold = settings['stalled_threshold']
-    if starting_change && (starting_change.time - time_range.end).to_i > stalled_threshold
-      data_sets << one_block_change_data_set(
-        starting_change: starting_change, ending_time: time_range.end,
-        issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
-      )
     end
 
     data_sets

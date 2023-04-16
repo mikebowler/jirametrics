@@ -345,7 +345,15 @@ class Issue
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 
-  def blocked_stalled_changes settings: @board.project_config.settings
+  # def all_subtask_activity_times
+  #   subtask_activity_times = []
+  #   @subtasks.each do |subtask|
+  #     subtask_activity_times += subtask.changes.collect(&:time)
+  #   end
+  #   subtask_activity_times.sort
+  # end
+
+  def blocked_stalled_changes settings: @board.project_config.settings, end_time:
     blocked_statuses = settings['blocked_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []
     stalled_threshold = settings['stalled_threshold']
@@ -356,8 +364,10 @@ class Issue
     previous_was_active = true
     previous_change_time = created
 
-    changes.each do |change|
-      next if change.artificial?
+    # This mock change is to force the writing of one last entry at the end of the time range.
+    # By doing this, we're able to eliminate a lot of duplicated code in charts.
+    mock_change = ChangeItem.new time: end_time, author: '', artificial: true, raw: { 'field' => '' }
+    (changes + [mock_change]).each do |change|
 
       blocking_status = nil
       flag = nil
@@ -396,8 +406,9 @@ class Issue
         time: change.time
       )
 
-      # We don't want to dump two actives in a row. That would just be noise.
-      result << new_change unless new_change.active? && previous_was_active
+      # We don't want to dump two actives in a row. That would just be noise. Unless this is
+      # the mock change, which we always want to dump
+      result << new_change if !new_change.active? || !previous_was_active || change == mock_change
 
       previous_was_active = new_change.active?
       previous_change_time = change.time
