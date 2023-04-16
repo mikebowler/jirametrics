@@ -345,14 +345,6 @@ class Issue
     date >= updated_date && (date - updated_date).to_i >= stalled_threshold
   end
 
-  # def all_subtask_activity_times
-  #   subtask_activity_times = []
-  #   @subtasks.each do |subtask|
-  #     subtask_activity_times += subtask.changes.collect(&:time)
-  #   end
-  #   subtask_activity_times.sort
-  # end
-
   def blocked_stalled_changes settings: @board.project_config.settings, end_time:
     blocked_statuses = settings['blocked_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []
@@ -372,13 +364,12 @@ class Issue
       blocking_status = nil
       flag = nil
 
-      # Stalled check
-      days = (change.time.to_date - previous_change_time.to_date).to_i
-      if days >= stalled_threshold
-        an_hour_later = previous_change_time + (60 * 60)
-        result << BlockedStalledChange.new(stalled_days: days, time: an_hour_later)
-        previous_was_active = false
-      end
+      previous_was_active = false if check_for_stalled(
+        change_time: change.time,
+        previous_change_time: previous_change_time,
+        stalled_threshold: stalled_threshold,
+        blocking_stalled_changes: result
+      )
 
       if change.flagged? && change.value != ''
         flag = change.value
@@ -406,7 +397,7 @@ class Issue
         time: change.time
       )
 
-      # We don't want to dump two actives in a row. That would just be noise. Unless this is
+      # We don't want to dump two actives in a row as that would just be noise. Unless this is
       # the mock change, which we always want to dump
       result << new_change if !new_change.active? || !previous_was_active || change == mock_change
 
@@ -415,6 +406,43 @@ class Issue
     end
 
     result
+  end
+
+  def check_for_stalled change_time:, previous_change_time:, stalled_threshold:, blocking_stalled_changes:
+    stalled_threshold_seconds = stalled_threshold * 60 * 60 * 24
+
+    # The most common case will be nothing to split so quick escape.
+    return false if (change_time - previous_change_time).to_i < stalled_threshold_seconds
+
+    list = [previous_change_time..change_time]
+    all_subtask_activity_times.each do |time|
+      matching_range = list.find { |range| time >= range.begin && time <= range.end }
+      next unless matching_range
+
+      list.delete matching_range
+      list << ((matching_range.begin)..time)
+      list << (time..(matching_range.end))
+    end
+
+    inserted_stalled = false
+
+    list.sort_by(&:begin).each do |range|
+      seconds = (range.end - range.begin).to_i
+      next if seconds < stalled_threshold_seconds
+
+      an_hour_later = range.begin + (60 * 60)
+      blocking_stalled_changes << BlockedStalledChange.new(stalled_days: seconds / (24 * 60 * 60), time: an_hour_later)
+      inserted_stalled = true
+    end
+    inserted_stalled
+  end
+
+  def all_subtask_activity_times
+    subtask_activity_times = []
+    @subtasks.each do |subtask|
+      subtask_activity_times += subtask.changes.collect(&:time)
+    end
+    subtask_activity_times
   end
 
   def expedited?

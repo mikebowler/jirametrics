@@ -577,7 +577,11 @@ describe Issue do
       ]
     end
 
-    xit 'should not report stalled if subtasks were active' do
+    it 'should not report stalled if subtasks were active through the period' do
+      # The main issue has activity on the 2nd and again on the 8th. If we don't take subtasks
+      # into account then we'd expect it to show stalled between those dates. Given that we
+      # should consider subtasks, it should show nothing stalled through the period.
+
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(
         field: 'status', value: 'Doing', time: '2021-10-02'
@@ -588,14 +592,37 @@ describe Issue do
 
       subtask = empty_issue created: '2021-10-01'
       subtask.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-06'
+        field: 'status', value: 'Doing', time: '2021-10-05'
       )
+      issue.subtasks << subtask
 
-      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to be_empty
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-10'))
+      ]
     end
 
-    xit 'should split stalled into sections if subtasks were active in between' do
-      fail
+    it 'should split stalled into sections if subtasks were active in between' do
+      # The full range is 1st to 12th with subtask activity on the 5th. The only
+      # stalled section in here is 5-12.
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-02'
+      )
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing2', time: '2021-10-12'
+      )
+
+      subtask = empty_issue created: '2021-10-01'
+      subtask.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-05'
+      )
+      issue.subtasks << subtask
+
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-13')).to eq [
+        BlockedStalledChange.new(stalled_days: 7, time: to_time('2021-10-05T01:00:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-12')),
+        BlockedStalledChange.new(time: to_time('2021-10-13'))
+      ]
     end
   end
 
