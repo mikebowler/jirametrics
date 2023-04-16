@@ -624,6 +624,17 @@ describe Issue do
         BlockedStalledChange.new(time: to_time('2021-10-13'))
       ]
     end
+
+    it 'should ignore the final artificial change for the purposes of stalled' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(
+        field: 'status', value: 'Doing', time: '2021-10-02'
+      )
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08')).to eq [
+        BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
+        BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-08T00:00:00'))
+      ]
+    end
   end
 
   context 'inspect' do

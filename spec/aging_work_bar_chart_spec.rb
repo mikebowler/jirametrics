@@ -139,7 +139,7 @@ describe AgingWorkBarChart do
           backgroundColor: '#FF7400',
           data: [
             {
-              title: 'Flagged',
+              title: 'Blocked by flag',
               x: ['2021-01-02T01:00:00+0000', '2021-01-02T02:00:00+0000'],
               y: 'SP-1'
             }

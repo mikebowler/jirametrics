@@ -5,7 +5,8 @@ require './spec/spec_helper'
 describe AgingWorkTable do
   let(:table) do
     AgingWorkTable.new(nil).tap do |table|
-      table.date_range = Date.parse('2021-01-01')..Date.parse('2021-01-31')
+      table.date_range = to_date('2021-01-01')..to_date('2021-01-31')
+      table.time_range = to_time('2021-01-01')..to_time('2021-01-31T23:59:59')
       table.today = table.date_range.end + 1
     end
   end
@@ -37,23 +38,26 @@ describe AgingWorkTable do
 
   context 'blocked_text' do
     it 'should handle flagged' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
-      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked: Has the flag set', icon: '🛑')
+      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by flag', icon: '🛑')
     end
 
     it 'should handle blocked status' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       review_status = issue1.board.possible_statuses.find { |s| s.name == 'Review' }
 
       issue1.board.project_config.settings['blocked_statuses'] = [review_status.name]
       issue1.changes << mock_change(field: 'status', value: review_status, time: '2020-10-03')
-      table.today = to_date('2022-10-15')
-      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked: in status "Review"', icon: '🛑')
+      table.time_range = table.time_range.begin..to_time('2022-10-15')
+
+      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by status: Review', icon: '🛑')
     end
 
     it 'should handle stalled' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
-      table.today = to_date('2022-10-15')
+      table.time_range = table.time_range.begin..to_time('2022-10-15')
 
       expect(table.blocked_text issue1).to eq(
         table.icon_span(
@@ -66,7 +70,7 @@ describe AgingWorkTable do
     it 'should handle dead' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
-      table.today = to_date('2022-12-01')
+      table.time_range = table.time_range.begin..to_time('2022-12-01')
 
       expect(table.blocked_text issue1).to eq(
         table.icon_span(

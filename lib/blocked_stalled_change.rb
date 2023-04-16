@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BlockedStalledChange
-  attr_reader :time, :blocking_issue_keys
+  attr_reader :time, :blocking_issue_keys, :flag, :blocking_status, :stalled_days
 
   def initialize time:, flagged: nil, blocking_status: nil, blocking_issue_keys: nil, stalled_days: nil
     @flag = flagged
@@ -25,11 +25,13 @@ class BlockedStalledChange
 
   def reasons
     result = []
-    result << "Stalled: #{@stalled_days} days" if stalled?
-    result << 'Flagged' if @flag
-    result << "Blocked by status: #{@blocking_status}" if @blocking_status
-    result << "Blocked by issues: #{@blocking_issue_keys.join(', ')}" if @blocking_issue_keys
-
+    if blocked?
+      result << 'Blocked by flag' if @flag
+      result << "Blocked by status: #{@blocking_status}" if @blocking_status
+      result << "Blocked by issues: #{@blocking_issue_keys.join(', ')}" if @blocking_issue_keys
+    else
+      result << "Stalled: #{@stalled_days} days"
+    end
     result.join(', ')
   end
 end

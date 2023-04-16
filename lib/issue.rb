@@ -356,13 +356,13 @@ class Issue
     previous_was_active = true
     previous_change_time = created
 
+    blocking_status = nil
+    flag = nil
+
     # This mock change is to force the writing of one last entry at the end of the time range.
     # By doing this, we're able to eliminate a lot of duplicated code in charts.
     mock_change = ChangeItem.new time: end_time, author: '', artificial: true, raw: { 'field' => '' }
     (changes + [mock_change]).each do |change|
-
-      blocking_status = nil
-      flag = nil
 
       previous_was_active = false if check_for_stalled(
         change_time: change.time,
@@ -371,10 +371,12 @@ class Issue
         blocking_stalled_changes: result
       )
 
-      if change.flagged? && change.value != ''
+      if change.flagged?
         flag = change.value
-      elsif change.status? && blocked_statuses.include?(change.value)
+        flag = nil if change.value == ''
+      elsif change.status?
         blocking_status = change.value
+        blocking_status = nil unless blocked_statuses.include?(change.value)
       elsif change.link?
         unless /^This issue (?<link_text>.+) (?<issue_key>.+)$/ =~ (change.value || change.old_value)
           puts "Can't parse link text: #{change.value || change.old_value}"
@@ -405,6 +407,18 @@ class Issue
       previous_change_time = change.time
     end
 
+    if result.size >= 2
+      # The existance of the mock entry will mess with the stalled count as it will wake everything
+      # back up. This hack will clean up appropriately.
+      hack = result.pop
+      result << BlockedStalledChange.new(
+        flagged: hack.flag,
+        blocking_status: hack.blocking_status,
+        blocking_issue_keys: hack.blocking_issue_keys,
+        time: hack.time,
+        stalled_days: result[-1].stalled_days
+      )
+    end
     result
   end
 
