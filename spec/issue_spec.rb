@@ -372,23 +372,6 @@ describe Issue do
     end
   end
 
-  context 'stalled_on_date?' do
-    it 'should not be stalled if there were no changes' do
-      issue = empty_issue created: '2021-10-01', board: board
-
-      expect(issue.stalled_on_date? to_date('2021-12-01'), end_time: to_time('2021-10-03')).to be_falsey
-      expect(issue.stalled_on_date? to_date('2021-10-02'), end_time: to_time('2021-10-03')).to be_falsey
-    end
-
-    it 'should be stalled after a gap' do
-      issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
-
-      expect(issue.stalled_on_date? to_date('2021-10-06'), end_time: to_time('2021-10-07')).to be_truthy
-      expect(issue.stalled_on_date? to_date('2021-10-07'), end_time: to_time('2021-10-07')).to be_falsey
-    end
-  end
-
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do

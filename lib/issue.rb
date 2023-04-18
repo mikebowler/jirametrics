@@ -287,17 +287,6 @@ class Issue
     end
   end
 
-  def stalled_on_date? date, end_time:
-    stalled = nil
-    blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
-      return false if change.blocked?
-
-      stalled = true if change.stalled?
-    end
-
-    stalled == true
-  end
-
   def blocked_stalled_changes end_time:, settings: @board.project_config.settings
     blocked_statuses = settings['blocked_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []

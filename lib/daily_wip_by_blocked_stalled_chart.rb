@@ -24,21 +24,40 @@ class DailyWipByBlockedStalledChart < DailyWipChart
     HTML
   end
 
+  def key_blocked_stalled_change issue:, date:, end_time:
+    stalled_change = nil
+    blocked_change = nil
+
+    issue.blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
+      blocked_change = change if change.blocked?
+      stalled_change = change if change.stalled?
+    end
+
+    return blocked_change if blocked_change
+    return stalled_change if stalled_change
+
+    nil
+  end
+
   def default_grouping_rules issue:, rules:
     started = issue.board.cycletime.started_time(issue)
+    change = key_blocked_stalled_change issue: issue, date: rules.current_date, end_time: time_range.end
+
     if started.nil?
       rules.label = 'Start date unknown'
       rules.color = 'white'
       rules.group_priority = 4
       # rules.ignore
-    elsif issue.blocked_on_date?(rules.current_date, end_time: time_range.end)
+    elsif change&.blocked? # issue.blocked_on_date?(rules.current_date, end_time: time_range.end)
       rules.label = 'Blocked'
       rules.color = 'red'
       rules.group_priority = 1
-    elsif issue.stalled_on_date?(rules.current_date, end_time: time_range.end)
+      rules.issue_hint = "(#{change.reasons})"
+    elsif change&.stalled?
       rules.label = 'Stalled'
       rules.color = 'orange'
       rules.group_priority = 2
+      rules.issue_hint = "(Stalled #{label_days(change.stalled_days)})"
     else
       rules.label = 'Active'
       rules.color = 'lightgray'
