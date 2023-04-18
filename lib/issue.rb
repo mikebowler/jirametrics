@@ -287,63 +287,7 @@ class Issue
     end
   end
 
-  def flagged_on_date? date
-    blocked_start = nil
-    changes.each do |change|
-      next unless change.flagged?
-
-      if change.value == '' # Flag is turning off
-        # It's theoretically impossible for us to get a flag turning off *before* it gets
-        # turned on and yet, we've seen this exact scenario in a production system so we
-        # have to handle it.
-        next if blocked_start.nil?
-
-        range = blocked_start.to_date..change.time.to_date
-        return true if range.include? date
-
-        blocked_start = nil
-      else
-        # Flag is turning on. Note that Jira may pass in a variety of different values here
-        # but all we care about is that it isn't an empty string.
-        blocked_start = change.time.to_date
-      end
-    end
-
-    if blocked_start
-      date >= blocked_start
-    else
-      false
-    end
-  end
-
-  # Returns false if not blocked or the name of the status (a truthy value) if blocked
-  def in_blocked_status_on_date?(
-    date, blocked_status_names: @board.project_config&.settings&.[]('blocked_statuses')
-  )
-    return false if blocked_status_names.nil?
-
-    blocked_statuses = @board.possible_statuses.expand_statuses(blocked_status_names)
-
-    current_blocked_status = false
-
-    changes.each do |change|
-      next unless change.status?
-
-      change_date = change.time.to_date
-      return current_blocked_status if change_date >= date && current_blocked_status
-      return false if change_date > date
-
-      if change.current_status_matches(*blocked_statuses)
-        current_blocked_status = change.value
-      elsif change.old_status_matches(*blocked_statuses)
-        current_blocked_status = false
-      end
-    end
-
-    current_blocked_status
-  end
-
-  def stalled_on_date? date, stalled_threshold = 5, end_time:
+  def stalled_on_date? date, end_time:
     stalled = nil
     blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
       return false if change.blocked?
