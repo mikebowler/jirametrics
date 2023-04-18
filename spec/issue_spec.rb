@@ -10,6 +10,7 @@ describe Issue do
   end
   let(:board) do
     board = sample_board
+    board.project_config = project_config
     statuses = board.possible_statuses
     statuses.clear
     statuses << Status.new(name: 'Backlog', id: 1, category_name: 'ready', category_id: 2)
@@ -466,34 +467,24 @@ describe Issue do
   end
 
   context 'stalled_on_date?' do
-    it 'should show stalled if the updated date is within the threshold' do
-      issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-10-01T00:00:00+00:00'
+    it 'should not be stalled if there were no changes' do
+      issue = empty_issue created: '2021-10-01', board: board
 
-      expect(issue.stalled_on_date? to_date('2021-12-01')).to be_truthy
-      expect(issue.stalled_on_date? to_date('2021-10-02')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-12-01'), end_time: to_time('2021-10-03')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-10-02'), end_time: to_time('2021-10-03')).to be_falsey
     end
 
     it 'should be stalled after a gap' do
-      issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-10-01T00:00:00+00:00'
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-11-02')
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
 
-      expect(issue.stalled_on_date? to_date('2021-11-01')).to be_truthy
-      expect(issue.stalled_on_date? to_date('2021-11-02')).to be_falsey
-    end
-
-    it 'should be stalled before the updated time' do
-      issue = empty_issue created: '2021-10-01'
-      issue.raw['fields']['updated'] = '2021-11-02T00:00:00+00:00'
-
-      expect(issue.stalled_on_date? to_date('2021-11-01')).to be_truthy
-      expect(issue.stalled_on_date? to_date('2021-11-02')).to be_falsey
+      expect(issue.stalled_on_date? to_date('2021-10-06'), end_time: to_time('2021-10-07')).to be_truthy
+      expect(issue.stalled_on_date? to_date('2021-10-07'), end_time: to_time('2021-10-07')).to be_falsey
     end
   end
 
   context 'blocked_stalled_changes' do
-    let(:issue) { empty_issue created: '2021-10-01' }
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do
       {
         'blocked_statuses' => %w[Blocked Blocked2],

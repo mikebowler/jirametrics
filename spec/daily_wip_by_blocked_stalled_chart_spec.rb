@@ -6,7 +6,8 @@ describe DailyWipByBlockedStalledChart do
   context 'grouping_rules' do
     let(:subject) do
       chart = DailyWipByBlockedStalledChart.new nil
-      chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-01')
+      chart.date_range = to_date('2022-01-01')..to_date('2022-02-01')
+      chart.time_range = to_time('2022-01-01')..to_time('2022-02-01T23:59:59')
       chart
     end
     let(:board) { load_complete_sample_board }
@@ -29,6 +30,8 @@ describe DailyWipByBlockedStalledChart do
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
+      subject.time_range = to_time('2022-01-01')..to_time('2022-01-03')
+
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       subject.default_grouping_rules issue: issue1, rules: rules
@@ -42,6 +45,7 @@ describe DailyWipByBlockedStalledChart do
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
+      subject.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
@@ -55,7 +59,7 @@ describe DailyWipByBlockedStalledChart do
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
-      # issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
+      subject.time_range = to_time('2022-01-01')..to_time('2022-01-13')
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')

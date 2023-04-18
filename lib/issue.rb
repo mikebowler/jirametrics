@@ -264,8 +264,27 @@ class Issue
     "Issue(#{key.inspect})"
   end
 
-  def blocked_on_date? date
-    flagged_on_date?(date) || in_blocked_status_on_date?(date)
+  def blocked_on_date? date, end_time:
+    blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
+      return true if change.blocked?
+    end
+    false
+  end
+
+  def blocked_stalled_changes_on_date date:, end_time:
+    next_day_start_time = (date + 1).to_time
+    this_day_start_time = date.to_time
+
+    # changes_affecting_date = []
+    previous_change_time = nil
+    blocked_stalled_changes(end_time: end_time).each do |change|
+      if previous_change_time.nil?
+        previous_change_time = change.time
+        next
+      end
+
+      yield change if previous_change_time < next_day_start_time && change.time >= this_day_start_time
+    end
   end
 
   def flagged_on_date? date
@@ -324,28 +343,18 @@ class Issue
     current_blocked_status
   end
 
-  def stalled_on_date? date, stalled_threshold = 5
-    # Did any changes happen within the threshold
-    changes.each do |change|
-      change_date = change.time.to_date
-      next if change_date > date
+  def stalled_on_date? date, stalled_threshold = 5, end_time:
+    stalled = nil
+    blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
+      return false if change.blocked?
 
-      return false if (date - change_date).to_i < stalled_threshold
+      stalled = true if change.stalled?
     end
 
-    # Walk through all subtasks to see if any of them have been updated within
-    # the threshold. This obviously only works if the subtasks are already loaded.
-    @subtasks.each do |subtask|
-      return false unless subtask.stalled_on_date?(date, stalled_threshold)
-    end
-
-    updated_date = updated.to_date
-    return true if date < updated_date
-
-    date >= updated_date && (date - updated_date).to_i >= stalled_threshold
+    stalled == true
   end
 
-  def blocked_stalled_changes settings: @board.project_config.settings, end_time:
+  def blocked_stalled_changes end_time:, settings: @board.project_config.settings
     blocked_statuses = settings['blocked_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []
     stalled_threshold = settings['stalled_threshold']

@@ -31,11 +31,11 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.color = 'white'
       rules.group_priority = 4
       # rules.ignore
-    elsif issue.blocked_on_date?(rules.current_date)
+    elsif issue.blocked_on_date?(rules.current_date, end_time: time_range.end)
       rules.label = 'Blocked'
       rules.color = 'red'
       rules.group_priority = 1
-    elsif issue.stalled_on_date?(rules.current_date)
+    elsif issue.stalled_on_date?(rules.current_date, end_time: time_range.end)
       rules.label = 'Stalled'
       rules.color = 'orange'
       rules.group_priority = 2
