@@ -48,7 +48,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.color = 'white'
       rules.group_priority = 4
       # rules.ignore
-    elsif change&.blocked? # issue.blocked_on_date?(rules.current_date, end_time: time_range.end)
+    elsif change&.blocked?
       rules.label = 'Blocked'
       rules.color = 'red'
       rules.group_priority = 1
