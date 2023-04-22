@@ -9,7 +9,7 @@ Alternatively, this tool can directly [generate HTML](https://github.com/mikebow
 * Installation
 * Configuring [how it connects to Jira](https://github.com/mikebowler/jira-export/wiki/Jira-Configuration).
 * Configuring the [common portions of the export](https://github.com/mikebowler/jira-export/wiki/Common-configuration)
-* Specifically configuring it to [export raw data](https://github.com/mikebowler/jira-export/wiki/Exporting-raw-data) or to generate pretty reports. (You'll need to set one of these)
+* Specifically configuring it to [export raw data](https://github.com/mikebowler/jira-export/wiki/Exporting-raw-data) or to generate [HTML reports](https://github.com/mikebowler/jira-export/wiki/HTML-Reports). (You'll need to set one of these)
 * Running it (see below)
 * [Change log](https://github.com/mikebowler/jira-export/wiki/Changes)
 
