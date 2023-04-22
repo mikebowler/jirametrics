@@ -15,10 +15,14 @@ class AgingWorkBarChart < ChartBase
         newest at the bottom.
       </p>
       <p>
-        The colours indicate different statuses, grouped by status category. Any statuses in the status
-        category of "To Do" will be in a shade of blue. Any in the category of "In Progress" will be in a
-        shade of yellow and any in "Done" will be in a shade of green. Depending on how you calculate
-        cycletime, you may end up with only yellows or you may have a mix of all three.
+        There are potentially three bars for each issue, although a bar may be missing if the issue has no
+        information relevant to that. Hovering over any of the bars will provide more details.
+        <ol><li>The top bar tells you what status the issue is in at any time. Any statuses in the status
+        category of "To Do" will be in blue. Any in the category of "In Progress" will be in a
+        yellow and any in "Done" will be green.</li>
+        <li>The middle bar indicates blocked and stalled states. A lighter orange is stalled and a darker,
+        reddish colour is blocked.</li>
+        <li>The bottom bar indicated an expedited state.</li></ol>
       </p>
       <p>
         The gray backgrounds indicate weekends and the red vertical line indicates the 85% point for all
