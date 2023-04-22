@@ -6,6 +6,7 @@ require './lib/groupable_issue_chart'
 class AgingWorkInProgressChart < ChartBase
   include GroupableIssueChart
   attr_accessor :possible_statuses, :board_id
+  attr_reader :board_columns
 
   def initialize block = nil
     super()
@@ -29,16 +30,29 @@ class AgingWorkInProgressChart < ChartBase
     end
   end
 
-  def board_columns
-    current_board.visible_columns
-  end
-
   def run
+    determine_board_columns
+
     @header_text += " on board: #{@all_boards[@board_id].name}"
     data_sets = make_data_sets
-    column_headings = board_columns.collect(&:name)
+    column_headings = @board_columns.collect(&:name)
+
+    adjust_visibility_of_unmapped_status_column data_sets: data_sets, column_headings: column_headings
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def determine_board_columns
+    unmapped_statuses = current_board.possible_statuses.collect(&:id)
+
+    columns = current_board.visible_columns
+    columns.each { |c| unmapped_statuses -= c.status_ids }
+
+    @fake_column = BoardColumn.new({
+      'name' => '[Unmapped Statuses]',
+      'statuses' => unmapped_statuses.collect { |id| { 'id' => id.to_s } }.uniq
+    })
+    @board_columns = columns + [@fake_column]
   end
 
   def make_data_sets
@@ -87,7 +101,7 @@ class AgingWorkInProgressChart < ChartBase
 
   def accumulated_status_ids_per_column
     accumulated_status_ids = []
-    board_columns.reverse.collect do |column|
+    @board_columns.reverse.collect do |column|
       accumulated_status_ids += column.status_ids
       [column.name, accumulated_status_ids.dup]
     end.reverse
@@ -107,8 +121,26 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def column_for issue:
-    board_columns.find do |board_column|
+    @board_columns.find do |board_column|
       board_column.status_ids.include? issue.status.id
+    end
+  end
+
+  def adjust_visibility_of_unmapped_status_column data_sets:, column_headings:
+    column_name = @fake_column.name
+
+    has_unmapped = data_sets.any? do |set|
+      set['data'].any? do |data|
+        data['x'] == column_name if data.is_a? Hash
+      end
+    end
+
+    if has_unmapped
+      @description_text += "<p>The items shown in #{column_name.inspect} are not visible on the " \
+        'board but are still active. Most likely everyone has forgotten about them.</p>'
+    else
+      column_headings.pop
+      @board_columns.pop
     end
   end
 end
