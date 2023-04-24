@@ -205,7 +205,8 @@ class Issue
   end
 
   def created
-    parse_time @raw['fields']['created']
+    # This shouldn't be necessary and yet we've seen one case where it was.
+    parse_time @raw['fields']['created'] if @raw['fields']['created']
   end
 
   def updated
