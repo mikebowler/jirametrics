@@ -51,7 +51,7 @@ class StoryPointAccuracyChart < ChartBase
     end
 
     [
-      [completed_hash, 'Completed', '#AFEEEE', 'blue', false],
+      [completed_hash, 'Completed', '#66FF99', 'green', false],
       [aging_hash, 'Still in progress', '#FFCCCB', 'red', true]
     ].collect do |hash, label, fill_color, border_color, starts_hidden|
       data = hash.collect do |key, values|
