@@ -3,7 +3,7 @@
 </div>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
-  type: 'scatter',
+  type: 'bubble',
   data: {
     datasets: <%= JSON.generate(data_sets) %>
   },

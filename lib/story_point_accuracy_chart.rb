@@ -4,7 +4,6 @@ class StoryPointAccuracyChart < ChartBase
   def initialize configuration_block = nil
     super()
 
-    @groupings = []
     header_text 'Story Point Accuracy'
     description_text <<-HTML
       <p>
@@ -12,22 +11,13 @@ class StoryPointAccuracyChart < ChartBase
         estimates can change over time, we're graphing the estimate at the time that the story started.
       </p>
       <p>
-        The color coding indicates how many issues fell at that intersection of estimate and actual.
+        The blue dots indicate completed cycletimes. The red dots (if you turn them on) show where aging
+        items currently are. Aging dots will give you an idea of where items may end up but aren't
+        conclusive as they're still moving.
       </p>
     HTML
 
-    if configuration_block
-      instance_eval(&configuration_block)
-    else
-      grouping range: 1..1, color: '#dcdcde'
-      grouping range: 2..3, color: '#c3c4c7'
-      grouping range: 4..6, color: '#a7aaad'
-      grouping range: 7..10, color: '#8c8f94'
-      grouping range: 11..15, color: '#787682'
-      grouping range: 16..20, color: '#646970'
-      grouping range: 21..30, color: '#3c434a'
-      grouping range: 31.., color: '#101517'
-    end
+    instance_eval(&configuration_block) if configuration_block
   end
 
   def run
@@ -39,16 +29,20 @@ class StoryPointAccuracyChart < ChartBase
   end
 
   def scan_issues
-    hash = {}
+    aging_hash = {}
+    completed_hash = {}
+
     issues.each do |issue|
       cycletime = issue.board.cycletime
       start_time = cycletime.started_time(issue)
       stop_time = cycletime.stopped_time(issue)
 
-      next unless start_time && stop_time
+      next unless start_time
+
+      hash = stop_time ? completed_hash : aging_hash
 
       estimate = story_points_at issue: issue, start_time: start_time
-      cycle_time = (stop_time.to_date - start_time.to_date).to_i + 1
+      cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
 
       next if estimate.nil? || estimate.empty?
 
@@ -56,43 +50,33 @@ class StoryPointAccuracyChart < ChartBase
       (hash[key] ||= []) << issue
     end
 
-    @groupings.collect do |range, color|
-      data = hash.select { |_key, issues| range.include? issues.size }.collect do |key, values|
+    [
+      [completed_hash, 'Completed', '#AFEEEE', 'blue', false],
+      [aging_hash, 'Still in progress', '#FFCCCB', 'red', true]
+    ].collect do |hash, label, fill_color, border_color, starts_hidden|
+      data = hash.collect do |key, values|
         estimate, cycle_time = *key
         title = ["Estimate: #{estimate}pts, Cycletime: #{label_days(cycle_time)}, #{values.size} issues"] +
           values.collect { |issue| "#{issue.key}: #{issue.summary}" }
         {
           'x' => cycle_time,
           'y' => estimate,
+          'r' => values.size * 2,
           'title' => title
         }
       end.compact
       next if data.empty?
 
       {
-        'label' => range_to_s(range),
+        'label' => label,
         'data' => data,
         'fill' => false,
         'showLine' => false,
-        'backgroundColor' => color
+        'backgroundColor' => fill_color,
+        'borderColor' => border_color,
+        'hidden' => starts_hidden
       }
     end.compact
-  end
-
-  def grouping range:, color:
-    @groupings << [range, color]
-  end
-
-  def range_to_s range
-    if range.begin == range.end
-      range.begin.to_s
-    elsif range.end.nil?
-      "#{range.begin} or more"
-    elsif range.begin.nil?
-      "Up to #{range.end}"
-    else
-      "#{range.begin}-#{range.end}"
-    end
   end
 
   def story_points_at issue:, start_time:
@@ -103,5 +87,10 @@ class StoryPointAccuracyChart < ChartBase
       story_points = change.value if change.story_points?
     end
     story_points
+  end
+
+  def grouping range:, color: # rubocop:disable Lint/UnusedMethodArgument
+    deprecated message: 'The grouping declaration is no longer supported on the StoryPointEstimateChart ' \
+      'as we now use a bubble chart rather than colors'
   end
 end

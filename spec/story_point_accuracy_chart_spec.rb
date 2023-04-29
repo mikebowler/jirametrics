@@ -5,21 +5,28 @@ require './spec/spec_helper'
 describe StoryPointAccuracyChart do
   let(:subject) { StoryPointAccuracyChart.new }
 
-  context 'range_to_s' do
-    it 'handles up to' do
-      expect(subject.range_to_s(..5)).to eq 'Up to 5'
+  context 'story_points_at' do
+    it 'handles no story points' do
+      issue = empty_issue created: '2023-01-02'
+      estimate = subject.story_points_at issue: issue, start_time: to_time('2023-01-03')
+      expect(estimate).to be_nil
     end
 
-    it 'handles or more' do
-      expect(subject.range_to_s(4..)).to eq '4 or more'
+    it 'handles a single estimate set' do
+      issue = empty_issue created: '2023-01-02'
+      issue.changes << mock_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
+
+      estimate = subject.story_points_at issue: issue, start_time: to_time('2023-01-04')
+      expect(estimate).to be '5.0'
     end
 
-    it 'handles regular range' do
-      expect(subject.range_to_s(1..2)).to eq '1-2'
-    end
+    it 'handles estimates set before and after' do
+      issue = empty_issue created: '2023-01-02'
+      issue.changes << mock_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
+      issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2023-01-05')
 
-    it 'handles only one' do
-      expect(subject.range_to_s(3..3)).to eq '3'
+      estimate = subject.story_points_at issue: issue, start_time: to_time('2023-01-04')
+      expect(estimate).to be '5.0'
     end
   end
 end
