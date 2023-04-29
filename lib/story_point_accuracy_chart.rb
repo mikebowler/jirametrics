@@ -11,9 +11,9 @@ class StoryPointAccuracyChart < ChartBase
         estimates can change over time, we're graphing the estimate at the time that the story started.
       </p>
       <p>
-        The blue dots indicate completed cycletimes. The red dots (if you turn them on) show where aging
-        items currently are. Aging dots will give you an idea of where items may end up but aren't
-        conclusive as they're still moving.
+        The completed dots indicate cycletimes. The aging dots (if you turn them on) show the current
+        age of items, which will give you a hint as to where they might end up. If they're already
+        far to the right then you know you have a problem.
       </p>
     HTML
 
