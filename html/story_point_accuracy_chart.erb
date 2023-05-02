@@ -28,13 +28,17 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 
       },
       y: {
+        type: "<%= @y_axis_type %>",
+        <% if @y_axis_sort_order %>
+        labels: ["","<%= @y_axis_sort_order.join('","')%>",""],
+        <% end %>
         scaleLabel: {
           display: true,
           labelString: 'Items remaining'
         },
         title: {
           display: true,
-          text: "Story Point Estimates"
+          text: "<%= @y_axis_label %>"
         },
         min: 0.0
       }

@@ -29,4 +29,27 @@ describe StoryPointAccuracyChart do
       expect(estimate).to be '5.0'
     end
   end
+
+  context 'hash_sorter' do
+    expected_equal = 0
+    expected_less = -1
+    expected_more = 1
+    [
+      [5, 2, 5, 2, expected_equal],
+      [5, 2, 5, 3, expected_more],
+      ['XL', 2, 'S', 2, expected_more],
+      ['M', 2, 'L', 2, expected_less],
+      ['A', 2, 'L', 2, expected_less]
+
+    ].each do |estimate1, count1, estimate2, count2, expected|
+      it "should sort for [#{estimate1},#{count1}] and [#{estimate2},#{count2}]" do
+        subject.y_axis sort_order: %w[XS S M L XL], label: 'points' if estimate1.is_a? String
+
+        a = [[estimate1, nil], [*1..count1]]
+        b = [[estimate2, nil], [*1..count2]]
+        expect(subject.hash_sorter.call(a, b)).to eq expected
+      end
+    end
+  end
+
 end

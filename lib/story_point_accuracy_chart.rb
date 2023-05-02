@@ -17,6 +17,11 @@ class StoryPointAccuracyChart < ChartBase
       </p>
     HTML
 
+    @y_axis_label = 'Story Point Estimates'
+    @y_axis_type = 'linear'
+    @y_axis_block = ->(issue, start_time) { story_points_at(issue: issue, start_time: start_time)&.to_f }
+    @y_axis_sort_order = nil
+
     instance_eval(&configuration_block) if configuration_block
   end
 
@@ -41,12 +46,12 @@ class StoryPointAccuracyChart < ChartBase
 
       hash = stop_time ? completed_hash : aging_hash
 
-      estimate = story_points_at issue: issue, start_time: start_time
+      estimate = @y_axis_block.call issue, start_time
       cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
 
-      next if estimate.nil? || estimate.empty?
+      next if estimate.nil?
 
-      key = [estimate.to_f, cycle_time]
+      key = [estimate, cycle_time]
       (hash[key] ||= []) << issue
     end
 
@@ -54,9 +59,11 @@ class StoryPointAccuracyChart < ChartBase
       [completed_hash, 'Completed', '#66FF99', 'green', false],
       [aging_hash, 'Still in progress', '#FFCCCB', 'red', true]
     ].collect do |hash, label, fill_color, border_color, starts_hidden|
-      data = hash.collect do |key, values|
+      # We sort so that the smaller circles are in front of the bigger circles.
+      data = hash.sort(&hash_sorter).collect do |key, values|
         estimate, cycle_time = *key
-        title = ["Estimate: #{estimate}pts, Cycletime: #{label_days(cycle_time)}, #{values.size} issues"] +
+        estimate_label = "#{estimate}#{'pts' if @y_axis_type == 'linear'}"
+        title = ["Estimate: #{estimate_label}, Cycletime: #{label_days(cycle_time)}, #{values.size} issues"] +
           values.collect { |issue| "#{issue.key}: #{issue.summary}" }
         {
           'x' => cycle_time,
@@ -79,6 +86,29 @@ class StoryPointAccuracyChart < ChartBase
     end.compact
   end
 
+  def hash_sorter
+    lambda do |arg1, arg2|
+      estimate1, _cycle_time1 = arg1[0]
+      estimate2, _cycle_time2 = arg2[0]
+
+      if @y_axis_sort_order
+        index1 = @y_axis_sort_order.index estimate1
+        index2 = @y_axis_sort_order.index estimate2
+
+        if index1.nil?
+          comparison = -1
+        elsif index2.nil?
+          comparison = 1
+        else
+          comparison = index1 <=> index2
+        end
+        return comparison unless comparison.zero?
+      end
+
+      arg2[1].size <=> arg1[1].size
+    end
+  end
+
   def story_points_at issue:, start_time:
     story_points = nil
     issue.changes.each do |change|
@@ -92,5 +122,16 @@ class StoryPointAccuracyChart < ChartBase
   def grouping range:, color: # rubocop:disable Lint/UnusedMethodArgument
     deprecated message: 'The grouping declaration is no longer supported on the StoryPointEstimateChart ' \
       'as we now use a bubble chart rather than colors'
+  end
+
+  def y_axis sort_order: nil, label:, &block
+    @y_axis_sort_order = sort_order
+    @y_axis_label = label
+    if sort_order
+      @y_axis_type = 'category'
+    else
+      @y_axis_type = 'linear'
+    end
+    @y_axis_block = block
   end
 end
