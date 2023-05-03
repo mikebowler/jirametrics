@@ -15,6 +15,7 @@ describe AgingWorkInProgressChart do
     chart.all_boards = { 1 => load_complete_sample_board }
     board.cycletime = default_cycletime_config
     chart.issues = load_complete_sample_issues board: board
+    chart.date_range = Date.parse('2021-06-18')..Date.parse('2021-06-28')
     chart
   end
 
@@ -84,29 +85,29 @@ describe AgingWorkInProgressChart do
         'backgroundColor' => 'green',
         'data' => [
           {
-            'title' => ['SP-11 : Report of all orders for an event (183 days)'],
+            'title' => ['SP-11 : Report of all orders for an event (11 days)'],
             'x' => 'Ready',
-            'y' => 183
+            'y' => 11
           },
           {
-            'title' => ['SP-8 : Refund ticket for individual order (183 days)'],
+            'title' => ['SP-8 : Refund ticket for individual order (11 days)'],
              'x' => 'In Progress',
-             'y' => 183
+             'y' => 11
           },
           {
-            'title' => ['SP-7 : Purchase ticket with Apple Pay (183 days)'],
+            'title' => ['SP-7 : Purchase ticket with Apple Pay (11 days)'],
              'x' => 'Ready',
-             'y' => 183
+             'y' => 11
           },
           {
-            'title' => ['SP-2 : Update existing event (183 days)'],
+            'title' => ['SP-2 : Update existing event (11 days)'],
              'x' => 'Ready',
-             'y' => 183
+             'y' => 11
           },
           {
-            'title' => ['SP-1 : Create new draft event (183 days)'],
+            'title' => ['SP-1 : Create new draft event (11 days)'],
             'x' => 'Review',
-            'y' => 183
+            'y' => 11
           }
         ],
        'fill' => false,

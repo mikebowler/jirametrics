@@ -68,7 +68,7 @@ class AgingWorkInProgressChart < ChartBase
         'type' => 'line',
         'label' => rules.label,
         'data' => rules_to_issues[rules].collect do |issue|
-            age = issue.board.cycletime.age(issue)
+            age = issue.board.cycletime.age(issue, today: date_range.end)
             column = column_for issue: issue
             next if column.nil?
 
@@ -92,7 +92,9 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def days_at_percentage_threshold_for_all_columns percentage:, issues:
-    accumulated_status_ids_per_column.collect do |_column, status_ids|
+    accumulated_status_ids_per_column.collect do |column, status_ids|
+      next if column == @fake_column
+
       ages = ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: status_ids
       index = ages.size * percentage / 100
       ages.sort[index.to_i] || 0
@@ -102,9 +104,11 @@ class AgingWorkInProgressChart < ChartBase
   def accumulated_status_ids_per_column
     accumulated_status_ids = []
     @board_columns.reverse.collect do |column|
+      next if column == @fake_column
+
       accumulated_status_ids += column.status_ids
       [column.name, accumulated_status_ids.dup]
-    end.reverse
+    end.compact.reverse
   end
 
   def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
