@@ -28,7 +28,7 @@ class StoryPointAccuracyChart < ChartBase
   def run
     data_sets = scan_issues
 
-    return "<h1>#{@header_text}</h1>None of the items have story points. Nothing to show." if data_sets.empty?
+    return '' if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end
