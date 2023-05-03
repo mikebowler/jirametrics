@@ -96,11 +96,11 @@ class StoryPointAccuracyChart < ChartBase
         index2 = @y_axis_sort_order.index estimate2
 
         if index1.nil?
-          comparison = -1
-        elsif index2.nil?
           comparison = 1
+        elsif index2.nil?
+          comparison = -1
         else
-          comparison = index1 <=> index2
+          comparison = index2 <=> index1
         end
         return comparison unless comparison.zero?
       end

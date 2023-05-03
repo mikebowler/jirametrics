@@ -37,9 +37,9 @@ describe StoryPointAccuracyChart do
     [
       [5, 2, 5, 2, expected_equal],
       [5, 2, 5, 3, expected_more],
-      ['XL', 2, 'S', 2, expected_more],
-      ['M', 2, 'L', 2, expected_less],
-      ['A', 2, 'L', 2, expected_less]
+      ['XL', 2, 'S', 2, expected_less],
+      ['M', 2, 'L', 2, expected_more],
+      ['A', 2, 'L', 2, expected_more]
 
     ].each do |estimate1, count1, estimate2, count2, expected|
       it "should sort for [#{estimate1},#{count1}] and [#{estimate2},#{count2}]" do
