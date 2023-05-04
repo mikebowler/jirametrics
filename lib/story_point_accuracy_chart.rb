@@ -126,7 +126,7 @@ class StoryPointAccuracyChart < ChartBase
       'as we now use a bubble chart rather than colors'
   end
 
-  def y_axis sort_order: nil, label:, &block
+  def y_axis label:, sort_order: nil, &block
     @y_axis_sort_order = sort_order
     @y_axis_label = label
     if sort_order
