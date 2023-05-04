@@ -30,7 +30,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       y: {
         type: "<%= @y_axis_type %>",
         <% if @y_axis_sort_order %>
-        labels: ["","<%= @y_axis_sort_order.join('","')%>",""],
+        labels: ["","<%= @y_axis_sort_order.reverse.join('","')%>",""],
         <% end %>
         scaleLabel: {
           display: true,

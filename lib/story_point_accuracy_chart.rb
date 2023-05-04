@@ -88,8 +88,10 @@ class StoryPointAccuracyChart < ChartBase
 
   def hash_sorter
     lambda do |arg1, arg2|
-      estimate1, _cycle_time1 = arg1[0]
-      estimate2, _cycle_time2 = arg2[0]
+      estimate1 = arg1[0][0]
+      estimate2 = arg2[0][0]
+      sample_count1 = arg1.size
+      sample_count2 = arg2.size
 
       if @y_axis_sort_order
         index1 = @y_axis_sort_order.index estimate1
@@ -100,12 +102,12 @@ class StoryPointAccuracyChart < ChartBase
         elsif index2.nil?
           comparison = -1
         else
-          comparison = index2 <=> index1
+          comparison = index1 <=> index2
         end
         return comparison unless comparison.zero?
       end
 
-      arg2[1].size <=> arg1[1].size
+      sample_count2 <=> sample_count1
     end
   end
 
