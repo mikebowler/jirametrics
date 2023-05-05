@@ -92,9 +92,7 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def days_at_percentage_threshold_for_all_columns percentage:, issues:
-    accumulated_status_ids_per_column.collect do |column, status_ids|
-      next if column == @fake_column
-
+    accumulated_status_ids_per_column.collect do |_column, status_ids|
       ages = ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: status_ids
       index = ages.size * percentage / 100
       ages.sort[index.to_i] || 0
