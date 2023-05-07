@@ -791,4 +791,19 @@ describe Issue do
       expect(actual).to eq [false, true]
     end
   end
+
+  context 'sorting' do
+    it 'should sort when project key is the same and the numbers are different' do
+      a = empty_issue(key: 'SP-1', created: '2022-01-01')
+      b = empty_issue(key: 'SP-2', created: '2022-01-01')
+      expect([b, a].sort.collect(&:key)).to eq %w[SP-1 SP-2]
+    end
+
+    it 'should sort when project keys are different and the numbers are same' do
+      a = empty_issue(key: 'SPA-1', created: '2022-01-01')
+      b = empty_issue(key: 'SPB-2', created: '2022-01-01')
+      expect([b, a].sort.collect(&:key)).to eq %w[SPA-1 SPB-2]
+    end
+  end
+
 end
