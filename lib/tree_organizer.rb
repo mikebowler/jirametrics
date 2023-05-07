@@ -21,6 +21,10 @@ class TreeOrganizer
     def <=> other
       issue <=> other.issue
     end
+
+    def has_children?
+      !@children.empty?
+    end
   end
 
   def initialize issues:
@@ -55,6 +59,12 @@ class TreeOrganizer
   end
 
   def flattened_issue_keys
+    flattened_nodes.collect do |node, depth|
+      [node.issue.key, depth]
+    end
+  end
+
+  def flattened_nodes
     list = []
     walk_children parent: @root, list: list, depth: 1
     list
@@ -62,7 +72,7 @@ class TreeOrganizer
 
   def walk_children parent:, list:, depth:
     parent.children.sort.each do |node|
-      list << [node.issue.key, depth]
+      list << [node, depth]
       walk_children parent: node, list: list, depth: depth + 1
     end
   end

@@ -143,6 +143,10 @@ class HtmlReportConfig
     execute_chart StoryPointAccuracyChart.new block
   end
 
+  def hierarchy_table &block
+    execute_chart HierarchyTable.new block
+  end
+
   def discard_changes_before_hook issues_cutoff_times
     # raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
 
