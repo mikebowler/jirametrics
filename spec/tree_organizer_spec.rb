@@ -59,7 +59,7 @@ describe TreeOrganizer do
         ['SP-1', 1],
         ['SP-1', 2]
       ])
-      expect(subject.cyclical_links).to eq [%w[SP-1]]
+      expect(subject.cyclical_links).to eq [%w[SP-1 SP-1]]
     end
 
     it 'should a three issue cyclical chain' do
