@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class TreeOrganizer
+  attr_reader :cyclical_links
+
   class Node
     attr_accessor :parent, :issue
     attr_reader :children
@@ -22,7 +24,7 @@ class TreeOrganizer
       issue <=> other.issue
     end
 
-    def has_children?
+    def children?
       !@children.empty?
     end
   end
@@ -30,23 +32,30 @@ class TreeOrganizer
   def initialize issues:
     @issues = issues
     @root = Node.new
+    @cyclical_links = []
 
     @issues.each do |issue|
       add issue
     end
   end
 
-  def add issue
+  def add issue, bread_crumbs = []
     parent_node = @root
 
     parent_issue = issue.parent
     if parent_issue
-      parent_node = find_node parent_issue.key
-      parent_node = add parent_issue if parent_node.nil?
+      cyclical = bread_crumbs.include? parent_issue.key
+      bread_crumbs << issue.key
+      if cyclical
+        @cyclical_links << bread_crumbs.reverse
+      else
+        parent_node = find_node parent_issue.key
+      end
+      parent_node = add parent_issue, bread_crumbs if parent_node.nil?
     end
 
     issue_node = Node.new(issue: issue)
-    parent_node.children << issue_node
+    parent_node.children << issue_node if parent_node
     issue_node
   end
 

@@ -5,6 +5,7 @@ require './spec/spec_helper'
 describe TreeOrganizer do
   let(:issue1) { empty_issue key: 'SP-1', created: '2022-01-01' }
   let(:issue2) { empty_issue key: 'SP-2', created: '2022-01-01' }
+  let(:issue3) { empty_issue key: 'SP-3', created: '2022-01-01' }
 
   context 'Adding issues' do
     it 'should handle no issues' do
@@ -36,6 +37,43 @@ describe TreeOrganizer do
         ['SP-1', 2],
         ['SP-2', 2]
       ])
+    end
+
+    it 'should handle two issues that have each other as parents' do
+      issue1.parent = issue2
+      issue2.parent = issue1
+
+      subject = TreeOrganizer.new issues: [issue1]
+      expect(subject.flattened_issue_keys).to eq([
+        ['SP-2', 1],
+        ['SP-1', 2]
+      ])
+      expect(subject.cyclical_links).to eq [%w[SP-2 SP-1]]
+    end
+
+    it 'should handle an issue that has itself as parent' do
+      issue1.parent = issue1
+
+      subject = TreeOrganizer.new issues: [issue1]
+      expect(subject.flattened_issue_keys).to eq([
+        ['SP-1', 1],
+        ['SP-1', 2]
+      ])
+      expect(subject.cyclical_links).to eq [%w[SP-1]]
+    end
+
+    it 'should a three issue cyclical chain' do
+      issue1.parent = issue2
+      issue2.parent = issue3
+      issue3.parent = issue1
+
+      subject = TreeOrganizer.new issues: [issue1]
+      expect(subject.flattened_issue_keys).to eq([
+        ['SP-3', 1],
+        ['SP-2', 2],
+        ['SP-1', 3]
+      ])
+      expect(subject.cyclical_links).to eq [%w[SP-3 SP-2 SP-1]]
     end
   end
 
