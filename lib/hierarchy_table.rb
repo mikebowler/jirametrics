@@ -21,7 +21,7 @@ class HierarchyTable < ChartBase
       message << '<p>Found cyclical links in the parent hierarchy. This is an error and should be '
       message << 'fixed.</p><ul>'
       tree_organizer.cyclical_links.each do |link|
-        message << '<li>' << link << '</ul>'
+        message << '<li>' << link.join(' > ') << '</ul>'
       end
       message << '</ul>'
       @description_text += message
