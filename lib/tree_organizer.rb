@@ -33,6 +33,7 @@ class TreeOrganizer
     @issues = issues
     @root = Node.new
     @cyclical_links = []
+    @node_hash = {}
 
     @issues.each do |issue|
       add issue
@@ -41,6 +42,9 @@ class TreeOrganizer
 
   def add issue, bread_crumbs = []
     parent_node = @root
+
+    issue_node = find_node issue.key
+    return issue_node if issue_node
 
     parent_issue = issue.parent
     if parent_issue
@@ -55,12 +59,16 @@ class TreeOrganizer
     end
 
     issue_node = Node.new(issue: issue)
-    parent_node.children << issue_node if parent_node
+    if parent_node
+      parent_node.children << issue_node
+      @node_hash[issue_node.issue.key] = issue_node
+    end
     issue_node
   end
 
   def find_node issue_key
-    @root.children.find { |node| node.issue.key == issue_key }
+    @node_hash[issue_key]
+    # @root.children.find { |node| node.issue.key == issue_key }
   end
 
   def find_issue issue_key

@@ -62,7 +62,7 @@ describe TreeOrganizer do
       expect(subject.cyclical_links).to eq [%w[SP-1 SP-1]]
     end
 
-    it 'should a three issue cyclical chain' do
+    it 'should handle a three issue cyclical chain' do
       issue1.parent = issue2
       issue2.parent = issue3
       issue3.parent = issue1
@@ -75,6 +75,21 @@ describe TreeOrganizer do
       ])
       expect(subject.cyclical_links).to eq [%w[SP-3 SP-2 SP-1]]
     end
-  end
 
+    it 'should the same issue twice but not at the root' do
+      issue1.parent
+      issue2.parent = issue1
+      issue3.parent = issue2
+      issue3a = issue3.dup
+      issue3a.parent = issue2
+
+      subject = TreeOrganizer.new issues: [issue1, issue2, issue3, issue3a]
+      expect(subject.flattened_issue_keys).to eq([
+        ['SP-1', 1],
+        ['SP-2', 2],
+        ['SP-3', 3]
+      ])
+      expect(subject.cyclical_links).to be_empty
+    end
+  end
 end
