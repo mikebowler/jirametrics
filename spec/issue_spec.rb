@@ -409,8 +409,8 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
-        BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
-        BlockedStalledChange.new(blocking_status: 'Blocked2', time: to_time('2021-10-04')),
+        BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
+        BlockedStalledChange.new(status: 'Blocked2', time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-05')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
@@ -422,7 +422,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
-        BlockedStalledChange.new(blocking_status: 'Blocked', time: to_time('2021-10-03')),
+        BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
         BlockedStalledChange.new(time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
@@ -465,8 +465,8 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Stalled2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
-        BlockedStalledChange.new(blocking_status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
-        BlockedStalledChange.new(blocking_status: 'Stalled2', status_is_blocking: false, time: to_time('2021-10-04')),
+        BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
+        BlockedStalledChange.new(status: 'Stalled2', status_is_blocking: false, time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-05')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
@@ -478,7 +478,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
-        BlockedStalledChange.new(blocking_status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
+        BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
         BlockedStalledChange.new(time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]

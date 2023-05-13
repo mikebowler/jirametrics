@@ -340,7 +340,7 @@ class Issue
 
       new_change = BlockedStalledChange.new(
         flagged: flag,
-        blocking_status: blocking_status,
+        status: blocking_status,
         status_is_blocking: blocking_status.nil? || blocked_statuses.include?(blocking_status),
         blocking_issue_keys: (blocking_issue_keys.empty? ? nil : blocking_issue_keys.dup),
         time: change.time
@@ -360,7 +360,7 @@ class Issue
       hack = result.pop
       result << BlockedStalledChange.new(
         flagged: hack.flag,
-        blocking_status: hack.blocking_status,
+        status: hack.status,
         blocking_issue_keys: hack.blocking_issue_keys,
         time: hack.time,
         stalled_days: result[-1].stalled_days
