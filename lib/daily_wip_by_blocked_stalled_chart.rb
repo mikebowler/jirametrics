@@ -57,7 +57,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.label = 'Stalled'
       rules.color = 'orange'
       rules.group_priority = 2
-      rules.issue_hint = "(Stalled #{label_days(change.stalled_days)})"
+      rules.issue_hint = "(#{change.reasons})"
     else
       rules.label = 'Active'
       rules.color = 'lightgray'
