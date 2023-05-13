@@ -16,7 +16,7 @@ class HierarchyTable < ChartBase
 
   def run
     tree_organizer = TreeOrganizer.new issues: @issues
-    if tree_organizer.cyclical_links
+    unless tree_organizer.cyclical_links.empty?
       message = String.new
       message << '<p>Found cyclical links in the parent hierarchy. This is an error and should be '
       message << 'fixed.</p><ul>'
