@@ -377,6 +377,7 @@ describe Issue do
     let(:settings) do
       {
         'blocked_statuses' => %w[Blocked Blocked2],
+        'stalled_statuses' => %w[Stalled Stalled2],
         'blocked_link_text' => ['is blocked by'],
         'stalled_threshold' => 5
       }
@@ -401,7 +402,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle blocked status' do
+    it 'should handle contiguous blocked status' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
@@ -415,7 +416,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle contiguous blocked statuses' do
+    it 'should handle blocked statuses' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
@@ -442,7 +443,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle stalled' do
+    it 'should handle stalled for inactivity' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(
         field: 'status', value: 'Doing', time: '2021-10-02'
@@ -454,6 +455,32 @@ describe Issue do
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
         BlockedStalledChange.new(time: to_time('2021-10-08')),
         BlockedStalledChange.new(time: to_time('2021-10-10'))
+      ]
+    end
+
+    it 'should handle contiguous stalled status' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status',  value: 'Stalled2', time: '2021-10-04')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(blocking_status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
+        BlockedStalledChange.new(blocking_status: 'Stalled2', status_is_blocking: false, time: to_time('2021-10-04')),
+        BlockedStalledChange.new(time: to_time('2021-10-05')),
+        BlockedStalledChange.new(time: to_time('2021-10-06'))
+      ]
+    end
+
+    it 'should handle stalled statuses' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(blocking_status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
+        BlockedStalledChange.new(time: to_time('2021-10-04')),
+        BlockedStalledChange.new(time: to_time('2021-10-06'))
       ]
     end
 

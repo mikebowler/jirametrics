@@ -290,6 +290,7 @@ class Issue
 
   def blocked_stalled_changes end_time:, settings: @board.project_config.settings
     blocked_statuses = settings['blocked_statuses'] || []
+    stalled_statuses = settings['stalled_statuses'] || []
     blocked_link_texts = settings['blocked_link_text'] || []
     stalled_threshold = settings['stalled_threshold']
 
@@ -318,8 +319,10 @@ class Issue
         flag = change.value
         flag = nil if change.value == ''
       elsif change.status?
-        blocking_status = change.value
-        blocking_status = nil unless blocked_statuses.include?(change.value)
+        blocking_status = nil
+        if blocked_statuses.include?(change.value) || stalled_statuses.include?(change.value)
+          blocking_status = change.value
+        end
       elsif change.link?
         unless /^This issue (?<link_text>.+) (?<issue_key>.+)$/ =~ (change.value || change.old_value)
           puts "Can't parse link text: #{change.value || change.old_value}"
@@ -338,6 +341,7 @@ class Issue
       new_change = BlockedStalledChange.new(
         flagged: flag,
         blocking_status: blocking_status,
+        status_is_blocking: blocking_status.nil? || blocked_statuses.include?(blocking_status),
         blocking_issue_keys: (blocking_issue_keys.empty? ? nil : blocking_issue_keys.dup),
         time: change.time
       )
@@ -351,7 +355,7 @@ class Issue
     end
 
     if result.size >= 2
-      # The existance of the mock entry will mess with the stalled count as it will wake everything
+      # The existence of the mock entry will mess with the stalled count as it will wake everything
       # back up. This hack will clean up appropriately.
       hack = result.pop
       result << BlockedStalledChange.new(
