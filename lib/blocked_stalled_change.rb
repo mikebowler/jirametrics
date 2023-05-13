@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BlockedStalledChange
-  attr_reader :time, :blocking_issue_keys, :flag, :status, :stalled_days
+  attr_reader :time, :blocking_issue_keys, :flag, :status, :stalled_days, :status_is_blocking
 
   def initialize time:, flagged: nil, status: nil, status_is_blocking: true, blocking_issue_keys: nil, stalled_days: nil
     @flag = flagged

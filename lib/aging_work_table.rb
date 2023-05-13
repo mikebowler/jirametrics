@@ -65,16 +65,15 @@ class AgingWorkTable < ChartBase
     if current.blocked?
       icon_span title: current.reasons, icon: @blocked_icon
     elsif current.stalled?
-      if current.stalled_days > @dead_threshold
+      if current.stalled_days && current.stalled_days > @dead_threshold
         icon_span(
           title: "Dead? Hasn&apos;t had any activity in #{label_days current.stalled_days}. " \
             'Does anyone still care about this?',
           icon: @dead_icon
         )
-      elsif current.stalled_days > @stalled_threshold
+      else
         icon_span(
-          title: "Stalled: Hasn&apos;t had any activity in #{label_days current.stalled_days} " \
-            'and isn&apos;t explicitly marked as blocked',
+          title: current.reasons,
           icon: @stalled_icon
         )
       end

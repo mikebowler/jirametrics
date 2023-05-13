@@ -327,6 +327,7 @@ class Issue
       result << BlockedStalledChange.new(
         flagged: hack.flag,
         status: hack.status,
+        status_is_blocking: hack.status_is_blocking,
         blocking_issue_keys: hack.blocking_issue_keys,
         time: hack.time,
         stalled_days: result[-1].stalled_days

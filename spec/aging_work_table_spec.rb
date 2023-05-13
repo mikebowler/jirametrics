@@ -61,7 +61,7 @@ describe AgingWorkTable do
 
       expect(table.blocked_text issue1).to eq(
         table.icon_span(
-          title: 'Stalled: Hasn&apos;t had any activity in 11 days and isn&apos;t explicitly marked as blocked',
+          title: 'Stalled by inactivity: 11 days',
           icon: '🟧'
         )
       )
