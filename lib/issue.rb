@@ -225,40 +225,6 @@ class Issue
     @raw['fields']&.[]('assignee')&.[]('displayName')
   end
 
-  # TODO: Change to use new cycletime_config
-  def blocked_percentage started, finished
-    started = started.call self
-    finished = finished.call self
-
-    return '' if started.nil? || finished.nil?
-
-    total_blocked_time = 0
-    blocked_start = nil
-
-    @changes.each do |change|
-      next unless change.flagged?
-
-      if change.value == 'Blocked'
-        blocked_start = change.time
-      else
-        # It shouldn't be possible to get an unblock without first being blocked but we've
-        # seen it in production so we have to handle it. Data integrity FTW.
-        next if blocked_start.nil?
-
-        if change.time >= started
-          blocked_start = started if blocked_start < started
-          blocked_end = change.time
-          blocked_end = finished if blocked_end > finished
-          total_blocked_time += (blocked_end.to_time - blocked_start.to_time)
-        end
-        blocked_start = nil
-      end
-    end
-
-    total_time = (finished.to_time - started.to_time)
-    total_blocked_time * 100.0 / total_time
-  end
-
   # Many test failures are simply unreadable because the default inspect on this class goes
   # on for pages. Shorten it up.
   def inspect
