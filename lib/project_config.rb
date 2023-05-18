@@ -219,8 +219,7 @@ class ProjectConfig
 
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
-    seconds_per_day = 24 * 60 * 60
-    @time_range = to_time(start)..(to_time(stop) + seconds_per_day)
+    @time_range = to_time(start)..to_time(stop)
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
