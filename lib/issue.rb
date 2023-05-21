@@ -255,9 +255,14 @@ class Issue
   end
 
   def blocked_stalled_changes end_time:, settings: @board.project_config.settings
-    blocked_statuses = settings['blocked_statuses'] || []
-    stalled_statuses = settings['stalled_statuses'] || []
-    blocked_link_texts = settings['blocked_link_text'] || []
+    blocked_statuses = settings['blocked_statuses']
+    stalled_statuses = settings['stalled_statuses']
+    unless blocked_statuses.is_a?(Array) && stalled_statuses.is_a?(Array)
+      raise "blocked_statuses(#{blocked_statuses.inspect}) and " \
+        "stalled_statuses(#{stalled_statuses.inspect}) must both be arrays"
+    end
+
+    blocked_link_texts = settings['blocked_link_text']
     stalled_threshold = settings['stalled_threshold']
 
     blocking_issue_keys = []

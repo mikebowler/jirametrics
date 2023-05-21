@@ -22,6 +22,10 @@ class ProjectConfig
     @board_configs = []
     @settings = {
       'stalled_threshold' => 5,
+      'blocked_statuses' => [],
+      'stalled_statuses' => [],
+      'blocked_link_text' => [],
+
       'colors' => {
         'stalled' => 'orange',
         'blocked' => '#FF7400'

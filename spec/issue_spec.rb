@@ -455,6 +455,18 @@ describe Issue do
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-08T00:00:00'))
       ]
     end
+
+    it 'should notice if blocked_statuses is a string' do
+      settings['blocked_statuses'] = ''
+      expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
+        .to raise_error 'blocked_statuses("") and stalled_statuses(["Stalled", "Stalled2"]) must both be arrays'
+    end
+
+    it 'should notice if stalled_statuses is a string' do
+      settings['stalled_statuses'] = ''
+      expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
+        .to raise_error 'blocked_statuses(["Blocked", "Blocked2"]) and stalled_statuses("") must both be arrays'
+    end
   end
 
   context 'inspect' do
