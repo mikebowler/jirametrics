@@ -4,10 +4,10 @@ class StoryPointAccuracyChart < ChartBase
   def initialize configuration_block = nil
     super()
 
-    header_text 'Story Point Accuracy'
+    header_text 'Estimate Accuracy'
     description_text <<-HTML
       <p>
-        This chart graphs story point estimates against actual recorded cycle times. Since story point
+        This chart graphs estimates against actual recorded cycle times. Since
         estimates can change over time, we're graphing the estimate at the time that the story started.
       </p>
       <p>
