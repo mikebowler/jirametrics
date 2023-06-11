@@ -18,6 +18,7 @@ class Anonymizer
     anonymize_issue_keys_and_titles
     anonymize_column_names
     # anonymize_issue_statuses
+    anonymize_board_names
     shift_all_dates unless @date_adjustment.zero?
     puts 'Anonymize done'
   end
@@ -175,5 +176,11 @@ class Anonymizer
       'Jacob Poirier',
       'Violet MacDonald'
     ].sample
+  end
+
+  def anonymize_board_names
+    @all_boards.values.each do |board|
+      board.raw['name'] = "#{random_phrase} board"
+    end
   end
 end
