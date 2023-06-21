@@ -425,9 +425,9 @@ class Issue
 
   def issue_links
     if @issue_links.nil?
-      @issue_links = @raw['fields']['issuelinks'].collect do |issue_link|
+      @issue_links = @raw['fields']['issuelinks']&.collect do |issue_link|
         IssueLink.new origin: self, raw: issue_link
-      end
+      end || []
     end
     @issue_links
   end
