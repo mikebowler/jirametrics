@@ -31,7 +31,7 @@ class BlockedStalledChange
     result = []
     if blocked?
       result << 'Blocked by flag' if @flag
-      result << "Blocked by status: #{@status}" if @status
+      result << "Blocked by status: #{@status}" if blocked_by_status?
       result << "Blocked by issues: #{@blocking_issue_keys.join(', ')}" if @blocking_issue_keys
     elsif stalled_by_status?
       result << "Stalled by status: #{@status}"

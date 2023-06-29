@@ -27,5 +27,12 @@ describe BlockedStalledChange do
       change = BlockedStalledChange.new time: '2022-01-01'
       expect(change.reasons).to eq ''
     end
+
+    it 'should correctly handle flagged with stalled by status' do
+      change = BlockedStalledChange.new(
+        time: '2022-01-01', flagged: true, status: 'Stalled', status_is_blocking: false
+      )
+      expect(change.reasons).to eq 'Blocked by flag'
+    end
   end
 end
