@@ -206,4 +206,4 @@ class Generator
   end
 end
 
-Generator.new.run
+Generator.new.run if __FILE__ == $PROGRAM_NAME

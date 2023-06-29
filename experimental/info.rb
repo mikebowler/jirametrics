@@ -70,6 +70,8 @@ class InfoDumper
   end
 end
 
-ARGV.each do |key|
-  InfoDumper.new.run key
+if __FILE__ == $PROGRAM_NAME
+  ARGV.each do |key|
+    InfoDumper.new.run key
+  end
 end
