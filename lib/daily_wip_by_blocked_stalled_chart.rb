@@ -41,13 +41,23 @@ class DailyWipByBlockedStalledChart < DailyWipChart
 
   def default_grouping_rules issue:, rules:
     started = issue.board.cycletime.started_time(issue)
+    stopped_date = issue.board.cycletime.stopped_time(issue)&.to_date
     change = key_blocked_stalled_change issue: issue, date: rules.current_date, end_time: time_range.end
 
-    if started.nil?
+    stopped_today = stopped_date == rules.current_date
+
+    if stopped_today && started.nil?
+      rules.label = 'Completed but not started'
+      rules.color = '#66FF66'
+      rules.group_priority = -1
+    elsif stopped_today
+      rules.label = 'Completed'
+      rules.color = '#009900'
+      rules.group_priority = -2
+    elsif started.nil?
       rules.label = 'Start date unknown'
       rules.color = 'white'
       rules.group_priority = 4
-      # rules.ignore
     elsif change&.blocked?
       rules.label = 'Blocked'
       rules.color = 'red'
