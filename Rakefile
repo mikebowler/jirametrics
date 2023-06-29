@@ -18,7 +18,6 @@ task :initialize_config do
   puts "config=#{config_file}"
   require_all 'lib'
   require config_file
-  exit 1
 end
 
 task download: %i[initialize_config] do
