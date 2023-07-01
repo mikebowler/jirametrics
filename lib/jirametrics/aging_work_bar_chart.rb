@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './lib/chart_base'
+require 'jirametrics/chart_base'
 
 class AgingWorkBarChart < ChartBase
   @@next_id = 0

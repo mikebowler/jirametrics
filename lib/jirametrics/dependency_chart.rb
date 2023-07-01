@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require './lib/chart_base'
+require 'jirametrics/chart_base'
 require 'open3'
-require './lib/rules'
+require 'jirametrics/rules'
 
 class DependencyChart < ChartBase
   class LinkRules < Rules

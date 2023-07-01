@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './lib/cycletime_scatterplot'
+require 'jirametrics/cycletime_scatterplot'
 
 describe CycletimeScatterplot do
   let(:chart) do

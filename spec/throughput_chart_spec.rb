@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './lib/throughput_chart'
+require 'jirametrics/throughput_chart'
 
 describe ThroughputChart do
   let(:board) { load_complete_sample_board }

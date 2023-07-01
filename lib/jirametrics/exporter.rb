@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+
 class Object
   def deprecated message:, date: nil
     text = String.new

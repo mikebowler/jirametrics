@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './lib/daily_wip_chart'
+require 'jirametrics/daily_wip_chart'
 
 class DailyWipByBlockedStalledChart < DailyWipChart
   def default_header_text

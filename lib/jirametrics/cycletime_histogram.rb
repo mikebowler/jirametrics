@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './lib/groupable_issue_chart'
+require 'jirametrics/groupable_issue_chart'
 
 class CycletimeHistogram < ChartBase
   include GroupableIssueChart

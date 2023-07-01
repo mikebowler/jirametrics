@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './lib/self_or_issue_dispatcher'
+require 'jirametrics/self_or_issue_dispatcher'
 require 'date'
 
 class CycleTimeConfig

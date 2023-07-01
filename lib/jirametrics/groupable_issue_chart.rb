@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require './lib/rules'
-require './lib/grouping_rules'
+require 'jirametrics/rules'
+require 'jirametrics/grouping_rules'
 
 module GroupableIssueChart
   def init_configuration_block user_provided_block, &default_block

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './lib/trend_line_calculator'
+require 'jirametrics/trend_line_calculator'
 
 describe TrendLineCalculator do
   context 'valid?' do

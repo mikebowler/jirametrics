@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require './lib/chart_base'
-require './lib/groupable_issue_chart'
+require 'jirametrics/chart_base'
+require 'jirametrics/groupable_issue_chart'
 
 class AgingWorkInProgressChart < ChartBase
   include GroupableIssueChart

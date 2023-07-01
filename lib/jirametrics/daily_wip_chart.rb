@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require './lib/chart_base'
+require 'jirametrics/chart_base'
 
 class DailyGroupingRules < GroupingRules
   attr_accessor :current_date, :group_priority, :issue_hint

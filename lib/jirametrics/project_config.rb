@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'time'
-require './lib/status_collection'
+require 'jirametrics/status_collection'
 
 class ProjectConfig
   include DiscardChangesBefore
