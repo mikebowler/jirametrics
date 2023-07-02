@@ -32,13 +32,15 @@ class ChartBase
   end
 
   def render caller_binding, file
-    basename = Pathname.new(File.realpath(file)).basename.to_s
+    pathname = Pathname.new(File.realpath(file))
+    basename = pathname.basename.to_s
     raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
 
     # Insert a incrementing chart_id so that all the chart names on the page are unique
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
-    erb = ERB.new File.read "html/#{$1}.erb"
+    @html_directory = "#{pathname.dirname}/html"
+    erb = ERB.new File.read "#{@html_directory}/#{$1}.erb"
     erb.result(caller_binding)
   end
 
@@ -98,7 +100,7 @@ class ChartBase
     issues_id = next_id
 
     issue_descriptions.sort! { |a, b| a[0].key_as_i <=> b[0].key_as_i }
-    erb = ERB.new File.read 'html/collapsible_issues_panel.erb'
+    erb = ERB.new File.read "#{@html_directory}/collapsible_issues_panel.erb"
     erb.result(binding)
   end
 

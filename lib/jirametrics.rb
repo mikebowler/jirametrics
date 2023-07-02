@@ -63,6 +63,13 @@ class JiraMetrics
     require 'jirametrics/hierarchy_table'
     require 'jirametrics/board'
     require config_file
+
+    puts ARGV.inspect
+    if ARGV[0] == 'download'
+      Exporter.instance.download
+    elsif ARGV[0] == 'export'
+      Exporter.instance.export
+    end
   end
 
   # Dir.foreach('lib/jirametrics') {|file| puts "require 'jirametrics/#{$1}'" if file =~ /^(.+)\.rb$/}

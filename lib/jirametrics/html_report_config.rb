@@ -35,7 +35,8 @@ class HtmlReportConfig
     @sections.rotate!(-1)
 
     File.open @file_config.output_filename, 'w' do |file|
-      erb = ERB.new File.read('html/index.erb')
+      html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
+      erb = ERB.new File.read("#{html_directory}/index.erb")
       file.puts erb.result(binding)
     end
   end
