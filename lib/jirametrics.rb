@@ -1,20 +1,36 @@
 # frozen_string_literal: true
 
-require 'require_all'
+require 'thor'
 
-class JiraMetrics
-  def self.run
-    config_file = './config.rb'
-    if ENV['config_file']
-      config_file = ENV['config_file']
-      if File.exist? config_file
-        puts "Using config file #{config_file}"
-      else
-        puts "Cannot find config file #{config_file}"
-      end
+class JiraMetrics < Thor
+  option :config
+  desc 'export', "Export data into either reports or CSV's as per the configuration"
+  def export
+    load_config options[:config]
+    Exporter.instance.export
+  end
+
+  option :config
+  desc 'download', 'Download data from Jira'
+  def download
+    load_config options[:config]
+    Exporter.instance.download
+  end
+
+  private
+
+  def load_config config_file
+    config_file = './config.rb' if config_file.nil?
+
+    if File.exist? config_file
+      # The fact that File.exist can see the file does not mean that require will be
+      # able to load it. Convert this to an absolute pathname now for require.
+      config_file = File.absolute_path(config_file).to_s
+    else
+      puts "Cannot find configuration file #{config_file.inspect}"
+      exit 1
     end
-    puts "config=#{config_file}"
-    # require_all 'jirametrics/'
+
     require 'jirametrics/chart_base'
     require 'jirametrics/rules'
     require 'jirametrics/grouping_rules'
@@ -63,13 +79,6 @@ class JiraMetrics
     require 'jirametrics/hierarchy_table'
     require 'jirametrics/board'
     require config_file
-
-    puts ARGV.inspect
-    if ARGV[0] == 'download'
-      Exporter.instance.download
-    elsif ARGV[0] == 'export'
-      Exporter.instance.export
-    end
   end
 
   # Dir.foreach('lib/jirametrics') {|file| puts "require 'jirametrics/#{$1}'" if file =~ /^(.+)\.rb$/}
