@@ -2,7 +2,8 @@
 
 require 'rspec/core/rake_task'
 
-task default: %i[download export]
+task default: [:spec]
+task test: [:spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
 
 task :initialize_config do
   require 'jirametrics'
@@ -20,4 +21,3 @@ end
 
 RSpec::Core::RakeTask.new(:spec)
 
-task test: [:spec]
