@@ -45,7 +45,6 @@ class Exporter
 
           discard_changes_before status_becomes: (starting_status || :backlog)
 
-          hierarchy_table
           cycletime_scatterplot do
             show_trend_lines
           end
