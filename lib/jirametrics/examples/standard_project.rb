@@ -83,11 +83,11 @@ class Exporter
           expedited_chart
           sprint_burndown
           story_point_accuracy_chart
-          story_point_accuracy_chart do
-            header_text nil
-            description_text nil
-            y_axis(sort_order: %w[Story Task Defect], label: 'TShirt Sizes') { |issue, _started_time| issue.type }
-          end
+          # story_point_accuracy_chart do
+          #   header_text nil
+          #   description_text nil
+          #   y_axis(sort_order: %w[Story Task Defect], label: 'TShirt Sizes') { |issue, _started_time| issue.type }
+          # end
 
           dependency_chart do
             link_rules do |link, rules|
