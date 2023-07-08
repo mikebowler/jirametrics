@@ -51,18 +51,18 @@ class Exporter
     @downloading = false
   end
 
-  def export
-    @project_configs.each do |project|
+  def export name_filter:
+    each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
       project.run
     end
   end
 
-  def download
+  def download name_filter:
     @downloading = true
     logfile_name = 'downloader.log'
     File.open logfile_name, 'w' do |logfile|
-      @project_configs.each do |project|
+      each_project_config(name_filter: name_filter) do |project|
         project.evaluate_next_level
         next if project.aggregated_project?
 
@@ -74,6 +74,12 @@ class Exporter
       end
     end
     puts "Full output from downloader in #{logfile_name}"
+  end
+
+  def each_project_config name_filter:
+    @project_configs.each do |project|
+      yield project if project.name.nil? || File.fnmatch(name_filter, project.name)
+    end
   end
 
   def downloading?

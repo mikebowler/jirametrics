@@ -4,17 +4,19 @@ require 'thor'
 
 class JiraMetrics < Thor
   option :config
+  option :name
   desc 'export', "Export data into either reports or CSV's as per the configuration"
   def export
     load_config options[:config]
-    Exporter.instance.export
+    Exporter.instance.export(name_filter: options[:name] || '*')
   end
 
   option :config
+  option :name
   desc 'download', 'Download data from Jira'
   def download
     load_config options[:config]
-    Exporter.instance.download
+    Exporter.instance.download(name_filter: options[:name] || '*')
   end
 
   private
