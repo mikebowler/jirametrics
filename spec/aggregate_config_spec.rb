@@ -15,10 +15,10 @@ describe AggregateConfig do
   end
 
   context 'include_issues_from' do
-    it 'should not allow aggregating projects from different jira instances' do
-      exporter = Exporter.new
-      target_path = 'spec/testdata/'
+    let(:exporter) { Exporter.new }
+    let(:target_path) { 'spec/testdata/' }
 
+    it 'should not allow aggregating projects from different jira instances' do
       project1 = ProjectConfig.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'foo'
       )
@@ -44,5 +44,24 @@ describe AggregateConfig do
         'Not allowed to aggregate projects from different Jira instances: "http://foo.com" and "http://bar.com"'
       )
     end
+
+    it 'should pull issues from project when no file sections' do
+      solo_project = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'solo'
+      )
+      solo_project.file_prefix 'sample'
+      solo_project.run
+      solo_project.issues << empty_issue(key: 'SP-1', created: '2023-01-01')
+      exporter.project_configs << solo_project
+
+      aggregated_project = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'aggregate'
+      )
+      subject = AggregateConfig.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'solo'
+      expect(aggregated_project.issues.collect(&:key)).to eq %w[SP-1]
+    end
+
   end
 end
+

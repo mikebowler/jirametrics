@@ -52,7 +52,16 @@ class AggregateConfig
     end
 
     @included_projects << project
-    @project_config.add_issues project.issues
+    if project.file_configs.empty?
+      issues = project.issues
+    else
+      issues = project.file_configs.first.issues
+      if project.file_configs.size > 1
+        puts 'More than one file section is defined. For the aggregated view, we always use ' \
+          'the first file section'
+      end
+    end
+    @project_config.add_issues issues
   end
 
   def date_range range
