@@ -758,4 +758,14 @@ describe Issue do
     end
   end
 
+  context 'author' do
+    it 'should return empty string when author section is missing' do
+      issue1.raw['fields']['creator'] = nil
+      expect(issue1.author).to eq ''
+    end
+
+    it 'should return author' do
+      expect(issue1.author).to eq 'Mike Bowler'
+    end
+  end
 end

@@ -69,7 +69,7 @@ class Issue
 
   def labels = @raw['fields']['labels'] || []
 
-  def author = @raw['fields']['creator']['displayName']
+  def author = @raw['fields']['creator']&.[]('displayName') || ''
 
   def resolution = @raw['fields']['resolution']&.[]('name')
 
