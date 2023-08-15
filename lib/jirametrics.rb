@@ -5,7 +5,7 @@ require 'thor'
 class JiraMetrics < Thor
   option :config
   option :name
-  desc 'export', "Export data into either reports or CSV's as per the configuration"
+  desc 'export only', "Export data into either reports or CSV's as per the configuration"
   def export
     load_config options[:config]
     Exporter.instance.export(name_filter: options[:name] || '*')
@@ -13,10 +13,21 @@ class JiraMetrics < Thor
 
   option :config
   option :name
-  desc 'download', 'Download data from Jira'
+  desc 'download only', 'Download data from Jira'
   def download
     load_config options[:config]
     Exporter.instance.download(name_filter: options[:name] || '*')
+  end
+
+  option :config
+  option :name
+  desc 'download and export', 'Same as running download, followed by export'
+  def go
+    load_config options[:config]
+    Exporter.instance.download(name_filter: options[:name] || '*')
+
+    load_config options[:config]
+    Exporter.instance.export(name_filter: options[:name] || '*')
   end
 
   private
@@ -80,7 +91,7 @@ class JiraMetrics < Thor
     require 'jirametrics/columns_config'
     require 'jirametrics/hierarchy_table'
     require 'jirametrics/board'
-    require config_file
+    load config_file
   end
 
   # Dir.foreach('lib/jirametrics') {|file| puts "require 'jirametrics/#{$1}'" if file =~ /^(.+)\.rb$/}
