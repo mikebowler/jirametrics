@@ -33,8 +33,8 @@ describe Issue do
   end
 
   it 'cannot fabricate url' do
-    issue2.raw['self'] = nil
-    expect(issue2.url).to be_nil
+    issue2.board.raw['self'] = nil
+    expect{issue2.url}.to raise_error 'Cannot parse self: nil'
   end
 
   it 'gets created and updated' do

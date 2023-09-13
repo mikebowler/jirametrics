@@ -75,7 +75,7 @@ class Issue
 
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
-    "#{$1}/browse/#{key}" if @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
+    "#{@board.server_url_prefix}/browse/#{key}"
   end
 
   def key_as_i

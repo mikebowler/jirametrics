@@ -39,11 +39,15 @@ class Board
     end.compact
   end
 
+  def server_url_prefix
+    raise "Cannot parse self: #{@raw['self'].inspect}" unless @raw['self'] =~ /^(https?:\/\/.+)\/rest\//
+
+    $1
+  end
+
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
-    raise "Cannot parse self: #{@raw['self']}" unless @raw['self'] =~ /^(https?:\/\/[^\/]+)\//
-
-    "#{$1}/secure/RapidBoard.jspa?rapidView=#{id}"
+    "#{server_url_prefix}/secure/RapidBoard.jspa?rapidView=#{id}"
   end
 
   def status_ids_from_column column

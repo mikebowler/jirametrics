@@ -25,7 +25,7 @@ describe Board do
         }
 
       }
-      expect { board.url }.to raise_error 'Cannot parse self: random string'
+      expect { board.url }.to raise_error 'Cannot parse self: "random string"'
     end
   end
 end
