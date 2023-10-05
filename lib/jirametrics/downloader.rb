@@ -2,7 +2,7 @@
 
 require 'cgi'
 require 'json'
-require 'english'
+require 'English'
 
 class Downloader
   CURRENT_METADATA_VERSION = 4
