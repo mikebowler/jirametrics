@@ -17,9 +17,7 @@ class AgingWorkBarChart < ChartBase
       <p>
         There are potentially three bars for each issue, although a bar may be missing if the issue has no
         information relevant to that. Hovering over any of the bars will provide more details.
-        <ol><li>The top bar tells you what status the issue is in at any time. Any statuses in the status
-        category of "To Do" will be in blue. Any in the category of "In Progress" will be in a
-        yellow and any in "Done" will be green.</li>
+        <ol><li>The top bar tells you what status the issue is in at any time.</li>
         <li>The middle bar indicates blocked and stalled states. A lighter orange is stalled and a darker,
         reddish colour is blocked.</li>
         <li>The bottom bar indicated an expedited state.</li></ol>
