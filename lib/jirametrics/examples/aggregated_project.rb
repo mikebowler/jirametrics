@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
-class Exporter
+# This file is really intended to give you ideas about how you might configure your own reports, not
+# as a complete setup that will work in every case. 
+#
+# See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for moreclass Exporter
   def aggregated_project name:, project_names:
     project name: name do
       puts name

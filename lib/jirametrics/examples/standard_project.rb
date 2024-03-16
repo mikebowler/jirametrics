@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# This file is really intended to give you ideas about how you might configure your own reports, not
+# as a complete setup that will work in every case. 
+#
+# See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {}, default_board: nil
     project name: name do
