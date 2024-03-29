@@ -4,6 +4,7 @@
 # as a complete setup that will work in every case. 
 #
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for moreclass Exporter
+class Exporter
   def aggregated_project name:, project_names:
     project name: name do
       puts name
