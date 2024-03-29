@@ -5,9 +5,12 @@
 #
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
-  def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {}, default_board: nil
+  def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
+      default_board: nil, anonymize: false
+
     project name: name do
       puts name
+      self.anonymize if anonymize
 
       settings['blocked_link_text'] = ['is blocked by']
       file_prefix file_prefix
@@ -40,7 +43,7 @@ class Exporter
         html_report do
           board_id default_board if default_board
 
-          html "<H1>#{file_prefix}</H1>", type: :header
+          html "<H1>#{name}</H1>", type: :header
           boards.each_key do |id|
             board = find_board id
             html "<div><a href='#{board.url}'>#{id} #{board.name}</a></div>",
@@ -52,16 +55,7 @@ class Exporter
           cycletime_scatterplot do
             show_trend_lines
           end
-          cycletime_scatterplot do # Epics
-            header_text 'Parents only'
-            filter_issues { |i| i.parent }
-          end
           cycletime_histogram
-          cycletime_histogram do
-            grouping_rules do |issue, rules|
-              rules.label = issue.board.cycletime.stopped_time(issue).to_date.strftime('%b %Y')
-            end
-          end
 
           throughput_chart do
             description_text '<h2>Number of items completed, grouped by issue type</h2>'
@@ -83,14 +77,24 @@ class Exporter
           aging_work_table
           daily_wip_by_age_chart
           daily_wip_by_blocked_stalled_chart
+          daily_wip_chart do
+            header_text 'Daily WIP by Parent'
+            description_text <<-TEXT
+              How much work is in progress, grouped by the parent of the issue. This will give us an
+              indication of how focused we are on higher level objectives. If there are many parent
+              tickets in progress at the same time, either this team has their focus scattered or we
+              aren't doing a good job of 
+              <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
+              tickets</a>. Neither of those is desirable.
+            TEXT
+            grouping_rules do |issue, rules|
+              rules.label = issue.parent&.key || 'No parent'
+              rules.color = 'white' if rules.label == 'No parent' 
+            end
+          end
           expedited_chart
           sprint_burndown
           story_point_accuracy_chart
-          # story_point_accuracy_chart do
-          #   header_text nil
-          #   description_text nil
-          #   y_axis(sort_order: %w[Story Task Defect], label: 'TShirt Sizes') { |issue, _started_time| issue.type }
-          # end
 
           dependency_chart do
             link_rules do |link, rules|
@@ -102,8 +106,9 @@ class Exporter
                 rules.merge_bidirectional keep: 'outward'
               when 'Sync'
                 rules.use_bidirectional_arrows
-                #   rules.line_color = 'red'
               else
+                # This is a link type that we don't recognized. Dump it to standard out to draw attention
+                # to it.
                 puts "name=#{link.name}, label=#{link.label}"
               end
             end
