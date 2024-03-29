@@ -495,7 +495,7 @@ class Issue
   end
 
   def load_history_into_changes
-    @raw['changelog']['histories'].each do |history|
+    @raw['changelog']['histories']&.each do |history|
       created = parse_time(history['created'])
 
       # It should be impossible to not have an author but we've seen it in production
@@ -507,7 +507,7 @@ class Issue
   end
 
   def load_comments_into_changes
-    @raw['fields']['comment']['comments'].each do |comment|
+    @raw['fields']['comment']['comments']&.each do |comment|
       raw = {
         'field' => 'comment',
         'to' => comment['id'],
