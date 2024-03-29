@@ -170,7 +170,7 @@ class Downloader
     @issue_keys_pending_download << parent_key if parent_key
 
     # Sub-tasks
-    issue.raw['fields']['subtasks'].each do |raw_subtask|
+    issue.raw['fields']['subtasks']&.each do |raw_subtask|
       @issue_keys_pending_download << raw_subtask['key']
     end
 
