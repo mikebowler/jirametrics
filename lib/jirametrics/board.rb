@@ -83,6 +83,10 @@ class Board
     @raw['id'].to_i
   end
 
+  def project_id
+    @raw['location']['id']
+  end
+
   def name
     @raw['name']
   end

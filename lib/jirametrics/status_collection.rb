@@ -64,4 +64,5 @@ class StatusCollection
   def <<(arg) = @list << arg
   def empty? = @list.empty?
   def clear = @list.clear
+  def delete(object) = @list.delete(object)
 end

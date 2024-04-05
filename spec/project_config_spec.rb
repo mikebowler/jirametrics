@@ -231,4 +231,66 @@ describe ProjectConfig do
       expect(subject.issues).to eql([issue])
     end
   end
+
+  context 'add_possible_status' do
+    let(:project_config) do
+      ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+    end
+
+    it 'should register a status' do
+      expect(project_config.possible_statuses).to be_empty
+      project_config.project_id = 100
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      )
+      expect(project_config.possible_statuses.collect(&:name)).to eq(['foo'])
+    end
+
+    it 'should ignore a project status for a different project' do
+      project_config.project_id = 100
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 101
+      )
+      expect(project_config.possible_statuses.collect(&:name)).to be_empty
+    end
+
+    it 'should replace a global status with the project specific one' do
+      project_config.project_id = 100
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: nil
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
+
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
+    end
+
+    it 'should not replace a project status with a global one' do
+      project_config.project_id = 100
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
+
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: nil
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
+    end
+
+    it 'should throw error if categories dont match' do
+      project_config.project_id = 100
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo2', category_id: 3
+      project_config.add_possible_status(status1)
+
+      expect { project_config.add_possible_status(status2) }.to raise_error(
+        /^Redefining status category/
+      )
+    end
+  end
 end
