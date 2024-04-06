@@ -101,7 +101,7 @@ class ProjectConfig
       return
     end
 
-    add_possible_status Status.new(name: status, id: nil, category_name: category, category_id: nil)
+    add_possible_status Status.new(name: status, category_name: category)
   end
 
   def load_all_boards
@@ -172,15 +172,7 @@ class ProjectConfig
     end
 
     status_json_snippets.each do |snippet|
-      category_config = snippet['statusCategory']
-      status_name = snippet['name']
-      add_possible_status Status.new(
-        name: status_name,
-        id: snippet['id'].to_i,
-        category_name: category_config['name'],
-        category_id: category_config['id'].to_i,
-        project_id: snippet['scope']&.[]('project')&.[]('id') # May have a value if this is a NextGen project
-      )
+      add_possible_status Status.new(raw: snippet)
     end
   end
 

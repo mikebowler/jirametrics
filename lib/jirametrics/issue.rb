@@ -51,15 +51,7 @@ class Issue
   def summary = @raw['fields']['summary']
 
   def status
-    raw_status = @raw['fields']['status']
-    raw_category = raw_status['statusCategory']
-
-    Status.new(
-      name: raw_status['name'],
-      id: raw_status['id'].to_i,
-      category_name: raw_category['name'],
-      category_id: raw_category['id'].to_i
-    )
+    Status.new raw: @raw['fields']['status']
   end
 
   def status_id
