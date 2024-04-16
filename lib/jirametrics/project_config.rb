@@ -41,7 +41,7 @@ class ProjectConfig
   def run
     unless aggregated_project?
       load_all_boards
-      @project_id = @all_boards.first.last.project_id
+      @project_id = @all_boards.first.last&.project_id
       load_status_category_mappings
       load_project_metadata
       load_sprints
@@ -194,7 +194,7 @@ class ProjectConfig
 
   def add_possible_status status
     # If it's project scoped and it's not this project, just ignore it.
-    return if status.project_id && status.project_id != @project_id
+    return if status.project_id && (@project_id.nil? || status.project_id != @project_id)
 
     existing_status = find_status(name: status.name)
 
