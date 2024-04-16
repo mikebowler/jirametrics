@@ -84,7 +84,7 @@ class Board
   end
 
   def project_id
-    @raw['location']['id']
+    @raw['location']&.[]('id')
   end
 
   def name
