@@ -2,5 +2,5 @@
 
 require './spec/spec_helper'
 
-describe HierarchyTable do
+describe HierarchyTable do # rubocop:disable Lint/EmptyBlock
 end

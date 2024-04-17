@@ -41,7 +41,7 @@ describe ProjectConfig do
 
       expected = [
         ['Backlog', 'To Do'],
-        ['Done', 'Done'], # rubocop:disable Style/WordArray
+        ['Done', 'Done'],
         ['FakeBacklog', 'To Do'],
         ['In Progress', 'In Progress'],
         ['Review', 'In Progress'],

@@ -160,6 +160,7 @@ class DependencyChart < ChartBase
     dot_graph << '}'
 
     return nil if visible_issues.empty?
+
     dot_graph
   end
 

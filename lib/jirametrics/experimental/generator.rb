@@ -38,7 +38,7 @@ class FakeIssue
         priority: {
           name: ''
         },
-        summary: RandomWord.phrases.next.gsub(/_/, ' '),
+        summary: RandomWord.phrases.next.gsub(_, ' '),
         issuelinks: [],
         fixVersions: []
       }

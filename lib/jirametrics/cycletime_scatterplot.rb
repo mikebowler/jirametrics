@@ -88,7 +88,10 @@ class CycletimeScatterplot < ChartBase
 
     # The trend calculation works with numbers only so convert Time to an int and back
     calculator = TrendLineCalculator.new(points)
-    data_points = calculator.chart_datapoints range: time_range.begin.to_i..time_range.end.to_i, max_y: @highest_cycletime
+    data_points = calculator.chart_datapoints(
+      range: time_range.begin.to_i..time_range.end.to_i,
+      max_y: @highest_cycletime
+    )
     data_points.each do |point_hash|
       point_hash[:x] = chart_format Time.at(point_hash[:x])
     end

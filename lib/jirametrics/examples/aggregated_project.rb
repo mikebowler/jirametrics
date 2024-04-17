@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # This file is really intended to give you ideas about how you might configure your own reports, not
-# as a complete setup that will work in every case. 
+# as a complete setup that will work in every case.
 #
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for moreclass Exporter
 class Exporter

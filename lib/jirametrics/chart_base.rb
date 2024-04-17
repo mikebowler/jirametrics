@@ -212,7 +212,7 @@ class ChartBase
   end
 
   def random_color
-    "\##{Random.bytes(3).unpack1('H*')}"
+    "##{Random.bytes(3).unpack1('H*')}"
   end
 
   def canvas width:, height:, responsive: true

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # This file is really intended to give you ideas about how you might configure your own reports, not
-# as a complete setup that will work in every case. 
+# as a complete setup that will work in every case.
 #
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
@@ -83,13 +83,13 @@ class Exporter
               How much work is in progress, grouped by the parent of the issue. This will give us an
               indication of how focused we are on higher level objectives. If there are many parent
               tickets in progress at the same time, either this team has their focus scattered or we
-              aren't doing a good job of 
+              aren't doing a good job of
               <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
               tickets</a>. Neither of those is desirable.
             TEXT
             grouping_rules do |issue, rules|
               rules.label = issue.parent&.key || 'No parent'
-              rules.color = 'white' if rules.label == 'No parent' 
+              rules.color = 'white' if rules.label == 'No parent'
             end
           end
           expedited_chart

@@ -66,7 +66,7 @@ class SprintBurndown < ChartBase
       sprints.each_with_index do |sprint, index|
         color = %w[blue orange green red brown][index % 5]
         label = sprint.name
-        data = send(data_method, **{ sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint] })
+        data = send(data_method, sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint])
         data_sets << {
           label: label,
           data: data,
@@ -130,8 +130,8 @@ class SprintBurndown < ChartBase
         currently_in_sprint = in_change_item
       elsif change.story_points? && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
-        story_points = change.value&.to_f || 0.0
-        value = story_points - (change.old_value&.to_f || 0.0)
+        story_points = change.value.to_f
+        value = story_points - change.old_value.to_f
       elsif completed_has_been_tracked == false && change.time == issue_completed_time
         completed_has_been_tracked = true
         action = :issue_stopped

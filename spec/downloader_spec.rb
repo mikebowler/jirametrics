@@ -121,7 +121,7 @@ describe Downloader do
         'personal_access_token' => 'yy'
       })
       expect(downloader.make_curl_command url: 'http://foo').to eq(
-        %(curl -s -H \"Authorization: Bearer yy\" --request GET --header "Accept: application/json" --url "http://foo")
+        %(curl -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
       )
     end
   end

@@ -30,5 +30,4 @@ class Rules
     result << ')'
     result
   end
-
 end

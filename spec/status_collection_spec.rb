@@ -45,7 +45,6 @@ describe StatusCollection do
     it 'should handle single exclude by name' do
       expect(subject.in_progress excluding: 'c').to eq %w[b]
     end
-
   end
 
   context 'in progress' do

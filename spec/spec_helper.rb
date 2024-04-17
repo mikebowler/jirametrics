@@ -135,7 +135,6 @@ def mock_cycletime_config stub_values: []
   raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
 
   stub_values.each do |line|
-
     unless line[0].is_a? Issue
       raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
     end
@@ -161,11 +160,12 @@ def chart_format object
 end
 
 def to_time string
-  if string.is_a? Date
+  case string
+  when Date
     Time.new string.year, string.month, string.day, 0, 0, 0, '+00:00'
-  elsif string =~ /^(\d{4})-(\d{2})-(\d{2})$/
+  when /^(\d{4})-(\d{2})-(\d{2})$/
     Time.new $1.to_i, $2.to_i, $3.to_i, 0, 0, 0, '+00:00'
-  elsif string =~ /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
+  when /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
     Time.new $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, '+00:00'
   else
     Time.parse string

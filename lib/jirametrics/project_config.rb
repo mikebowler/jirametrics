@@ -54,7 +54,6 @@ class ProjectConfig
     @file_configs.each do |file_config|
       file_config.run
     end
-
   end
 
   def aggregated_project?
@@ -204,7 +203,7 @@ class ProjectConfig
     # If the existing one has a project id then it's already the most precise. Ignore the new one.
     # No need to check categories as status_category_mapping can't add a project_id so by definition
     # this data came from Jira.
-    return if existing_status && existing_status.project_id
+    return if existing_status&.project_id
 
     # If the new one has a project_id then it's more precise so replace the old one with this,
     # regardless of whether the categories match.
@@ -347,7 +346,8 @@ class ProjectConfig
     raise "No boards found for project #{name.inspect}" if all_boards.empty?
 
     if all_boards.size != 1
-      puts "Multiple boards are in use for project #{name.inspect}. Picked #{(default_board.name).inspect} to attach issues to."
+      puts "Multiple boards are in use for project #{name.inspect}. " \
+        "Picked #{default_board.name.inspect} to attach issues to."
     end
     default_board
   end

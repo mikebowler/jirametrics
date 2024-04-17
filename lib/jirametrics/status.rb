@@ -11,20 +11,19 @@ class Status
     @category_id = category_id
     @project_id = project_id
 
-    if raw
-      @raw = raw
-      @name = raw['name']
-      @id = raw['id'].to_i
+    return unless raw
 
-      category_config = raw['statusCategory']
-      @category_name = category_config['name']
-      @category_id = category_config['id'].to_i
+    @raw = raw
+    @name = raw['name']
+    @id = raw['id'].to_i
 
-      # If this is a NextGen project then this status may be project specific. When this field is
-      # nil then the status is global.
-      @project_id = raw['scope']&.[]('project')&.[]('id')
-    end
+    category_config = raw['statusCategory']
+    @category_name = category_config['name']
+    @category_id = category_config['id'].to_i
 
+    # If this is a NextGen project then this status may be project specific. When this field is
+    # nil then the status is global.
+    @project_id = raw['scope']&.[]('project')&.[]('id')
   end
 
   def to_s
@@ -38,7 +37,7 @@ class Status
 
   def state
     instance_variables
-      .reject {|variable| variable == :@raw}
+      .reject { |variable| variable == :@raw }
       .map { |variable| instance_variable_get variable }
   end
 end

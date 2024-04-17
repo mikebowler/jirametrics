@@ -86,5 +86,4 @@ describe Anonymizer do
       expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
     end
   end
-
 end

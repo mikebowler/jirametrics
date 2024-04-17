@@ -50,5 +50,4 @@ describe StoryPointAccuracyChart do
       end
     end
   end
-
 end

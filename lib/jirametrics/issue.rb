@@ -270,7 +270,6 @@ class Issue
     # By doing this, we're able to eliminate a lot of duplicated code in charts.
     mock_change = ChangeItem.new time: end_time, author: '', artificial: true, raw: { 'field' => '' }
     (changes + [mock_change]).each do |change|
-
       previous_was_active = false if check_for_stalled(
         change_time: change.time,
         previous_change_time: previous_change_time,

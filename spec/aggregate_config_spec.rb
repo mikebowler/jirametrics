@@ -61,7 +61,5 @@ describe AggregateConfig do
       subject.include_issues_from 'solo'
       expect(aggregated_project.issues.collect(&:key)).to eq %w[SP-1]
     end
-
   end
 end
-

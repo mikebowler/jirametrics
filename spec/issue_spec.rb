@@ -34,7 +34,7 @@ describe Issue do
 
   it 'cannot fabricate url' do
     issue2.board.raw['self'] = nil
-    expect{issue2.url}.to raise_error 'Cannot parse self: nil'
+    expect { issue2.url }.to raise_error 'Cannot parse self: nil'
   end
 
   it 'gets created and updated' do
@@ -628,8 +628,7 @@ describe Issue do
         'id' => '10097',
         'key' => 'ABC-1',
         'self' => 'https://{your_jira_site}.com/rest/api/3/issue/10097',
-        'fields' => {
-        }
+        'fields' => {}
       }
       expect(issue.parent_key).to eq 'ABC-1'
     end

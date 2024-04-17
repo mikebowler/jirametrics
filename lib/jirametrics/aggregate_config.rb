@@ -93,6 +93,7 @@ class AggregateConfig
     end
 
     raise "Can't calculate range" if earliest.nil? || latest.nil?
+
     earliest..latest
   end
 end

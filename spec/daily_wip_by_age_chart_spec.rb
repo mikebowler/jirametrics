@@ -33,7 +33,7 @@ describe DailyWipByAgeChart do
       rules.current_date = Date.parse('2022-01-05')
       subject.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Completed but not started', '#66FF66']
-      expect(rules.group_priority).to eq -1
+      expect(rules.group_priority).to eq(-1)
     end
 
     it 'completed today' do
@@ -44,7 +44,7 @@ describe DailyWipByAgeChart do
       rules.current_date = Date.parse('2022-01-05')
       subject.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Completed', '#009900']
-      expect(rules.group_priority).to eq -2
+      expect(rules.group_priority).to eq(-2)
     end
 
     it 'active less than a day' do

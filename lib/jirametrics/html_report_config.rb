@@ -125,11 +125,11 @@ class HtmlReportConfig
   end
 
   def random_color
-    "\##{Random.bytes(3).unpack1('H*')}"
+    "##{Random.bytes(3).unpack1('H*')}"
   end
 
   def html string, type: :body
-    raise "Unexpected type: #{type}" unless [:body, :header].include? type
+    raise "Unexpected type: #{type}" unless %i[body header].include? type
 
     @sections << [string, type]
   end
