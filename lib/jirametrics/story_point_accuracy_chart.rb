@@ -58,7 +58,7 @@ class StoryPointAccuracyChart < ChartBase
     [
       [completed_hash, 'Completed', '#66FF99', 'green', false],
       [aging_hash, 'Still in progress', '#FFCCCB', 'red', true]
-    ].collect do |hash, label, fill_color, border_color, starts_hidden|
+    ].filter_map do |hash, label, fill_color, border_color, starts_hidden|
       # We sort so that the smaller circles are in front of the bigger circles.
       data = hash.sort(&hash_sorter).collect do |key, values|
         estimate, cycle_time = *key
@@ -71,7 +71,7 @@ class StoryPointAccuracyChart < ChartBase
           'r' => values.size * 2,
           'title' => title
         }
-      end.compact
+      end
       next if data.empty?
 
       {

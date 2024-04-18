@@ -26,7 +26,7 @@ describe Anonymizer do
   end
 
   context 'anonymize_issue_keys_and_titles' do
-    it 'should have renumbered all issue keys and changed summary' do
+    it 'has renumbered all issue keys and changed summary' do
       issue = anonymizer.project_config.issues.first
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
       expect(issue.key).to eq 'ANON-1'
@@ -34,21 +34,14 @@ describe Anonymizer do
       expect(issue.assigned_to).to be_nil
     end
 
-    it 'should have changed assigned_to if it was set' do
+    it 'has changed assigned_to if it was set' do
       issue = anonymizer.project_config.issues.first
       issue.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
       expect(issue.assigned_to).to eq 'random_name'
     end
 
-    it 'should have changed assigned_to if it was set' do
-      issue = anonymizer.project_config.issues.first
-      issue.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
-      anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
-      expect(issue.assigned_to).to eq 'random_name'
-    end
-
-    it 'should have changed links' do
+    it 'has changed links' do
       issue1 = load_issue('SP-1')
       anonymizer.project_config.issues << issue1
       issue1.raw['fields']['issuelinks'] = [
@@ -75,12 +68,12 @@ describe Anonymizer do
   context 'Board.status_ids_in_or_right_of_column' do
     let(:board) { anonymizer.project_config.all_boards[1] }
 
-    it 'should work when not anonymized' do
+    it 'works when not anonymized' do
       expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
       expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
     end
 
-    it 'should still work after anonymization' do
+    it 'still works after anonymization' do
       anonymizer.anonymize_column_names
       expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
       expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]

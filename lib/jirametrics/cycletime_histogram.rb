@@ -58,7 +58,7 @@ class CycletimeHistogram < ChartBase
     {
       type: 'bar',
       label: label,
-      data: keys.sort.collect do |key|
+      data: keys.sort.filter_map do |key|
         next if histogram_data[key].zero?
 
         {
@@ -66,7 +66,7 @@ class CycletimeHistogram < ChartBase
           y: histogram_data[key],
           title: "#{histogram_data[key]} items completed in #{label_days key}"
         }
-      end.compact,
+      end,
       backgroundColor: color,
       borderRadius: 0
     }

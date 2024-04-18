@@ -22,7 +22,7 @@ class Rules
   end
 
   def inspect
-    result = String.new
+    result = +''
     result << "#{self.class}("
     result << instance_variables.collect do |variable|
       "#{variable}=#{instance_variable_get(variable).inspect}"

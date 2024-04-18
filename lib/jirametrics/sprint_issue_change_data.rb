@@ -20,7 +20,7 @@ class SprintIssueChangeData
   end
 
   def inspect
-    result = String.new
+    result = +''
     result << 'SprintIssueChangeData('
     result << instance_variables.collect do |variable|
       "#{variable}=#{instance_variable_get(variable).inspect}"

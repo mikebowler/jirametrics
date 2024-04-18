@@ -8,10 +8,10 @@ class TrendLineCalculator
     @valid = points.size >= 2
     return unless valid?
 
-    sum_of_x = points.collect { |x, _y| x }.sum
-    sum_of_y = points.collect { |_x, y| y }.sum
-    sum_of_xy = points.collect { |x, y| x * y }.sum
-    sum_of_x2 = points.collect { |x, _y| x * x }.sum
+    sum_of_x = points.sum { |x, _y| x }
+    sum_of_y = points.sum { |_x, y| y }
+    sum_of_xy = points.sum { |x, y| x * y }
+    sum_of_x2 = points.sum { |x, _y| x * x }
     n = points.size.to_f
 
     @slope = ((n * sum_of_xy) - (sum_of_x * sum_of_y)) / ((n * sum_of_x2) - (sum_of_x * sum_of_x))

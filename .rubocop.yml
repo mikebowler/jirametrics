@@ -112,3 +112,6 @@ RSpec/MultipleExpectations:
 RSpec/ContextWording:
   Enabled: false
 
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+  

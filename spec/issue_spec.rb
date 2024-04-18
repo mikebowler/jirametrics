@@ -53,7 +53,7 @@ describe Issue do
         }
       }
     }
-    issue = Issue.new raw: raw, board: sample_board
+    issue = described_class.new raw: raw, board: sample_board
     expect([issue.created, issue.updated]).to eq [
       Time.parse('2021-08-29T18:00:00+00:00'),
       Time.parse('2021-09-29T18:00:00+00:00')
@@ -88,7 +88,7 @@ describe Issue do
        ]
     end
 
-    it "should default the first status if there really hasn't been any yet" do
+    it "defaults the first status if there really hasn't been any yet" do
       issue = empty_issue created: '2021-08-29T18:00:00+00:00'
       expect(issue.changes).to eq [
         mock_change(field: 'status', value: 'Backlog', time: '2021-08-29T18:00:00+00:00')
@@ -126,19 +126,19 @@ describe Issue do
           }
         }
       }
-      issue = Issue.new raw: raw, board: sample_board
+      issue = described_class.new raw: raw, board: sample_board
       expect(issue.first_time_not_in_status('BrandNew!')).to be_nil
     end
   end
 
   context 'first_time_in_or_right_of_column' do
-    it 'should fail for invalid column name' do
+    it 'fails for invalid column name' do
       expect { issue1.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
         'No visible column with name: "NoSuchColumn" Possible options are: "Ready", "In Progress", "Review", "Done"'
       )
     end
 
-    it 'should work for happy path' do
+    it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
@@ -147,7 +147,7 @@ describe Issue do
       expect(issue1.first_time_in_or_right_of_column 'In Progress').to eq to_time('2021-07-18')
     end
 
-    it 'should return nil when no matches' do
+    it 'returns nil when no matches' do
       # The second column is called "In Progress" and it's only mapped to status 3
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
@@ -157,7 +157,7 @@ describe Issue do
   end
 
   context 'still_in_or_right_of_column' do
-    it 'should work for happy path' do
+    it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-01')
@@ -167,12 +167,6 @@ describe Issue do
       issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
 
       expect(issue1.still_in_or_right_of_column 'In Progress').to eq to_time('2021-06-04')
-    end
-  end
-
-  context 'first_status_change_after_created' do
-    it "first time for any status change - created doesn't count as status change" do
-      expect(issue10.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
     end
   end
 
@@ -190,7 +184,7 @@ describe Issue do
   end
 
   context 'first_status_change_after_created' do
-    it 'first status change after created' do
+    it "finds first time for any status change - created doesn't count as status change" do
       expect(issue10.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
     end
 
@@ -210,7 +204,7 @@ describe Issue do
 
         }
       }
-      issue = Issue.new raw: raw, board: sample_board
+      issue = described_class.new raw: raw, board: sample_board
       expect(issue.first_status_change_after_created).to be_nil
     end
   end
@@ -296,14 +290,14 @@ describe Issue do
       }
     end
 
-    it 'should handle never blocked' do
+    it 'handles never blocked' do
       issue = empty_issue created: '2021-10-01'
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-05'))
       ]
     end
 
-    it 'should handle flagged and unflagged' do
+    it 'handles flagged and unflagged' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
@@ -315,7 +309,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle contiguous blocked status' do
+    it 'handles contiguous blocked status' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
@@ -329,7 +323,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle blocked statuses' do
+    it 'handles blocked statuses' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
@@ -341,7 +335,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle blocked on issues' do
+    it 'handles blocked on issues' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(
         field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02'
@@ -356,7 +350,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle stalled for inactivity' do
+    it 'handles stalled for inactivity' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(
         field: 'status', value: 'Doing', time: '2021-10-02'
@@ -371,7 +365,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle contiguous stalled status' do
+    it 'handles contiguous stalled status' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
@@ -385,7 +379,7 @@ describe Issue do
       ]
     end
 
-    it 'should handle stalled statuses' do
+    it 'handles stalled statuses' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
@@ -397,7 +391,7 @@ describe Issue do
       ]
     end
 
-    it 'should not report stalled if subtasks were active through the period' do
+    it 'does not report stalled if subtasks were active through the period' do
       # The main issue has activity on the 2nd and again on the 8th. If we don't take subtasks
       # into account then we'd expect it to show stalled between those dates. Given that we
       # should consider subtasks, it should show nothing stalled through the period.
@@ -421,7 +415,7 @@ describe Issue do
       ]
     end
 
-    it 'should split stalled into sections if subtasks were active in between' do
+    it 'splits stalled into sections if subtasks were active in between' do
       # The full range is 1st to 12th with subtask activity on the 5th. The only
       # stalled section in here is 5-12.
       issue = empty_issue created: '2021-10-01'
@@ -445,7 +439,7 @@ describe Issue do
       ]
     end
 
-    it 'should ignore the final artificial change for the purposes of stalled' do
+    it 'ignores the final artificial change for the purposes of stalled' do
       issue = empty_issue created: '2021-10-01'
       issue.changes << mock_change(
         field: 'status', value: 'Doing', time: '2021-10-02'
@@ -456,13 +450,13 @@ describe Issue do
       ]
     end
 
-    it 'should notice if blocked_statuses is a string' do
+    it 'notices if blocked_statuses is a string' do
       settings['blocked_statuses'] = ''
       expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
         .to raise_error 'blocked_statuses("") and stalled_statuses(["Stalled", "Stalled2"]) must both be arrays'
     end
 
-    it 'should notice if stalled_statuses is a string' do
+    it 'notices if stalled_statuses is a string' do
       settings['stalled_statuses'] = ''
       expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
         .to raise_error 'blocked_statuses(["Blocked", "Blocked2"]) and stalled_statuses("") must both be arrays'
@@ -470,13 +464,13 @@ describe Issue do
   end
 
   context 'inspect' do
-    it 'should return a simplified representation' do
+    it 'returns a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
     end
   end
 
   context 'resolutions' do
-    it 'should find resolutions when they are present' do
+    it 'finds resolutions when they are present' do
       issue = empty_issue created: '2021-10-01T00:00:00+00:00'
       issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-02T00:00:00+00:00')
       issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-03T01:00:00+00:00')
@@ -491,19 +485,19 @@ describe Issue do
       ]
     end
 
-    it 'should handle the case where there are no resolutions' do
+    it 'handles the case where there are no resolutions' do
       issue = empty_issue created: '2021-10-01'
       expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
     end
   end
 
   context 'resolution' do
-    it 'should return nil when not resolved' do
+    it 'returns nil when not resolved' do
       issue = empty_issue created: '2021-10-01'
       expect(issue.resolution).to be_nil
     end
 
-    it 'should work' do
+    it 'returns resolution' do
       issue = empty_issue created: '2021-10-01'
       issue.raw['fields']['resolution'] = { 'name' => 'Done' }
       expect(issue.resolution).to eq 'Done'
@@ -512,7 +506,7 @@ describe Issue do
 
   context 'created from a linked issue' do
     let(:issue) do
-      Issue.new raw: {
+      described_class.new raw: {
         'id' => '10019',
         'key' => 'SP-12',
         'self' => 'https =>//improvingflow.atlassian.net/rest/api/2/issue/10019',
@@ -562,13 +556,13 @@ describe Issue do
       expect(issue.type).to eql 'Story'
     end
 
-    it 'gets key' do
+    it 'gets summary' do
       expect(issue.summary).to eql 'Report of all events'
     end
   end
 
   context 'status' do
-    it 'should work' do
+    it 'returns status' do
       expect(load_issue('SP-1').status).to eql(
         Status.new(name: 'In Progress', id: 3, category_name: 'In Progress', category_id: 4)
       )
@@ -578,23 +572,23 @@ describe Issue do
   context 'last_activity' do
     let(:issue) { empty_issue created: '2020-01-01' }
 
-    it 'should handle no activity, ever' do
+    it 'handles no activity, ever' do
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
 
-    it 'should pick most recent change' do
+    it 'picks most recent change' do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
       expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-03')
     end
 
-    it 'should handle subtask with no changes' do
+    it 'handles subtask with no changes' do
       subtask = empty_issue created: '2020-01-02'
       issue.subtasks << subtask
       expect(issue.last_activity now: to_time('2021-02-01')).to eq to_time('2020-01-02')
     end
 
-    it 'should handle multiple subtasks, each with changes' do
+    it 'handles multiple subtasks, each with changes' do
       subtask1 = empty_issue created: '2020-01-02'
       subtask1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
       issue.subtasks << subtask1
@@ -606,7 +600,7 @@ describe Issue do
       expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-04')
     end
 
-    it 'should handle no activity on the subtask but activity on the main issue' do
+    it 'handles no activity on the subtask but activity on the main issue' do
       subtask = empty_issue created: '2020-01-01'
       issue.subtasks << subtask
 
@@ -619,11 +613,11 @@ describe Issue do
   context 'parent_link' do
     let(:issue) { empty_issue created: '2020-01-01' }
 
-    it 'should return nil when no parent found' do
+    it 'returns nil when no parent found' do
       expect(issue.parent_key).to be_nil
     end
 
-    it 'should get the new parent link' do
+    it 'gets the new parent link' do
       issue.raw['fields']['parent'] = {
         'id' => '10097',
         'key' => 'ABC-1',
@@ -633,7 +627,7 @@ describe Issue do
       expect(issue.parent_key).to eq 'ABC-1'
     end
 
-    it 'should get the epic link' do
+    it 'gets the epic link' do
       # Note that I haven't seen this in production yet but it's in the documentation at:
       # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
 
@@ -652,14 +646,14 @@ describe Issue do
     end
 
     context 'custom fields' do
-      it 'should determine multiple custom fields from settings and get the parent from there' do
+      it 'determines multiple custom fields from settings and get the parent from there' do
         project_config.settings['customfield_parent_links'] = %w[customfield_1 customfield_2]
         issue.board.project_config = project_config
         issue.raw['fields']['customfield_2'] = 'ABC-2'
         expect(issue.parent_key).to eq 'ABC-2'
       end
 
-      it 'should determine single custom fields from settings and get the parent from there' do
+      it 'determines single custom fields from settings and get the parent from there' do
         project_config.settings['customfield_parent_links'] = 'customfield_1'
         issue.board.project_config = project_config
         issue.raw['fields']['customfield_1'] = 'ABC-1'
@@ -672,32 +666,32 @@ describe Issue do
     let(:issue) { empty_issue created: '2020-01-01' }
 
     it 'no board' do
-      expect(empty_issue(created: '2020-01-01', board: nil).expedited?).to be_falsey
+      expect(empty_issue(created: '2020-01-01', board: nil)).not_to be_expedited
     end
 
     it 'no priority set' do
-      expect(issue.expedited?).to be_falsey
+      expect(issue).not_to be_expedited
     end
 
     it 'priority set but not expedited' do
       issue.raw['fields']['priority'] = 'high'
-      expect(issue.expedited?).to be_falsey
+      expect(issue).not_to be_expedited
     end
 
     it 'priority set to expedited' do
       issue.raw['fields']['priority'] = { 'name' => 'high' }
       issue.board.expedited_priority_names = ['high']
-      expect(issue.expedited?).to be_truthy
+      expect(issue).to be_expedited
     end
   end
 
   context 'expedited_on_date?' do
-    it 'should return false if no board was set' do
+    it 'returns false if no board was set' do
       issue = empty_issue created: '2021-10-01', board: nil
-      expect(issue.expedited_on_date? to_date('2021-10-02')).to be_falsey
+      expect(issue).not_to be_expedited_on_date(to_date('2021-10-02'))
     end
 
-    it 'should work when expedited turns on and off on same day' do
+    it 'works when expedited turns on and off on same day' do
       issue = empty_issue created: '2021-10-01'
       issue.board.expedited_priority_names = ['high']
 
@@ -712,7 +706,7 @@ describe Issue do
       expect(actual).to eq [false, true, false]
     end
 
-    it 'should work when one expedite follows another' do
+    it 'works when one expedite follows another' do
       issue = empty_issue created: '2021-10-01'
       issue.board.expedited_priority_names = %w[high higher]
 
@@ -729,7 +723,7 @@ describe Issue do
       expect(actual).to eq [false, true, true, false]
     end
 
-    it 'should work when still expedited at end of data' do
+    it 'works when still expedited at end of data' do
       issue = empty_issue created: '2021-10-01'
       issue.board.expedited_priority_names = %w[high higher]
 
@@ -744,13 +738,13 @@ describe Issue do
   end
 
   context 'sorting' do
-    it 'should sort when project key is the same and the numbers are different' do
+    it 'sorts when project key is the same and the numbers are different' do
       a = empty_issue(key: 'SP-1', created: '2022-01-01')
       b = empty_issue(key: 'SP-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SP-1 SP-2]
     end
 
-    it 'should sort when project keys are different and the numbers are same' do
+    it 'sorts when project keys are different and the numbers are same' do
       a = empty_issue(key: 'SPA-1', created: '2022-01-01')
       b = empty_issue(key: 'SPB-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SPA-1 SPB-2]
@@ -758,12 +752,12 @@ describe Issue do
   end
 
   context 'author' do
-    it 'should return empty string when author section is missing' do
+    it 'returns empty string when author section is missing' do
       issue1.raw['fields']['creator'] = nil
       expect(issue1.author).to eq ''
     end
 
-    it 'should return author' do
+    it 'returns author' do
       expect(issue1.author).to eq 'Mike Bowler'
     end
   end

@@ -4,30 +4,30 @@ require 'fileutils'
 
 class Object
   def deprecated message:, date: nil
-    text = String.new
+    text = +''
     text << 'Deprecated'
     text << "(#{date})"
     text << ': '
     text << message
-    text << "\n-> Called from #{caller[0]}"
+    text << "\n-> Called from #{caller(1..1).first}"
     warn text
   end
 
   def assert_jira_behaviour_true condition, &block
-    block.call if ENV['RACK_ENV'] == 'test' # Always expand the block if we're running in a test
+    yield if ENV['RACK_ENV'] == 'test' # Always expand the block if we're running in a test
     failed_jira_behaviour(block) unless condition
   end
 
   def assert_jira_behaviour_false condition, &block
-    block.call if ENV['RACK_ENV'] == 'test' # Always expand the block if we're running in a test
+    yield if ENV['RACK_ENV'] == 'test' # Always expand the block if we're running in a test
     failed_jira_behaviour(block) if condition
   end
 
   def failed_jira_behaviour block
-    text = String.new
+    text = +''
     text << 'Jira not doing what we expected. Results may be incorrect: '
     text << block.call
-    text << "\n-> Called from #{caller[1]}"
+    text << "\n-> Called from #{caller(2..2).first}"
     warn text
   end
 end

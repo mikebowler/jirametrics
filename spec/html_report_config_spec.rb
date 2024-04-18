@@ -14,7 +14,7 @@ describe HtmlReportConfig do
   let(:exporter) { Exporter.new }
 
   context 'no injectable dependencies' do
-    it 'should still pass if no dependencies supported' do
+    it 'still passes if no dependencies supported' do
       project_config = ProjectConfig.new(
         exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
       )
@@ -23,7 +23,7 @@ describe HtmlReportConfig do
       project_config.load_all_boards
       project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       file_config = FileConfig.new project_config: project_config, block: nil
-      config = HtmlReportConfig.new file_config: file_config, block: nil
+      config = described_class.new file_config: file_config, block: nil
       config.board_id 1
 
       chart = ChartBase.new
@@ -44,7 +44,7 @@ describe HtmlReportConfig do
     project_config.load_status_category_mappings
     project_config.load_all_boards
     file_config = FileConfig.new project_config: project_config, block: nil
-    config = HtmlReportConfig.new file_config: file_config, block: nil
+    config = described_class.new file_config: file_config, block: nil
     config.cycletime '1st', &empty_block
     expect { config.cycletime '2nd', &empty_block }.to raise_error 'Multiple cycletimes not supported yet'
   end

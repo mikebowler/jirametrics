@@ -17,22 +17,22 @@ end
 
 describe Downloader do
   let(:download_config) { mock_download_config }
-  let(:downloader) { Downloader.new(download_config: download_config).tap { |d| d.quiet_mode = true } }
+  let(:downloader) { described_class.new(download_config: download_config).tap { |d| d.quiet_mode = true } }
 
   context 'Build curl command' do
-    it 'should generate with url only' do
+    it 'generates with url only' do
       downloader.load_jira_config({})
       expected = 'curl -s --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
 
-    it 'should generate with cookies' do
+    it 'generates with cookies' do
       downloader.load_jira_config({ 'cookies' => { 'a' => 'b' } })
       expected = 'curl -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
 
-    it 'should generate with api-token' do
+    it 'generates with api-token' do
       downloader.load_jira_config({ 'email' => 'fred@flintstone', 'api_token' => 'bedrock' })
       expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
@@ -40,7 +40,7 @@ describe Downloader do
   end
 
   context 'IO' do
-    it 'should load json' do
+    it 'loads json' do
       filename = make_test_filename 'downloader_write_json'
       begin
         downloader.write_json({ 'c' => 'd' }, filename)
@@ -52,7 +52,7 @@ describe Downloader do
   end
 
   context 'make_jql' do
-    it 'should only pull deltas if we have a previous download' do
+    it 'only pull deltas if we have a previous download' do
       downloader.metadata.clear
       downloader.metadata['date_end'] = Date.parse('2021-07-20')
 
@@ -65,7 +65,7 @@ describe Downloader do
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
 
-    it 'should use the filter id in the board config' do
+    it 'uses the filter id in the board config' do
       download_config.rolling_date_count 90
       expected = 'filter=5 AND ((updated >= "2021-05-03 00:00" AND updated <= "2021-08-01 23:59") OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
@@ -76,7 +76,7 @@ describe Downloader do
   end
 
   context 'load_jira_config' do
-    it 'should fail when api-key specified but not email' do
+    it 'fails when api-key specified but not email' do
       expect do
         downloader.load_jira_config({
           'api_token' => 'xx'
@@ -86,7 +86,7 @@ describe Downloader do
       )
     end
 
-    it 'should fail when api-key and personal-access-token are both specified' do
+    it 'fails when api-key and personal-access-token are both specified' do
       expect do
         downloader.load_jira_config({
           'api_token' => 'xx',
@@ -100,7 +100,7 @@ describe Downloader do
   end
 
   context 'make_curl_command' do
-    it 'should handle empty config' do
+    it 'handles empty config' do
       downloader.load_jira_config({})
 
       expect(downloader.make_curl_command url: 'http://foo').to eq(
@@ -108,7 +108,7 @@ describe Downloader do
       )
     end
 
-    it 'should ignore SSL errors' do
+    it 'ignores SSL errors' do
       downloader.load_jira_config({})
       download_config.project_config.settings['ignore_ssl_errors'] = true
       expect(downloader.make_curl_command url: 'http://foo').to eq(
@@ -116,7 +116,7 @@ describe Downloader do
       )
     end
 
-    it 'work with personal_access_token' do
+    it 'works with personal_access_token' do
       downloader.load_jira_config({
         'personal_access_token' => 'yy'
       })

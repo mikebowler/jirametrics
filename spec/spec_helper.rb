@@ -68,7 +68,7 @@ end
 def load_complete_sample_issues board:
   result = []
   Dir.each_child './spec/complete_sample/sample_issues' do |file|
-    next unless file =~ /SP-.+/
+    next unless file.match?(/SP-.+/)
 
     result << Issue.new(raw: JSON.parse(File.read("./spec/complete_sample/sample_issues/#{file}")), board: board)
   end

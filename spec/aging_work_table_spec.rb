@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe AgingWorkTable do
   let(:table) do
-    AgingWorkTable.new(nil).tap do |table|
+    described_class.new(nil).tap do |table|
       table.date_range = to_date('2021-01-01')..to_date('2021-01-31')
       table.time_range = to_time('2021-01-01')..to_time('2021-01-31T23:59:59')
       table.today = table.date_range.end + 1
@@ -16,18 +16,18 @@ describe AgingWorkTable do
   let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
   context 'icon_span' do
-    it 'should work' do
+    it 'creates span' do
       expect(table.icon_span title: 'foo', icon: 'x').to eq "<span title='foo' style='font-size: 0.8em;'>x</span>"
     end
   end
 
   context 'expedited_text' do
-    it 'should be empty when not expedited' do
+    it 'is empty when not expedited' do
       issue1.raw['fields']['priority']['name'] = 'Not set'
       expect(table.expedited_text issue1).to be_nil
     end
 
-    it 'should work when expedited' do
+    it 'creates span when expedited' do
       issue1.raw['fields']['priority']['name'] = 'Highest'
       issue1.board.expedited_priority_names = ['Highest']
       expect(table.expedited_text issue1).to eq(
@@ -37,13 +37,13 @@ describe AgingWorkTable do
   end
 
   context 'blocked_text' do
-    it 'should handle flagged' do
+    it 'handles flagged' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
       expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by flag', icon: '🛑')
     end
 
-    it 'should handle blocked status' do
+    it 'handles blocked status' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       review_status = issue1.board.possible_statuses.find { |s| s.name == 'Review' }
 
@@ -54,7 +54,7 @@ describe AgingWorkTable do
       expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by status: Review', icon: '🛑')
     end
 
-    it 'should handle stalled' do
+    it 'handles stalled' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
@@ -67,7 +67,7 @@ describe AgingWorkTable do
       )
     end
 
-    it 'should handle dead' do
+    it 'handles dead' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-12-01')
@@ -80,13 +80,13 @@ describe AgingWorkTable do
       )
     end
 
-    it 'should handle started but neither blocked nor stalled' do
+    it 'handles started but neither blocked nor stalled' do
       issue1.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
       expect(table.blocked_text issue1).to be_nil
     end
 
-    it 'should handle not started and also neither blocked nor stalled' do
+    it 'handles not started and also neither blocked nor stalled' do
       issue1.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
       board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
       expect(table.blocked_text issue1).to be_nil
@@ -94,18 +94,18 @@ describe AgingWorkTable do
   end
 
   context 'select_aging_issues' do
-    it 'should handle no issues' do
+    it 'handles no issues' do
       table.issues = []
       expect(table.select_aging_issues).to be_empty
     end
 
-    it 'should handle a single aging issue' do
+    it 'handles a single aging issue' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
       table.issues = [issue1]
       expect(table.select_aging_issues).to eq [issue1]
     end
 
-    it 'should handle a mix of aging and completed' do
+    it 'handles a mix of aging and completed' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2021-01-02', nil],
         [issue2, '2021-01-02', '2021-010-04']

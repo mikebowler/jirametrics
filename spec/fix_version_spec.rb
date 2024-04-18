@@ -3,17 +3,17 @@
 require './spec/spec_helper'
 
 describe FixVersion do
-  let(:subject) { FixVersion.new({ 'name' => 'Barney', 'id' => '2', 'released' => true }) }
+  let(:fix_version) { described_class.new({ 'name' => 'Barney', 'id' => '2', 'released' => true }) }
 
-  it 'should know its name' do
-    expect(subject.name).to eq 'Barney'
+  it 'knows its name' do
+    expect(fix_version.name).to eq 'Barney'
   end
 
-  it 'should know its id' do
-    expect(subject.id).to be 2
+  it 'knows its id' do
+    expect(fix_version.id).to be 2
   end
 
-  it 'should know if it is released' do
-    expect(subject.released?).to be_truthy
+  it 'knows if it is released' do
+    expect(fix_version).to be_released
   end
 end

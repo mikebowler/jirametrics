@@ -3,8 +3,8 @@
 require './spec/spec_helper'
 
 describe Status do
-  it 'should parse simple status from raw' do
-    status = Status.new raw: {
+  it 'parses simple status from raw' do
+    status = described_class.new raw: {
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/3',
       'description' => 'This issue is being actively worked on at the moment by the assignee.',
       'iconUrl' => 'https://improvingflow.atlassian.net/images/icons/statuses/inprogress.png',
@@ -24,8 +24,8 @@ describe Status do
     )
   end
 
-  it 'should parse status with project id' do
-    status = Status.new raw: {
+  it 'parses status with project id' do
+    status = described_class.new raw: {
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/10017',
       'description' => '',
       'iconUrl' => 'https://improvingflow.atlassian.net/',

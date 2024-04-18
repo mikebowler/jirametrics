@@ -4,8 +4,8 @@ require './spec/spec_helper'
 
 describe DailyWipByBlockedStalledChart do
   context 'grouping_rules' do
-    let(:subject) do
-      chart = DailyWipByBlockedStalledChart.new nil
+    let(:chart) do
+      chart = described_class.new nil
       chart.date_range = to_date('2022-01-01')..to_date('2022-02-01')
       chart.time_range = to_time('2022-01-01')..to_time('2022-02-01T23:59:59')
       chart
@@ -13,14 +13,14 @@ describe DailyWipByBlockedStalledChart do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue('SP-1', board: board).tap { |i| i.changes.clear } }
 
-    it 'should handle active items with no start' do
+    it 'handles active items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-02-02').to_s
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, to_date('2022-01-05')]
       ]
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
-      subject.default_grouping_rules issue: issue1, rules: rules
+      chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Start date unknown', 'white']
       expect(rules.group_priority).to eq 4
     end
@@ -30,11 +30,11 @@ describe DailyWipByBlockedStalledChart do
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
-      subject.time_range = to_time('2022-01-01')..to_time('2022-01-03')
+      chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
-      subject.default_grouping_rules issue: issue1, rules: rules
+      chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Active', 'lightgray'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 3
     end
@@ -45,11 +45,11 @@ describe DailyWipByBlockedStalledChart do
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
-      subject.time_range = to_time('2022-01-01')..to_time('2022-01-03')
+      chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
-      subject.default_grouping_rules issue: issue1, rules: rules
+      chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Blocked', 'red'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 1
     end
@@ -59,11 +59,11 @@ describe DailyWipByBlockedStalledChart do
         [issue1, to_date('2022-01-01'), nil]
       ]
       issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
-      subject.time_range = to_time('2022-01-01')..to_time('2022-01-13')
+      chart.time_range = to_time('2022-01-01')..to_time('2022-01-13')
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')
-      subject.default_grouping_rules issue: issue1, rules: rules
+      chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Stalled', 'orange'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 2
     end
@@ -77,7 +77,7 @@ describe DailyWipByBlockedStalledChart do
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')
-      subject.default_grouping_rules issue: issue1, rules: rules
+      chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Blocked', 'red'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 1
     end

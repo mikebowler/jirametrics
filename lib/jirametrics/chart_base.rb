@@ -46,7 +46,7 @@ class ChartBase
 
   # Render the file and then wrap it with standard headers and quality checks.
   def wrap_and_render caller_binding, file
-    result = String.new
+    result = +''
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
     result << render(caller_binding, file)
@@ -74,7 +74,7 @@ class ChartBase
       type: 'bar',
       label: label,
       data: date_issues_list.collect do |date, issues|
-        issues.sort! { |a, b| a.key_as_i <=> b.key_as_i }
+        issues.sort_by!(&:key_as_i)
         title = "#{label} (#{label_issues issues.size})"
         {
           x: date,
@@ -189,7 +189,7 @@ class ChartBase
     begin
       statuses = board.possible_statuses.expand_statuses([name_or_id])
     rescue RuntimeError => e
-      return "<span style='color: red'>#{name_or_id}</span>" if e.message =~ /^Status not found:/
+      return "<span style='color: red'>#{name_or_id}</span>" if e.message.match?(/^Status not found:/)
 
       throw e
     end
@@ -233,7 +233,7 @@ class ChartBase
     @issues = issues
     return unless @filter_issues_block
 
-    @issues = issues.collect { |i| @filter_issues_block.call(i) }.compact.uniq
+    @issues = issues.filter_map { |i| @filter_issues_block.call(i) }.uniq
     puts @issues.collect(&:key).join(', ')
   end
 end

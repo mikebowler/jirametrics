@@ -122,7 +122,7 @@ class ProjectConfig
   end
 
   def raise_with_message_about_missing_category_information
-    message = String.new
+    message = +''
     message << 'Could not determine categories for some of the statuses used in this data set.\n\n' \
       'If you specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
       ' and we still don\'t have the right mapping, which is possible, then use the' \
@@ -242,7 +242,7 @@ class ProjectConfig
   end
 
   def to_time string
-    string = "#{string}T00:00:00#{@timezone_offset}" if string =~ /^\d{4}-\d{2}\d{2}$/
+    string = "#{string}T00:00:00#{@timezone_offset}" if string.match?(/^\d{4}-\d{2}\d{2}$/)
     Time.parse string
   end
 
@@ -360,7 +360,7 @@ class ProjectConfig
 
     issues = []
     Dir.foreach(path) do |filename|
-      if filename =~ /#{file_prefix}_\d+\.json/
+      if filename.match?(/#{file_prefix}_\d+\.json/)
         content = JSON.parse File.read("#{path}#{filename}")
         content['issues'].each do |issue|
           issues << Issue.new(raw: issue, timezone_offset: timezone_offset, board: default_board)

@@ -3,8 +3,8 @@
 require './spec/spec_helper'
 
 describe IssueLink do
-  let(:subject) do
-    IssueLink.new origin: load_issue('SP-1'), raw: {
+  let(:issue_link) do
+    described_class.new origin: load_issue('SP-1'), raw: {
       'id' => '10001',
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/issueLink/10001',
       'type' => {
@@ -55,31 +55,31 @@ describe IssueLink do
     }
   end
 
-  it 'should return origin' do
-    expect(subject.origin.key).to eq 'SP-1'
+  it 'returns origin' do
+    expect(issue_link.origin.key).to eq 'SP-1'
   end
 
-  it 'should return other issue' do
-    expect(subject.other_issue.key).to eq 'SP-12'
+  it 'returns other issue' do
+    expect(issue_link.other_issue.key).to eq 'SP-12'
   end
 
-  it 'should return direction' do
-    expect(subject.direction).to be :inward
-    expect(subject.inward?).to be_truthy
-    expect(subject.outward?).to be_falsey
+  it 'returns direction' do
+    expect(issue_link.direction).to be :inward
+    expect(issue_link).to be_inward
+    expect(issue_link).not_to be_outward
   end
 
-  it 'should return inward label' do
-    expect(subject.label).to eq 'is caused by'
+  it 'returns inward label' do
+    expect(issue_link.label).to eq 'is caused by'
   end
 
-  it 'should return outward label' do
-    subject.raw['outwardIssue'] = subject.raw['inwardIssue']
-    subject.raw.delete 'inwardIssue'
-    expect(subject.label).to eq 'causes'
+  it 'returns outward label' do
+    issue_link.raw['outwardIssue'] = issue_link.raw['inwardIssue']
+    issue_link.raw.delete 'inwardIssue'
+    expect(issue_link.label).to eq 'causes'
   end
 
-  it 'should return name' do
-    expect(subject.name).to eq 'Problem/Incident'
+  it 'returns name' do
+    expect(issue_link.name).to eq 'Problem/Incident'
   end
 end

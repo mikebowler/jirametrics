@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe DependencyChart do
-  let(:subject) { DependencyChart.new nil }
+  let(:chart) { described_class.new nil }
   let(:empty_issue_rules) { ->(_issue, rules) { rules.color = :none } }
 
   # Relationships: SP-15 is a clone of SP-13 and is blocked by SP-14
@@ -12,15 +12,15 @@ describe DependencyChart do
   let(:issue15) { load_issue('SP-15') }
 
   context 'build_dot_graph' do
-    it 'should handle no issues' do
-      subject.issues = []
-      expect(subject.build_dot_graph).to be_nil
+    it 'handles no issues' do
+      chart.issues = []
+      expect(chart.build_dot_graph).to be_nil
     end
 
-    it 'should handle simple graph of relationships with default configuration' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+    it 'handles simple graph of relationships with default configuration' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -34,13 +34,13 @@ describe DependencyChart do
       ]
     end
 
-    it 'should handle ignore for a link type' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'handles ignore for a link type' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.ignore if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
@@ -51,13 +51,13 @@ describe DependencyChart do
       ]
     end
 
-    it 'should handle line_color for links' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'handles line_color for links' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.line_color = 'blue' if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -71,13 +71,13 @@ describe DependencyChart do
       ]
     end
 
-    it 'should support labels for links' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'supports labels for links' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.label = 'foo' if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -91,13 +91,13 @@ describe DependencyChart do
       ]
     end
 
-    it 'should support merge_bidirectional while keeping outward' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'supports merge_bidirectional while keeping outward' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'outward' if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -111,13 +111,13 @@ describe DependencyChart do
       ]
     end
 
-    it 'should support merge_bidirectional while keeping inward' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'supports merge_bidirectional while keeping inward' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'inward' if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
-      expect(subject.build_dot_graph).to eq [
+      chart.issue_rules(&empty_issue_rules)
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -131,18 +131,18 @@ describe DependencyChart do
       ]
     end
 
-    it 'should merge_bidirectional when the data only goes one way' do
+    it 'supports merge_bidirectional when the data only goes one way' do
       # Remove the inward Cloner link for issue 15
       issue13.raw['fields']['issuelinks'].reject! do |link_json|
         link_json['type']['name'] == 'Cloners' && link_json['inwardIssue']
       end
 
-      subject.issues = [issue13, issue14, issue15]
-      subject.issue_rules(&empty_issue_rules)
-      subject.link_rules do |link, rules|
+      chart.issues = [issue13, issue14, issue15]
+      chart.issue_rules(&empty_issue_rules)
+      chart.link_rules do |link, rules|
         rules.merge_bidirectional keep: 'inward' if link.name == 'Cloners'
       end
-      expect(subject.build_dot_graph).to eq [
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -156,23 +156,23 @@ describe DependencyChart do
       ]
     end
 
-    it 'should support raise exception for invalid keep argument in merge_bidirectional' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.issue_rules(&empty_issue_rules)
-      subject.link_rules do |_link, rules|
+    it 'supports raise exception for invalid keep argument in merge_bidirectional' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.issue_rules(&empty_issue_rules)
+      chart.link_rules do |_link, rules|
         rules.merge_bidirectional keep: 'up'
       end
-      expect { subject.build_dot_graph }.to raise_error 'Keep must be either inward or outward: up'
+      expect { chart.build_dot_graph }.to raise_error 'Keep must be either inward or outward: up'
     end
 
-    it 'should draw double arrowhead' do
-      subject.issues = [issue13, issue14, issue15]
-      subject.link_rules do |link, rules|
+    it 'draws double arrowhead' do
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
         rules.use_bidirectional_arrows if link.name == 'Cloners'
       end
-      subject.issue_rules(&empty_issue_rules)
+      chart.issue_rules(&empty_issue_rules)
       # subject.build_dot_graph.each { |line| puts line }
-      expect(subject.build_dot_graph).to eq [
+      expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
@@ -188,73 +188,73 @@ describe DependencyChart do
   end
 
   context 'make_dot_issue' do
-    it 'should handle simple case' do
+    it 'handles simple case' do
       rules = DependencyChart::IssueRules.new
       rules.color = :none
-      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+      expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
     end
 
-    it 'should support color' do
+    it 'supports color' do
       rules = DependencyChart::IssueRules.new
       rules.color = 'red'
-      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+      expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
           %(,style=filled,fillcolor="red"]))
       )
     end
 
-    it 'should support plain label' do
+    it 'supports plain label' do
       rules = DependencyChart::IssueRules.new
       rules.label = 'hello'
       rules.color = :none
-      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+      expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="hello",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
     end
 
-    it 'should support html label' do
+    it 'supports html label' do
       rules = DependencyChart::IssueRules.new
       rules.label = '<hello>'
       rules.color = :none
-      expect(subject.make_dot_issue issue: issue13, issue_rules: rules).to(
+      expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
     end
   end
 
   context 'default_color_for_issue' do
-    it 'should return colors for all normal issue types' do
-      expect(subject.default_color_for_issue(issue13)).to be_truthy
+    it 'returns colors for all normal issue types' do
+      expect(chart.default_color_for_issue(issue13)).to be_truthy
     end
   end
 
   context 'shrink_svg' do
-    it 'should shrink' do
+    it 'shrinks' do
       svg = '<svg width="914pt" height="1126pt" viewBox="0.00 0.00 914.00 1126.00"'
       expected = '<svg width="731pt" height="900pt" viewBox="0.00 0.00 914.00 1126.00"'
-      expect(subject.shrink_svg svg).to eq expected
+      expect(chart.shrink_svg svg).to eq expected
     end
   end
 
   context 'word_wrap' do
-    it 'should handle different line endings coming in' do
-      expect(subject.word_wrap "a\nb\r\nc", max_width: 80, separator: '|').to eq 'a|b|c'
+    it 'handles different line endings coming in' do
+      expect(chart.word_wrap "a\nb\r\nc", max_width: 80, separator: '|').to eq 'a|b|c'
     end
 
-    it 'should handle empty string' do
-      expect(subject.word_wrap '', max_width: 80, separator: '|').to eq ''
+    it 'handles empty string' do
+      expect(chart.word_wrap '', max_width: 80, separator: '|').to eq ''
     end
 
-    it 'should handle simple too long string' do
-      expect(subject.word_wrap 'this is a long string', max_width: 10, separator: "\n").to eq(
+    it 'handles simple too long string' do
+      expect(chart.word_wrap 'this is a long string', max_width: 10, separator: "\n").to eq(
         "this is a\nlong\nstring"
       )
     end
 
-    it 'should handle text that cannnot be wrapped' do
-      expect(subject.word_wrap 'this is a absolutelyhorriblylong string', max_width: 10, separator: "\n").to eq(
+    it 'handles text that cannnot be wrapped' do
+      expect(chart.word_wrap 'this is a absolutelyhorriblylong string', max_width: 10, separator: "\n").to eq(
         "this is a\nabsolutelyhorriblylong\nstring"
       )
     end

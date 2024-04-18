@@ -18,62 +18,62 @@ describe DataQualityReport do
   let(:issue2) { load_issue('SP-2', board: board) }
   let(:issue10) { load_issue('SP-10', board: board) }
 
-  let(:subject) do
-    subject = DataQualityReport.new({})
+  let(:report) do
+    subject = described_class.new({})
     subject.issues = [issue10, issue1]
     subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
     subject
   end
 
-  it 'should create entries' do
-    subject.initialize_entries
+  it 'creates entries' do
+    report.initialize_entries
 
-    expect(subject.testable_entries).to eq [
+    expect(report.testable_entries).to eq [
       ['2021-06-18 18:43:34 +0000', '', issue1],
       ['2021-08-29 18:06:28 +0000', '2021-09-06 04:34:26 +0000', issue10]
     ]
 
-    expect(subject.entries_with_problems).to be_empty
+    expect(report.entries_with_problems).to be_empty
   end
 
-  it 'should ignore entries that finished before the range' do
+  it 'ignores entries that finished before the range' do
     board.cycletime = mock_cycletime_config stub_values: [
       [issue1, nil, to_time('2021-05-01')],
       [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
     ]
-    subject.initialize_entries
+    report.initialize_entries
 
-    expect(subject.testable_entries).to eq [
+    expect(report.testable_entries).to eq [
       ['2021-08-29 00:00:00 +0000', '2021-09-06 00:00:00 +0000', issue10]
     ]
   end
 
-  it 'should ignore entries that started after the range' do
+  it 'ignores entries that started after the range' do
     board.cycletime = mock_cycletime_config stub_values: [
       [issue1, to_time('2022-01-01'), nil],
       [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
     ]
-    subject.initialize_entries
+    report.initialize_entries
 
-    expect(subject.testable_entries).to eq [
+    expect(report.testable_entries).to eq [
       ['2021-08-29 00:00:00 +0000', '2021-09-06 00:00:00 +0000', issue10]
     ]
   end
 
-  it 'should identify items with completed but not started' do
+  it 'identifies items with completed but not started' do
     issue1.changes.clear
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-    subject.initialize_entries
+    report.initialize_entries
 
     entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
-    subject.scan_for_completed_issues_without_a_start_time entry: entry
+    report.scan_for_completed_issues_without_a_start_time entry: entry
 
     expect(entry.problems.size).to eq 1
     problem_key, _detail = *entry.problems.first
     expect(problem_key).to eq :completed_but_not_started
   end
 
-  it 'should detect status changes after done' do
+  it 'detects status changes after done' do
     # Issue 1 does have a resolution but no status after it.
     # Issue 2 has no resolutions at all
     # Issue 10 has a resolution with a status afterwards.
@@ -82,18 +82,18 @@ describe DataQualityReport do
     issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06T04:34:26+00:00')
 
-    subject.issues << issue2
+    report.issues << issue2
 
     issue10.changes.clear
     issue10.changes << mock_change(field: 'resolution', value: 'Done',    time: '2021-09-06T04:34:26+00:00')
     issue10.changes << mock_change(field: 'status', value: 'Done',        time: '2021-09-06T04:34:26+00:00')
     issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
-    subject.initialize_entries
+    report.initialize_entries
 
     entry = DataQualityReport::Entry.new(
       started: nil, stopped: Time.parse('2021-09-06T04:34:26+00:00'), issue: issue10
     )
-    subject.scan_for_status_change_after_done entry: entry
+    report.scan_for_status_change_after_done entry: entry
 
     expect(entry.problems.size).to eq 1
     problem_key, _detail = *entry.problems.first
@@ -101,9 +101,9 @@ describe DataQualityReport do
   end
 
   context 'backwards movement' do
-    it 'should detect backwards status' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'detects backwards status' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
@@ -114,16 +114,16 @@ describe DataQualityReport do
         time: '2021-09-06', value_id: 10_001
       )
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
       expect(problem_key).to match :backwords_through_statuses
     end
 
-    it 'should detect backwards status category' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'detects backwards status category' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
@@ -136,31 +136,31 @@ describe DataQualityReport do
         time: '2021-09-06', value_id: 3
       )
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
       expect(problem_key).to eq :backwards_through_status_categories
     end
 
-    it 'should detect statuses that just aren\'t on the board' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'detects statuses that just aren\'t on the board' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
       expect(problem_key).to eq :status_not_on_board
     end
 
-    it 'should detect skip past changes that are moving right' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'detects skip past changes that are moving right' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
@@ -171,16 +171,16 @@ describe DataQualityReport do
       )
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
 
-      subject.scan_for_backwards_movement entry: entry, backlog_statuses: []
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to be_empty
     end
   end
 
   context 'scan_for_issues_not_created_in_the_right_status' do
-    it 'should catch invalid starting status' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'catches invalid starting status' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
@@ -188,7 +188,7 @@ describe DataQualityReport do
       issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
       board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
-      subject.scan_for_issues_not_created_in_a_backlog_status(
+      report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
       )
 
@@ -197,16 +197,16 @@ describe DataQualityReport do
       expect(problem_key).to eq :created_in_wrong_status
     end
 
-    it 'should be ok when issue created in a correct backlog status' do
-      subject.all_boards = { 1 => board }
-      subject.initialize_entries
+    it 'is ok when issue created in a correct backlog status' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
       board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
-      subject.scan_for_issues_not_created_in_a_backlog_status(
+      report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
       )
 
@@ -215,19 +215,19 @@ describe DataQualityReport do
   end
 
   context 'scan_for_stopped_before_started' do
-    it 'should accept correct data' do
+    it 'accepts correct data' do
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
       )
-      subject.scan_for_stopped_before_started entry: entry
+      report.scan_for_stopped_before_started entry: entry
       expect(entry.problems).to eq []
     end
 
-    it 'should identify incorrect data' do
+    it 'identifies incorrect data' do
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-04'), stopped: to_time('2022-01-03'), issue: issue1
       )
-      subject.scan_for_stopped_before_started entry: entry
+      report.scan_for_stopped_before_started entry: entry
       expect(entry.problems).to eq [
         [
           :stopped_before_started,
@@ -245,18 +245,18 @@ describe DataQualityReport do
       subtask
     end
 
-    it 'should ignore subtasks that also have not started' do
+    it 'ignores subtasks that also have not started' do
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: to_time('2022-01-03'), issue: issue1
       )
 
       issue1.subtasks << subtask
 
-      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      report.scan_for_issues_not_started_with_subtasks_that_have entry: entry
       expect(entry.problems).to eq []
     end
 
-    it 'should flag subtasks that are started when main issue is not' do
+    it 'flags subtasks that are started when main issue is not' do
       board.cycletime = mock_cycletime_config stub_values: [
         [subtask, to_time('2022-01-03'), nil]
       ]
@@ -265,7 +265,7 @@ describe DataQualityReport do
       )
       issue1.subtasks << subtask
 
-      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      report.scan_for_issues_not_started_with_subtasks_that_have entry: entry
 
       expect(entry.problems).to eq [
         [
@@ -276,7 +276,7 @@ describe DataQualityReport do
       ]
     end
 
-    it 'should ignore subtasks that are started when the main issue is also started' do
+    it 'ignores subtasks that are started when the main issue is also started' do
       board.cycletime = mock_cycletime_config stub_values: [
         [subtask, to_time('2022-01-03'), nil]
       ]
@@ -286,100 +286,85 @@ describe DataQualityReport do
 
       issue1.subtasks << subtask
 
-      subject.scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      report.scan_for_issues_not_started_with_subtasks_that_have entry: entry
       expect(entry.problems).to be_empty
     end
   end
 
   context 'label_issues' do
-    it 'should handle singular' do
-      expect(subject.label_issues(1)).to eq '1 item'
+    it 'handles singular' do
+      expect(report.label_issues(1)).to eq '1 item'
     end
 
-    it 'should handle plural' do
-      expect(subject.label_issues(2)).to eq '2 items'
+    it 'handles plural' do
+      expect(report.label_issues(2)).to eq '2 items'
     end
   end
 
   context 'scan_for_discarded_data' do
-    it 'should handle nothing discarded' do
+    it 'handles nothing discarded' do
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
       )
-      subject.scan_for_discarded_data entry: entry
+      report.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq []
     end
 
-    it 'should handle discarded and restarted' do
-      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      subject.original_issue_times[issue1] = {
+    it 'handles discarded and restarted' do
+      report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      report.original_issue_times[issue1] = {
         started_time: to_time('2022-01-01'),
         cutoff_time: to_time('2022-01-03')
       }
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-05'), stopped: to_time('2022-02-03'), issue: issue1
       )
-      subject.scan_for_discarded_data entry: entry
+      report.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq [
         [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
       ]
     end
 
-    it 'should handle discarded with no restart' do
-      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      subject.original_issue_times[issue1] = {
+    it 'handles discarded with no restart' do
+      report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      report.original_issue_times[issue1] = {
         started_time: to_time('2022-01-01'),
         cutoff_time: to_time('2022-01-03')
       }
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: nil, issue: issue1
       )
-      subject.scan_for_discarded_data entry: entry
+      report.scan_for_discarded_data entry: entry
       expect(entry.problems).to eq [
         [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
       ]
     end
 
-    it 'should handle discarded with no restart' do
-      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      subject.original_issue_times[issue1] = {
-        started_time: to_time('2022-01-01'),
-        cutoff_time: to_time('2022-01-03')
-      }
-      entry = DataQualityReport::Entry.new(
-        started: nil, stopped: nil, issue: issue1
-      )
-      subject.scan_for_discarded_data entry: entry
-      expect(entry.problems).to eq [
-        [:discarded_changes, 'Started: 2022-01-01, Discarded: 2022-01-03, Ignored: 3 days']
-      ]
-    end
-
-    it 'should handle discarded that results in no days ignored' do
-      subject.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      subject.original_issue_times[issue1] = {
+    it 'handles discarded that results in no days ignored' do
+      report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
+      report.original_issue_times[issue1] = {
         started_time: to_time('2022-01-01T01:00:00'),
         cutoff_time: to_time('2022-01-01T02:00:00')
       }
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-01T03:00:00'), stopped: nil, issue: issue1
       )
-      subject.scan_for_discarded_data entry: entry
+      report.scan_for_discarded_data entry: entry
       expect(entry.problems).to be_empty
     end
   end
 
   context 'scan_for_issues_on_multiple_boards' do
-    it 'should not report errors when no duplicates' do
+    it 'does not report errors when no duplicates' do
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue2)
-      subject.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
+      report.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
 
       expect(entry1.problems).to be_empty
       expect(entry2.problems).to be_empty
     end
 
-    it 'should not report errors when no duplicates' do
+    it 'does report errors when no duplicates' do
       board2 = Board.new raw: {
         'name' => 'bar',
         'type' => 'kanban',
@@ -395,7 +380,7 @@ describe DataQualityReport do
       issue1a = load_issue 'SP-1', board: board2
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1a)
-      subject.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
+      report.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
 
       expect(entry1.problems).to eq [
         [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"']

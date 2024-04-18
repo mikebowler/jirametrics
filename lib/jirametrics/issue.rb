@@ -387,7 +387,7 @@ class Issue
       if expedited_names.include? change.value
         expedited_start = change.time.to_date if expedited_start.nil?
       else
-        return true if expedited_start && (expedited_start..change.time.to_date).include?(date)
+        return true if expedited_start && (expedited_start..change.time.to_date).cover?(date)
 
         expedited_start = nil
       end

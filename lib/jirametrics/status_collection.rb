@@ -9,13 +9,13 @@ class StatusCollection
     including = expand_statuses including
     excluding = expand_statuses excluding
 
-    @list.collect do |status|
+    @list.filter_map do |status|
       keep = status.category_name == category_name ||
         including.any? { |s| s.name == status.name }
       keep = false if excluding.any? { |s| s.name == status.name }
 
       status.name if keep
-    end.compact
+    end
   end
 
   def expand_statuses names_or_ids

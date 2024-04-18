@@ -83,7 +83,7 @@ class DataQualityReport < ChartBase
   end
 
   def initialize_entries
-    @entries = @issues.collect do |issue|
+    @entries = @issues.filter_map do |issue|
       cycletime = issue.board.cycletime
       started = cycletime.started_time(issue)
       stopped = cycletime.stopped_time(issue)
@@ -91,7 +91,7 @@ class DataQualityReport < ChartBase
       next if started && started > time_range.end
 
       Entry.new started: started, stopped: stopped, issue: issue
-    end.compact
+    end
 
     @entries.sort! do |a, b|
       a.issue.key =~ /.+-(\d+)$/
@@ -107,11 +107,11 @@ class DataQualityReport < ChartBase
   def scan_for_completed_issues_without_a_start_time entry:
     return unless entry.stopped && entry.started.nil?
 
-    status_names = entry.issue.changes.collect do |change|
+    status_names = entry.issue.changes.filter_map do |change|
       next unless change.status?
 
       format_status change.value, board: entry.issue.board
-    end.compact
+    end
 
     entry.report(
       problem_key: :completed_but_not_started,

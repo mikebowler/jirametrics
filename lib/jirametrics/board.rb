@@ -33,10 +33,10 @@ class Board
       @backlog_statuses = []
     end
 
-    @visible_columns = columns.collect do |column|
+    @visible_columns = columns.filter_map do |column|
       # It's possible for a column to be defined without any statuses and in this case, it won't be visible.
       BoardColumn.new column unless status_ids_from_column(column).empty?
-    end.compact
+    end
   end
 
   def server_url_prefix
@@ -65,7 +65,7 @@ class Board
     end
 
     unless found_it
-      column_names = @visible_columns.collect(&:name).collect(&:inspect).join(', ')
+      column_names = @visible_columns.collect { |c| c.name.inspect }.join(', ')
       raise "No visible column with name: #{column_name.inspect} Possible options are: #{column_names}"
     end
     status_ids

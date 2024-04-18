@@ -78,7 +78,7 @@ class DependencyChart < ChartBase
   end
 
   def make_dot_link issue_link:, link_rules:
-    result = String.new
+    result = +''
     result << issue_link.origin.key.inspect
     result << ' -> '
     result << issue_link.other_issue.key.inspect
@@ -91,11 +91,11 @@ class DependencyChart < ChartBase
   end
 
   def make_dot_issue issue:, issue_rules:
-    result = String.new
+    result = +''
     result << issue.key.inspect
     result << '['
     label = issue_rules.label || "#{issue.key}|#{issue.type}"
-    label = label.inspect unless label =~ /^<.+>$/
+    label = label.inspect unless label.match?(/^<.+>$/)
     result << "label=#{label}"
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
@@ -206,7 +206,7 @@ class DependencyChart < ChartBase
       line.gsub!(/[{<]/, '[')
       line.gsub!(/[}>]/, ']')
       line.gsub!(/\s*&\s*/, ' and ')
-      line.gsub!('|', '')
+      line.delete!('|')
 
       if line.length > max_width
         line.gsub(/(.{1,#{max_width}})(\s+|$)/, "\\1#{separator}").strip

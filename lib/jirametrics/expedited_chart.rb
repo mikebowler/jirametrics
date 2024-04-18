@@ -39,9 +39,9 @@ class ExpeditedChart < ChartBase
   end
 
   def run
-    data_sets = find_expedited_issues.collect do |issue|
+    data_sets = find_expedited_issues.filter_map do |issue|
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
-    end.compact
+    end
 
     if data_sets.empty?
       '<h1>Expedited work</h1>There is no expedited work in this time period.'
@@ -84,7 +84,7 @@ class ExpeditedChart < ChartBase
       prepare_expedite_data(issue).empty?
     end
 
-    expedited_issues.sort { |a, b| a.key_as_i <=> b.key_as_i }
+    expedited_issues.sort_by(&:key_as_i)
   end
 
   def later_date date1, date2
@@ -110,7 +110,7 @@ class ExpeditedChart < ChartBase
 
     expedite_data << [started_time, :issue_started] if started_time
     expedite_data << [stopped_time, :issue_stopped] if stopped_time
-    expedite_data.sort! { |a, b| a[0] <=> b[0] }
+    expedite_data.sort_by! { |a| a[0] }
 
     # If none of the data would be visible on the chart then skip it.
     return nil unless expedite_data.any? { |time, _action| time.to_date >= date_range.begin }

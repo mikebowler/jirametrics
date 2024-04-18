@@ -10,7 +10,7 @@ end
 describe AgingWorkInProgressChart do
   let(:board) { load_complete_sample_board }
   let :chart do
-    chart = AgingWorkInProgressChart.new
+    chart = described_class.new
     chart.board_id = 1
     chart.all_boards = { 1 => load_complete_sample_board }
     board.cycletime = default_cycletime_config
@@ -20,7 +20,7 @@ describe AgingWorkInProgressChart do
   end
 
   context 'accumulated_status_ids_per_column' do
-    it 'should accumulate properly' do
+    it 'accumulates properly' do
       chart.issues = load_complete_sample_issues(board: board).select { |issue| board.cycletime.in_progress? issue }
       chart.run
 
@@ -35,19 +35,19 @@ describe AgingWorkInProgressChart do
   end
 
   context 'ages_of_issues_that_crossed_column_boundary' do
-    it 'should handle no issues' do
+    it 'handles no issues' do
       issues = []
 
       actual = chart.ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: [10_002, 10_011]
       expect(actual).to eq []
     end
 
-    it 'should handle no status ids' do
+    it 'handles no status ids' do
       actual = chart.ages_of_issues_that_crossed_column_boundary issues: chart.issues, status_ids: []
       expect(actual).to eq []
     end
 
-    it 'should handle happy path' do
+    it 'handles happy path' do
       actual = chart.ages_of_issues_that_crossed_column_boundary issues: chart.issues, status_ids: [10_002, 10_011, 3]
       expect(actual).to eq [180, 73, 1]
     end
@@ -69,7 +69,7 @@ describe AgingWorkInProgressChart do
   end
 
   context 'column_for' do
-    it 'should work' do
+    it 'returns name' do
       chart.run
 
       actual = chart.column_for(issue: chart.issues[-1]).name
@@ -126,7 +126,7 @@ describe AgingWorkInProgressChart do
   end
 
   context 'Extra column for unmapped statuses' do
-    it 'should the column when an issue is present with that status' do
+    it 'shows the column when an issue is present with that status' do
       chart.time_range = to_time('2021-10-01')..to_time('2021-10-30')
       issue = empty_issue created: '2021-10-01', board: board
       issue.raw['fields']['status'] = {
@@ -155,7 +155,7 @@ describe AgingWorkInProgressChart do
       ]
     end
 
-    it 'should hide the column when no issues are in that status' do
+    it 'hides the column when no issues are in that status' do
       chart.run
 
       actual = chart.board_columns.collect do |column|

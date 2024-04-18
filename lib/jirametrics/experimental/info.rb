@@ -13,7 +13,7 @@ class InfoDumper
       path = "#{@target_dir}#{prefix}_issues/#{key}.json"
       path = "#{@target_dir}#{prefix}_issues"
       Dir.foreach path do |file|
-        if file =~ /^#{key}.+\.json$/
+        if file.match?(/^#{key}.+\.json$/)
           issue = Issue.new raw: JSON.parse(File.read(File.join(path, file))), board: nil
           dump issue
         end

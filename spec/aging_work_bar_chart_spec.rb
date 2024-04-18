@@ -3,12 +3,12 @@
 require './spec/spec_helper'
 
 describe AgingWorkBarChart do
-  let(:subject) { AgingWorkBarChart.new }
+  let(:chart) { described_class.new }
 
   context 'data_set_by_block' do
-    it 'should handle nothing blocked at all' do
+    it 'handles nothing blocked at all' do
       issue = load_issue('SP-1')
-      data_sets = subject.data_set_by_block(
+      data_sets = chart.data_set_by_block(
         issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |_day| false }
@@ -22,12 +22,12 @@ describe AgingWorkBarChart do
       })
     end
 
-    it 'should handle a single blocked range completely within the date range' do
+    it 'handles a single blocked range completely within the date range' do
       issue = load_issue('SP-1')
-      data_sets = subject.data_set_by_block(
+      data_sets = chart.data_set_by_block(
         issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |day| (3..6).include? day.day }
+      ) { |day| (3..6).cover? day.day }
 
       expect(data_sets).to eq(
         {
@@ -46,12 +46,12 @@ describe AgingWorkBarChart do
       )
     end
 
-    it 'should handle multiple blocked ranges, all completely within the date range' do
+    it 'handles multiple blocked ranges, all completely within the date range' do
       issue = load_issue('SP-1')
-      data_set = subject.data_set_by_block(
+      data_set = chart.data_set_by_block(
         issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |day| (3..4).include?(day.day) || day.day == 6 }
+      ) { |day| (3..4).cover?(day.day) || day.day == 6 }
 
       # Only checking the data section as the full wrapper was tested above.
       expect(data_set[:data]).to eq([
@@ -70,7 +70,7 @@ describe AgingWorkBarChart do
 
     it 'never becomes unblocked' do
       issue = load_issue('SP-1')
-      data_set = subject.data_set_by_block(
+      data_set = chart.data_set_by_block(
         issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |_day| true }
@@ -87,12 +87,12 @@ describe AgingWorkBarChart do
   end
 
   context 'status_data_sets' do
-    it 'should return nil if no status' do
-      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
-      subject.timezone_offset = '+0000'
+    it 'returns nil if no status' do
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: sample_board
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
-      data_sets = subject.status_data_sets(
+      data_sets = chart.status_data_sets(
         issue: issue, label: issue.key, today: to_date('2021-01-05')
       )
       expect(data_sets).to eq([
@@ -122,16 +122,16 @@ describe AgingWorkBarChart do
       board
     end
 
-    it 'should handle blocked by flag' do
-      subject.settings = board.project_config.settings
-      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
-      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
-      subject.timezone_offset = '+0000'
+    it 'handles blocked by flag' do
+      chart.settings = board.project_config.settings
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
       issue.changes << mock_change(field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
-      data_sets = subject.blocked_data_sets(
+      data_sets = chart.blocked_data_sets(
         issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
       )
       expect(data_sets).to eq([
@@ -151,17 +151,17 @@ describe AgingWorkBarChart do
       ])
     end
 
-    it 'should handle blocked by status' do
-      subject.settings = board.project_config.settings
-      subject.settings['blocked_statuses'] = ['Blocked']
-      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
-      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
-      subject.timezone_offset = '+0000'
+    it 'handles blocked by status' do
+      chart.settings = board.project_config.settings
+      chart.settings['blocked_statuses'] = ['Blocked']
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2021-01-02')
       issue.changes << mock_change(field: 'status', value: 'Doing',   time: '2021-01-03')
 
-      data_sets = subject.blocked_data_sets(
+      data_sets = chart.blocked_data_sets(
         issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
       )
       expect(data_sets).to eq([
@@ -181,13 +181,13 @@ describe AgingWorkBarChart do
       ])
     end
 
-    it 'should handle blocked by issue' do
-      subject.settings = board.project_config.settings
-      subject.settings['blocked_link_text'] = ['is blocked by']
+    it 'handle blocked by issue' do
+      chart.settings = board.project_config.settings
+      chart.settings['blocked_link_text'] = ['is blocked by']
 
-      subject.date_range = to_date('2021-01-01')..to_date('2021-01-05')
-      subject.time_range = subject.date_range.begin.to_time..subject.date_range.end.to_time
-      subject.timezone_offset = '+0000'
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
       issue.changes << mock_change(
         field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-01-02'
@@ -196,7 +196,7 @@ describe AgingWorkBarChart do
         field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 
-      data_sets = subject.blocked_data_sets(
+      data_sets = chart.blocked_data_sets(
         issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
       )
       expect(data_sets).to eq([

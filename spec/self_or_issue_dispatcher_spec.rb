@@ -22,20 +22,20 @@ describe SelfOrIssueDispatcher do
       FileConfig.new project_config: project_config, block: nil
     end
 
-    it 'should call a method without config and no args' do
+    it 'calls a method without config and no args' do
       columns = ColumnsConfig.new file_config: file, block: nil
       proc = columns.three 3
 
       expect(proc).to be_a Proc
       expect(proc.call(issue)).to eql 'three-3'
-      expect(columns.respond_to?(:three)).to be_truthy
+      expect(columns).to respond_to(:three)
     end
 
-    it "should fail when calling a method that doesn't exist anywhere" do
+    it "fails when calling a method that doesn't exist anywhere" do
       columns = ColumnsConfig.new file_config: file, block: nil
       expect { columns.method_that_does_not_exist }
         .to raise_error "method_that_does_not_exist isn't a method on Issue or ColumnsConfig"
-      expect(columns.respond_to?(:method_that_does_not_exist)).to be_falsey
+      expect(columns).not_to respond_to(:method_that_does_not_exist)
     end
   end
 end

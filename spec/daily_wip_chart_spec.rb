@@ -17,77 +17,77 @@ describe DailyWipChart do
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
 
-  let(:subject) do
+  let(:chart) do
     empty_config_block = ->(_) {}
-    chart = DailyWipChart.new empty_config_block
+    chart = described_class.new empty_config_block
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-04-02')
     chart
   end
 
   context 'group_issues_by_active_dates' do
-    it 'should return nothing when no issues' do
-      subject.issues = []
-      expect(subject.group_issues_by_active_dates).to be_empty
+    it 'returns nothing when no issues' do
+      chart.issues = []
+      expect(chart.group_issues_by_active_dates).to be_empty
     end
 
-    it 'should return raise exception when no grouping rules set' do
+    it 'returns raise exception when no grouping rules set' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
-      subject.issues = [issue1]
-      expect { subject.group_issues_by_active_dates }.to raise_error('grouping_rules must be set')
+      chart.issues = [issue1]
+      expect { chart.group_issues_by_active_dates }.to raise_error('grouping_rules must be set')
     end
 
-    it 'should return nothing when grouping rules ignore everything' do
+    it 'returns nothing when grouping rules ignore everything' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
-      subject.issues = [issue1]
-      subject.grouping_rules do |_issue, rules|
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
         rules.ignore
       end
-      expect(subject.group_issues_by_active_dates).to be_empty
+      expect(chart.group_issues_by_active_dates).to be_empty
     end
 
-    it 'should make a single group for one issue' do
+    it 'makes a single group for one issue' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
-      subject.issues = [issue1]
-      subject.grouping_rules do |_issue, rules|
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
         rules.color = 'blue'
       end
 
-      expect(flatten_issue_groups subject.group_issues_by_active_dates).to eq([
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
         ['2022-02-02', 'SP-1', 'foo', 'blue', 0]
       ])
     end
 
-    it 'should skip and issue that neither started nor stopped' do
+    it 'skips an issue that neither started nor stopped' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil]
       ]
-      subject.issues = [issue1]
-      subject.grouping_rules do |_issue, rules|
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
         rules.color = 'blue'
       end
 
-      expect(flatten_issue_groups subject.group_issues_by_active_dates).to be_empty
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to be_empty
     end
 
-    it 'should include an issue that stopped but never started' do
+    it 'includes an issue that stopped but never started' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, to_time('2022-01-03T14:00:00')]
       ]
-      subject.issues = [issue1]
-      subject.grouping_rules do |_issue, rules|
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
         rules.color = 'blue'
       end
 
-      expect(flatten_issue_groups subject.group_issues_by_active_dates).to eq([
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
         ['2022-01-01', 'SP-1', 'foo', 'blue', 0],
         ['2022-01-02', 'SP-1', 'foo', 'blue', 0],
         ['2022-01-03', 'SP-1', 'foo', 'blue', 0]
@@ -96,11 +96,11 @@ describe DailyWipChart do
   end
 
   context 'select_possible_rules' do
-    it 'should return empty for no data' do
-      expect(subject.select_possible_rules issue_rules_by_active_date: {}).to be_empty
+    it 'returns empty for no data' do
+      expect(chart.select_possible_rules issue_rules_by_active_date: {}).to be_empty
     end
 
-    it 'should return one group' do
+    it 'returns one group' do
       rules = DailyGroupingRules.new
       rules.label = 'foo'
       rules.color = 'red'
@@ -111,12 +111,12 @@ describe DailyWipChart do
           [issue1, rules]
         ]
       }
-      expect(subject.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
+      expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
         %w[foo red]
       ])
     end
 
-    it 'should return two different groups' do
+    it 'returns two different groups' do
       rule1 = DailyGroupingRules.new
       rule1.label = 'foo'
       rule1.color = 'red'
@@ -133,13 +133,13 @@ describe DailyWipChart do
           [issue2, rule2]
         ]
       }
-      expect(subject.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
+      expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
         %w[foo red],
         %w[bar gray]
       ])
     end
 
-    it 'should return one group when the same one is used twice' do
+    it 'returns one group when the same one is used twice' do
       rule1 = DailyGroupingRules.new
       rule1.label = 'foo'
       rule1.color = 'red'
@@ -156,7 +156,7 @@ describe DailyWipChart do
           [issue2, rule2]
         ]
       }
-      expect(subject.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
+      expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
         %w[foo red]
       ])
     end
@@ -176,7 +176,7 @@ describe DailyWipChart do
         ]
       }
 
-      data_set = subject.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
       expect(data_set).to eq({
         backgroundColor: 'red',
         borderColor: 'gray',
@@ -207,7 +207,7 @@ describe DailyWipChart do
         ]
       }
 
-      data_set = subject.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
       expect(data_set).to eq({
         backgroundColor: 'white',
         borderColor: 'gray',

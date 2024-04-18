@@ -185,14 +185,14 @@ class AgingWorkBarChart < ChartBase
   end
 
   def data_set_by_block(
-    issue:, issue_label:, title_label:, stack:, color:, start_date:, end_date: date_range.end, &block
+    issue:, issue_label:, title_label:, stack:, color:, start_date:, end_date: date_range.end
   )
     started = nil
     ended = nil
     data = []
 
     (start_date..end_date).each do |day|
-      if block.call(day)
+      if yield(day)
         started = day if started.nil?
         ended = day
       elsif ended
@@ -225,7 +225,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def calculate_percent_line percentage: 85
-    days = completed_issues_in_range.collect { |issue| issue.board.cycletime.cycletime(issue) }.compact.sort
+    days = completed_issues_in_range.filter_map { |issue| issue.board.cycletime.cycletime(issue) }.sort
     return nil if days.empty?
 
     days[days.length * percentage / 100]

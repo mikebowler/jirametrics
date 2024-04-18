@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe Sprint do
   let(:sprint) do
-    Sprint.new(raw: {
+    described_class.new(raw: {
       'id' => 1,
       'self' => 'https://improvingflow.atlassian.net/rest/agile/1.0/sprint/1',
       'state' => 'active',
@@ -16,23 +16,23 @@ describe Sprint do
     }, timezone_offset: '+00:00')
   end
 
-  it 'should return id' do
+  it 'returns id' do
     expect(sprint.id).to eq 1
   end
 
-  it 'should return state' do
-    expect(sprint.active?).to be_truthy
+  it 'returns state' do
+    expect(sprint).to be_active
   end
 
-  it 'should return start' do
+  it 'returns start' do
     expect(sprint.start_time).to eq Time.parse('2022-03-26T16:04:09.679Z')
   end
 
-  it 'should return end' do
+  it 'returns end' do
     expect(sprint.end_time).to eq Time.parse('2022-04-09T16:04:00.000Z')
   end
 
-  it 'should return goal' do
+  it 'returns goal' do
     expect(sprint.goal).to eq 'Do something'
   end
 end

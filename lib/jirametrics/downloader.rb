@@ -289,7 +289,7 @@ class Downloader
   def remove_old_files
     file_prefix = @download_config.project_config.file_prefix
     Dir.foreach @target_path do |file|
-      next unless file =~ /^#{file_prefix}_\d+\.json$/
+      next unless file.match?(/^#{file_prefix}_\d+\.json$/)
 
       File.unlink "#{@target_path}#{file}"
     end
@@ -301,7 +301,7 @@ class Downloader
     return unless File.exist? path
 
     Dir.foreach path do |file|
-      next unless file =~ /\.json$/
+      next unless file.match?(/\.json$/)
 
       File.unlink File.join(path, file)
     end

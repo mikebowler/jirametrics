@@ -61,7 +61,7 @@ class CycletimeScatterplot < ChartBase
       label = rules.label
       color = rules.color
       percent_line = calculate_percent_line completed_issues_by_type
-      data = completed_issues_by_type.collect { |issue| data_for_issue(issue) }.compact
+      data = completed_issues_by_type.filter_map { |issue| data_for_issue(issue) }
       data_sets << {
         label: "#{label} (85% at #{label_days(percent_line)})",
         data: data,

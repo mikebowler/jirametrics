@@ -54,17 +54,18 @@ class SprintBurndown < ChartBase
       change_data_by_sprint[sprint] = change_data.sort_by(&:time)
     end
 
-    result = String.new
+    result = +''
     result << '<h1>Sprint Burndowns</h1>'
 
+    possible_colours = %w[blue orange green red brown]
     charts_to_generate = []
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
-    charts_to_generate.each do |data_method, y_axis_title|
+    charts_to_generate.each do |data_method, y_axis_title| # rubocop:disable Style/HashEachMethods
       @summary_stats.clear
       data_sets = []
       sprints.each_with_index do |sprint, index|
-        color = %w[blue orange green red brown][index % 5]
+        color = possible_colours[index % 5]
         label = sprint.name
         data = send(data_method, sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint])
         data_sets << {
