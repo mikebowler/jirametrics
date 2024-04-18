@@ -137,7 +137,7 @@ class Generator
     remove_old_files
     @date_range.each_with_index do |date, day|
       yield date, day if block_given?
-      process_date(date, day) if (1..5).include? date.wday # Weekday
+      process_date(date, day) if (1..5).cover? date.wday # Weekday
     end
 
     @issues.each do |issue|
@@ -158,7 +158,7 @@ class Generator
   def remove_old_files
     path = "#{@target_path}#{@file_prefix}_issues"
     Dir.foreach path do |file|
-      next unless file =~ /-\d+\.json$/
+      next unless file.match?(/-\d+\.json$/)
 
       filename = "#{path}/#{file}"
       File.unlink filename
@@ -191,8 +191,9 @@ class Generator
       end
     end
 
+    possible_capacities = [0, 1, 1, 1, 2]
     @workers.each do |worker|
-      worker_capacity = [0, 1, 1, 1, 2].sample
+      worker_capacity = possible_capacities.sample
       if worker.issue.nil? || worker.issue.done?
         type = lucky?(89) ? 'Story' : 'Bug'
         worker.issue = next_issue_for worker: worker, date: date, type: type

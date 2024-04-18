@@ -67,7 +67,7 @@ class AgingWorkInProgressChart < ChartBase
       {
         'type' => 'line',
         'label' => rules.label,
-        'data' => rules_to_issues[rules].collect do |issue|
+        'data' => rules_to_issues[rules].filter_map do |issue|
             age = issue.board.cycletime.age(issue, today: date_range.end)
             column = column_for issue: issue
             next if column.nil?
@@ -76,7 +76,7 @@ class AgingWorkInProgressChart < ChartBase
               'x' => column.name,
               'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
-          end.compact,
+          end,
         'fill' => false,
         'showLine' => false,
         'backgroundColor' => rules.color
@@ -101,16 +101,16 @@ class AgingWorkInProgressChart < ChartBase
 
   def accumulated_status_ids_per_column
     accumulated_status_ids = []
-    @board_columns.reverse.collect do |column|
+    @board_columns.reverse.filter_map do |column|
       next if column == @fake_column
 
       accumulated_status_ids += column.status_ids
       [column.name, accumulated_status_ids.dup]
-    end.compact.reverse
+    end.reverse
   end
 
   def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
-    issues.collect do |issue|
+    issues.filter_map do |issue|
       stop = issue.first_time_in_status(*status_ids)
       start = issue.board.cycletime.started_time(issue)
 
@@ -119,7 +119,7 @@ class AgingWorkInProgressChart < ChartBase
       next if stop < start
 
       (stop.to_date - start.to_date).to_i + 1
-    end.compact
+    end
   end
 
   def column_for issue:
