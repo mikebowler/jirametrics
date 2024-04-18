@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name        = 'jirametrics'
-  spec.version     = '1.5'
+  spec.version     = '1.6pre'
   spec.summary     = 'Extract Jira metrics'
   spec.description = 'Tool to extract metrics from Jira and export to either a report or to CSV files'
   spec.authors     = ['Mike Bowler']
@@ -22,5 +22,4 @@ Gem::Specification.new do |spec|
     'changelog_uri'         => 'https://github.com/mikebowler/jirametrics/wiki/Changes',
     'documentation_uri'     => 'https://github.com/mikebowler/jirametrics/wiki'
   }
-  spec.add_development_dependency 'rspec', '~> 3.4'
 end
