@@ -1,3 +1,8 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
+  - rubocop-performance
+
 AllCops:
   NewCops: enable
   TargetRubyVersion: 3.0
@@ -94,3 +99,16 @@ Layout/LineContinuationLeadingSpace:
 # This may be a bug in rubocop. It recommends things that actually change the behaviour.
 Lint/NonAtomicFileOperation:
   Enabled: false
+
+RSpec/IndexedLet:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/ContextWording:
+  Enabled: false
+

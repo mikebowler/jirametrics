@@ -50,7 +50,7 @@ class DailyWipChart < ChartBase
   def select_possible_rules issue_rules_by_active_date
     possible_rules = []
     issue_rules_by_active_date.each_pair do |_date, issues_rules_list|
-      issues_rules_list.each do |_issue, rules|
+      issues_rules_list.each do |_issue, rules| # rubocop:disable Style/HashEachMethods
         possible_rules << rules unless possible_rules.any? { |r| r.group == rules.group }
       end
     end

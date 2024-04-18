@@ -16,8 +16,8 @@ class BlockedStalledChange
   def stalled? = @stalled_days || stalled_by_status?
   def active? = !blocked? && !stalled?
 
-  def blocked_by_status? = (@status && @status_is_blocking)
-  def stalled_by_status? = (@status && !@status_is_blocking)
+  def blocked_by_status? = @status && @status_is_blocking
+  def stalled_by_status? = @status && !@status_is_blocking
 
   def ==(other)
     (other.class == self.class) && (other.state == state)

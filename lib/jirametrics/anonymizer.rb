@@ -28,7 +28,7 @@ class Anonymizer
     # just try again. In every case we've seen, it's worked on the second attempt, but we'll be
     # cautious and try five times.
     5.times do |i|
-      return RandomWord.phrases.next.gsub(/_/, ' ')
+      return RandomWord.phrases.next.gsub('_', ' ')
     rescue # rubocop:disable Style/RescueStandardError We don't care what exception was thrown.
       puts "Random word blew up on attempt #{i + 1}"
     end
@@ -179,7 +179,7 @@ class Anonymizer
   end
 
   def anonymize_board_names
-    @all_boards.values.each do |board|
+    @all_boards.each_value do |board|
       board.raw['name'] = "#{random_phrase} board"
     end
   end
