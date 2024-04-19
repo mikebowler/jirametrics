@@ -48,7 +48,7 @@ class AggregateConfig
     @project_config.jira_url = project.jira_url if @project_config.jira_url.nil?
     unless @project_config.jira_url == project.jira_url
       raise 'Not allowed to aggregate projects from different Jira instances: ' \
-        "#{@project_config.jira_url.inspect} and #{project.jira_url.inspect}"
+        "#{@project_config.jira_url.inspect} and #{project.jira_url.inspect}. For project #{project_name}"
     end
 
     @included_projects << project
