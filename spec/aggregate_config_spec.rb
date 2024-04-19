@@ -41,7 +41,8 @@ describe AggregateConfig do
       subject = described_class.new project_config: project3, block: nil
       subject.include_issues_from 'foo'
       expect { subject.include_issues_from 'bar' }.to raise_error(
-        'Not allowed to aggregate projects from different Jira instances: "http://foo.com" and "http://bar.com"'
+        'Not allowed to aggregate projects from different Jira instances: "http://foo.com" and ' \
+          '"http://bar.com". For project bar'
       )
     end
 
