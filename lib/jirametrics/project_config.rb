@@ -214,7 +214,7 @@ class ProjectConfig
     end
   end
 
-  def add_possible_status status, debug: false
+  def add_possible_status status
     existing_status = find_status(name: status.name)
 
     if status.project_scoped?

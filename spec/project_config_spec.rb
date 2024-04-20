@@ -319,7 +319,7 @@ describe ProjectConfig do
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
 
       project_config.add_possible_status(
-        Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100), debug: true
+        Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100)
       )
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
     end
@@ -331,7 +331,7 @@ describe ProjectConfig do
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
 
       project_config.add_possible_status(
-        Status.new(name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100), debug: true
+        Status.new(name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100)
       )
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
     end
@@ -344,7 +344,7 @@ describe ProjectConfig do
 
       expect {
         project_config.add_possible_status(
-          Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100), debug: true
+          Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100)
         )
       }.to raise_error /^Ambiguous project id/
     end
