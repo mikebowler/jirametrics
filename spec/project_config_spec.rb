@@ -93,6 +93,58 @@ describe ProjectConfig do
     end
   end
 
+  context 'guess_project_id' do
+    it 'defaults to nil' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+      expect(project_config.guess_project_id).to be_nil
+    end
+
+    it 'accepts id that was passed in' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample', id: 2
+      )
+      expect(project_config.guess_project_id).to eq 2
+    end
+
+    it 'uses project id from board, if present' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+      project_config.all_boards[1] = sample_board.tap do |b|
+        b.raw['location'] = { 'type' => 'project', 'id' => 1 }
+      end
+      expect(project_config.guess_project_id).to eq 1
+    end
+
+    it 'uses project id when only one unique one is specified' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+      project_config.all_boards[1] = sample_board.tap do |b|
+        b.raw['location'] = { 'type' => 'project', 'id' => 1 }
+      end
+      project_config.all_boards[2] = sample_board.tap do |b|
+        b.raw['location'] = { 'type' => 'user', 'id' => 2 }
+      end
+      expect(project_config.guess_project_id).to eq 1
+    end
+
+    it 'returns nil when project id is different on different boards (ambiguous)' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      )
+      project_config.all_boards[1] = sample_board.tap do |b|
+        b.raw['location'] = { 'type' => 'project', 'id' => 1 }
+      end
+      project_config.all_boards[2] = sample_board.tap do |b|
+        b.raw['location'] = { 'type' => 'project', 'id' => 2 }
+      end
+      expect(project_config.guess_project_id).to be_nil
+    end
+  end
+
   context 'discard_changes_before' do
     let(:issue1) { load_issue('SP-1') }
 

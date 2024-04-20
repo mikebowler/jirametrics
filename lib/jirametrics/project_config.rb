@@ -8,10 +8,10 @@ class ProjectConfig
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings
+    :settings, :id
   attr_accessor :time_range, :jira_url, :project_id
 
-  def initialize exporter:, jira_config:, block:, target_path: '.', name: ''
+  def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
     @exporter = exporter
     @block = block
     @file_configs = []
@@ -21,6 +21,7 @@ class ProjectConfig
     @possible_statuses = StatusCollection.new
     @name = name
     @board_configs = []
+    @all_boards = {}
     @settings = {
       'stalled_threshold' => 5,
       'blocked_statuses' => [],
@@ -32,6 +33,7 @@ class ProjectConfig
         'blocked' => '#FF7400'
       }
     }
+    @id = id
   end
 
   def evaluate_next_level
@@ -41,7 +43,7 @@ class ProjectConfig
   def run
     unless aggregated_project?
       load_all_boards
-      @project_id = @all_boards.first.last&.project_id
+      @project_id = guess_project_id
       load_status_category_mappings
       load_project_metadata
       load_sprints
@@ -54,6 +56,23 @@ class ProjectConfig
     @file_configs.each do |file_config|
       file_config.run
     end
+  end
+
+  def guess_project_id
+    return @id if @id
+
+    previous_id = nil
+    @all_boards.each_value do |board|
+      project_id = board.project_id
+
+      # If the id is ambiguous then return nil for now. The user will get an error later
+      # in the case where we need it to be unambiguous. Sometimes we don't care and there's
+      # no point forcing the user to enter a project id if we don't need it.
+      return nil if previous_id && project_id && previous_id != project_id
+
+      previous_id = project_id if project_id
+    end
+    previous_id
   end
 
   def aggregated_project?
@@ -110,7 +129,7 @@ class ProjectConfig
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
-    raise "No boards found in #{@target_path.inspect}" if @all_boards.nil?
+    raise "No boards found in #{@target_path.inspect}" if @all_boards.empty?
   end
 
   def load_board board_id:, filename:
@@ -118,7 +137,7 @@ class ProjectConfig
       raw: JSON.parse(File.read(filename)), possible_statuses: @possible_statuses
     )
     board.project_config = self
-    (@all_boards ||= {})[board_id] = board
+    @all_boards[board_id] = board
   end
 
   def raise_with_message_about_missing_category_information
@@ -192,6 +211,7 @@ class ProjectConfig
   end
 
   def add_possible_status status
+    # TODO Barf if the status is project scoped and we can't determine the status.
     # If it's project scoped and it's not this project, just ignore it.
     return if status.project_id && (@project_id.nil? || status.project_id != @project_id)
 
@@ -274,7 +294,7 @@ class ProjectConfig
   # To be used by the aggregate_config only. Not intended to be part of the public API
   def add_issues issues_list
     @issues = [] if @issues.nil?
-    @all_boards = {} if @all_boards.nil?
+    @all_boards = {}
 
     issues_list.each do |issue|
       @issues << issue

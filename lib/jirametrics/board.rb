@@ -84,7 +84,10 @@ class Board
   end
 
   def project_id
-    @raw['location']&.[]('id')
+    location = @raw['location']
+    return nil unless location
+
+    location['id'] if location['type'] == 'project'
   end
 
   def name
