@@ -236,6 +236,10 @@ class ProjectConfig
     # If it isn't there, add it and go.
     return @possible_statuses << status unless existing_status
 
+    # We're registering the same one twice. Shouldn't be possible with the new status API but it
+    # did happen with the project specific one.
+    return if status.category_name == existing_status.category_name
+
     # If we got this far then someone has called status_category_mapping and is attempting to
     # change the category.
     raise "Redefining status category #{status} with #{existing_status}. Was one set in the config?"

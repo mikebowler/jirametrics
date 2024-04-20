@@ -363,6 +363,7 @@ describe ProjectConfig do
       status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
       status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
       project_config.add_possible_status(status1)
+      project_config.add_possible_status(status2)
 
       expect(project_config.possible_statuses.collect(&:name)).to eq ['foo']
     end

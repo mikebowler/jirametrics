@@ -31,7 +31,7 @@ class Status
   end
 
   def global?
-    @project.nil?
+    !project_scoped?
   end
 
   def to_s
