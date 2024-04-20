@@ -26,6 +26,14 @@ class Status
     @project_id = raw['scope']&.[]('project')&.[]('id')
   end
 
+  def project_scoped?
+    !!@project_id
+  end
+
+  def global?
+    @project.nil?
+  end
+
   def to_s
     "Status(name=#{@name.inspect}, id=#{@id.inspect}," \
       " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect}, project_id=#{@project_id})"

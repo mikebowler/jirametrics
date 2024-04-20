@@ -296,7 +296,7 @@ describe ProjectConfig do
 
     it 'registers a status' do
       expect(project_config.possible_statuses).to be_empty
-      project_config.project_id = 100
+      project_config.id = 100
       project_config.add_possible_status(
         Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
       )
@@ -304,7 +304,7 @@ describe ProjectConfig do
     end
 
     it 'ignores a project status for a different project' do
-      project_config.project_id = 100
+      project_config.id = 100
       project_config.add_possible_status(
         Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 101
       )
@@ -312,33 +312,44 @@ describe ProjectConfig do
     end
 
     it 'replaces a global status with the project specific one' do
-      project_config.project_id = 100
+      project_config.id = 100
       project_config.add_possible_status(
         Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: nil
       )
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
 
       project_config.add_possible_status(
-        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100
+        Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100), debug: true
       )
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
     end
 
-    it 'does not replace a project status with a global one' do
-      project_config.project_id = 100
-      project_config.add_possible_status(
-        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100
-      )
-      expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
-
+    it 'does not replace a global status with the project specific one because categories are the same' do
       project_config.add_possible_status(
         Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: nil
       )
-      expect(project_config.possible_statuses.collect(&:project_id)).to eq [100]
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
+
+      project_config.add_possible_status(
+        Status.new(name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: 100), debug: true
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
+    end
+
+    it 'raises ambiguous exception because we need to know the project id and cant determine it' do
+      project_config.add_possible_status(
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, project_id: nil
+      )
+      expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
+
+      expect {
+        project_config.add_possible_status(
+          Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100), debug: true
+        )
+      }.to raise_error /^Ambiguous project id/
     end
 
     it 'throws error if categories dont match' do
-      project_config.project_id = 100
       status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
       status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo2', category_id: 3
       project_config.add_possible_status(status1)
@@ -346,6 +357,14 @@ describe ProjectConfig do
       expect { project_config.add_possible_status(status2) }.to raise_error(
         /^Redefining status category/
       )
+    end
+
+    it 'does nothing if we are just adding the same one again' do
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      project_config.add_possible_status(status1)
+
+      expect(project_config.possible_statuses.collect(&:name)).to eq ['foo']
     end
   end
 end

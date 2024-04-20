@@ -9,7 +9,7 @@ class ProjectConfig
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
     :settings, :id
-  attr_accessor :time_range, :jira_url, :project_id
+  attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
     @exporter = exporter
@@ -43,7 +43,7 @@ class ProjectConfig
   def run
     unless aggregated_project?
       load_all_boards
-      @project_id = guess_project_id
+      @id = guess_project_id
       load_status_category_mappings
       load_project_metadata
       load_sprints
@@ -189,9 +189,13 @@ class ProjectConfig
       status_json_snippets = json
     end
 
-    status_json_snippets.each do |snippet|
-      add_possible_status Status.new(raw: snippet)
-    end
+    statuses = status_json_snippets.map { |snippet| Status.new(raw: snippet) }
+    statuses
+      .find_all { |status| status.global? }
+      .each { |status| add_possible_status status }
+    statuses
+      .find_all { |status| status.project_scoped? }
+      .each { |status| add_possible_status status }
   end
 
   def load_sprints
@@ -210,35 +214,37 @@ class ProjectConfig
     end
   end
 
-  def add_possible_status status
-    # TODO Barf if the status is project scoped and we can't determine the status.
-    # If it's project scoped and it's not this project, just ignore it.
-    return if status.project_id && (@project_id.nil? || status.project_id != @project_id)
-
+  def add_possible_status status, debug: false
     existing_status = find_status(name: status.name)
 
-    # If it isn't there, add it and go.
-    return @possible_statuses << status unless existing_status
+    if status.project_scoped?
+      # If the project specific status doesn't change anything then we don't care whether it's
+      # our project or not.
+      return if existing_status && existing_status.category_name == status.category_name
 
-    # If the existing one has a project id then it's already the most precise. Ignore the new one.
-    # No need to check categories as status_category_mapping can't add a project_id so by definition
-    # this data came from Jira.
-    return if existing_status&.project_id
+      raise_ambiguous_project_id if @id.nil?
 
-    # If the new one has a project_id then it's more precise so replace the old one with this,
-    # regardless of whether the categories match.
-    if status.project_id
+      # Not our project, ignore it.
+      return unless status.project_id == @id
+
+      # Replace the old one with this
       @possible_statuses.delete(existing_status)
       @possible_statuses << status
       return
     end
 
-    # This new status may have come from status_category_mapping so verify that categories match.
-    if existing_status.category_name != status.category_name
-      raise "Redefining status category #{status} with #{existing_status}. Was one set in the config?"
-    end
+    # If it isn't there, add it and go.
+    return @possible_statuses << status unless existing_status
 
-    @possible_statuses << status
+    # If we got this far then someone has called status_category_mapping and is attempting to
+    # change the category.
+    raise "Redefining status category #{status} with #{existing_status}. Was one set in the config?"
+  end
+
+  def raise_ambiguous_project_id
+    raise 'Ambiguous project id: There is a project specific status that could affect out calculations. ' \
+      'We are unable to automatically detect the id of the project so you will have to set it manually ' \
+      'in the configuration like: "project id: 5"'
   end
 
   def find_status name:
