@@ -22,10 +22,9 @@ class Board
       end
 
       @backlog_statuses = @possible_statuses.expand_statuses(status_ids_from_column columns[0]) do |unknown_status|
-        # Yet another "theoretically impossible and yet we've seen it in production" moment
-        puts "Status #{unknown_status.inspect} is defined as being in the backlog for board #{name.inspect}:#{id} " \
-          'and yet it\'s not defined in the list of possible statuses available to the project. Check your Jira ' \
-          'configuration'
+        # There is a status defined as being 'backlog' that is no longer being returned in statuses.
+        # We used to display a warning for this but honestly, there is nothing that anyone can do about it
+        # so now we just quietly ignore it.
       end
       columns = columns[1..]
     else
