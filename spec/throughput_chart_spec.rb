@@ -88,18 +88,6 @@ describe ThroughputChart do
       })
     end
 
-    it 'renders when the old (deprecated) approach is used' do
-      subject = described_class.new(lambda do |_issue|
-        %w[foo orange]
-      end)
-      expected_rules = GroupingRules.new
-      expected_rules.color = 'orange'
-      expected_rules.label = 'foo'
-      expect(subject.group_issues([issue1])).to eq({
-        expected_rules => [issue1]
-      })
-    end
-
     it 'renders when grouping_rules are used' do
       subject = described_class.new
       subject.grouping_rules do |issue, rules|
