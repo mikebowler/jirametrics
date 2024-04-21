@@ -3,7 +3,12 @@
 # This file is really intended to give you ideas about how you might configure your own reports, not
 # as a complete setup that will work in every case.
 #
-# See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for moreclass Exporter
+# See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more details
+#
+# The point of an AGGREGATED report is that we're now looking at a higher level. We might use this in a
+# S2 meeting (Scrum of Scrums) to talk about the things that are happening across teams, not within a
+# single team. For that reason, we look at slightly different things that we would on a single team board.
+
 class Exporter
   def aggregated_project name:, project_names:
     project name: name do
@@ -51,7 +56,40 @@ class Exporter
             end
           end
           aging_work_table do
+            # In an aggregated report, we likely only care about items that are old so exclude anything
+            # under 21 days.
             age_cutoff 21
+          end
+
+          dependency_chart do
+            header_text 'Dependencies across boards'
+            description_text 'We are only showing dependencies across boards.'
+
+            # By default, the issue doesn't show what board it's on and this is important for an
+            # aggregated view
+            issue_rules do |issue, rules|
+              key = issue.key
+              key = "<S>#{key} </S> " if issue.status.category_name == 'Done'
+              rules.label = "<#{key} [#{issue.type}]<BR/>#{issue.board.name}<BR/>#{word_wrap issue.summary}>"
+            end
+
+            link_rules do |link, rules|
+              # By default, the dependency chart shows everything. Clean it up a bit.
+              case link.name
+              when 'Cloners'
+                # We don't want to see any clone links at all.
+                rules.ignore
+              when 'Blocks'
+                # For blocks, by default Jira will have links going both
+                # ways and we want them only going one way. Also make the
+                # link red.
+                rules.merge_bidirectional keep: 'outward'
+                rules.line_color = 'red'
+              end
+
+              # Because this is the aggregated view, let's hide any link that doesn't cross boards.
+              rules.ignore if link.origin.board == link.other_issue.board
+            end
           end
         end
       end
