@@ -46,7 +46,7 @@ class Board
   end
 
   def status_ids_from_column column
-    column['statuses'].collect { |status| status['id'].to_i }
+    column['statuses']&.collect { |status| status['id'].to_i } || []
   end
 
   def status_ids_in_or_right_of_column column_name
