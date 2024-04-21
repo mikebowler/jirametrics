@@ -215,8 +215,5 @@ describe AgingWorkBarChart do
         }
       ])
     end
-
-    # TODO: Test stalled
-    # TODO: Test a complex case with all of the above.
   end
 end
