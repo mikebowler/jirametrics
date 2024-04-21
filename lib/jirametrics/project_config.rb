@@ -132,34 +132,35 @@ class ProjectConfig
     @all_boards[board_id] = board
   end
 
-  def raise_with_message_about_missing_category_information
+  def raise_with_message_about_missing_category_information all_issues = @issues
     message = +''
-    message << 'Could not determine categories for some of the statuses used in this data set.\n\n' \
-      'If you specify a project: then we\'ll ask Jira for those mappings. If you\'ve done that' \
-      ' and we still don\'t have the right mapping, which is possible, then use the' \
-      " 'status_category_mapping' declaration in your config to manually add one.\n\n" \
-      ' The mappings we do know about are below:'
+    message << "Could not determine categories for some of the statuses used in this data set.\n" \
+      "Use the 'status_category_mapping' declaration in your config to manually add one.\n" \
+      'The mappings we do know about are below:'
 
     @possible_statuses.each do |status|
-      message << "\n  status: #{status.name.inspect}, category: #{status.category_name.inspect}'"
+      message << "\n  status: #{status.name.inspect}, category: #{status.category_name.inspect}"
     end
 
     message << "\n\nThe ones we're missing are the following:"
 
+    find_statuses_with_no_category_information(all_issues).each do |status_name|
+      message << "\n  status: #{status_name.inspect}, category: <unknown>"
+    end
+
+    raise message
+  end
+
+  def find_statuses_with_no_category_information all_issues
     missing_statuses = []
-    issues.each do |issue|
+    all_issues.each do |issue|
       issue.changes.each do |change|
         next unless change.status?
 
         missing_statuses << change.value unless find_status(name: change.value)
       end
     end
-
-    missing_statuses.uniq.each do |status_name|
-      message << "\n  status: #{status_name.inspect}, category: <unknown>"
-    end
-
-    raise message
+    missing_statuses.uniq
   end
 
   def load_status_category_mappings

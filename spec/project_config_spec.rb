@@ -8,6 +8,7 @@ describe ProjectConfig do
   let(:project_config) do
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
   end
+  let(:issue1) { load_issue('SP-1') }
 
   context 'board_configuration' do
     it 'loads' do
@@ -146,8 +147,6 @@ describe ProjectConfig do
   end
 
   context 'discard_changes_before' do
-    let(:issue1) { load_issue('SP-1') }
-
     it 'discards for date provided' do
       issue1.changes.clear
       issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-01')
@@ -366,6 +365,48 @@ describe ProjectConfig do
       project_config.add_possible_status(status2)
 
       expect(project_config.possible_statuses.collect(&:name)).to eq ['foo']
+    end
+  end
+
+  context 'find_statuses_with_no_category_information' do
+    it 'returns [] when no issues' do
+      expect(project_config.find_statuses_with_no_category_information([])).to be_empty
+    end
+
+    it 'returns all when no statuses are found' do
+      issues = [issue1]
+      expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
+        ['Backlog', 'Selected for Development', 'In Progress']
+      )
+    end
+
+    it 'returns only those missing categories' do
+      issues = [issue1]
+      project_config.possible_statuses << Status.new(name: 'Backlog')
+      expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
+        ['Selected for Development', 'In Progress']
+      )
+    end
+  end
+
+  context 'raise_with_message_about_missing_category_information' do
+    it 'raises correct error' do
+      issues = [issue1]
+      project_config.possible_statuses << Status.new(name: 'Backlog', category_name: 'Foo')
+
+      expect { project_config.raise_with_message_about_missing_category_information(issues) }
+        .to raise_error(
+        <<~ERROR
+          Could not determine categories for some of the statuses used in this data set.
+          Use the 'status_category_mapping' declaration in your config to manually add one.
+          The mappings we do know about are below:
+            status: "Backlog", category: "Foo"
+
+          The ones we're missing are the following:
+            status: "Selected for Development", category: <unknown>
+            status: "In Progress", category: <unknown>
+        ERROR
+        .chomp)
     end
   end
 end
