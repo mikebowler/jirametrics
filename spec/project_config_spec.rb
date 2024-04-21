@@ -396,17 +396,18 @@ describe ProjectConfig do
 
       expect { project_config.raise_with_message_about_missing_category_information(issues) }
         .to raise_error(
-        <<~ERROR
-          Could not determine categories for some of the statuses used in this data set.
-          Use the 'status_category_mapping' declaration in your config to manually add one.
-          The mappings we do know about are below:
-            status: "Backlog", category: "Foo"
+          <<~ERROR
+            Could not determine categories for some of the statuses used in this data set.
+            Use the 'status_category_mapping' declaration in your config to manually add one.
+            The mappings we do know about are below:
+              status: "Backlog", category: "Foo"
 
-          The ones we're missing are the following:
-            status: "Selected for Development", category: <unknown>
-            status: "In Progress", category: <unknown>
-        ERROR
-        .chomp)
+            The ones we're missing are the following:
+              status: "Selected for Development", category: <unknown>
+              status: "In Progress", category: <unknown>
+          ERROR
+          .chomp
+        )
     end
   end
 end
