@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'jirametrics/value_equality'
+
 class Status
+  include ValueEquality
   attr_reader :id, :type, :category_name, :category_id, :project_id
   attr_accessor :name
 
@@ -39,13 +42,7 @@ class Status
       " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect}, project_id=#{@project_id})"
   end
 
-  def eql?(other)
-    (other.class == self.class) && (other.state == state)
-  end
-
-  def state
-    instance_variables
-      .reject { |variable| variable == :@raw }
-      .map { |variable| instance_variable_get variable }
+  def value_equality_ignored_variables
+    [:@raw]
   end
 end

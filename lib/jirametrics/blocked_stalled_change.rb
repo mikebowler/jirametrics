@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'jirametrics/value_equality'
+
 class BlockedStalledChange
+  include ValueEquality
   attr_reader :time, :blocking_issue_keys, :flag, :status, :stalled_days, :status_is_blocking
 
   def initialize time:, flagged: nil, status: nil, status_is_blocking: true, blocking_issue_keys: nil, stalled_days: nil
@@ -18,14 +21,6 @@ class BlockedStalledChange
 
   def blocked_by_status? = @status && @status_is_blocking
   def stalled_by_status? = @status && !@status_is_blocking
-
-  def ==(other)
-    (other.class == self.class) && (other.state == state)
-  end
-
-  def state
-    instance_variables.map { |variable| instance_variable_get variable }
-  end
 
   def reasons
     result = []

@@ -44,6 +44,7 @@ class JiraMetrics < Thor
       exit 1
     end
 
+    require 'jirametrics/value_equality'
     require 'jirametrics/chart_base'
     require 'jirametrics/rules'
     require 'jirametrics/grouping_rules'

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'jirametrics/value_equality'
+
 class SprintIssueChangeData
+  include ValueEquality
   attr_reader :time, :action, :value, :issue, :story_points
 
   def initialize time:, action:, value:, issue:, story_points:
@@ -9,14 +12,6 @@ class SprintIssueChangeData
     @value = value
     @issue = issue
     @story_points = story_points
-  end
-
-  def eql?(other)
-    (other.class == self.class) && (other.state == state)
-  end
-
-  def state
-    instance_variables.map { |variable| instance_variable_get variable }
   end
 
   def inspect
