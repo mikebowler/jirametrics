@@ -168,20 +168,8 @@ class ProjectConfig
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
 
-    status_json_snippets = []
-
-    json = JSON.parse(File.read(filename))
-    if json[0]['statuses']
-      # Response from /api/2/{project_code}/status
-      json.each do |type_config|
-        status_json_snippets += type_config['statuses']
-      end
-    else
-      # Response from /api/2/status
-      status_json_snippets = json
-    end
-
-    statuses = status_json_snippets.map { |snippet| Status.new(raw: snippet) }
+    statuses = JSON.parse(File.read(filename))
+      .map { |snippet| Status.new(raw: snippet) }
     statuses
       .find_all { |status| status.global? }
       .each { |status| add_possible_status status }
