@@ -54,11 +54,6 @@ class Issue
     Status.new raw: @raw['fields']['status']
   end
 
-  def status_id
-    puts 'DEPRECATED(Issue.status_id) Call Issue.status.id instead'
-    status.id
-  end
-
   def labels = @raw['fields']['labels'] || []
 
   def author = @raw['fields']['creator']&.[]('displayName') || ''

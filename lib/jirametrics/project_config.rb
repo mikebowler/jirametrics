@@ -110,9 +110,7 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_category_mapping status:, category:, type: nil
-    deprecated message: "status_category_mapping no longer needs a type: #{type.inspect}" if type
-
+  def status_category_mapping status:, category:
     add_possible_status Status.new(name: status, category_name: category)
   end
 

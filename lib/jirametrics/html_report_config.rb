@@ -68,22 +68,12 @@ class HtmlReportConfig
     execute_chart AgingWorkBarChart.new(block)
   end
 
-  def aging_work_table priority_name = nil, &block
-    if priority_name
-      deprecated message: 'priority name should no longer be passed into the chart. Specify it in the ' \
-        'board declaration. See https://github.com/mikebowler/jira-export/wiki/Deprecated',
-        date: '2022-12-26'
-    end
+  def aging_work_table &block
     execute_chart AgingWorkTable.new(block)
   end
 
   def cycletime_scatterplot &block
     execute_chart CycletimeScatterplot.new block
-  end
-
-  def total_wip_over_time_chart &block
-    puts 'Deprecated(total_wip_over_time_chart). Use daily_wip_by_age_chart instead.'
-    execute_chart DailyWipByAgeChart.new block
   end
 
   def daily_wip_chart &block
@@ -106,17 +96,7 @@ class HtmlReportConfig
     execute_chart ThroughputChart.new(block)
   end
 
-  def blocked_stalled_chart
-    puts 'Deprecated(blocked_stalled_chart). Use daily_wip_by_blocked_stalled_chart instead.'
-    execute_chart DailyWipByBlockedStalledChart.new
-  end
-
-  def expedited_chart priority_name = nil
-    if priority_name
-      deprecated message: 'priority name should no longer be passed into the chart. Specify it in the ' \
-        'board declaration. See https://github.com/mikebowler/jira-export/wiki/Deprecated',
-        date: '2022-12-26'
-    end
+  def expedited_chart
     execute_chart ExpeditedChart.new
   end
 
@@ -159,11 +139,6 @@ class HtmlReportConfig
         @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
       end
     end
-  end
-
-  def discarded_changes_report
-    puts 'Deprecated(discarded_changes_report) No need to specify this anymore as this information is ' \
-     'now included in the data quality checks.'
   end
 
   def dependency_chart &block

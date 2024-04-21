@@ -121,11 +121,6 @@ class StoryPointAccuracyChart < ChartBase
     story_points
   end
 
-  def grouping range:, color: # rubocop:disable Lint/UnusedMethodArgument
-    deprecated message: 'The grouping declaration is no longer supported on the StoryPointEstimateChart ' \
-      'as we now use a bubble chart rather than colors'
-  end
-
   def y_axis label:, sort_order: nil, &block
     @y_axis_sort_order = sort_order
     @y_axis_label = label
