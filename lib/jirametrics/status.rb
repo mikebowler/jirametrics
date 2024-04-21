@@ -4,7 +4,7 @@ require 'jirametrics/value_equality'
 
 class Status
   include ValueEquality
-  attr_reader :id, :type, :category_name, :category_id, :project_id
+  attr_reader :id, :category_name, :category_id, :project_id
   attr_accessor :name
 
   def initialize name: nil, id: nil, category_name: nil, category_id: nil, project_id: nil, raw: nil

@@ -141,8 +141,7 @@ class ProjectConfig
       ' The mappings we do know about are below:'
 
     @possible_statuses.each do |status|
-      message << "\n  type: #{status.type.inspect}, status: #{status.name.inspect}, " \
-        "category: #{status.category_name.inspect}'"
+      message << "\n  status: #{status.name.inspect}, category: #{status.category_name.inspect}'"
     end
 
     message << "\n\nThe ones we're missing are the following:"
