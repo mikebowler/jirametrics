@@ -111,13 +111,7 @@ class ProjectConfig
   end
 
   def status_category_mapping status:, category:, type: nil
-    puts "Deprecated: ProjectConfig.status_category_mapping no longer needs a type: #{type.inspect}" if type
-
-    status_object = find_status(name: status)
-    if status_object
-      puts "Status/Category mapping was already present. Ignoring redefinition: #{status_object}"
-      return
-    end
+    deprecated message: "status_category_mapping no longer needs a type: #{type.inspect}" if type
 
     add_possible_status Status.new(name: status, category_name: category)
   end
@@ -327,10 +321,8 @@ class ProjectConfig
       issues_path = "#{@target_path}#{file_prefix}_issues/"
       if File.exist?(issues_path) && File.directory?(issues_path)
         issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
-      elsif File.exist?(@target_path) && File.directory?(@target_path)
-        issues = load_issues_from_target_directory path: @target_path, timezone_offset: timezone_offset
       else
-        puts "Can't find issues in either #{path} or #{@target_path}"
+        puts "Can't find issues in #{path}. Has a download been done?"
       end
 
       # Attach related issues
@@ -380,24 +372,6 @@ class ProjectConfig
         "Picked #{default_board.name.inspect} to attach issues to."
     end
     default_board
-  end
-
-  def load_issues_from_target_directory path:, timezone_offset:
-    puts "Deprecated: issues in the target directory for project #{@name}. " \
-      'Download again and this should fix itself.'
-
-    default_board = find_default_board
-
-    issues = []
-    Dir.foreach(path) do |filename|
-      if filename.match?(/#{file_prefix}_\d+\.json/)
-        content = JSON.parse File.read("#{path}#{filename}")
-        content['issues'].each do |issue|
-          issues << Issue.new(raw: issue, timezone_offset: timezone_offset, board: default_board)
-        end
-      end
-    end
-    issues
   end
 
   def load_issues_from_issues_directory path:, timezone_offset:
