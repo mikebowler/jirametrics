@@ -75,6 +75,11 @@ class Downloader
     @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
   end
 
+  def call_gateway url:
+    command = make_curl_command url: url
+    call_command command
+  end
+
   def call_command command
     JSON.parse @jira_gateway.call_command command
   end
@@ -139,7 +144,7 @@ class Downloader
         }
         identify_other_issues_to_be_downloaded issue_json
         file = "#{issue_json['key']}-#{board_id}.json"
-        @file_system.save_json(issue_json, File.join(path, file))
+        @file_system.save_json( json: issue_json, filename: File.join(path, file))
       end
 
       total = json['total'].to_i
@@ -184,8 +189,7 @@ class Downloader
 
   def download_statuses
     log '  Downloading all statuses', both: true
-    command = make_curl_command url: "\"#{@jira_url}/rest/api/2/status\""
-    json = call_command(command)
+    json = call_gateway url: "\"#{@jira_url}/rest/api/2/status\""
 
     @file_system.save_json(
       json: json, 
@@ -204,7 +208,7 @@ class Downloader
     # @board_configuration = json if @download_config.board_ids.size == 1
 
     file_prefix = @download_config.project_config.file_prefix
-    @file_system.save_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+    @file_system.save_json json: json, filename: "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
 
     download_sprints board_id: board_id if json['type'] == 'scrum'
   end
@@ -222,7 +226,10 @@ class Downloader
       json = call_command(command)
       exit_if_call_failed json
 
-      @file_system.save_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
+      @file_system.save_json(
+        json: json,
+        filename: "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
+      )
       is_last = json['isLast']
       max_results = json['maxResults']
       start_at += json['values'].size
@@ -269,7 +276,7 @@ class Downloader
 
     @metadata['jira_url'] = @jira_url
 
-    @file_system.save_json @metadata, metadata_pathname
+    @file_system.save_json json: @metadata, filename: metadata_pathname
   end
 
   def remove_old_files
