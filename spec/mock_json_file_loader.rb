@@ -2,12 +2,12 @@
 
 require 'json'
 
-class MockJsonFileLoader
+class MockFileSystem
   def initialize
     @data = {}
   end
 
-  def load filename, fail_on_error: true
+  def load_json filename, fail_on_error: true
     puts "\n#{self.class}(#{filename})"
     json = @data[filename]
 
@@ -17,7 +17,7 @@ class MockJsonFileLoader
     raise Errno::ENOENT
   end
 
-  def when file:, json:
+  def when_loading file:, json:
     @data[file] = json.clone
   end
 end

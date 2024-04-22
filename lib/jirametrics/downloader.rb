@@ -8,16 +8,16 @@ class Downloader
   CURRENT_METADATA_VERSION = 4
 
   attr_accessor :metadata, :quiet_mode, :logfile, :logfile_name
-  attr_reader :json_file_loader
+  attr_reader :file_system
 
   # For testing only
   attr_reader :start_date_in_query
 
-  def initialize download_config:, json_file_loader: JsonFileLoader.new
+  def initialize download_config:, file_system: FileSystem.new
     @metadata = {}
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
-    @json_file_loader = json_file_loader
+    @file_system = file_system
     @board_id_to_filter_id = {}
 
     @issue_keys_downloaded_in_current_run = []
@@ -257,7 +257,7 @@ class Downloader
 
   def load_metadata
     # If we've never done a download before then this file won't be there. That's ok.
-    hash = json_file_loader.load(metadata_pathname, fail_on_error: false)
+    hash = file_system.load_json(metadata_pathname, fail_on_error: false)
     return if hash.nil?
 
     # Only use the saved metadata if the version number is the same one that we're currently using.

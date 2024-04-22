@@ -82,7 +82,7 @@ class JiraMetrics < Thor
     require 'jirametrics/self_or_issue_dispatcher'
     require 'jirametrics/throughput_chart'
     require 'jirametrics/exporter'
-    require 'jirametrics/json_file_loader'
+    require 'jirametrics/file_system'
     require 'jirametrics/blocked_stalled_change'
     require 'jirametrics/board_column'
     require 'jirametrics/anonymizer'

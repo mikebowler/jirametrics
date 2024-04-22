@@ -87,7 +87,7 @@ class Exporter
   end
 
   def jira_config filename = nil
-    @jira_config = JsonFileLoader.new.load(filename) unless filename.nil?
+    @jira_config = FileSystem.new.load_json(filename) unless filename.nil?
     @jira_config
   end
 

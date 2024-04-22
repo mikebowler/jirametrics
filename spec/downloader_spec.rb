@@ -25,9 +25,9 @@ end
 
 describe Downloader do
   let(:download_config) { mock_download_config }
-  let(:json_file_loader) { MockJsonFileLoader.new }
+  let(:file_system) { MockFileSystem.new }
   let(:downloader) do
-    described_class.new(download_config: download_config, json_file_loader: json_file_loader)
+    described_class.new(download_config: download_config, file_system: file_system)
       .tap { |d| d.quiet_mode = true }
   end
 
@@ -35,7 +35,7 @@ describe Downloader do
     it 'skips the download when no-download specified' do
       downloader.quiet_mode = false
       downloader.logfile = StringIO.new
-      json_file_loader.when file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
+      file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
       expect(downloader.logfile.string.chomp).to match 'Skipping download'
     end
