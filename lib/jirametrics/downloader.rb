@@ -100,7 +100,7 @@ class Downloader
     start_at = 0
     total = 1
     while start_at < total
-      json = @jira_gateway.call_url relative_url: "/rest/api/2/search" \
+      json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
       exit_if_call_failed json
@@ -111,7 +111,8 @@ class Downloader
         }
         identify_other_issues_to_be_downloaded issue_json
         file = "#{issue_json['key']}-#{board_id}.json"
-        @file_system.save_json( json: issue_json, filename: File.join(path, file))
+
+        @file_system.save_json(json: issue_json, filename: File.join(path, file))
       end
 
       total = json['total'].to_i

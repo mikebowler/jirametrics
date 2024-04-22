@@ -21,7 +21,6 @@ class MockJiraGateway < JiraGateway
   end
 
   def when url:, response:
-    puts "when url: #{url} response: #{response}"
     @data[url] = response
   end
 end

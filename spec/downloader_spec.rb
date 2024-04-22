@@ -73,13 +73,41 @@ describe Downloader do
 
   context 'download_statuses' do
     it 'loads statuses' do
-      jira_gateway.when url: '/rest/api/2/status', response: '{ "a": 1 }'
+      jira_gateway.when url: '/rest/api/2/status', response: { 'a' => 1 }
 
       downloader.download_statuses
 
       expect(file_system.log_messages).to eq(['Downloading all statuses'])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_statuses.json' => '{ "a": 1 }'
+        'spec/testdata/sample_statuses.json' => '{"a":1}'
+      })
+    end
+  end
+
+  context 'jira_search_by_jql' do
+    it 'completes when no issues found' do
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
+      jira_gateway.when url: url, response: { 'issues' => [], 'total' => 0, 'maxResults' => 0 }
+
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 1, path: '/abc'
+
+      expect(file_system.log_messages).to eq(['project=ABC', 'Downloaded 1-0 of 0 issues to /abc'])
+      expect(file_system.saved_json).to be_empty
+    end
+
+    it 'completes when one issue found' do
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
+      issue_json = {
+        'key' => 'ABC-123',
+        'fields' => {}
+      }
+      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
+
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 2, path: '/abc'
+
+      expect(file_system.log_messages).to eq(['project=ABC', 'Downloaded 1-1 of 1 issues to /abc'])
+      expect(file_system.saved_json).to eq({
+        '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
       })
     end
   end

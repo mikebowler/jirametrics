@@ -23,7 +23,7 @@ class MockFileSystem < FileSystem
   end
 
   def save_json filename:, json:
-    @saved_json[filename] = json
+    @saved_json[filename] = JSON.generate(json)
   end
 
   def when_loading file:, json:
