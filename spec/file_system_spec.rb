@@ -22,4 +22,18 @@ describe FileSystem do
     expect { described_class.new.load_json('file_that_does_not_exist', fail_on_error: true) }
       .to raise_error Errno::ENOENT
   end
+
+  context 'compress' do
+    it "doesn't change structures that are full" do
+      input    = { a: 1, b: { d: 5, e: [4, 5, 6] } }
+      expected = { a: 1, b: { d: 5, e: [4, 5, 6] } }
+      expect(described_class.new.compress(input)).to eq expected
+    end
+
+    it 'collapses empty lists' do
+      input    = { a: nil, b: { d: 5, e: [] } }
+      expected = { b: { d: 5 } }
+      expect(described_class.new.compress(input)).to eq expected
+    end
+  end
 end

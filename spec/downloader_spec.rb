@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './spec/mock_json_file_loader'
+require './spec/mock_file_system'
+require './spec/mock_jira_gateway'
 
 def mock_download_config
   exporter = Exporter.new
@@ -26,18 +27,18 @@ end
 describe Downloader do
   let(:download_config) { mock_download_config }
   let(:file_system) { MockFileSystem.new }
+  let(:jira_gateway) { MockJiraGateway.new(file_system: file_system) }
   let(:downloader) do
-    described_class.new(download_config: download_config, file_system: file_system)
+    described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
       .tap { |d| d.quiet_mode = true }
   end
 
   context 'run' do
     it 'skips the download when no-download specified' do
       downloader.quiet_mode = false
-      downloader.logfile = StringIO.new
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
-      expect(downloader.logfile.string.chomp).to match 'Skipping download'
+      expect(file_system.log_messages).to include 'Skipping download. Found no-download in meta file'
     end
   end
 
@@ -58,18 +59,6 @@ describe Downloader do
       downloader.load_jira_config({ 'email' => 'fred@flintstone', 'api_token' => 'bedrock' })
       expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
       expect(downloader.make_curl_command(url: 'URL')).to eq expected
-    end
-  end
-
-  context 'IO' do
-    it 'loads json' do
-      filename = make_test_filename 'downloader_write_json'
-      begin
-        downloader.write_json({ 'c' => 'd' }, filename)
-        expect(File.read(filename)).to eq %({\n  "c": "d"\n})
-      ensure
-        File.unlink filename
-      end
     end
   end
 
@@ -145,20 +134,6 @@ describe Downloader do
       expect(downloader.make_curl_command url: 'http://foo').to eq(
         %(curl -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
       )
-    end
-  end
-
-  context 'compress' do
-    it "doesn't change structures that are full" do
-      input    = { a: 1, b: { d: 5, e: [4, 5, 6] } }
-      expected = { a: 1, b: { d: 5, e: [4, 5, 6] } }
-      expect(downloader.compress(input)).to eq expected
-    end
-
-    it 'collapses empty lists' do
-      input    = { a: nil, b: { d: 5, e: [] } }
-      expected = { b: { d: 5 } }
-      expect(downloader.compress(input)).to eq expected
     end
   end
 end

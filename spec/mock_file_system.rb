@@ -3,8 +3,12 @@
 require 'json'
 
 class MockFileSystem
+  attr_reader :log_messages
+
   def initialize
+    super
     @data = {}
+    @log_messages = []
   end
 
   def load_json filename, fail_on_error: true
@@ -19,5 +23,11 @@ class MockFileSystem
 
   def when_loading file:, json:
     @data[file] = json.clone
+  end
+
+  def log message
+    # Ignore blank lines and whitespace on either end
+    message = message.strip
+    @log_messages << message unless message == ''
   end
 end

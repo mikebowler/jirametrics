@@ -43,14 +43,19 @@ class Exporter
     @downloading = true
     logfile_name = 'downloader.log'
     File.open logfile_name, 'w' do |logfile|
+      file_system.logfile = logfile
+      file_system.logfile_name = logfile_name
+
       each_project_config(name_filter: name_filter) do |project|
         project.evaluate_next_level
         next if project.aggregated_project?
 
         project.download_config.run
-        downloader = Downloader.new(download_config: project.download_config, file_system: file_system)
-        downloader.logfile = logfile
-        downloader.logfile_name = logfile_name
+        downloader = Downloader.new(
+          download_config: project.download_config,
+          file_system: file_system,
+          jira_gateway: JiraGateway.new(file_system: file_system)
+        )
         downloader.run
       end
     end

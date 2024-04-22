@@ -2,22 +2,22 @@
 
 require 'cgi'
 require 'json'
-require 'English'
 
 class Downloader
   CURRENT_METADATA_VERSION = 4
 
-  attr_accessor :metadata, :quiet_mode, :logfile, :logfile_name
+  attr_accessor :metadata, :quiet_mode
   attr_reader :file_system
 
   # For testing only
   attr_reader :start_date_in_query
 
-  def initialize download_config:, file_system:
+  def initialize download_config:, file_system:, jira_gateway:
     @metadata = {}
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
     @file_system = file_system
+    @jira_gateway = jira_gateway
     @board_id_to_filter_id = {}
 
     @issue_keys_downloaded_in_current_run = []
@@ -49,7 +49,7 @@ class Downloader
   end
 
   def log text, both: false
-    @logfile&.puts text
+    @file_system.log text
     puts text if both
   end
 
@@ -76,13 +76,7 @@ class Downloader
   end
 
   def call_command command
-    log "  #{command.gsub(/\s+/, ' ')}"
-    result = `#{command}`
-    log result unless $CHILD_STATUS.success?
-    return result if $CHILD_STATUS.success?
-
-    log "Failed call with exit status #{$CHILD_STATUS.exitstatus}. See #{@logfile_name} for details", both: true
-    exit $CHILD_STATUS.exitstatus
+    JSON.parse @jira_gateway.call_command command
   end
 
   def make_curl_command url:
@@ -136,7 +130,7 @@ class Downloader
       command = make_curl_command url: "#{@jira_url}/rest/api/2/search" \
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
-      json = JSON.parse call_command(command)
+      json = call_command(command)
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
@@ -145,7 +139,7 @@ class Downloader
         }
         identify_other_issues_to_be_downloaded issue_json
         file = "#{issue_json['key']}-#{board_id}.json"
-        write_json(issue_json, File.join(path, file))
+        @file_system.save_json(issue_json, File.join(path, file))
       end
 
       total = json['total'].to_i
@@ -191,23 +185,23 @@ class Downloader
   def download_statuses
     log '  Downloading all statuses', both: true
     command = make_curl_command url: "\"#{@jira_url}/rest/api/2/status\""
-    json = JSON.parse call_command(command)
+    json = call_command(command)
 
-    write_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
+    @file_system.save_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
   end
 
   def download_board_configuration board_id:
     log "  Downloading board configuration for board #{board_id}", both: true
     command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
 
-    json = JSON.parse call_command(command)
+    json = call_command(command)
     exit_if_call_failed json
 
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
     # @board_configuration = json if @download_config.board_ids.size == 1
 
     file_prefix = @download_config.project_config.file_prefix
-    write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+    @file_system.save_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
 
     download_sprints board_id: board_id if json['type'] == 'scrum'
   end
@@ -222,33 +216,14 @@ class Downloader
     while is_last == false
       command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
         "maxResults=#{max_results}&startAt=#{start_at}"
-      json = JSON.parse call_command(command)
+      json = call_command(command)
       exit_if_call_failed json
 
-      write_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
+      @file_system.save_json json, "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
       is_last = json['isLast']
       max_results = json['maxResults']
       start_at += json['values'].size
     end
-  end
-
-  def write_json json, filename
-    file_path = File.dirname(filename)
-    FileUtils.mkdir_p file_path unless File.exist?(file_path)
-
-    File.write(filename, JSON.pretty_generate(compress json))
-  end
-
-  # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
-  # cases where this simple compression will drop the filesize by half.
-  def compress node
-    if node.is_a? Hash
-      node.reject! { |_key, value| value.nil? || (value.is_a?(Array) && value.empty?) }
-      node.each_value { |value| compress value }
-    elsif node.is_a? Array
-      node.each { |a| compress a }
-    end
-    node
   end
 
   def metadata_pathname
@@ -291,7 +266,7 @@ class Downloader
 
     @metadata['jira_url'] = @jira_url
 
-    write_json @metadata, metadata_pathname
+    @file_system.save_json @metadata, metadata_pathname
   end
 
   def remove_old_files

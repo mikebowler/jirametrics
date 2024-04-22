@@ -56,6 +56,7 @@ class JiraMetrics < Thor
     require 'jirametrics/expedited_chart'
     require 'jirametrics/board_config'
     require 'jirametrics/file_config'
+    require 'jirametrics/jira_gateway'
     require 'jirametrics/trend_line_calculator'
     require 'jirametrics/status'
     require 'jirametrics/issue_link'
