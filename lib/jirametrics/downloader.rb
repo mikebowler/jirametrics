@@ -28,7 +28,7 @@ class Downloader
     log '', both: true
     log @download_config.project_config.name, both: true
 
-    load_jira_config(@download_config.project_config.jira_config)
+    init_gateway
     load_metadata
 
     if @metadata['no-download']
@@ -48,6 +48,11 @@ class Downloader
     save_metadata
   end
 
+  def init_gateway
+    @jira_gateway.load_jira_config(@download_config.project_config.jira_config)
+    @jira_gateway.ignore_ssl_errors = @download_config.project_config.settings['ignore_ssl_errors']
+  end
+
   def log text, both: false
     @file_system.log text
     puts text if both
@@ -58,39 +63,6 @@ class Downloader
     raise 'Board ids must be specified' if ids.empty?
 
     ids
-  end
-
-  def load_jira_config jira_config
-    @jira_url = jira_config['url']
-    @jira_email = jira_config['email']
-    @jira_api_token = jira_config['api_token']
-    @jira_personal_access_token = jira_config['personal_access_token']
-
-    raise 'When specifying an api-token, you must also specify email' if @jira_api_token && !@jira_email
-
-    if @jira_api_token && @jira_personal_access_token
-      raise "You can't specify both an api-token and a personal-access-token. They don't work together."
-    end
-
-    @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
-  end
-
-  def call_gateway url:
-    command = make_curl_command url: url
-    JSON.parse @jira_gateway.call_command command
-  end
-
-  def make_curl_command url:
-    command = 'curl'
-    command += ' -s'
-    command += ' -k' if @download_config.project_config.settings['ignore_ssl_errors']
-    command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
-    command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
-    command += " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
-    command += ' --request GET'
-    command += ' --header "Accept: application/json"'
-    command += " --url \"#{url}\""
-    command
   end
 
   def download_issues board_id:
@@ -128,7 +100,7 @@ class Downloader
     start_at = 0
     total = 1
     while start_at < total
-      json = call_gateway url: "#{@jira_url}/rest/api/2/search" \
+      json = @jira_gateway.call_url relative_url: "/rest/api/2/search" \
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
       exit_if_call_failed json
@@ -184,7 +156,7 @@ class Downloader
 
   def download_statuses
     log '  Downloading all statuses', both: true
-    json = call_gateway url: "\"#{@jira_url}/rest/api/2/status\""
+    json = @jira_gateway.call_url relative_url: "/rest/api/2/status"
 
     @file_system.save_json(
       json: json, 
@@ -194,7 +166,7 @@ class Downloader
 
   def download_board_configuration board_id:
     log "  Downloading board configuration for board #{board_id}", both: true
-    json = call_gateway url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
+    json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
     exit_if_call_failed json
 
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
@@ -214,7 +186,7 @@ class Downloader
     is_last = false
 
     while is_last == false
-      json = call_gateway url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
+      json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/sprint?" \
         "maxResults=#{max_results}&startAt=#{start_at}"
       exit_if_call_failed json
 

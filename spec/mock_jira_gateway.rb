@@ -10,10 +10,14 @@ class MockJiraGateway < JiraGateway
     @data = {}
   end
 
-  def call_command url
-    response = @data[url]
-    raise "404 for #{url.inspect}" if response.nil?
+  def call_url relative_url:
+    response = @data[relative_url]
+    raise "404 for #{relative_url.inspect}" if response.nil?
     response
+  end
+
+  def call_command url
+    call_url relative_url: url
   end
 
   def when url:, response:

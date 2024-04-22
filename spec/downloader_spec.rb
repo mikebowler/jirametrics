@@ -32,7 +32,8 @@ describe Downloader do
     described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
       .tap do |d|
         d.quiet_mode = true
-        d.load_jira_config(download_config.project_config.jira_config)
+        d.init_gateway
+        # d.load_jira_config(download_config.project_config.jira_config)
       end
   end
 
@@ -43,26 +44,6 @@ describe Downloader do
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
       expect(file_system.log_messages).to include 'Skipping download. Found no-download in meta file'
-    end
-  end
-
-  context 'Build curl command' do
-    it 'generates with url only' do
-      downloader.load_jira_config({})
-      expected = 'curl -s --request GET --header "Accept: application/json" --url "URL"'
-      expect(downloader.make_curl_command(url: 'URL')).to eq expected
-    end
-
-    it 'generates with cookies' do
-      downloader.load_jira_config({ 'cookies' => { 'a' => 'b' } })
-      expected = 'curl -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
-      expect(downloader.make_curl_command(url: 'URL')).to eq expected
-    end
-
-    it 'generates with api-token' do
-      downloader.load_jira_config({ 'email' => 'fred@flintstone', 'api_token' => 'bedrock' })
-      expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
-      expect(downloader.make_curl_command(url: 'URL')).to eq expected
     end
   end
 
@@ -90,67 +71,15 @@ describe Downloader do
     end
   end
 
-  context 'load_jira_config' do
-    it 'fails when api-key specified but not email' do
-      expect do
-        downloader.load_jira_config({
-          'api_token' => 'xx'
-        })
-      end.to raise_error(
-        'When specifying an api-token, you must also specify email'
-      )
-    end
-
-    it 'fails when api-key and personal-access-token are both specified' do
-      expect do
-        downloader.load_jira_config({
-          'api_token' => 'xx',
-          'email' => 'aa',
-          'personal_access_token' => 'yy'
-        })
-      end.to raise_error(
-        "You can't specify both an api-token and a personal-access-token. They don't work together."
-      )
-    end
-  end
-
-  context 'make_curl_command' do
-    it 'handles empty config' do
-      downloader.load_jira_config({})
-
-      expect(downloader.make_curl_command url: 'http://foo').to eq(
-        %(curl -s --request GET --header "Accept: application/json" --url "http://foo")
-      )
-    end
-
-    it 'ignores SSL errors' do
-      downloader.load_jira_config({})
-      download_config.project_config.settings['ignore_ssl_errors'] = true
-      expect(downloader.make_curl_command url: 'http://foo').to eq(
-        %(curl -s -k --request GET --header "Accept: application/json" --url "http://foo")
-      )
-    end
-
-    it 'works with personal_access_token' do
-      downloader.load_jira_config({
-        'personal_access_token' => 'yy'
-      })
-      expect(downloader.make_curl_command url: 'http://foo').to eq(
-        %(curl -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
-      )
-    end
-  end
-
   context 'download_statuses' do
     it 'loads statuses' do
-      url = "curl -s --user bugs_bunny@example.com:carrots --request GET --header \"Accept: application/json\" --url \"\"https://example.com/rest/api/2/status\"\""
-      jira_gateway.when url: url, response: '{ "a": 1 }'
+      jira_gateway.when url: '/rest/api/2/status', response: '{ "a": 1 }'
 
       downloader.download_statuses
 
       expect(file_system.log_messages).to eq(['Downloading all statuses'])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_statuses.json' => { 'a' => 1 }
+        'spec/testdata/sample_statuses.json' => '{ "a": 1 }'
       })
     end
   end
