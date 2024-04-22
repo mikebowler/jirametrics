@@ -187,7 +187,10 @@ class Downloader
     command = make_curl_command url: "\"#{@jira_url}/rest/api/2/status\""
     json = call_command(command)
 
-    @file_system.save_json json, "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
+    @file_system.save_json(
+      json: json, 
+      filename: "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
+    )
   end
 
   def download_board_configuration board_id:

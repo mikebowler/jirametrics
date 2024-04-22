@@ -30,12 +30,16 @@ describe Downloader do
   let(:jira_gateway) { MockJiraGateway.new(file_system: file_system) }
   let(:downloader) do
     described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
-      .tap { |d| d.quiet_mode = true }
+      .tap do |d|
+        d.quiet_mode = true
+        d.load_jira_config(download_config.project_config.jira_config)
+      end
   end
 
   context 'run' do
     it 'skips the download when no-download specified' do
       downloader.quiet_mode = false
+
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
       expect(file_system.log_messages).to include 'Skipping download. Found no-download in meta file'
@@ -134,6 +138,20 @@ describe Downloader do
       expect(downloader.make_curl_command url: 'http://foo').to eq(
         %(curl -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
       )
+    end
+  end
+
+  context 'download_statuses' do
+    it 'loads statuses' do
+      url = "curl -s --user bugs_bunny@example.com:carrots --request GET --header \"Accept: application/json\" --url \"\"https://example.com/rest/api/2/status\"\""
+      jira_gateway.when url: url, response: '{ "a": 1 }'
+
+      downloader.download_statuses
+
+      expect(file_system.log_messages).to eq(['Downloading all statuses'])
+      expect(file_system.saved_json).to eq({
+        'spec/testdata/sample_statuses.json' => { 'a' => 1 }
+      })
     end
   end
 end

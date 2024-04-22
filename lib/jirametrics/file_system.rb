@@ -11,7 +11,7 @@ class FileSystem
     JSON.parse File.read(filename)
   end
 
-  def save_json json, filename
+  def save_json json:, filename:
     file_path = File.dirname(filename)
     FileUtils.mkdir_p file_path unless File.exist?(file_path)
 
