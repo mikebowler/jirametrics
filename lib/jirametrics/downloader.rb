@@ -8,6 +8,7 @@ class Downloader
   CURRENT_METADATA_VERSION = 4
 
   attr_accessor :metadata, :quiet_mode, :logfile, :logfile_name
+  attr_reader :json_file_loader
 
   # For testing only
   attr_reader :start_date_in_query
@@ -31,7 +32,7 @@ class Downloader
     load_metadata
 
     if @metadata['no-download']
-      log '  Skipping download. Found no-download in meta file', both: true
+      log 'Skipping download. Found no-download in meta file', both: true
       return
     end
 
@@ -256,9 +257,8 @@ class Downloader
 
   def load_metadata
     # If we've never done a download before then this file won't be there. That's ok.
-    return unless File.exist? metadata_pathname
-
-    hash = JSON.parse(File.read metadata_pathname)
+    hash = json_file_loader.load(metadata_pathname, fail_on_error: false)
+    return if hash.nil?
 
     # Only use the saved metadata if the version number is the same one that we're currently using.
     # If the cached data is in an older format then we're going to throw most of it away.

@@ -1,10 +1,18 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
+require './spec/mock_json_file_loader'
 
 def mock_download_config
   exporter = Exporter.new
-  project = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
+  jira_config = {
+    'url' => 'https://example.com',
+    'email' => 'bugs_bunny@example.com',
+    'api_token' => 'carrots'
+  }
+  project = ProjectConfig.new(
+    exporter: exporter, target_path: 'spec/testdata/', jira_config: jira_config, block: nil
+  )
   project.file_prefix 'sample'
   project.status_category_mapping status: 'Backlog', category: 'ready'
   project.status_category_mapping status: 'Selected for Development', category: 'ready'
@@ -17,7 +25,21 @@ end
 
 describe Downloader do
   let(:download_config) { mock_download_config }
-  let(:downloader) { described_class.new(download_config: download_config).tap { |d| d.quiet_mode = true } }
+  let(:json_file_loader) { MockJsonFileLoader.new }
+  let(:downloader) do
+    described_class.new(download_config: download_config, json_file_loader: json_file_loader)
+      .tap { |d| d.quiet_mode = true }
+  end
+
+  context 'run' do
+    it 'skips the download when no-download specified' do
+      downloader.quiet_mode = false
+      downloader.logfile = StringIO.new
+      json_file_loader.when file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
+      downloader.run
+      expect(downloader.logfile.string.chomp).to match 'Skipping download'
+    end
+  end
 
   context 'Build curl command' do
     it 'generates with url only' do

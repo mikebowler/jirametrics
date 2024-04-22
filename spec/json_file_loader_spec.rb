@@ -13,4 +13,13 @@ describe JsonFileLoader do
       File.unlink filename
     end
   end
+
+  it 'returns nil if file does not exist' do
+    expect(described_class.new.load('file_that_does_not_exist', fail_on_error: false)).to be_nil
+  end
+
+  it 'raises error if not exist' do
+    expect { described_class.new.load('file_that_does_not_exist', fail_on_error: true) }
+      .to raise_error Errno::ENOENT
+  end
 end
