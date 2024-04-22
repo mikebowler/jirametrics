@@ -13,7 +13,7 @@ class Downloader
   # For testing only
   attr_reader :start_date_in_query
 
-  def initialize download_config:, file_system: FileSystem.new
+  def initialize download_config:, file_system:
     @metadata = {}
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
@@ -32,7 +32,7 @@ class Downloader
     load_metadata
 
     if @metadata['no-download']
-      log 'Skipping download. Found no-download in meta file', both: true
+      log '  Skipping download. Found no-download in meta file', both: true
       return
     end
 

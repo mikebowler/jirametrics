@@ -13,7 +13,7 @@ class Object
 end
 
 class Exporter
-  attr_reader :project_configs
+  attr_reader :project_configs, :file_system
 
   def self.configure &block
     exporter = Exporter.new
@@ -23,12 +23,13 @@ class Exporter
 
   def self.instance = @@instance
 
-  def initialize
+  def initialize file_system: FileSystem.new
     @project_configs = []
     @timezone_offset = '+00:00'
     @target_path = '.'
     @holiday_dates = []
     @downloading = false
+    @file_system = file_system
   end
 
   def export name_filter:
@@ -47,7 +48,7 @@ class Exporter
         next if project.aggregated_project?
 
         project.download_config.run
-        downloader = Downloader.new(download_config: project.download_config)
+        downloader = Downloader.new(download_config: project.download_config, file_system: file_system)
         downloader.logfile = logfile
         downloader.logfile_name = logfile_name
         downloader.run
@@ -87,7 +88,7 @@ class Exporter
   end
 
   def jira_config filename = nil
-    @jira_config = FileSystem.new.load_json(filename) unless filename.nil?
+    @jira_config = file_system.load_json(filename) unless filename.nil?
     @jira_config
   end
 
