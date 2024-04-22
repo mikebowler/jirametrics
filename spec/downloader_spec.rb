@@ -110,5 +110,27 @@ describe Downloader do
         '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
       })
     end
+
+    it 'follows pagination' do
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
+      issue_json = { 'key' => 'ABC-123', 'fields' => {} }
+      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
+
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=1&startAt=1&expand=changelog&fields=*all'
+      issue_json = { 'key' => 'ABC-125', 'fields' => {} }
+      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
+
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 2, path: '/abc'
+
+      expect(file_system.log_messages).to eq([
+        'project=ABC',
+        'Downloaded 1-1 of 2 issues to /abc',
+        'Downloaded 2-2 of 2 issues to /abc'
+      ])
+      expect(file_system.saved_json).to eq({
+        '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}',
+        '/abc/ABC-125-2.json' => '{"key":"ABC-125","fields":{},"exporter":{"in_initial_query":true}}'
+      })
+    end
   end
 end
