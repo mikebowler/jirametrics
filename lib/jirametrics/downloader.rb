@@ -77,10 +77,6 @@ class Downloader
 
   def call_gateway url:
     command = make_curl_command url: url
-    call_command command
-  end
-
-  def call_command command
     JSON.parse @jira_gateway.call_command command
   end
 
@@ -132,10 +128,9 @@ class Downloader
     start_at = 0
     total = 1
     while start_at < total
-      command = make_curl_command url: "#{@jira_url}/rest/api/2/search" \
+      json = call_gateway url: "#{@jira_url}/rest/api/2/search" \
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
-      json = call_command(command)
       exit_if_call_failed json
 
       json['issues'].each do |issue_json|
@@ -199,9 +194,7 @@ class Downloader
 
   def download_board_configuration board_id:
     log "  Downloading board configuration for board #{board_id}", both: true
-    command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
-
-    json = call_command(command)
+    json = call_gateway url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/configuration"
     exit_if_call_failed json
 
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
@@ -221,9 +214,8 @@ class Downloader
     is_last = false
 
     while is_last == false
-      command = make_curl_command url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
+      json = call_gateway url: "#{@jira_url}/rest/agile/1.0/board/#{board_id}/sprint?" \
         "maxResults=#{max_results}&startAt=#{start_at}"
-      json = call_command(command)
       exit_if_call_failed json
 
       @file_system.save_json(
