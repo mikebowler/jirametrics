@@ -171,7 +171,6 @@ class Downloader
     exit_if_call_failed json
 
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
-    # @board_configuration = json if @download_config.board_ids.size == 1
 
     file_prefix = @download_config.project_config.file_prefix
     @file_system.save_json json: json, filename: "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
