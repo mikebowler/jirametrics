@@ -30,6 +30,8 @@ class Issue
       fabricate_change(field_name: 'status'),
       fabricate_change(field_name: 'priority')
     ].compact + @changes
+  rescue => e
+    raise "Unable to initialize #{raw['key']}"
   end
 
   def sort_changes!
@@ -486,7 +488,7 @@ class Issue
 
       # It should be impossible to not have an author but we've seen it in production
       author = assemble_author history
-      history['items'].each do |item|
+      history['items']&.each do |item|
         @changes << ChangeItem.new(raw: item, time: created, author: author)
       end
     end
