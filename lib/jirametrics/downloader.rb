@@ -10,7 +10,7 @@ class Downloader
   attr_reader :file_system
 
   # For testing only
-  attr_reader :start_date_in_query
+  attr_reader :start_date_in_query, :board_id_to_filter_id
 
   def initialize download_config:, file_system:, jira_gateway:
     @metadata = {}
@@ -93,7 +93,7 @@ class Downloader
     intercept_jql = @download_config.project_config.settings['intercept_jql']
     jql = intercept_jql.call jql if intercept_jql
 
-    log "  #{jql}"
+    log "  JQL: #{jql}"
     escaped_jql = CGI.escape jql
 
     max_results = 100
