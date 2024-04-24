@@ -32,7 +32,7 @@ class StatusCollection
           next
         else
           all_status_names = @list.collect { |s| "#{s.name.inspect}:#{s.id.inspect}" }.uniq.sort.join(', ')
-          raise "Status not found: #{name_or_id}. Possible statuses are: #{all_status_names}"
+          raise "Status not found: \"#{name_or_id}\". Possible statuses are: #{all_status_names}"
         end
       end
 

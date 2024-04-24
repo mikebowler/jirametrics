@@ -64,7 +64,7 @@ describe StatusCollection do
 
     it 'raises error when status not found' do
       expect { collection.expand_statuses [2000] }.to raise_error(
-        'Status not found: 2000. Possible statuses are: "a":1, "b":2, "c":3, "d":4'
+        'Status not found: "2000". Possible statuses are: "a":1, "b":2, "c":3, "d":4'
       )
     end
 
