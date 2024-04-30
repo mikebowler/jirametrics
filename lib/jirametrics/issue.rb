@@ -252,7 +252,7 @@ class Issue
     end
 
     blocked_link_texts = settings['blocked_link_text']
-    stalled_threshold = settings['stalled_threshold']
+    stalled_threshold = settings['stalled_threshold_days']
 
     blocking_issue_keys = []
 

@@ -1,11 +1,11 @@
 {
-  "stalled_threshold": 5,
-  "blocked_statuses": [],
+  "stalled_threshold_days": 5,
   "stalled_statuses": [],
-  "blocked_link_text": [],
+  "stalled_color": "orange",
 
-  "colors": {
-    "stalled": "orange",
-    "blocked": "#FF7400"
-  }
+  "blocked_link_text": [],
+  "blocked_statuses": [],
+  "blocked_color": "#FF7400",
+
+  "page_background_color": "white"
 }

@@ -412,6 +412,6 @@ describe ProjectConfig do
   end
 
   it 'loaded settings' do
-    expect(project_config.settings['stalled_threshold']).not_to be_nil
+    expect(project_config.settings['stalled_threshold_days']).not_to be_nil
   end
 end

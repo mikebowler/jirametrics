@@ -144,8 +144,8 @@ class AgingWorkBarChart < ChartBase
   end
 
   def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:
-    color = settings['colors']['blocked']
-    color = settings['colors']['stalled'] if starting_change.stalled?
+    color = settings['blocked_color']
+    color = settings['stalled_color'] if starting_change.stalled?
     {
       backgroundColor: color,
       data: [

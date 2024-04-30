@@ -334,7 +334,7 @@ describe Issue do
         'blocked_statuses' => %w[Blocked Blocked2],
         'stalled_statuses' => %w[Stalled Stalled2],
         'blocked_link_text' => ['is blocked by'],
-        'stalled_threshold' => 5
+        'stalled_threshold_days' => 5
       }
     end
 
