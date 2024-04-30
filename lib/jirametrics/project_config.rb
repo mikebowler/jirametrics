@@ -22,17 +22,7 @@ class ProjectConfig
     @name = name
     @board_configs = []
     @all_boards = {}
-    @settings = {
-      'stalled_threshold' => 5,
-      'blocked_statuses' => [],
-      'stalled_statuses' => [],
-      'blocked_link_text' => [],
-
-      'colors' => {
-        'stalled' => 'orange',
-        'blocked' => '#FF7400'
-      }
-    }
+    @settings = load_settings
     @id = id
   end
 
@@ -56,6 +46,11 @@ class ProjectConfig
     @file_configs.each do |file_config|
       file_config.run
     end
+  end
+
+  def load_settings
+    path = File.expand_path(File.dirname(__FILE__))
+    JSON.parse(File.read(File.join(path, 'settings.json')))
   end
 
   def guess_project_id

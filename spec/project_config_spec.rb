@@ -410,4 +410,8 @@ describe ProjectConfig do
         )
     end
   end
+
+  it 'loaded settings' do
+    expect(project_config.settings['stalled_threshold']).not_to be_nil
+  end
 end
