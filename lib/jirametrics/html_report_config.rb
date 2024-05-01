@@ -36,10 +36,18 @@ class HtmlReportConfig
 
     File.open @file_config.output_filename, 'w' do |file|
       html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
-      css  = File.read(File.join(html_directory, 'index.css'))
+      css = load_css html_directory: html_directory
       erb = ERB.new File.read(File.join(html_directory, 'index.erb'))
       file.puts erb.result(binding)
     end
+  end
+
+  def load_css html_directory:
+    base_css = File.read(File.join(html_directory, 'index.css'))
+    extra_css_filename = settings['extra_css_filename']
+    return base_css unless extra_css_filename && File.exist?(extra_css_filename)
+
+    base_css << "\n\n" << File.read(extra_css_filename)
   end
 
   def board_id id = nil
