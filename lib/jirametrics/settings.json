@@ -5,7 +5,5 @@
 
   "blocked_link_text": [],
   "blocked_statuses": [],
-  "blocked_color": "#FF7400",
-
-  "page_background_color": "white"
+  "blocked_color": "#FF7400"
 }

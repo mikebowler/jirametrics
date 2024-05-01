@@ -1,0 +1,35 @@
+h1 {
+  border: 1px solid black;
+  background: lightgray;
+  padding-left: 0.2em;
+}
+dl, dd, dt {
+  padding: 0;
+  margin: 0;
+}
+dd {
+  margin-bottom:  0.4em;
+}
+span.highlight {
+  background: #FDD5B1;
+}
+a.issue_key {
+  white-space: nowrap;
+}
+table.standard thead tr th {
+  border-bottom: 1px solid gray;
+  position: sticky;
+  top: 0;
+  background: white;
+}
+table.standard tbody tr td {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  vertical-align: top;
+}
+table.standard tbody tr:nth-child(odd){
+  background-color: #eee;
+}
+.quality_note_bullet {
+  color: red;
+}
