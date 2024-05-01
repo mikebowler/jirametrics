@@ -10,9 +10,11 @@
 # single team. For that reason, we look at slightly different things that we would on a single team board.
 
 class Exporter
-  def aggregated_project name:, project_names:
+  def aggregated_project name:, project_names:, settings: {}
     project name: name do
       puts name
+      self.settings.merge! settings
+
       aggregate do
         project_names.each do |project_name|
           include_issues_from project_name

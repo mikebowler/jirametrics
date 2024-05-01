@@ -6,13 +6,15 @@
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
-      default_board: nil, anonymize: false
+      default_board: nil, anonymize: false, settings: {}
 
     project name: name do
       puts name
       self.anonymize if anonymize
 
       settings['blocked_link_text'] = ['is blocked by']
+      self.settings.merge! settings
+
       file_prefix file_prefix
       download do
         rolling_date_count 90
