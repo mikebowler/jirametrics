@@ -16,19 +16,21 @@ span.highlight {
 a.issue_key {
   white-space: nowrap;
 }
-table.standard thead tr th {
-  border-bottom: 1px solid gray;
-  position: sticky;
-  top: 0;
-  background: white;
-}
-table.standard tbody tr td {
-  padding-left: 0.5em;
-  padding-right: 0.5em;
-  vertical-align: top;
-}
-table.standard tbody tr:nth-child(odd){
-  background-color: #eee;
+table.standard {
+  th {
+    border-bottom: 1px solid gray;
+    position: sticky;
+    top: 0;
+    background: white;
+  }
+  td {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    vertical-align: top;
+  }
+  tr:nth-child(odd){
+    background-color: #eee;
+  }
 }
 .quality_note_bullet {
   color: red;
