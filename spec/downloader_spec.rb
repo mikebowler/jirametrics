@@ -90,9 +90,11 @@ describe Downloader do
 
       downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 1, path: '/abc'
 
-      expect(file_system.log_messages).to eq([
-        'JQL: project=ABC',
-        'Downloaded 1-0 of 0 issues to /abc']
+      expect(file_system.log_messages).to eq(
+        [
+          'JQL: project=ABC',
+          'Downloaded 1-0 of 0 issues to /abc'
+        ]
       )
       expect(file_system.saved_json).to be_empty
     end
@@ -107,9 +109,11 @@ describe Downloader do
 
       downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 2, path: '/abc'
 
-      expect(file_system.log_messages).to eq([
-        'JQL: project=ABC',
-        'Downloaded 1-1 of 1 issues to /abc']
+      expect(file_system.log_messages).to eq(
+        [
+          'JQL: project=ABC',
+          'Downloaded 1-1 of 1 issues to /abc'
+        ]
       )
       expect(file_system.saved_json).to eq({
         '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
@@ -145,7 +149,6 @@ describe Downloader do
       issue_json = { 'key' => 'ABC-123', 'fields' => {} }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
 
-
       downloader.board_id_to_filter_id[2] = 123
       downloader.download_issues board_id: 2
 
@@ -156,7 +159,8 @@ describe Downloader do
         'Downloading linked issues for board 2'
       ])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_issues/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
+        'spec/testdata/sample_issues/ABC-123-2.json' =>
+          '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
       })
     end
   end
@@ -182,7 +186,7 @@ describe Downloader do
       )
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
-        response: {'isLast' => true, 'maxResults' => 100, 'values' => 1}
+        response: { 'isLast' => true, 'maxResults' => 100, 'values' => 1 }
       )
 
       downloader.download_board_configuration board_id: 2
@@ -205,11 +209,11 @@ describe Downloader do
       )
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
-        response: {'isLast' => false, 'maxResults' => 1, 'values' => [{'a' => 2}]}
+        response: { 'isLast' => false, 'maxResults' => 1, 'values' => [{ 'a' => 2 }] }
       )
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=1&startAt=1',
-        response: {'isLast' => true, 'maxResults' => 1, 'values' => [{'a' => 2}]}
+        response: { 'isLast' => true, 'maxResults' => 1, 'values' => [{ 'a' => 2 }] }
       )
 
       downloader.download_board_configuration board_id: 2

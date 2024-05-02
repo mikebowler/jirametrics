@@ -4,15 +4,16 @@ require 'cgi'
 require 'json'
 require 'English'
 
-class MockJiraGateway < JiraGateway  
+class MockJiraGateway < JiraGateway
   def initialize file_system:
-    super file_system: file_system
+    super(file_system: file_system)
     @data = {}
   end
 
   def call_url relative_url:
     response = @data[relative_url]
     raise "404 for #{relative_url.inspect}" if response.nil?
+
     response
   end
 

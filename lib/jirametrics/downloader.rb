@@ -157,10 +157,10 @@ class Downloader
 
   def download_statuses
     log '  Downloading all statuses', both: true
-    json = @jira_gateway.call_url relative_url: "/rest/api/2/status"
+    json = @jira_gateway.call_url relative_url: '/rest/api/2/status'
 
     @file_system.save_json(
-      json: json, 
+      json: json,
       filename: "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
     )
   end

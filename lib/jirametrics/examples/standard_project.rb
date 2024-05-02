@@ -52,7 +52,7 @@ class Exporter
                  type: :header
           end
 
-          discard_changes_before status_becomes: (starting_status || :backlog)
+          discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
 
           cycletime_scatterplot do
             show_trend_lines

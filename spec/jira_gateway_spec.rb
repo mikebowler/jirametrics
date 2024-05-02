@@ -2,11 +2,11 @@
 
 describe JiraGateway do
   let(:file_system) { FileSystem.new }
-  let(:gateway) { described_class.new file_system: file_system}
+  let(:gateway) { described_class.new file_system: file_system }
 
   context 'make_curl_command' do
     it 'handles empty config' do
-      gateway.load_jira_config({'url' => 'https://example.com'})
+      gateway.load_jira_config({ 'url' => 'https://example.com' })
 
       expect(gateway.make_curl_command url: 'http://foo').to eq(
         %(curl -s --request GET --header "Accept: application/json" --url "http://foo")
@@ -14,7 +14,7 @@ describe JiraGateway do
     end
 
     it 'ignores SSL errors' do
-      gateway.load_jira_config({'url' => 'https://example.com'})
+      gateway.load_jira_config({ 'url' => 'https://example.com' })
       gateway.ignore_ssl_errors = true
       expect(gateway.make_curl_command url: 'http://foo').to eq(
         %(curl -s -k --request GET --header "Accept: application/json" --url "http://foo")
@@ -60,7 +60,7 @@ describe JiraGateway do
 
   context 'Build curl command' do
     it 'generates with url only' do
-      gateway.load_jira_config({'url' => 'https://example.com'})
+      gateway.load_jira_config({ 'url' => 'https://example.com' })
       expected = 'curl -s --request GET --header "Accept: application/json" --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
@@ -72,7 +72,9 @@ describe JiraGateway do
     end
 
     it 'generates with api-token' do
-      gateway.load_jira_config({ 'url' => 'https://example.com', 'email' => 'fred@flintstone', 'api_token' => 'bedrock' })
+      gateway.load_jira_config(
+        { 'url' => 'https://example.com', 'email' => 'fred@flintstone', 'api_token' => 'bedrock' }
+      )
       expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end

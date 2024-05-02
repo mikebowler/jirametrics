@@ -64,18 +64,7 @@ describe Issue do
     it 'includes issue key when an exception happens' do
       raw = {
         'key' => 'SP-1',
-        'changelog' => { 'histories' => [] },
-        # 'fields' => {
-        #   'created' => '2021-08-29T18:00:00+00:00',
-        #   'updated' => '2021-09-29T18:00:00+00:00',
-        #   'status' => {
-        #     'name' => 'BrandNew!',
-        #     'id' => '999'
-        #   },
-        #   'creator' => {
-        #     'displayName' => 'Tolkien'
-        #   }
-        # }
+        'changelog' => { 'histories' => [] }
       }
       expect { described_class.new raw: raw, board: sample_board }.to raise_error(
         'Unable to initialize SP-1'
@@ -84,10 +73,10 @@ describe Issue do
   end
 
   context 'load_history_into_changes' do
-    it 'should continue even when the history does not have items (seen in prod)' do
+    it 'continues even when the history does not have items (seen in prod)' do
       raw = {
         'key' => 'SP-1',
-        'changelog' => { 'histories' => [{'created' => '2021-08-29T18:00:00+00:00'}] },
+        'changelog' => { 'histories' => [{ 'created' => '2021-08-29T18:00:00+00:00' }] },
         'fields' => {
           'created' => '2021-08-29T18:00:00+00:00',
           'updated' => '2021-09-29T18:00:00+00:00',

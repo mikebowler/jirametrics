@@ -10,7 +10,7 @@ gem 'require_all'
 gem 'rspec'
 gem 'rubocop', require: false
 gem 'rubocop-performance', require: false
-gem 'rubocop-rspec', require: false
 gem 'rubocop-rake', require: false
+gem 'rubocop-rspec', require: false
 gem 'simplecov'
 gem 'thor'

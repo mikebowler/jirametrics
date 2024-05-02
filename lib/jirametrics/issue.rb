@@ -30,7 +30,8 @@ class Issue
       fabricate_change(field_name: 'status'),
       fabricate_change(field_name: 'priority')
     ].compact + @changes
-  rescue => e
+  rescue # rubocop:disable Style/RescueStandardError
+    # All we're doing is adding information to the existing exception and letting it propogate up
     raise "Unable to initialize #{raw['key']}"
   end
 

@@ -8,7 +8,7 @@ class ProjectConfig
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings, :id
+    :settings
   attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
@@ -49,8 +49,7 @@ class ProjectConfig
   end
 
   def load_settings
-    path = File.expand_path(File.dirname(__FILE__))
-    JSON.parse(File.read(File.join(path, 'settings.json')))
+    JSON.parse(File.read(File.join(__dir__, 'settings.json')))
   end
 
   def guess_project_id

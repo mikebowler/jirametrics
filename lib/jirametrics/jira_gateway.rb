@@ -29,7 +29,7 @@ class JiraGateway
 
   def load_jira_config jira_config
     @jira_url = jira_config['url']
-    raise "Must specify URL in config" if @jira_url.nil?
+    raise 'Must specify URL in config' if @jira_url.nil?
 
     @jira_email = jira_config['email']
     @jira_api_token = jira_config['api_token']

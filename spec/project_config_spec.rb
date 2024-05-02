@@ -341,11 +341,11 @@ describe ProjectConfig do
       )
       expect(project_config.possible_statuses.collect(&:project_id)).to eq [nil]
 
-      expect {
+      expect do
         project_config.add_possible_status(
           Status.new(name: 'foo', id: 1, category_name: 'xfoo', category_id: 2, project_id: 100)
         )
-      }.to raise_error /^Ambiguous project id/
+      end.to raise_error(/^Ambiguous project id/)
     end
 
     it 'throws error if categories dont match' do
