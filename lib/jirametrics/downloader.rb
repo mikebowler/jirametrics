@@ -55,7 +55,7 @@ class Downloader
 
   def log text, both: false
     @file_system.log text
-    puts text if both
+    puts text if both && !@quiet_mode
   end
 
   def find_board_ids

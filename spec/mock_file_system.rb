@@ -13,7 +13,6 @@ class MockFileSystem < FileSystem
   end
 
   def load_json filename, fail_on_error: true
-    # puts "\n#{self.class}(#{filename})"
     json = @data[filename]
 
     return json if json
