@@ -218,7 +218,6 @@ describe ChartBase do
     end
 
     it 'handles done statuses' do
-      puts board.possible_statuses.todo.inspect
       expect(chart_base.format_status 'Done', board: board).to eq "<span style='color: green'>Done</span>"
     end
 
