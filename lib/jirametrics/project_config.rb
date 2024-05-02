@@ -430,8 +430,8 @@ class ProjectConfig
       else
         message << "days of data from #{issue.changes.first.time.to_date} to #{cutoff_time.to_date}"
       end
-      puts message
+      exporter.file_system.log message
     end
-    puts "Discarded data from #{issues_cutoff_times.count} issues out of a total #{issues.size}"
+    exporter.file_system.log "Discarded data from #{issues_cutoff_times.count} issues out of a total #{issues.size}"
   end
 end

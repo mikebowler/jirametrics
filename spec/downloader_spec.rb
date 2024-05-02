@@ -38,8 +38,6 @@ describe Downloader do
 
   context 'run' do
     it 'skips the download when no-download specified' do
-      downloader.quiet_mode = false
-
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
       expect(file_system.log_messages).to include 'Skipping download. Found no-download in meta file'

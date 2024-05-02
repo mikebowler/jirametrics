@@ -16,7 +16,14 @@ class Exporter
   attr_reader :project_configs, :file_system
 
   def self.configure &block
-    exporter = Exporter.new
+    logfile_name = 'jirametrics.log'
+    logfile = File.open logfile_name, 'w'
+    file_system = FileSystem.new
+    file_system.logfile = logfile
+    file_system.logfile_name = logfile_name
+
+    exporter = Exporter.new file_system: file_system
+
     exporter.instance_eval(&block)
     @@instance = exporter
   end
@@ -41,10 +48,10 @@ class Exporter
 
   def download name_filter:
     @downloading = true
-    logfile_name = 'downloader.log'
-    File.open logfile_name, 'w' do |logfile|
-      file_system.logfile = logfile
-      file_system.logfile_name = logfile_name
+    # logfile_name = 'downloader.log'
+    # File.open logfile_name, 'w' do |logfile|
+      # file_system.logfile = logfile
+      # file_system.logfile_name = logfile_name
 
       each_project_config(name_filter: name_filter) do |project|
         project.evaluate_next_level
@@ -58,8 +65,8 @@ class Exporter
         )
         downloader.run
       end
-    end
-    puts "Full output from downloader in #{logfile_name}"
+    # end
+    puts "Full output from downloader in #{file_system.logfile_name}"
   end
 
   def each_project_config name_filter:

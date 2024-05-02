@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe ProjectConfig do
-  let(:exporter) { Exporter.new }
+  let(:exporter) { Exporter.new file_system: MockFileSystem.new}
   let(:target_path) { 'spec/testdata/' }
   let(:project_config) do
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil

@@ -12,6 +12,7 @@ class Anonymizer
     @all_boards = @project_config.all_boards
     @possible_statuses = @project_config.possible_statuses
     @date_adjustment = date_adjustment
+    @file_system = project_config.exporter.file_system
   end
 
   def run
@@ -20,7 +21,7 @@ class Anonymizer
     # anonymize_issue_statuses
     anonymize_board_names
     shift_all_dates unless @date_adjustment.zero?
-    puts 'Anonymize done'
+    @file_system.log 'Anonymize done'
   end
 
   def random_phrase
@@ -30,7 +31,7 @@ class Anonymizer
     5.times do |i|
       return RandomWord.phrases.next.tr('_', ' ')
     rescue # rubocop:disable Style/RescueStandardError We don't care what exception was thrown.
-      puts "Random word blew up on attempt #{i + 1}"
+      @file_system.log "Random word blew up on attempt #{i + 1}"
     end
   end
 
@@ -55,7 +56,7 @@ class Anonymizer
 
   def anonymize_column_names
     @all_boards.each_key do |board_id|
-      puts "Anonymizing column names for board #{board_id}"
+      @file_system.log "Anonymizing column names for board #{board_id}"
 
       column_name = 'Column-A'
       @all_boards[board_id].visible_columns.each do |column|
@@ -93,7 +94,7 @@ class Anonymizer
   end
 
   def anonymize_issue_statuses
-    puts 'Anonymizing issue statuses and status categories'
+    @file_system.log 'Anonymizing issue statuses and status categories'
     status_name_hash = build_status_name_hash
 
     @issues.each do |issue|
@@ -130,7 +131,7 @@ class Anonymizer
   end
 
   def shift_all_dates
-    puts "Shifting all dates by #{@date_adjustment} days"
+    @file_system.log "Shifting all dates by #{@date_adjustment} days"
     @issues.each do |issue|
       issue.changes.each do |change|
         change.time = change.time + @date_adjustment
