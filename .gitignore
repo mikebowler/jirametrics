@@ -6,3 +6,5 @@ coverage/
 Gemfile.lock
 spec/tmp/
 *.gem
+*.log
+extra.css
