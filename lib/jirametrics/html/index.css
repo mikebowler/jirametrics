@@ -1,4 +1,6 @@
 :root {
+  --body-background: white;
+
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
   --blocked-color: #FF7400;
@@ -10,6 +12,10 @@
   --type-spike-color: #9400D3;
 
   --aging-work-bar-chart-percentage-line-color: red;
+}
+
+body {
+  background-color: var(--body-background);
 }
 
 h1 {

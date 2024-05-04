@@ -91,7 +91,7 @@ class Exporter
             TEXT
             grouping_rules do |issue, rules|
               rules.label = issue.parent&.key || 'No parent'
-              rules.color = 'white' if rules.label == 'No parent'
+              rules.color = CssVariable.new('--body-background') if rules.label == 'No parent'
             end
           end
           expedited_chart

@@ -46,7 +46,7 @@ class DailyWipByAgeChart < DailyWipChart
       rules.group_priority = -1
     else
       rules.label = 'Start date unknown'
-      rules.color = 'white'
+      rules.color = CssVariable.new('--body-background')
       rules.group_priority = 11
       created_days = rules.current_date - created + 1
       rules.issue_hint = "(created: #{label_days created_days.to_i} earlier, stopped on #{stopped})"

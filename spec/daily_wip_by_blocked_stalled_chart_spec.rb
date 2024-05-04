@@ -21,7 +21,7 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Start date unknown', 'white']
+      expect(rules.group).to eq ['Start date unknown', '--body-background']
       expect(rules.group_priority).to eq 4
     end
 
@@ -50,7 +50,7 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Blocked', 'red'] # rubocop:disable Style/WordArray
+      expect(rules.group).to eq ['Blocked', '--blocked-color'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 1
     end
 
@@ -64,7 +64,7 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Stalled', 'orange'] # rubocop:disable Style/WordArray
+      expect(rules.group).to eq ['Stalled', '--stalled-color'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 2
     end
 
@@ -78,7 +78,7 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Blocked', 'red'] # rubocop:disable Style/WordArray
+      expect(rules.group).to eq ['Blocked', '--blocked-color'] # rubocop:disable Style/WordArray
       expect(rules.group_priority).to eq 1
     end
   end

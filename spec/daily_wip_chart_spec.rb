@@ -197,7 +197,7 @@ describe DailyWipChart do
     it 'negative' do
       rule = DailyGroupingRules.new
       rule.label = 'foo'
-      rule.color = 'white'
+      rule.color = CssVariable.new('--body-background')
       rule.group_priority = -1
 
       issue_rules_by_active_date = {
@@ -209,7 +209,7 @@ describe DailyWipChart do
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
       expect(data_set).to eq({
-        backgroundColor: 'white',
+        backgroundColor: CssVariable.new('--body-background'),
         borderColor: 'gray',
         borderRadius: 5,
         borderWidth: 1,
