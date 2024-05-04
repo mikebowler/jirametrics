@@ -18,6 +18,7 @@
   --aging-work-bar-chart-percentage-line-color: red;
   --aging-work-bar-chart-separator-color: white;
   --throughput_chart_total_line_color: gray;
+  --aging-work-in-progress-chart-shading-color: lightgray;
 }
 
 body {
