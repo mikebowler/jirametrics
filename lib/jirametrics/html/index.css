@@ -59,3 +59,44 @@ table.standard {
 .chart {
   background-color: white;
 }
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --non-working-days-color: black;
+    --type-story-color: #90EE90;
+
+    --body-background: #222;
+  }
+
+  body {
+    background-color: var(--body-background);
+    color: #aaa;
+  }
+
+  h1 {
+    color: #572780;
+    background-color: #656565;
+  }
+
+  a[href] {
+    color: #1e8ad6;
+  }
+
+  a[href]:hover {
+    color: #3ba0e6;
+  }
+
+  .chart {
+    background: var(--body-background);
+  }
+
+  table.standard {
+    th {
+      border-bottom: 1px solid gray;
+      background: var(--body-background);
+    }
+    tr:nth-child(odd){
+      background-color: #656565;
+    }
+  }
+}
