@@ -23,6 +23,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -43,6 +44,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
         %("SP-14" -> "SP-15"[label="blocks",color="black"];),
@@ -60,6 +62,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -80,6 +83,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -100,6 +104,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -120,6 +125,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -145,6 +151,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
@@ -175,6 +182,7 @@ describe DependencyChart do
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
+        'bgcolor="transparent"',
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
