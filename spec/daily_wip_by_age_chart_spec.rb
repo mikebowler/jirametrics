@@ -20,7 +20,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Start date unknown', '--body-background']
+      expect(rules.group).to eq ['Start date unknown', CssVariable['--body-background']]
       expect(rules.group_priority).to eq 11
     end
 

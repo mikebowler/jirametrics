@@ -82,7 +82,7 @@ describe AgingWorkInProgressChart do
 
     expect(chart.make_data_sets).to eq([
       {
-        'backgroundColor' => '--type-story-color',
+        'backgroundColor' => CssVariable['--type-story-color'],
         'data' => [
           {
             'title' => ['SP-11 : Report of all orders for an event (11 days)'],

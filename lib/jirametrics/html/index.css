@@ -11,7 +11,13 @@
   --type-bug-color: orange;
   --type-spike-color: #9400D3;
 
+  --status-category-todo-color: gray;
+  --status-category-inprogress-color: blue;
+  --status-category-done-color: green;
+
   --aging-work-bar-chart-percentage-line-color: red;
+  --aging-work-bar-chart-separator-color: white;
+  --throughput_chart_total_line_color: gray;
 }
 
 body {
@@ -58,6 +64,12 @@ table.standard {
 
 .chart {
   background-color: white;
+}
+
+div.color_block {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
 }
 
 @media screen and (prefers-color-scheme: dark) {

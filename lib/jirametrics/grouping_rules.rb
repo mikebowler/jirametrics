@@ -13,7 +13,7 @@ class GroupingRules < Rules
   end
 
   def color= color
-    color = CssVariable.new(color) if color.start_with?('--') && !color.is_a?(CssVariable)
+    color = CssVariable[color] unless color.is_a?(CssVariable)
     @color = color
   end
 end

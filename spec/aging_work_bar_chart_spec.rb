@@ -97,7 +97,7 @@ describe AgingWorkBarChart do
       )
       expect(data_sets).to eq([
         {
-          backgroundColor: 'gray',
+          backgroundColor: CssVariable['--status-category-todo-color'],
           data: [
             {
               title: 'Bug : Backlog',
@@ -136,7 +136,7 @@ describe AgingWorkBarChart do
       )
       expect(data_sets).to eq([
         {
-          backgroundColor: '--blocked-color',
+          backgroundColor: CssVariable['--blocked-color'],
           data: [
             {
               title: 'Blocked by flag',
@@ -166,7 +166,7 @@ describe AgingWorkBarChart do
       )
       expect(data_sets).to eq([
         {
-          backgroundColor: '--blocked-color',
+          backgroundColor: CssVariable['--blocked-color'],
           data: [
             {
               title: 'Blocked by status: Blocked',
@@ -201,7 +201,7 @@ describe AgingWorkBarChart do
       )
       expect(data_sets).to eq([
         {
-          backgroundColor: '--blocked-color',
+          backgroundColor: CssVariable['--blocked-color'],
           data: [
             {
               title: 'Blocked by issues: SP-10',

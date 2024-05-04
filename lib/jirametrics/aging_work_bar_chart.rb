@@ -17,10 +17,15 @@ class AgingWorkBarChart < ChartBase
       <p>
         There are potentially three bars for each issue, although a bar may be missing if the issue has no
         information relevant to that. Hovering over any of the bars will provide more details.
-        <ol><li>The top bar tells you what status the issue is in at any time.</li>
-        <li>The middle bar indicates blocked and stalled states. A lighter orange is stalled and a darker,
-        reddish colour is blocked.</li>
-        <li>The bottom bar indicated an expedited state.</li></ol>
+        <ol>
+          <li>The top bar tells you what status the issue is in at any time. The colour indicates the
+          status category, which will be one of #{color_block '--status-category-todo-color'} To Do,
+          #{color_block '--status-category-inprogress-color'} In Progress,
+          or #{color_block '--status-category-done-color'} Done</li>
+          <li>The middle bar indicates #{color_block '--blocked-color'} blocked
+          or #{color_block '--stalled-color'} stalled.</li>
+          <li>The bottom bar indicated #{color_block '--expedited-color'} expedited.</li>
+        </ol>
       </p>
       <p>
         The gray backgrounds indicate weekends and the red vertical line indicates the 85% point for all
@@ -65,7 +70,7 @@ class AgingWorkBarChart < ChartBase
           issue_label: issue_label,
           title_label: 'Expedited',
           stack: 'expedited',
-          color: CssVariable.new('--expedited-color'),
+          color: CssVariable['--expedited-color'],
           start_date: issue_start_date
         ) { |day| issue.expedited_on_date?(day) }
       ].compact.flatten.each do |data|
@@ -109,7 +114,7 @@ class AgingWorkBarChart < ChartBase
             title: "#{issue.type} : #{change.value}"
           }],
           backgroundColor: status_category_color(status),
-          borderColor: 'white',
+          borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
           borderWidth: {
              top: 0,
              right: 1,
@@ -150,7 +155,7 @@ class AgingWorkBarChart < ChartBase
     color = settings['blocked_color'] || '--blocked-color'
     color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?
     {
-      backgroundColor: color,
+      backgroundColor: CssVariable[color],
       data: [
         {
           title: starting_change.reasons,

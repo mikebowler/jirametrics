@@ -12,17 +12,17 @@ class ChartBase
 
   def initialize
     @chart_colors = {
-      'dark:Story'  => CssVariable.new('--type-story-color'),
-      'dark:Task'   => CssVariable.new('--type-task-color'),
-      'dark:Bug'    => CssVariable.new('--type-bug-color'),
-      'dark:Defect' => CssVariable.new('--type-bug-color'),
-      'dark:Spike'  => CssVariable.new('--type-spike-color'),
+      'dark:Story'  => CssVariable['--type-story-color'],
+      'dark:Task'   => CssVariable['--type-task-color'],
+      'dark:Bug'    => CssVariable['--type-bug-color'],
+      'dark:Defect' => CssVariable['--type-bug-color'],
+      'dark:Spike'  => CssVariable['--type-spike-color'],
 
-      'light:Story'  => CssVariable.new('--type-story-color'),
-      'light:Task'   => CssVariable.new('--type-task-color'),
-      'light:Bug'    => CssVariable.new('--type-bug-color'),
-      'light:Defect' => CssVariable.new('--type-bug-color'),
-      'light:Spike'  => CssVariable.new('--type-spike-color')
+      'light:Story'  => CssVariable['--type-story-color'],
+      'light:Task'   => CssVariable['--type-task-color'],
+      'light:Bug'    => CssVariable['--type-bug-color'],
+      'light:Defect' => CssVariable['--type-bug-color'],
+      'light:Spike'  => CssVariable['--type-spike-color']
     }
     @canvas_width = 800
     @canvas_height = 200
@@ -207,9 +207,9 @@ class ChartBase
   def status_category_color status
     case status.category_name
     when nil then 'black'
-    when 'To Do' then 'gray'
-    when 'In Progress' then 'blue'
-    when 'Done' then 'green'
+    when 'To Do' then CssVariable['--status-category-todo-color']
+    when 'In Progress' then CssVariable['--status-category-inprogress-color']
+    when 'Done' then CssVariable['--status-category-done-color']
     end
   end
 
@@ -245,5 +245,9 @@ class ChartBase
     else
       "'#{variable}'"
     end
+  end
+
+  def color_block color
+    "<div class='color_block' style='background: var(#{color});'></div>"
   end
 end

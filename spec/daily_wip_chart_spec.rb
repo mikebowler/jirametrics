@@ -209,7 +209,7 @@ describe DailyWipChart do
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
       expect(data_set).to eq({
-        backgroundColor: CssVariable.new('--body-background'),
+        backgroundColor: CssVariable['--body-background'],
         borderColor: 'gray',
         borderRadius: 5,
         borderWidth: 1,

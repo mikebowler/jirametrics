@@ -25,7 +25,10 @@ class ThroughputChart < ChartBase
     data_sets = []
     if rules_to_issues.size > 1
       data_sets << weekly_throughput_dataset(
-        completed_issues: completed_issues, label: 'Totals', color: 'gray', dashed: true
+        completed_issues: completed_issues,
+        label: 'Totals',
+        color: CssVariable['--throughput_chart_total_line_color'],
+        dashed: true
       )
     end
 

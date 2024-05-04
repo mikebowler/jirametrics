@@ -42,7 +42,7 @@ describe CycletimeScatterplot do
 
     expect(chart.create_datasets [issue]).to eq([
       {
-        backgroundColor: '--type-story-color',
+        backgroundColor: CssVariable['--type-story-color'],
         data: [
           {
             title: ['SP-10 : Check in people at an event (81 days)'],
@@ -61,7 +61,7 @@ describe CycletimeScatterplot do
         fill: false,
         borderWidth: 1,
         markerType: 'none',
-        borderColor: '--type-story-color',
+        borderColor: CssVariable['--type-story-color'],
         borderDash: [6, 3],
         pointStyle: 'dash',
         hidden: true

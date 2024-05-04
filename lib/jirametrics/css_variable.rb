@@ -1,12 +1,33 @@
 # frozen_string_literal: true
 
-class CssVariable < String
+class CssVariable #< String
+  attr_reader :name
+
+  def self.[](name)
+    if name.start_with? '--'
+      CssVariable.new name
+    else
+      name
+    end
+  end
+
   def initialize name
-    super
     @name = name
   end
 
   def to_json(*_args)
     "getComputedStyle(document.body).getPropertyValue('#{@name}')"
+  end
+
+  def to_s
+    "var(#{@name})"
+  end
+
+  def inspect
+    "CssVariable(#{@name})"
+  end
+
+  def == other
+    self.class == other.class && @name == other.name
   end
 end
