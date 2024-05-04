@@ -1,3 +1,14 @@
+:root {
+  --non-working-days-color: #F0F0F0;
+
+  --type-story-color: #90EE90;
+  --type-task-color: blue;
+  --type-bug-color: orange;
+  --type-spike-color: #9400D3;
+
+  --aging-work-bar-chart-percentage-line-color: red;
+}
+
 h1 {
   border: 1px solid black;
   background: lightgray;
@@ -34,4 +45,8 @@ table.standard {
 }
 .quality_note_bullet {
   color: red;
+}
+
+.chart {
+  background-color: white;
 }

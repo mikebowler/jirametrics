@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require './lib/jirametrics/css_variable'
+
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings
@@ -10,17 +12,17 @@ class ChartBase
 
   def initialize
     @chart_colors = {
-      'dark:Story' => 'green',
-      'dark:Task' => 'blue',
-      'dark:Bug' => 'orange',
-      'dark:Defect' => 'orange',
-      'dark:Spike' => '#9400D3', # dark purple
-      'light:Story' => '#90EE90',
-      'light:Task' => '#87CEFA',
-      'light:Bug' => '#ffdab9',
-      'light:Defect' => 'orange',
-      'light:Epic' => '#fafad2',
-      'light:Spike' => '#DDA0DD' # light purple
+      'dark:Story'  => CssVariable.new('--type-story-color'),
+      'dark:Task'   => CssVariable.new('--type-task-color'),
+      'dark:Bug'    => CssVariable.new('--type-bug-color'),
+      'dark:Defect' => CssVariable.new('--type-bug-color'),
+      'dark:Spike'  => CssVariable.new('--type-spike-color'),
+
+      'light:Story'  => CssVariable.new('--type-story-color'),
+      'light:Task'   => CssVariable.new('--type-task-color'),
+      'light:Bug'    => CssVariable.new('--type-bug-color'),
+      'light:Defect' => CssVariable.new('--type-bug-color'),
+      'light:Spike'  => CssVariable.new('--type-spike-color')
     }
     @canvas_width = 800
     @canvas_height = 200
@@ -235,5 +237,13 @@ class ChartBase
 
     @issues = issues.filter_map { |i| @filter_issues_block.call(i) }.uniq
     puts @issues.collect(&:key).join(', ')
+  end
+
+  def expand_css_variable variable
+    if variable.start_with? '--'
+      "getComputedStyle(document.body).getPropertyValue('#{variable}')"
+    else
+      "'#{variable}'"
+    end
   end
 end

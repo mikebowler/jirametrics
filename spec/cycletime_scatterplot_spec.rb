@@ -42,7 +42,7 @@ describe CycletimeScatterplot do
 
     expect(chart.create_datasets [issue]).to eq([
       {
-        backgroundColor: 'green',
+        backgroundColor: '--type-story-color',
         data: [
           {
             title: ['SP-10 : Check in people at an event (81 days)'],
@@ -61,7 +61,7 @@ describe CycletimeScatterplot do
         fill: false,
         borderWidth: 1,
         markerType: 'none',
-        borderColor: 'green',
+        borderColor: '--type-story-color',
         borderDash: [6, 3],
         pointStyle: 'dash',
         hidden: true
@@ -75,7 +75,7 @@ describe CycletimeScatterplot do
 
     it 'renders when no rules specified' do
       expected_rules = GroupingRules.new
-      expected_rules.color = 'green'
+      expected_rules.color = '--type-story-color'
       expected_rules.label = issue1.type
       expect(chart.group_issues([issue1])).to eq({
         expected_rules => [issue1]

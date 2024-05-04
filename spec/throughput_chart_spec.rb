@@ -81,7 +81,7 @@ describe ThroughputChart do
   context 'group_issues' do
     it 'renders when no rules specified' do
       expected_rules = GroupingRules.new
-      expected_rules.color = 'green'
+      expected_rules.color = '--type-story-color'
       expected_rules.label = 'Story'
       expect(described_class.new.group_issues([issue1])).to eq({
         expected_rules => [issue1]

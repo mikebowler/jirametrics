@@ -224,12 +224,6 @@ describe DependencyChart do
     end
   end
 
-  context 'default_color_for_issue' do
-    it 'returns colors for all normal issue types' do
-      expect(chart.default_color_for_issue(issue13)).to be_truthy
-    end
-  end
-
   context 'shrink_svg' do
     it 'shrinks' do
       svg = '<svg width="914pt" height="1126pt" viewBox="0.00 0.00 914.00 1126.00"'

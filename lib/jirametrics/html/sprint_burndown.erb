@@ -1,6 +1,6 @@
 <h2>Burndown by <%= y_axis_title %></h2>
 
-<div>
+<div class="chart">
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <script>
@@ -57,8 +57,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             type: 'box',
             xMin: '<%= range.begin %>T00:00:00',
             xMax: '<%= range.end %>T23:59:59',
-            backgroundColor: '#F0F0F0',
-            borderColor: '#F0F0F0'
+            backgroundColor: <%= expand_css_variable '--non-working-days-color' %>,
+            borderColor: <%= expand_css_variable '--non-working-days-color' %>
           },
           <% end %>
         }

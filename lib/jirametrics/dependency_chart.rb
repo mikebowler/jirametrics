@@ -101,10 +101,24 @@ class DependencyChart < ChartBase
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
     unless issue_rules.color == :none
-      result << %(,style=filled,fillcolor="#{issue_rules.color || color_for(type: issue.type, shade: :light)}")
+      result << %(,style=filled,fillcolor="#{issue_rules.color || color_for(type: issue.type)}")
     end
     result << ']'
     result
+  end
+
+  # This used to pull colours from chart_base but the migration to CSS colours kept breaking
+  # this chart so we moved it here, until we're finished with the rest. TODO: Revisit whether
+  # this can also use customizable CSS colours
+  def color_for type:
+    @chart_colors = {
+      'Story' => '#90EE90',
+      'Task' => '#87CEFA',
+      'Bug' => '#ffdab9',
+      'Defect' => '#ffdab9',
+      'Epic' => '#fafad2',
+      'Spike' => '#DDA0DD' # light purple
+    }[type] ||= random_color
   end
 
   def build_dot_graph
@@ -175,18 +189,6 @@ class DependencyChart < ChartBase
       'Ensure that graphviz is installed and that dot is in your path.'
     puts message
     message
-  end
-
-  def default_color_for_issue issue
-    {
-      'Story' => '#90EE90',
-      'Task' => '#87CEFA',
-      'Bug' => '#f08080',
-      'Defect' => '#f08080',
-      'Epic' => '#fafad2',
-      'Spike' => '#7fffd4',
-      'Sub-task' => '#dcdcdc'
-    }[issue.type]
   end
 
   def shrink_svg svg
