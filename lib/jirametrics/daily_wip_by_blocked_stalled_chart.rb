@@ -56,16 +56,16 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.group_priority = -2
     elsif started.nil?
       rules.label = 'Start date unknown'
-      rules.color = CssVariable.new('--body-background')
+      rules.color = '--body-background'
       rules.group_priority = 4
     elsif change&.blocked?
       rules.label = 'Blocked'
-      rules.color = CssVariable.new('--blocked-color')
+      rules.color = '--blocked-color'
       rules.group_priority = 1
       rules.issue_hint = "(#{change.reasons})"
     elsif change&.stalled?
       rules.label = 'Stalled'
-      rules.color = CssVariable.new('--stalled-color')
+      rules.color = '--stalled-color'
       rules.group_priority = 2
       rules.issue_hint = "(#{change.reasons})"
     else

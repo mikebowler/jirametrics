@@ -197,7 +197,7 @@ describe DailyWipChart do
     it 'negative' do
       rule = DailyGroupingRules.new
       rule.label = 'foo'
-      rule.color = CssVariable.new('--body-background')
+      rule.color = '--body-background'
       rule.group_priority = -1
 
       issue_rules_by_active_date = {

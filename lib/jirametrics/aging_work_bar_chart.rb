@@ -147,8 +147,8 @@ class AgingWorkBarChart < ChartBase
     deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['blocked_color']
     deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['stalled_color']
 
-    color = settings['blocked_color'] || CssVariable.new('--blocked-color')
-    color = settings['stalled_color'] || CssVariable.new('--stalled-color') if starting_change.stalled?
+    color = settings['blocked_color'] || '--blocked-color'
+    color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?
     {
       backgroundColor: color,
       data: [
