@@ -1,5 +1,8 @@
 :root {
   --non-working-days-color: #F0F0F0;
+  --expedited-color: red;
+  --blocked-color: #FF7400;
+  --stalled-color: orange;
 
   --type-story-color: #90EE90;
   --type-task-color: blue;

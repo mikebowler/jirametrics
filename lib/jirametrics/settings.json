@@ -1,9 +1,7 @@
 {
   "stalled_threshold_days": 5,
   "stalled_statuses": [],
-  "stalled_color": "orange",
 
   "blocked_link_text": [],
-  "blocked_statuses": [],
-  "blocked_color": "#FF7400"
+  "blocked_statuses": []
 }

@@ -65,7 +65,7 @@ class AgingWorkBarChart < ChartBase
           issue_label: issue_label,
           title_label: 'Expedited',
           stack: 'expedited',
-          color: 'red',
+          color: CssVariable.new('--expedited-color'),
           start_date: issue_start_date
         ) { |day| issue.expedited_on_date?(day) }
       ].compact.flatten.each do |data|
@@ -144,8 +144,11 @@ class AgingWorkBarChart < ChartBase
   end
 
   def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:
-    color = settings['blocked_color']
-    color = settings['stalled_color'] if starting_change.stalled?
+    deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['blocked_color']
+    deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['stalled_color']
+
+    color = settings['blocked_color'] || CssVariable.new('--blocked-color')
+    color = settings['stalled_color'] || CssVariable.new('--stalled-color') if starting_change.stalled?
     {
       backgroundColor: color,
       data: [
