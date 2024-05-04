@@ -162,6 +162,7 @@ class DependencyChart < ChartBase
     dot_graph = []
     dot_graph << 'digraph mygraph {'
     dot_graph << 'rankdir=LR'
+    dot_graph << 'bgcolor="transparent"'
 
     # Sort the keys so they are proccessed in a deterministic order.
     visible_issues.values.sort_by(&:key_as_i).each do |issue|
