@@ -19,6 +19,8 @@
   --aging-work-bar-chart-separator-color: white;
   --throughput_chart_total_line_color: gray;
   --aging-work-in-progress-chart-shading-color: lightgray;
+  --hierarchy-table-active-item-text-color: black;
+  --hierarchy-table-inactive-item-text-color: gray;
 }
 
 body {

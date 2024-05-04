@@ -14,7 +14,7 @@
       <tr>
         <td style="text-align: right;"><%= issue.board.cycletime.age(issue, today: @today) || 'Not started' %></td>
         <td>
-          <% color = (node.children? ? 'gray' : 'black') %>
+          <% color = "var(--hierarchy-table-#{ 'in' if node.children? }active-item-text-color)" %>
           <span style="padding-left: <%= depth - 1 %>em;" />
           <span style="white-space: nowrap;">
             <img src="<%= issue.type_icon_url %>" title="<%= issue.type %>"/>
