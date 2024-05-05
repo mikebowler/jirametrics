@@ -36,6 +36,8 @@
   --estimate-accuracy-chart-completed-border-color: green;
   --estimate-accuracy-chart-active-fill-color: #FFCCCB;
   --estimate-accuracy-chart-active-border-color: red;
+
+  --expedited-chart-no-longer-expedited: gray;
 }
 
 body {

@@ -3,11 +3,14 @@
 require 'jirametrics/chart_base'
 
 class ExpeditedChart < ChartBase
-  EXPEDITED_SEGMENT = Object.new.tap do |segment|
+  EXPEDITED_SEGMENT = ChartBase.new.tap do |segment|
     def segment.to_json *_args
+      expedited = expand_css_variable '--expedited-color'
+      not_expedited = expand_css_variable '--expedited-chart-no-longer-expedited'
+
       <<~SNIPPET
         {
-          borderColor: ctx => expedited(ctx, 'red') || notExpedited(ctx, 'gray'),
+          borderColor: ctx => expedited(ctx, #{expedited}) || notExpedited(ctx, #{not_expedited}),
           borderDash: ctx => notExpedited(ctx, [6, 6])
         }
       SNIPPET
