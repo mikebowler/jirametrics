@@ -10,7 +10,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   def default_description_text
     <<-HTML
       <div>
-        This chart highlights work that is #{color_block '--blocked-color'} blocked, 
+        This chart highlights work that is #{color_block '--blocked-color'} blocked,
         #{color_block '--stalled-color'} stalled, or
         #{color_block '--wip-chart-active-color'} active on each given day.
         <ul>
