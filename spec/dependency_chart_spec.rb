@@ -27,10 +27,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray"];),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -47,8 +47,8 @@ describe DependencyChart do
         'bgcolor="transparent"',
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -66,10 +66,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="blue"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="blue"];),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="blue",fontcolor="blue"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="clones",color="blue",fontcolor="blue"];),
         '}'
       ]
     end
@@ -87,10 +87,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="foo",color="gray"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="foo",color="gray"];),
+        %("SP-13" -> "SP-15"[label="foo",color="gray",fontcolor="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="foo",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -108,10 +108,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        # "SP-13" -> "SP-15"[label="is cloned by",color="gray"];) should be removed
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray"];),
+        # "SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];) should be removed
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -129,10 +129,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        # %("SP-15" -> "SP-13"[label="clones",color="gray"];), should be removed
+        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        # %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];), should be removed
         '}'
       ]
     end
@@ -155,10 +155,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        # %("SP-13" -> "SP-15"[label="is cloned by",color="gray"];), # Should be removed
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray"];),
+        # %("SP-13" -> "SP-15"[label="is cloned by",color="gray,fontcolor="gray""];), # Should be removed
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -178,7 +178,6 @@ describe DependencyChart do
         rules.use_bidirectional_arrows if link.name == 'Cloners'
       end
       chart.issue_rules(&empty_issue_rules)
-      # subject.build_dot_graph.each { |line| puts line }
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
@@ -186,10 +185,10 @@ describe DependencyChart do
         %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",dir=both];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray",dir=both];),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray",dir=both];),
+        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray",dir=both];),
         '}'
       ]
     end
