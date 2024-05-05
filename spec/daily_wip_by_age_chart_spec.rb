@@ -32,7 +32,9 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Completed but not started', '#66FF66']
+      expect(rules.group).to eq(
+        ['Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color']]
+      )
       expect(rules.group_priority).to eq(-1)
     end
 
@@ -43,7 +45,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Completed', '#009900']
+      expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color']]
       expect(rules.group_priority).to eq(-2)
     end
 
@@ -54,7 +56,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-01')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Less than a day', '#aaaaaa']
+      expect(rules.group).to eq ['Less than a day', CssVariable['--wip-chart-duration-less-than-day-color']]
       expect(rules.group_priority).to eq 10
     end
 
@@ -65,7 +67,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-07')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['A week or less', '#80bfff']
+      expect(rules.group).to eq ['A week or less', CssVariable['--wip-chart-duration-week-or-less-color']]
       expect(rules.group_priority).to eq 9
     end
 
@@ -76,7 +78,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-14')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Two weeks or less', '#ffd700']
+      expect(rules.group).to eq ['Two weeks or less', CssVariable['--wip-chart-duration-two-weeks-or-less-color']]
       expect(rules.group_priority).to eq 8
     end
 
@@ -87,7 +89,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-28')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Four weeks or less', '#ce6300']
+      expect(rules.group).to eq ['Four weeks or less', CssVariable['--wip-chart-duration-four-weeks-or-less-color']]
       expect(rules.group_priority).to eq 7
     end
 
@@ -98,7 +100,7 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-29')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['More than four weeks', '#990000']
+      expect(rules.group).to eq ['More than four weeks', CssVariable['--wip-chart-duration-more-than-four-weeks-color']]
       expect(rules.group_priority).to eq 6
     end
   end

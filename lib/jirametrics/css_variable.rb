@@ -24,7 +24,7 @@ class CssVariable #< String
   end
 
   def inspect
-    "CssVariable(#{@name})"
+    "CssVariable['#{@name}']"
   end
 
   def == other

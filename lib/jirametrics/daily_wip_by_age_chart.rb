@@ -17,7 +17,7 @@ class DailyWipByAgeChart < DailyWipChart
       <p>
         "Completed without being started" reflects the fact that while we know that it completed
         that day, we were unable to determine when it had started. These items will show up in
-        white at the top. Note that the white is approximate because we don't know exactly when
+        white at the top. Note that the this grouping is approximate because we don't know exactly when
         it started so we're guessing.
       </p>
     HTML
@@ -42,7 +42,7 @@ class DailyWipByAgeChart < DailyWipChart
   def not_started stopped:, rules:, created:
     if stopped == rules.current_date
       rules.label = 'Completed but not started'
-      rules.color = '#66FF66'
+      rules.color = '--wip-chart-completed-but-not-started-color'
       rules.group_priority = -1
     else
       rules.label = 'Start date unknown'
@@ -55,7 +55,7 @@ class DailyWipByAgeChart < DailyWipChart
 
   def stopped_today rules:
     rules.label = 'Completed'
-    rules.color = '#009900'
+    rules.color = '--wip-chart-completed-color'
     rules.group_priority = -2
   end
 
@@ -65,23 +65,23 @@ class DailyWipByAgeChart < DailyWipChart
     case age
     when 1
       rules.label = 'Less than a day'
-      rules.color = '#aaaaaa'
+      rules.color = '--wip-chart-duration-less-than-day-color'
       rules.group_priority = 10 # Highest is top
     when 2..7
       rules.label = 'A week or less'
-      rules.color = '#80bfff'
+      rules.color = '--wip-chart-duration-week-or-less-color'
       rules.group_priority = 9
     when 8..14
       rules.label = 'Two weeks or less'
-      rules.color = '#ffd700'
+      rules.color = '--wip-chart-duration-two-weeks-or-less-color'
       rules.group_priority = 8
     when 15..28
       rules.label = 'Four weeks or less'
-      rules.color = '#ce6300'
+      rules.color = '--wip-chart-duration-four-weeks-or-less-color'
       rules.group_priority = 7
     else
       rules.label = 'More than four weeks'
-      rules.color = '#990000'
+      rules.color = '--wip-chart-duration-more-than-four-weeks-color'
       rules.group_priority = 6
     end
   end

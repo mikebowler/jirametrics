@@ -21,6 +21,14 @@
   --aging-work-in-progress-chart-shading-color: lightgray;
   --hierarchy-table-active-item-text-color: black;
   --hierarchy-table-inactive-item-text-color: gray;
+
+  --wip-chart-completed-color: #009900;
+  --wip-chart-completed-but-not-started-color: #66FF66;
+  --wip-chart-duration-less-than-day-color: #aaaaaa;
+  --wip-chart-duration-week-or-less-color: #ffd700;
+  --wip-chart-duration-two-weeks-or-less-color: #80bfff;
+  --wip-chart-duration-four-weeks-or-less-color: #ce6300;
+  --wip-chart-duration-more-than-four-weeks-color: #990000;
 }
 
 body {
