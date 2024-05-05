@@ -10,9 +10,9 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   def default_description_text
     <<-HTML
       <div>
-        This chart highlights work that is #{color_block '--blocked-color'} blocked or 
-        #{color_block '--stalled-color'} stalled on each given day. Items that are
-        #{color_block '--wip-chart-active-color'} actively are being worked on.
+        This chart highlights work that is #{color_block '--blocked-color'} blocked, 
+        #{color_block '--stalled-color'} stalled, or
+        #{color_block '--wip-chart-active-color'} active on each given day.
         <ul>
           <li>#{color_block '--blocked-color'} Blocked could mean that the item has been flagged or it's
             in a status that is configured as blocked, or it could have a link showing that it is blocked
