@@ -17,6 +17,12 @@
           document.getElementById(issues_id).style.display = 'none'
         }
       }
+      // If we switch between light/dark mode then force a refresh so all charts will redraw correctly
+      // in the other colour scheme.
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        location.reload()
+      })
+
     </script>
     <style>
 <%= css %>
