@@ -30,6 +30,7 @@
   --wip-chart-duration-four-weeks-or-less-color: #ce6300;
   --wip-chart-duration-more-than-four-weeks-color: #990000;
   --wip-chart-active-color: lightgray;
+  --wip-chart-border-color: gray;
 }
 
 body {

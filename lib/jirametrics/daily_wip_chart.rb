@@ -102,7 +102,7 @@ class DailyWipChart < ChartBase
       label: grouping_rule.label,
       data: data,
       backgroundColor: grouping_rule.color || random_color,
-      borderColor: 'gray',
+      borderColor: CssVariable['--wip-chart-border-color'],
       borderWidth: grouping_rule.color.to_s == 'var(--body-background)' ? 1 : 0,
       borderRadius: positive ? 0 : 5
     }
