@@ -84,7 +84,7 @@ class DependencyChart < ChartBase
     result << issue_link.other_issue.key.inspect
     result << '['
     result << 'label=' << (link_rules.label || issue_link.label).inspect
-    result << ',color=' << (link_rules.line_color || 'black').inspect
+    result << ',color=' << (link_rules.line_color || 'gray').inspect
     result << ',dir=both' if link_rules.bidirectional_arrows?
     result << '];'
     result
