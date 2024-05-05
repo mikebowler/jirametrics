@@ -11,7 +11,8 @@ class StoryPointAccuracyChart < ChartBase
         estimates can change over time, we're graphing the estimate at the time that the story started.
       </p>
       <p>
-        The completed dots indicate cycletimes. The aging dots (if you turn them on) show the current
+        The completed dots indicate cycletimes. The aging dots (click on the legend to turn them on)
+        show the current
         age of items, which will give you a hint as to where they might end up. If they're already
         far to the right then you know you have a problem.
       </p>
@@ -56,9 +57,12 @@ class StoryPointAccuracyChart < ChartBase
     end
 
     [
-      [completed_hash, 'Completed', '#66FF99', 'green', false],
-      [aging_hash, 'Still in progress', '#FFCCCB', 'red', true]
-    ].filter_map do |hash, label, fill_color, border_color, starts_hidden|
+      [completed_hash, 'Completed', 'completed', false],
+      [aging_hash, 'Still in progress', 'active', true]
+    ].filter_map do |hash, label, completed_or_active, starts_hidden|
+      fill_color = CssVariable["--estimate-accuracy-chart-#{completed_or_active}-fill-color"]
+      border_color = CssVariable["--estimate-accuracy-chart-#{completed_or_active}-border-color"]
+
       # We sort so that the smaller circles are in front of the bigger circles.
       data = hash.sort(&hash_sorter).collect do |key, values|
         estimate, cycle_time = *key

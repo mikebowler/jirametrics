@@ -31,6 +31,11 @@
   --wip-chart-duration-more-than-four-weeks-color: #990000;
   --wip-chart-active-color: lightgray;
   --wip-chart-border-color: gray;
+
+  --estimate-accuracy-chart-completed-fill-color: #66FF99;
+  --estimate-accuracy-chart-completed-border-color: green;
+  --estimate-accuracy-chart-active-fill-color: #FFCCCB;
+  --estimate-accuracy-chart-activie-border-color: red;
 }
 
 body {
