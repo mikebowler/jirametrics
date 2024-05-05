@@ -9,18 +9,26 @@ class DailyWipByBlockedStalledChart < DailyWipChart
 
   def default_description_text
     <<-HTML
+      <div>
+        This chart highlights work that is #{color_block '--blocked-color'} blocked or 
+        #{color_block '--stalled-color'} stalled on each given day. Items that are
+        #{color_block '--wip-chart-active-color'} actively are being worked on.
+        <ul>
+          <li>#{color_block '--blocked-color'} Blocked could mean that the item has been flagged or it's
+            in a status that is configured as blocked, or it could have a link showing that it is blocked
+          by another item. It all depends how the report has been configured.</li>
+          <li>#{color_block '--stalled-color'} Stalled indicates that there has been no activity on this
+          item in five days.</li>
+        </ul>
+      </div>
       <p>
-        This chart highlights work that is blocked or stalled on each given day. In Jira terms, blocked
-        means that the issue has been "flagged". Stalled indicates that the item hasn't had any updates in 5 days.
-      </p>
-      <p>
-        Note that if an item tracks as both blocked and stalled, it will only show up in the flagged totals.
+        Note that if an item tracks as both blocked and stalled, it will only show up in the blocked totals.
         It will not be double counted.
       </p>
-      <p>
-        The white section reflects items that have stopped but for which we can't identify the start date. As
+      <div>
+        The #{color_block '--body-background'} shaded section reflects items that have stopped but for which we can't identify the start date. As
         a result, we are unable to properly show the WIP for these items.
-      </p>
+      </div>
     HTML
   end
 
@@ -48,11 +56,11 @@ class DailyWipByBlockedStalledChart < DailyWipChart
 
     if stopped_today && started.nil?
       rules.label = 'Completed but not started'
-      rules.color = '#66FF66'
+      rules.color = '--wip-chart-completed-but-not-started-color'
       rules.group_priority = -1
     elsif stopped_today
       rules.label = 'Completed'
-      rules.color = '#009900'
+      rules.color = '--wip-chart-completed-color'
       rules.group_priority = -2
     elsif started.nil?
       rules.label = 'Start date unknown'
@@ -70,7 +78,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.issue_hint = "(#{change.reasons})"
     else
       rules.label = 'Active'
-      rules.color = 'lightgray'
+      rules.color = '--wip-chart-active-color'
       rules.group_priority = 3
     end
   end

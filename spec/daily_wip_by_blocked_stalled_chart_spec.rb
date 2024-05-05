@@ -35,7 +35,7 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Active', 'lightgray'] # rubocop:disable Style/WordArray
+      expect(rules.group).to eq ['Active', CssVariable['--wip-chart-active-color']]
       expect(rules.group_priority).to eq 3
     end
 
