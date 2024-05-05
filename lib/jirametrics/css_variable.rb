@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CssVariable #< String
+class CssVariable
   attr_reader :name
 
   def self.[](name)

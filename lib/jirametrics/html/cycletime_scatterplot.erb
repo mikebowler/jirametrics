@@ -53,8 +53,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             type: 'box',
             xMin: '<%= range.begin %>T00:00:00',
             xMax: '<%= range.end %>T23:59:59',
-            backgroundColor: <%= expand_css_variable '--non-working-days-color' %>,
-            borderColor: <%= expand_css_variable '--non-working-days-color' %>
+            backgroundColor: <%= CssVariable.new('--non-working-days-color').to_json %>,
+            borderColor: <%= CssVariable.new('--non-working-days-color').to_json %>
           },
           <% end %>
 

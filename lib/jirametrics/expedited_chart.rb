@@ -5,8 +5,8 @@ require 'jirametrics/chart_base'
 class ExpeditedChart < ChartBase
   EXPEDITED_SEGMENT = ChartBase.new.tap do |segment|
     def segment.to_json *_args
-      expedited = expand_css_variable '--expedited-color'
-      not_expedited = expand_css_variable '--expedited-chart-no-longer-expedited'
+      expedited = CssVariable.new('--expedited-color').to_json
+      not_expedited = CssVariable.new('--expedited-chart-no-longer-expedited').to_json
 
       <<~SNIPPET
         {

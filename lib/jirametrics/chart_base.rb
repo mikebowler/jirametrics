@@ -239,14 +239,6 @@ class ChartBase
     puts @issues.collect(&:key).join(', ')
   end
 
-  def expand_css_variable variable
-    if variable.start_with? '--'
-      "getComputedStyle(document.body).getPropertyValue('#{variable}')"
-    else
-      "'#{variable}'"
-    end
-  end
-
   def color_block color
     "<div class='color_block' style='background: var(#{color});'></div>"
   end
