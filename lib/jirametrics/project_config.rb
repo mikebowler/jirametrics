@@ -237,7 +237,7 @@ class ProjectConfig
 
     start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
     stop  = json['date_end'] || json['time_end']
-    @time_range = to_time(start)..to_time(stop)
+    @time_range = to_time(start)..to_time(stop, end_of_day: true)
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
@@ -245,8 +245,9 @@ class ProjectConfig
     raise
   end
 
-  def to_time string
-    string = "#{string}T00:00:00#{@timezone_offset}" if string.match?(/^\d{4}-\d{2}\d{2}$/)
+  def to_time string, end_of_day: false
+    time = end_of_day ? '23:59:59' : '00:00:00'
+    string = "#{string}T#{time}#{@timezone_offset}" if string.match?(/^\d{4}-\d{2}-\d{2}$/)
     Time.parse string
   end
 
