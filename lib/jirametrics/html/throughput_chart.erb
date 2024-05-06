@@ -23,7 +23,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         scaleLabel: {
           display: true,
           labelString: 'Date Completed'
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         scaleLabel: {
@@ -33,7 +36,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           display: true,
           text: 'Count of items'
         },
-        min: 0
+        min: 0,
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
     },
     plugins: {

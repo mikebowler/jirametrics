@@ -19,14 +19,20 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         stacked: false,
         title: {
           display: false
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         stacked: true,
         position: 'right',
         ticks: {
           display: true
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       }
     },
     plugins: {

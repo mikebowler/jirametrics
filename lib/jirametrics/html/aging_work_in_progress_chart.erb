@@ -20,7 +20,10 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
         scaleLabel: {
           display: true,
           labelString: 'Date Completed'
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         scaleLabel: {
@@ -30,6 +33,9 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
         title: {
           display: true,
           text: 'Age in days'
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
         },
       }
     },

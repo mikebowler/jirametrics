@@ -17,14 +17,20 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         title: {
           display: true,
           text: 'Cycletime in days'
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         stacked: true,
         title: {
           display: true,
           text: 'Number of items that had that cycletime'
-        }
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       }
     },
     plugins: {

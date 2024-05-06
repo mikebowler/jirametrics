@@ -20,7 +20,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         time: {
           unit: 'day'
         },
-        stacked: true
+        stacked: true,
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         stacked: true,
@@ -32,7 +35,9 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           display: true,
           text: 'Count of items'
         },
-
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       }
     },
     plugins: {

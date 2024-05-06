@@ -26,8 +26,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           labelString: 'Date'
         },
         min: "<%= date_range.begin.to_s %>",
-        max: "<%= (date_range.end + 1).to_s %>"
-
+        max: "<%= (date_range.end + 1).to_s %>",
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       },
       y: {
         scaleLabel: {
@@ -38,7 +40,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           display: true,
           text: "<%= y_axis_title %>"
         },
-        min: 0.0
+        min: 0.0,
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
       }
     },
     plugins: {
