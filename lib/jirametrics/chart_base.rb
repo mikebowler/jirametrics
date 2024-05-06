@@ -202,6 +202,7 @@ class ChartBase
 
     text = is_category ? status.category_name : status.name
     "<span style='color: #{color}'>#{text}</span>"
+    "<span title='#{status.category_name}'>#{color_block color.name} #{text}</span>"
   end
 
   def status_category_color status
