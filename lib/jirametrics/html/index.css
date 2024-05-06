@@ -41,6 +41,12 @@
   --estimate-accuracy-chart-active-border-color: red;
 
   --expedited-chart-no-longer-expedited: gray;
+
+  --sprint-burndown-sprint-color-1: blue;
+  --sprint-burndown-sprint-color-2: orange;
+  --sprint-burndown-sprint-color-3: green;
+  --sprint-burndown-sprint-color-4: red;
+  --sprint-burndown-sprint-color-5: brown;
 }
 
 body {

@@ -57,7 +57,7 @@ class SprintBurndown < ChartBase
     result = +''
     result << '<h1>Sprint Burndowns</h1>'
 
-    possible_colours = %w[blue orange green red brown]
+    possible_colours = (1..5).collect { |i| CssVariable["--sprint-burndown-sprint-color-#{i}"] }
     charts_to_generate = []
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
@@ -65,7 +65,7 @@ class SprintBurndown < ChartBase
       @summary_stats.clear
       data_sets = []
       sprints.each_with_index do |sprint, index|
-        color = possible_colours[index % 5]
+        color = possible_colours[index % possible_colours.size]
         label = sprint.name
         data = send(data_method, sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint])
         data_sets << {
