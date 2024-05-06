@@ -1,5 +1,6 @@
 :root {
   --body-background: white;
+  --grid-line-color: gray;
 
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
