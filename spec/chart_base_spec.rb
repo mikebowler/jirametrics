@@ -211,19 +211,22 @@ describe ChartBase do
 
     it 'handles todo statuses' do
       expect(chart_base.format_status 'Backlog', board: board).to eq(
-        "<span style='color: var(--status-category-todo-color)'>Backlog</span>"
+        "<span title='To Do'><div class='color_block' " \
+          "style='background: var(--status-category-todo-color);'></div> Backlog</span>"
       )
     end
 
     it 'handles in progress statuses' do
       expect(chart_base.format_status 'Review', board: board).to eq(
-        "<span style='color: var(--status-category-inprogress-color)'>Review</span>"
+        "<span title='In Progress'><div class='color_block' " \
+          "style='background: var(--status-category-inprogress-color);'></div> Review</span>"
       )
     end
 
     it 'handles done statuses' do
       expect(chart_base.format_status 'Done', board: board).to eq(
-        "<span style='color: var(--status-category-done-color)'>Done</span>"
+        "<span title='Done'><div class='color_block' " \
+          "style='background: var(--status-category-done-color);'></div> Done</span>"
       )
     end
 
