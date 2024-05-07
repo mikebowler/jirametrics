@@ -1,20 +1,20 @@
 :root {
   --body-background: white;
-  --grid-line-color: gray;
+  --grid-line-color: #565656;
 
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
   --blocked-color: #FF7400;
   --stalled-color: orange;
 
-  --type-story-color: #90EE90;
+  --type-story-color: #4bc14b;
   --type-task-color: blue;
   --type-bug-color: orange;
   --type-spike-color: #9400D3;
 
   --status-category-todo-color: gray;
-  --status-category-inprogress-color: blue;
-  --status-category-done-color: green;
+  --status-category-inprogress-color: #2663ff;
+  --status-category-done-color: #00ff00;
 
   --aging-work-bar-chart-percentage-line-color: red;
   --aging-work-bar-chart-separator-color: white;
@@ -26,17 +26,17 @@
   --hierarchy-table-active-item-text-color: black;
   --hierarchy-table-inactive-item-text-color: gray;
 
-  --wip-chart-completed-color: #009900;
-  --wip-chart-completed-but-not-started-color: #66FF66;
-  --wip-chart-duration-less-than-day-color: #aaaaaa;
-  --wip-chart-duration-week-or-less-color: #ffd700;
-  --wip-chart-duration-two-weeks-or-less-color: #80bfff;
-  --wip-chart-duration-four-weeks-or-less-color: #ce6300;
-  --wip-chart-duration-more-than-four-weeks-color: #990000;
-  --wip-chart-active-color: lightgray;
+  --wip-chart-completed-color: #00ff00;
+  --wip-chart-completed-but-not-started-color: #66FF99;
+  --wip-chart-duration-less-than-day-color: #ffef41;
+  --wip-chart-duration-week-or-less-color: #dcc900;
+  --wip-chart-duration-two-weeks-or-less-color: #dfa000;
+  --wip-chart-duration-four-weeks-or-less-color: #eb7200;
+  --wip-chart-duration-more-than-four-weeks-color: #e70000;
+  --wip-chart-active-color: #326cff;
   --wip-chart-border-color: gray;
 
-  --estimate-accuracy-chart-completed-fill-color: #66FF99;
+  --estimate-accuracy-chart-completed-fill-color: #00ff00;
   --estimate-accuracy-chart-completed-border-color: green;
   --estimate-accuracy-chart-active-fill-color: #FFCCCB;
   --estimate-accuracy-chart-active-border-color: red;
@@ -105,10 +105,16 @@ div.color_block {
 
 @media screen and (prefers-color-scheme: dark) {
   :root {
-    --non-working-days-color: black;
+    --non-working-days-color: #2f2f2f;
     --type-story-color: #90EE90;
 
-    --body-background: #222;
+    --body-background: #343434;
+
+    --wip-chart-duration-less-than-day-color: #d2d988;
+    --wip-chart-duration-week-or-less-color: #dfcd00;
+    --wip-chart-duration-two-weeks-or-less-color: #cf9400;
+    --wip-chart-duration-four-weeks-or-less-color: #c25e00;
+    --wip-chart-duration-more-than-four-weeks-color: #8e0000;
   }
 
   body {
@@ -117,7 +123,7 @@ div.color_block {
   }
 
   h1 {
-    color: #572780;
+    color: #e0e0e0;
     background-color: #656565;
   }
 
