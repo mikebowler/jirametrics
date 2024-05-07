@@ -70,7 +70,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             type: 'line',
             yMin: <%= percent %>,
             yMax: <%= percent %>,
-            borderColor: '<%= color %>',
+            borderColor: <%= color.to_json %>,
             borderWidth: 1,
             drawTime: 'beforeDraw'
           },
