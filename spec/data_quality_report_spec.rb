@@ -270,8 +270,9 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :issue_not_started_but_subtasks_have,
-          "Started subtask: <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>SP-2</a>" \
-            " (<span title='In Progress'><div class='color_block' style='background: var(--status-category-inprogress-color);'></div> Selected for Development</span>) \"Update existing event\""
+          "Started subtask: <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>SP-2</a> " \
+            "(<span title='Category: In Progress'><div class='color_block' " \
+            "style='background: var(--status-category-inprogress-color);'></div> Selected for Development</span>) \"Update existing event\""
         ]
       ]
     end

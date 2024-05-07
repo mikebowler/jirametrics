@@ -202,7 +202,7 @@ class ChartBase
 
     text = is_category ? status.category_name : status.name
     "<span style='color: #{color}'>#{text}</span>"
-    "<span title='#{status.category_name}'>#{color_block color.name} #{text}</span>"
+    "<span title='Category: #{status.category_name}'>#{color_block color.name} #{text}</span>"
   end
 
   def status_category_color status
@@ -240,7 +240,11 @@ class ChartBase
     puts @issues.collect(&:key).join(', ')
   end
 
-  def color_block color
-    "<div class='color_block' style='background: var(#{color});'></div>"
+  def color_block color, title: nil
+    result = +''
+    result << "<div class='color_block' style='background: var(#{color});'"
+    result << " title=#{title.inspect}" if title
+    result << '></div>'
+    result
   end
 end

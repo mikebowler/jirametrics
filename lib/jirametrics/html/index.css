@@ -1,5 +1,6 @@
 :root {
   --body-background: white;
+  --default-text-color: black;
   --grid-line-color: lightgray;
 
   --cycletime-scatterplot-overall-trendline-color: grey;
@@ -8,6 +9,7 @@
   --expedited-color: red;
   --blocked-color: #FF7400;
   --stalled-color: orange;
+  --dead-color: black;
 
   --type-story-color: #4bc14b;
   --type-task-color: blue;
@@ -25,7 +27,6 @@
   
   --aging-work-in-progress-chart-shading-color: lightgray;
   
-  --hierarchy-table-active-item-text-color: black;
   --hierarchy-table-inactive-item-text-color: gray;
 
   --wip-chart-completed-color: #00ff00;
@@ -54,6 +55,7 @@
 
 body {
   background-color: var(--body-background);
+  color: var(--default-text-color);
 }
 
 h1 {
@@ -111,20 +113,18 @@ div.color_block {
     --type-story-color: #90EE90;
 
     --body-background: #343434;
+    --default-text-color: #aaa;
     --grid-line-color: #424242;
 
     --cycletime-scatterplot-overall-trendline-color: grey;
+
+    --hierarchy-table-inactive-item-text-color: yellow;
 
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
     --wip-chart-duration-two-weeks-or-less-color: #cf9400;
     --wip-chart-duration-four-weeks-or-less-color: #c25e00;
     --wip-chart-duration-more-than-four-weeks-color: #8e0000;
-  }
-
-  body {
-    background-color: var(--body-background);
-    color: #aaa;
   }
 
   h1 {
@@ -152,5 +152,9 @@ div.color_block {
     tr:nth-child(odd){
       background-color: #656565;
     }
+  }
+
+  div.color_block {
+    border: 1px solid lightgray;
   }
 }

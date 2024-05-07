@@ -38,7 +38,7 @@
         <td><%= blocked_text(issue) %></td>
         <td>
           <% parent_hierarchy(issue).each_with_index do |parent, index| %>
-            <% color = "var(--hierarchy-table-#{ 'in' if parent != issue }active-item-text-color)" %>
+            <% color = parent != issue ? "var(--hierarchy-table-inactive-item-text-color)" : 'var(--default-text-color)' %>
             <div style="padding-left: <%= index %>em; color: <%= color %>">
               <span style="white-space: nowrap;">
                 <img src="<%= parent.type_icon_url %>" title="<%= parent.type %>"/>

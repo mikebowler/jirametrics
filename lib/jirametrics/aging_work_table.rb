@@ -7,11 +7,7 @@ class AgingWorkTable < ChartBase
 
   def initialize block
     super()
-    @blocked_icon = '🛑'
-    @expedited_icon = '🔥'
-    @stalled_icon = '🟧'
     @stalled_threshold = 5
-    @dead_icon = '⬛'
     @dead_threshold = 45
     @age_cutoff = 0
 
@@ -54,7 +50,7 @@ class AgingWorkTable < ChartBase
     return unless issue.expedited?
 
     name = issue.raw['fields']['priority']['name']
-    icon_span(title: "Expedited: Has a priority of &quot;#{name}&quot;", icon: @expedited_icon)
+    color_block '--expedited-color', title: "Expedited: Has a priority of &quot;#{name}&quot;"
   end
 
   def blocked_text issue
@@ -63,27 +59,24 @@ class AgingWorkTable < ChartBase
 
     current = issue.blocked_stalled_changes(end_time: time_range.end)[-1]
     if current.blocked?
-      icon_span title: current.reasons, icon: @blocked_icon
+      color_block '--blocked-color', title: current.reasons
     elsif current.stalled?
       if current.stalled_days && current.stalled_days > @dead_threshold
-        icon_span(
+        color_block(
+          '--dead-color',
           title: "Dead? Hasn&apos;t had any activity in #{label_days current.stalled_days}. " \
-            'Does anyone still care about this?',
-          icon: @dead_icon
+            'Does anyone still care about this?'
         )
       else
-        icon_span(
-          title: current.reasons,
-          icon: @stalled_icon
-        )
+        color_block '--stalled-color', title: current.reasons
       end
     end
   end
 
   def unmapped_status_text issue
     icon_span(
-      title: "The status #{issue.status.name.inspect} is not mapped to any column and will not be visible",
-      icon: ' ⁉️'
+      title: "Not visible: The status #{issue.status.name.inspect} is not mapped to any column and will not be visible",
+      icon: ' 👀'
     )
   end
 

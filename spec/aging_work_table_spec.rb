@@ -31,7 +31,8 @@ describe AgingWorkTable do
       issue1.raw['fields']['priority']['name'] = 'Highest'
       issue1.board.expedited_priority_names = ['Highest']
       expect(table.expedited_text issue1).to eq(
-        table.icon_span title: 'Expedited: Has a priority of &quot;Highest&quot;', icon: '🔥'
+        "<div class='color_block' style='background: var(--expedited-color);' " \
+          'title="Expedited: Has a priority of &quot;Highest&quot;"></div>'
       )
     end
   end
@@ -40,7 +41,9 @@ describe AgingWorkTable do
     it 'handles flagged' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
-      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by flag', icon: '🛑')
+      expect(table.blocked_text issue1).to eq(
+        "<div class='color_block' style='background: var(--blocked-color);' title=\"Blocked by flag\"></div>"
+      )
     end
 
     it 'handles blocked status' do
@@ -51,7 +54,10 @@ describe AgingWorkTable do
       issue1.changes << mock_change(field: 'status', value: review_status, time: '2020-10-03')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 
-      expect(table.blocked_text issue1).to eq(table.icon_span title: 'Blocked by status: Review', icon: '🛑')
+      expect(table.blocked_text issue1).to eq(
+        "<div class='color_block' style='background: var(--blocked-color);' " \
+          'title="Blocked by status: Review"></div>'
+      )
     end
 
     it 'handles stalled' do
@@ -60,10 +66,8 @@ describe AgingWorkTable do
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 
       expect(table.blocked_text issue1).to eq(
-        table.icon_span(
-          title: 'Stalled by inactivity: 11 days',
-          icon: '🟧'
-        )
+        "<div class='color_block' style='background: var(--stalled-color);' " \
+          'title="Stalled by inactivity: 11 days"></div>'
       )
     end
 
@@ -73,10 +77,8 @@ describe AgingWorkTable do
       table.time_range = table.time_range.begin..to_time('2022-12-01')
 
       expect(table.blocked_text issue1).to eq(
-        table.icon_span(
-          title: 'Dead? Hasn&apos;t had any activity in 58 days. Does anyone still care about this?',
-          icon: '⬛'
-        )
+        "<div class='color_block' style='background: var(--dead-color);' " \
+          'title="Dead? Hasn&apos;t had any activity in 58 days. Does anyone still care about this?"></div>'
       )
     end
 
