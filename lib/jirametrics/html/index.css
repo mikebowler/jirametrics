@@ -110,21 +110,30 @@ div.color_block {
 @media screen and (prefers-color-scheme: dark) {
   :root {
     --non-working-days-color: #2f2f2f;
-    --type-story-color: #90EE90;
+    --type-story-color: #6fb86f;
+    --type-task-color: #0021b3;
+    --type-bug-color: #bb5603;
 
     --body-background: #343434;
     --default-text-color: #aaa;
     --grid-line-color: #424242;
 
-      --expedited-color: red;
-      --blocked-color: #FF7400;
-      --stalled-color: orange;
-      --dead-color: black;
+    --expedited-color: #b90000;
+    --blocked-color: #c75b02;
+    --stalled-color: #ae7202;
+    --dead-color: black;
+    --wip-chart-active-color: #2551c1;
+
+    --aging-work-in-progress-chart-shading-color: #b4b4b4;
+
+    --status-category-inprogress-color: #1c49bb;
 
     --cycletime-scatterplot-overall-trendline-color: gray;
 
     --hierarchy-table-inactive-item-text-color: #939393;
 
+     --wip-chart-completed-color: #03cb03;
+    --wip-chart-completed-but-not-started-color: #99FF99;
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
     --wip-chart-duration-two-weeks-or-less-color: #cf9400;
