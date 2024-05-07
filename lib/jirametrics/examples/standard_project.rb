@@ -6,7 +6,7 @@
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
-      default_board: nil, anonymize: false, settings: {}
+      default_board: nil, anonymize: false, settings: {}, status_category_mappings: {}
 
     project name: name do
       puts name
@@ -14,6 +14,10 @@ class Exporter
 
       settings['blocked_link_text'] = ['is blocked by']
       self.settings.merge! settings
+
+      status_category_mappings.each do |status, category|
+        status_category_mapping status: status, category: category
+      end
 
       file_prefix file_prefix
       download do
@@ -109,7 +113,7 @@ class Exporter
               when 'Sync'
                 rules.use_bidirectional_arrows
               else
-                # This is a link type that we don't recognized. Dump it to standard out to draw attention
+                # This is a link type that we don't recognize. Dump it to standard out to draw attention
                 # to it.
                 puts "name=#{link.name}, label=#{link.label}"
               end
