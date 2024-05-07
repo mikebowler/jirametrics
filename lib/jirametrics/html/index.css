@@ -2,6 +2,8 @@
   --body-background: white;
   --grid-line-color: lightgray;
 
+  --cycletime-scatterplot-overall-trendline-color: grey;
+
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
   --blocked-color: #FF7400;
@@ -110,6 +112,8 @@ div.color_block {
 
     --body-background: #343434;
     --grid-line-color: #424242;
+
+    --cycletime-scatterplot-overall-trendline-color: grey;
 
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
