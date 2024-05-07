@@ -30,7 +30,7 @@
   --hierarchy-table-inactive-item-text-color: gray;
 
   --wip-chart-completed-color: #00ff00;
-  --wip-chart-completed-but-not-started-color: #66FF99;
+  --wip-chart-completed-but-not-started-color: #99FF99;
   --wip-chart-duration-less-than-day-color: #ffef41;
   --wip-chart-duration-week-or-less-color: #dcc900;
   --wip-chart-duration-two-weeks-or-less-color: #dfa000;
@@ -116,9 +116,14 @@ div.color_block {
     --default-text-color: #aaa;
     --grid-line-color: #424242;
 
+      --expedited-color: red;
+      --blocked-color: #FF7400;
+      --stalled-color: orange;
+      --dead-color: black;
+
     --cycletime-scatterplot-overall-trendline-color: gray;
 
-    --hierarchy-table-inactive-item-text-color: ;
+    --hierarchy-table-inactive-item-text-color: #939393;
 
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
