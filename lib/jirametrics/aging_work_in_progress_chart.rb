@@ -17,7 +17,7 @@ class AgingWorkInProgressChart < ChartBase
         they're currently in. Hovering over a dot will show you the ID of that work item.
       </p>
       <div>
-        The #{color_block '--aging-work-in-progress-chart-shading-color'} shaded area indicates the 85%
+        The #{color_block '--non-working-days-color'} shaded area indicates the 85%
         mark for work items that have passed through here; 85% of
         previous work items left this column while still inside the shaded area. Any work items above
         the shading are outliers and they are the items that you should pay special attention to.
@@ -88,7 +88,7 @@ class AgingWorkInProgressChart < ChartBase
       'label' => "#{percentage}%",
       'barPercentage' => 1.0,
       'categoryPercentage' => 1.0,
-      'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
+      'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'].to_json,
       'data' => days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
     }
   end

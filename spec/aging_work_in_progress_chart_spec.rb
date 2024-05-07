@@ -120,7 +120,8 @@ describe AgingWorkInProgressChart do
        'categoryPercentage' => 1.0,
        'data' => [180, 180, 81],
        'label' => '85%',
-       'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
+       'backgroundColor' =>
+          "getComputedStyle(document.body).getPropertyValue('--aging-work-in-progress-chart-shading-color')",
        'type' => 'bar'
      }
     ])
