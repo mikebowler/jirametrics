@@ -1,6 +1,6 @@
 :root {
   --body-background: white;
-  --grid-line-color: #565656;
+  --grid-line-color: lightgray;
 
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
@@ -109,6 +109,7 @@ div.color_block {
     --type-story-color: #90EE90;
 
     --body-background: #343434;
+    --grid-line-color: #424242;
 
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
