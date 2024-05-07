@@ -12,17 +12,11 @@ class ChartBase
 
   def initialize
     @chart_colors = {
-      'dark:Story'  => CssVariable['--type-story-color'],
-      'dark:Task'   => CssVariable['--type-task-color'],
-      'dark:Bug'    => CssVariable['--type-bug-color'],
-      'dark:Defect' => CssVariable['--type-bug-color'],
-      'dark:Spike'  => CssVariable['--type-spike-color'],
-
-      'light:Story'  => CssVariable['--type-story-color'],
-      'light:Task'   => CssVariable['--type-task-color'],
-      'light:Bug'    => CssVariable['--type-bug-color'],
-      'light:Defect' => CssVariable['--type-bug-color'],
-      'light:Spike'  => CssVariable['--type-spike-color']
+      'Story'  => CssVariable['--type-story-color'],
+      'Task'   => CssVariable['--type-task-color'],
+      'Bug'    => CssVariable['--type-bug-color'],
+      'Defect' => CssVariable['--type-bug-color'],
+      'Spike'  => CssVariable['--type-spike-color']
     }
     @canvas_width = 800
     @canvas_height = 200
@@ -59,8 +53,8 @@ class ChartBase
     @@chart_counter += 1
   end
 
-  def color_for type:, shade: :dark
-    @chart_colors["#{shade}:#{type}"] ||= random_color
+  def color_for type:
+    @chart_colors[type] ||= random_color
   end
 
   def label_days days
@@ -201,7 +195,6 @@ class ChartBase
     color = status_category_color status
 
     text = is_category ? status.category_name : status.name
-    "<span style='color: #{color}'>#{text}</span>"
     "<span title='Category: #{status.category_name}'>#{color_block color.name} #{text}</span>"
   end
 
