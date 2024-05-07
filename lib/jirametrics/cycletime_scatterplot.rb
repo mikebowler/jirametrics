@@ -16,16 +16,18 @@ class CycletimeScatterplot < ChartBase
         This chart shows only completed work and indicates both what day it completed as well as
         how many days it took to get done. Hovering over a dot will show you the ID of the work item.
       </p>
-      <p>
-        The gray line indicates the 85th percentile (<%= overall_percent_line %> days). 85% of all
+      <div style="padding-bottom: 0.7em">
+        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} line indicates the 85th
+        percentile (<%= overall_percent_line %> days). 85% of all
         items on this chart fall on or below the line and the remaining 15% are above the line. 85%
         is a reasonable proxy for "most" so that we can say that based on this data set, we can
         predict that most work of this type will complete in <%= overall_percent_line %> days or
         less. The other lines reflect the 85% line for that respective type of work.
-      </p>
-      <p>
-        The gray vertical bars indicate weekends, when theoretically we aren't working.
-      </p>
+      </div>
+      <div>
+        The #{color_block '--non-working-days-color'} vertical bars indicate weekends, when theoretically
+        we aren't working.
+      </div>
     HTML
 
     init_configuration_block block do
@@ -44,7 +46,7 @@ class CycletimeScatterplot < ChartBase
 
     data_sets = create_datasets completed_issues
     overall_percent_line = calculate_percent_line(completed_issues)
-    @percentage_lines << [overall_percent_line, 'gray']
+    @percentage_lines << [overall_percent_line, CssVariable['--cycletime-scatterplot-overall-trendline-color']]
 
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
 
