@@ -3,7 +3,7 @@
   --default-text-color: black;
   --grid-line-color: lightgray;
 
-  --cycletime-scatterplot-overall-trendline-color: grey;
+  --cycletime-scatterplot-overall-trendline-color: gray;
 
   --non-working-days-color: #F0F0F0;
   --expedited-color: red;
@@ -116,9 +116,9 @@ div.color_block {
     --default-text-color: #aaa;
     --grid-line-color: #424242;
 
-    --cycletime-scatterplot-overall-trendline-color: grey;
+    --cycletime-scatterplot-overall-trendline-color: gray;
 
-    --hierarchy-table-inactive-item-text-color: yellow;
+    --hierarchy-table-inactive-item-text-color: ;
 
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
