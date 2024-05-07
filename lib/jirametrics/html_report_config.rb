@@ -44,9 +44,10 @@ class HtmlReportConfig
 
   def load_css html_directory:
     base_css = File.read(File.join(html_directory, 'index.css'))
-    extra_css_filename = settings['extra_css_filename']
+    extra_css_filename = settings['include_css']
     return base_css unless extra_css_filename && File.exist?(extra_css_filename)
 
+    @file_config.project_config.exporter.file_system.log("including css from file: #{extra_css_filename}")
     base_css << "\n\n" << File.read(extra_css_filename)
   end
 
