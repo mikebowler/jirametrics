@@ -282,9 +282,8 @@ class Downloader
 
       # Pick up any issues that had a status change in the range
       start_date_text = @start_date_in_query.strftime '%Y-%m-%d'
-      end_date_text = today.strftime '%Y-%m-%d'
       # find_in_range = %((status changed DURING ("#{start_date_text} 00:00","#{end_date_text} 23:59")))
-      find_in_range = %((updated >= "#{start_date_text} 00:00" AND updated <= "#{end_date_text} 23:59"))
+      find_in_range = %(updated >= "#{start_date_text} 00:00")
 
       segments << "(#{find_in_range} OR #{catch_all})"
     end
