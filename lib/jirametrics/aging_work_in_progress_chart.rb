@@ -88,7 +88,7 @@ class AgingWorkInProgressChart < ChartBase
       'label' => "#{percentage}%",
       'barPercentage' => 1.0,
       'categoryPercentage' => 1.0,
-      'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'].to_json,
+      'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
       'data' => days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
     }
   end
