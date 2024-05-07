@@ -27,7 +27,7 @@ class ProjectConfig
   end
 
   def evaluate_next_level
-    instance_eval(&@block)
+    instance_eval(&@block) if @block
   end
 
   def run

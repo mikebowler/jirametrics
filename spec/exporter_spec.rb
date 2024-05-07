@@ -90,4 +90,15 @@ describe Exporter do
       expect(actual).to eq %w[action]
     end
   end
+
+  context 'download' do
+    it 'fails if download block is missing' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      exporter.project name: 'foo' # do # rubocop:disable Lint/EmptyBlock
+      # end
+      expect { exporter.download name_filter: '*' }.to raise_error(
+        'Project "foo" is missing a download section in the config. That is required in order to download'
+      )
+    end
+  end
 end
