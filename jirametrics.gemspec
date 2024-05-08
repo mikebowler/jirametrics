@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.description = 'Tool to extract metrics from Jira and export to either a report or to CSV files'
   spec.authors     = ['Mike Bowler']
   spec.email       = 'mbowler@gargoylesoftware.com'
-  spec.files       = Dir['lib/**/*.rb'] + Dir['lib/**/*.erb'] + Dir['bin/*']
+  spec.files       = Dir['lib/**/*.{rb,json,css,erb}'] + Dir['bin/*']
   spec.homepage    = 'https://github.com/mikebowler/jirametrics'
   spec.license     = 'Apache-2.0'
   spec.required_ruby_version = '>= 3.0.0'
