@@ -7,14 +7,6 @@
   If there are expedited items that haven't yet started then they're at the bottom of the table. By the
   very definition of expedited, if we haven't started them already, we'd better get on that.
 </p>
-<p>
-  <% if age_cutoff > 0 %>
-    Items less than <%= label_days age_cutoff %> old have been excluded from this chart to provide more
-    focus on the older items. The exception are items that are either expedited or blocked - these are
-    shown no matter how old they are.
-  <% end %>
-</p>
-
 <table class='standard'>
   <thead>
     <tr>
@@ -31,9 +23,18 @@
     </tr>
   </thead>
   <tbody>
+    <% show_age_cutoff_bar_at = age_cutoff %>
     <% aging_issues.each do |issue| %>
+      <% issue_age = issue.board.cycletime.age(issue, today: @today) %>
+      <% if show_age_cutoff_bar_at && issue_age&.<(show_age_cutoff_bar_at) %>
+        <tr><th colspan=100 style="text-align: left; padding-top: 1em;">
+          The items below are less than <%= label_days age_cutoff %> old, and are only on this report
+          because they're either expedited or blocked.
+        </th></tr>
+        <% show_age_cutoff_bar_at = nil %>
+      <% end %>
       <tr>
-        <td style="text-align: right;"><%= issue.board.cycletime.age(issue, today: @today) || 'Not started' %></td>
+        <td style="text-align: right;"><%= issue_age || 'Not started' %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
         <td>
