@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require './lib/jirametrics/css_variable'
-
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings
