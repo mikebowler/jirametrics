@@ -22,7 +22,13 @@ class SprintBurndown < ChartBase
 
     @summary_stats = {}
     header_text 'Sprint burndown'
-    description_text ''
+    description_text <<-TEXT
+      <div class="p">
+        Burndowns for all sprints in this time period. The different colours are only to
+        differentiate one sprint from another as they may overlap time periods.
+      </div>
+      #{describe_non_working_days}      
+    TEXT
   end
 
   def options= arg
@@ -55,7 +61,7 @@ class SprintBurndown < ChartBase
     end
 
     result = +''
-    result << '<h1>Sprint Burndowns</h1>'
+    result << render_top_text(binding)
 
     possible_colours = (1..5).collect { |i| CssVariable["--sprint-burndown-sprint-color-#{i}"] }
     charts_to_generate = []

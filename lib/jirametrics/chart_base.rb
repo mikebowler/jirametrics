@@ -38,11 +38,16 @@ class ChartBase
     erb.result(caller_binding)
   end
 
-  # Render the file and then wrap it with standard headers and quality checks.
-  def wrap_and_render caller_binding, file
+  def render_top_text caller_binding
     result = +''
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
+  end
+
+  # Render the file and then wrap it with standard headers and quality checks.
+  def wrap_and_render caller_binding, file
+    result = +''
+    result << render_top_text(caller_binding)
     result << render(caller_binding, file)
     result
   end
