@@ -25,19 +25,20 @@ class ExpeditedChart < ChartBase
 
     header_text 'Expedited work'
     description_text <<-HTML
-      <p>
+      <div class="p">
         This chart only shows issues that have been expedited at some point. We care about these as
         any form of expedited work will affect the entire system and will slow down non-expedited work.
         Refer to this article on
         <a href="https://improvingflow.com/2021/06/16/classes-of-service.html">classes of service</a>
         for a longer explanation on why we want to avoid expedited work.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         The lines indicate time that this issue was expedited. When the line is red then the issue was
         expedited at that time. When it's gray then it wasn't. Orange dots indicate the date the work
         was started and green dots represent the completion date. Lastly, the vertical height of the
         lines/dots indicates how long it's been since this issue was created.
-      </p>
+      </div>
+      #{describe_non_working_days}
     HTML
   end
 

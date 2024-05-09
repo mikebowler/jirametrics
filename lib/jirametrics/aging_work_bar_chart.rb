@@ -27,10 +27,7 @@ class AgingWorkBarChart < ChartBase
           <li>The bottom bar indicated #{color_block '--expedited-color'} expedited.</li>
         </ol>
       </p>
-      <p>
-        The gray backgrounds indicate weekends and the red vertical line indicates the 85% point for all
-        items in this time period. Anything that started to the left of that is now an outlier.
-      </p>
+      #{ describe_non_working_days }
     HTML
 
     # Because this one will size itself as needed, we start with a smaller default size

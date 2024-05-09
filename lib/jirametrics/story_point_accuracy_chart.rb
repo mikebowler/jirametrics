@@ -6,16 +6,16 @@ class StoryPointAccuracyChart < ChartBase
 
     header_text 'Estimate Accuracy'
     description_text <<-HTML
-      <p>
+      <div class="p">
         This chart graphs estimates against actual recorded cycle times. Since
         estimates can change over time, we're graphing the estimate at the time that the story started.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         The completed dots indicate cycletimes. The aging dots (click on the legend to turn them on)
         show the current
         age of items, which will give you a hint as to where they might end up. If they're already
         far to the right then you know you have a problem.
-      </p>
+      </div>
     HTML
 
     @y_axis_label = 'Story Point Estimates'

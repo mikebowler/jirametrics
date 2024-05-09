@@ -9,7 +9,12 @@ class ThroughputChart < ChartBase
     super()
 
     header_text 'Throughput Chart'
-    description_text 'This chart shows how many items we completed per unit of time'
+    description_text <<-TEXT
+      <div class="p">
+        This chart shows how many items we completed per week
+      </div>
+      #{describe_non_working_days}
+    TEXT
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|

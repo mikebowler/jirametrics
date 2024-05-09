@@ -9,7 +9,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
 
   def default_description_text
     <<-HTML
-      <div>
+      <div class="p">
         This chart highlights work that is #{color_block '--blocked-color'} blocked,
         #{color_block '--stalled-color'} stalled, or
         #{color_block '--wip-chart-active-color'} active on each given day.
@@ -21,14 +21,25 @@ class DailyWipByBlockedStalledChart < DailyWipChart
           item in five days.</li>
         </ul>
       </div>
-      <p>
+      <div class="p">
         Note that if an item tracks as both blocked and stalled, it will only show up in the blocked totals.
         It will not be double counted.
-      </p>
-      <div>
-        The #{color_block '--body-background'} shaded section reflects items that have stopped but for which we can't identify the start date. As
-        a result, we are unable to properly show the WIP for these items.
       </div>
+      <% if @has_completed_but_not_started %>
+      <div class="p">
+        #{color_block '--wip-chart-completed-but-not-started-color'} "Completed but not started"
+        reflects the fact that while we know that it completed that day, we were unable to determine when
+        it had started; it had moved directly from a To Do status to a Done status.
+        The #{color_block '--body-background'} shading at the top shows when they might
+        have been active. Note that the this grouping is approximate as we just don't know for sure.
+      </div>
+      <% end %>
+      <div class="p">
+        The #{color_block '--body-background'} shaded section reflects items that have completed but for
+        which we can't identify the start date. As a result, we are unable to properly show the WIP for
+        these items.
+      </div>
+      #{describe_non_working_days}      
     HTML
   end
 
@@ -55,6 +66,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
     stopped_today = stopped_date == rules.current_date
 
     if stopped_today && started.nil?
+      @has_completed_but_not_started = true
       rules.label = 'Completed but not started'
       rules.color = '--wip-chart-completed-but-not-started-color'
       rules.group_priority = -1

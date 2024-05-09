@@ -12,11 +12,11 @@ class CycletimeScatterplot < ChartBase
 
     header_text 'Cycletime Scatterplot'
     description_text <<-HTML
-      <p>
+      <div class="p">
         This chart shows only completed work and indicates both what day it completed as well as
         how many days it took to get done. Hovering over a dot will show you the ID of the work item.
-      </p>
-      <div style="padding-bottom: 0.7em">
+      </div>
+      <div class="p">
         The #{color_block '--cycletime-scatterplot-overall-trendline-color'} line indicates the 85th
         percentile (<%= overall_percent_line %> days). 85% of all
         items on this chart fall on or below the line and the remaining 15% are above the line. 85%
@@ -24,10 +24,7 @@ class CycletimeScatterplot < ChartBase
         predict that most work of this type will complete in <%= overall_percent_line %> days or
         less. The other lines reflect the 85% line for that respective type of work.
       </div>
-      <div>
-        The #{color_block '--non-working-days-color'} vertical bars indicate weekends, when theoretically
-        we aren't working.
-      </div>
+      #{ describe_non_working_days }
     HTML
 
     init_configuration_block block do

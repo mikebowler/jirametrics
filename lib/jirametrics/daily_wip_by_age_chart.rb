@@ -9,17 +9,23 @@ class DailyWipByAgeChart < DailyWipChart
 
   def default_description_text
     <<-HTML
-      <p>
+      <div class="p">
         This chart shows the highest WIP on each given day. The WIP is color coded so you can see
         how old it is and hovering over the bar will show you exactly which work items it relates
-        to. The green bar underneath, shows how many items completed on that day.
-      </p>
-      <p>
-        "Completed without being started" reflects the fact that while we know that it completed
-        that day, we were unable to determine when it had started. These items will show up in
-        white at the top. Note that the this grouping is approximate because we don't know exactly when
-        it started so we're guessing.
-      </p>
+        to. The #{color_block '--wip-chart-completed-color'}
+        #{color_block '--wip-chart-completed-but-not-started-color'}
+        bars underneath, show how many items completed on that day.
+      </div>
+      <% if @has_completed_but_not_started %>
+      <div class="p">
+        #{color_block '--wip-chart-completed-but-not-started-color'} "Completed but not started"
+        reflects the fact that while we know that it completed that day, we were unable to determine when
+        it had started; it had moved directly from a To Do status to a Done status.
+        The #{color_block '--body-background'} shading at the top shows when they might
+        have been active. Note that the this grouping is approximate as we just don't know for sure.
+      </div>
+      <% end %>
+      #{describe_non_working_days}
     HTML
   end
 
@@ -31,6 +37,7 @@ class DailyWipByAgeChart < DailyWipChart
     rules.issue_hint = "(age: #{label_days (rules.current_date - started + 1).to_i})" if started
 
     if stopped && started.nil? # We can't tell when it started
+      @has_completed_but_not_started = true
       not_started stopped: stopped, rules: rules, created: issue.created.to_date
     elsif stopped == rules.current_date
       stopped_today rules: rules

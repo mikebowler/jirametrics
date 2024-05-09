@@ -238,4 +238,13 @@ class ChartBase
     result << '></div>'
     result
   end
+
+  def describe_non_working_days
+    <<-TEXT
+      <div class='p'>
+        The #{color_block '--non-working-days-color'} vertical bars indicate non-working days; weekends
+        and any other holidays mentioned in the configuration.
+      </div>
+    TEXT
+  end  
 end
