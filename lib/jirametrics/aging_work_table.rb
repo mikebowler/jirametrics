@@ -11,6 +11,18 @@ class AgingWorkTable < ChartBase
     @dead_threshold = 45
     @age_cutoff = 0
 
+    header_text 'Aging Work Table'
+    description_text <<-TEXT
+      <p>
+        This chart shows all active (started but not completed) work, ordered from oldest at the top to
+        newest at the bottom.
+      </p>
+      <p>
+        If there are expedited items that haven't yet started then they're at the bottom of the table.
+        By the very definition of expedited, if we haven't started them already, we'd better get on that.
+      </p>
+    TEXT
+
     instance_eval(&block) if block
   end
 
@@ -24,7 +36,7 @@ class AgingWorkTable < ChartBase
     end
     aging_issues += expedited_but_not_started.sort_by(&:created)
 
-    render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__)
   end
 
   def select_aging_issues
