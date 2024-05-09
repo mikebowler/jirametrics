@@ -33,10 +33,8 @@ class ExpeditedChart < ChartBase
         for a longer explanation on why we want to avoid expedited work.
       </div>
       <div class="p">
-        The lines indicate time that this issue was expedited. When the line is red then the issue was
-        expedited at that time. When it's gray then it wasn't. Orange dots indicate the date the work
-        was started and green dots represent the completion date. Lastly, the vertical height of the
-        lines/dots indicates how long it's been since this issue was created.
+        The colour of the line indicates time that this issue was #{color_block '--expedited-color'} expedited
+        or #{color_block '--expedited-chart-no-longer-expedited'} not expedited.
       </div>
       #{describe_non_working_days}
     HTML
@@ -128,20 +126,20 @@ class ExpeditedChart < ChartBase
       case action
       when :issue_started
         data << make_point(issue: issue, time: time, label: 'Started', expedited: expedited)
-        dot_colors << 'orange'
+        dot_colors << CssVariable['--expedited-chart-dot-issue-started-color']
         point_styles << 'rect'
       when :issue_stopped
         data << make_point(issue: issue, time: time, label: 'Completed', expedited: expedited)
-        dot_colors << 'green'
+        dot_colors << CssVariable['--expedited-chart-dot-issue-stopped-color']
         point_styles << 'rect'
       when :expedite_start
         data << make_point(issue: issue, time: time, label: 'Expedited', expedited: true)
-        dot_colors << 'red'
+        dot_colors << CssVariable['--expedited-chart-dot-expedite-started-color']
         point_styles << 'circle'
         expedited = true
       when :expedite_stop
         data << make_point(issue: issue, time: time, label: 'Not expedited', expedited: false)
-        dot_colors << 'gray'
+        dot_colors << CssVariable['--expedited-chart-dot-expedite-stopped-color']
         point_styles << 'circle'
         expedited = false
       else
@@ -153,7 +151,7 @@ class ExpeditedChart < ChartBase
       last_change_time = expedite_data[-1][0].to_date
       if last_change_time && last_change_time <= date_range.end && stopped_time.nil?
         data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
-        dot_colors << 'blue' # It won't be visible so it doesn't matter
+        dot_colors << '' # It won't be visible so it doesn't matter
         point_styles << 'dash'
       end
     end

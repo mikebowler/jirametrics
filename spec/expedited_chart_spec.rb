@@ -121,7 +121,12 @@ describe ExpeditedChart do
         ],
         fill: false,
         showLine: true,
-        backgroundColor: %w[orange red gray green],
+        backgroundColor:  [
+          CssVariable['--expedited-chart-dot-issue-started-color'],
+          CssVariable['--expedited-chart-dot-expedite-started-color'],
+          CssVariable['--expedited-chart-dot-expedite-stopped-color'],
+          CssVariable['--expedited-chart-dot-issue-stopped-color']
+        ],
         pointBorderColor: 'black',
         pointStyle: %w[rect circle circle rect],
         segment: ExpeditedChart::EXPEDITED_SEGMENT
@@ -146,7 +151,11 @@ describe ExpeditedChart do
         ],
         fill: false,
         showLine: true,
-        backgroundColor: %w[orange red blue],
+        backgroundColor: [
+          CssVariable['--expedited-chart-dot-issue-started-color'],
+          CssVariable['--expedited-chart-dot-expedite-started-color'],
+          ""
+        ],
         pointBorderColor: 'black',
         pointStyle: %w[rect circle dash],
         segment: ExpeditedChart::EXPEDITED_SEGMENT

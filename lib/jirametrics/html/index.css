@@ -45,12 +45,18 @@
   --estimate-accuracy-chart-active-border-color: red;
 
   --expedited-chart-no-longer-expedited: gray;
+  --expedited-chart-dot-issue-started-color: orange;
+  --expedited-chart-dot-issue-stopped-color: green;
+  --expedited-chart-dot-expedite-started-color: red;
+  --expedited-chart-dot-expedite-stopped-color: green;
 
   --sprint-burndown-sprint-color-1: blue;
   --sprint-burndown-sprint-color-2: orange;
   --sprint-burndown-sprint-color-3: green;
   --sprint-burndown-sprint-color-4: red;
   --sprint-burndown-sprint-color-5: brown;
+
+
 }
 
 body {
@@ -137,7 +143,7 @@ div.color_block {
 
     --hierarchy-table-inactive-item-text-color: #939393;
 
-     --wip-chart-completed-color: #03cb03;
+    --wip-chart-completed-color: #03cb03;
     --wip-chart-completed-but-not-started-color: #99FF99;
     --wip-chart-duration-less-than-day-color: #d2d988;
     --wip-chart-duration-week-or-less-color: #dfcd00;
