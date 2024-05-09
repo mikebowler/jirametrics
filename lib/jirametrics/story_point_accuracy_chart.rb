@@ -11,10 +11,14 @@ class StoryPointAccuracyChart < ChartBase
         estimates can change over time, we're graphing the estimate at the time that the story started.
       </div>
       <div class="p">
-        The completed dots indicate cycletimes. The aging dots (click on the legend to turn them on)
-        show the current
-        age of items, which will give you a hint as to where they might end up. If they're already
-        far to the right then you know you have a problem.
+        The #{color_block '--estimate-accuracy-chart-completed-fill-color'} completed dots indicate
+        cycletimes. 
+        <% if @has_aging_data %>
+          The #{color_block '--estimate-accuracy-chart-active-fill-color'} aging dots
+          (click on the legend to turn them on) show the current
+          age of items, which will give you a hint as to where they might end up. If they're already
+          far to the right then you know you have a problem.
+        <% end %>
       </div>
     HTML
 
@@ -55,6 +59,8 @@ class StoryPointAccuracyChart < ChartBase
       key = [estimate, cycle_time]
       (hash[key] ||= []) << issue
     end
+
+    @has_aging_data = !aging_hash.empty?
 
     [
       [completed_hash, 'Completed', 'completed', false],

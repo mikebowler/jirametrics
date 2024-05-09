@@ -27,7 +27,7 @@ class SprintBurndown < ChartBase
         Burndowns for all sprints in this time period. The different colours are only to
         differentiate one sprint from another as they may overlap time periods.
       </div>
-      #{describe_non_working_days}      
+      #{describe_non_working_days}
     TEXT
   end
 

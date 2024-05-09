@@ -34,12 +34,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
         have been active. Note that the this grouping is approximate as we just don't know for sure.
       </div>
       <% end %>
-      <div class="p">
-        The #{color_block '--body-background'} shaded section reflects items that have completed but for
-        which we can't identify the start date. As a result, we are unable to properly show the WIP for
-        these items.
-      </div>
-      #{describe_non_working_days}      
+      #{describe_non_working_days}
     HTML
   end
 
