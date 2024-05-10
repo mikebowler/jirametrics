@@ -61,6 +61,14 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           },
           <% end %>
         }
+      },
+      legend: {
+        labels: {
+          filter: function(item, chart) {
+            // Logic to remove a particular legend item goes here
+            return !item.text.includes('Trendline');
+          }
+        }
       }
     }
   }

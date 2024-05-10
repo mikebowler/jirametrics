@@ -3,6 +3,18 @@
 require 'jirametrics/daily_wip_chart'
 
 class DailyWipByAgeChart < DailyWipChart
+  def initialize block = nil
+    super block
+
+    add_trend_line line_color: '--aging-work-in-progress-by-age-trend-line-color', group_labels: [
+      'Less than a day',
+      'A week or less',
+      'Two weeks or less',
+      'Four weeks or less',
+      'More than four weeks'
+    ]
+  end
+
   def default_header_text
     'Daily WIP grouped by Age'
   end
@@ -26,6 +38,13 @@ class DailyWipByAgeChart < DailyWipChart
       </div>
       <% end %>
       #{describe_non_working_days}
+      <div class="p">
+        The #{color_block '--aging-work-in-progress-by-age-trend-line-color'} dashed line is a general trend line.
+        <% if @has_completed_but_not_started %>
+        Note that this trend line only includes items where we know both the start and end times of
+        the work so it may not be as accurate as we hope.
+        <% end %>
+      </div>
     HTML
   end
 

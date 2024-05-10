@@ -36,6 +36,11 @@ class DailyWipChart < ChartBase
     data_sets = possible_rules.collect do |grouping_rule|
       make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date
     end
+    if @trend_lines
+      data_sets = @trend_lines.filter_map do |group_labels, line_color|
+        trend_line_data_set(data: data_sets, group_labels: group_labels, color: line_color)
+      end + data_sets
+    end
 
     wrap_and_render(binding, __FILE__)
   end
@@ -119,5 +124,49 @@ class DailyWipChart < ChartBase
 
   def grouping_rules &block
     @group_by_block = block
+  end
+
+  def add_trend_line group_labels:, line_color:
+    (@trend_lines ||= []) << [group_labels, line_color]
+  end
+
+  def trend_line_data_set data:, group_labels:, color:
+    day_wip_hash = {}
+    data.each do |top_level|
+      next unless group_labels.include? top_level[:label]
+
+      top_level[:data].each do |datapoint|
+        date = datapoint[:x]
+        day_wip_hash[date] = (day_wip_hash[date] || 0) + datapoint[:y]
+      end
+    end
+
+    points = day_wip_hash
+      .collect { |date, wip| [date.jd, wip] }
+      .sort_by(&:first)
+
+    calculator = TrendLineCalculator.new(points)
+    return nil unless calculator.valid?
+
+    data_points = calculator.chart_datapoints(
+      range: date_range.begin.jd..date_range.end.jd,
+      max_y: points.collect { |_date, wip| wip }.max
+    )
+    data_points.each do |point_hash|
+      point_hash[:x] = chart_format Date.jd(point_hash[:x])
+    end
+
+    {
+      type: 'line',
+      label: "Trendline",
+      data: data_points,
+      fill: false,
+      borderWidth: 1,
+      markerType: 'none',
+      borderColor: CssVariable[color],
+      borderDash: [6, 3],
+      pointStyle: 'dash',
+      hidden: false
+    }
   end
 end

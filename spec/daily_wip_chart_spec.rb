@@ -225,4 +225,45 @@ describe DailyWipChart do
       })
     end
   end
+
+  context 'trend_line_data_set' do
+    let(:sample_data) do
+      [
+        {
+          label: 'cat',
+          data: [
+            { x: to_date('2024-01-01'), y: 3 },
+            { x: to_date('2024-01-02'), y: 4 },
+            { x: to_date('2024-01-03'), y: 5 }
+          ]
+        }
+      ]
+    end
+
+    it 'returns nil if no data' do
+      expect(chart.trend_line_data_set data: {}, group_labels: ['one'], color: 'red').to be_nil
+    end
+
+    it 'returns nil if no group labels match' do
+      expect(chart.trend_line_data_set data: sample_data, group_labels: ['one'], color: 'red').to be_nil
+    end
+
+    it 'processes trend line' do
+      expect(chart.trend_line_data_set data: sample_data, group_labels: ['cat'], color: 'red').to eq(
+        borderColor: 'red',
+        borderDash: [6, 3],
+        borderWidth: 1,
+        data: [
+          { x: '2023-12-29', y: 0 },
+          { x: '2023-12-29', y: 0 }
+        ],
+        fill: false,
+        hidden: false,
+        label: 'Trendline',
+        markerType: 'none',
+        pointStyle: 'dash',
+        type: 'line'
+      )
+    end
+  end
 end
