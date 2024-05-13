@@ -115,7 +115,7 @@ class ProjectConfig
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
-    raise "No boards found in #{@target_path.inspect}" if @all_boards.empty?
+    raise "No boards found for #{@file_prefix} in #{@target_path.inspect}" if @all_boards.empty?
   end
 
   def load_board board_id:, filename:
