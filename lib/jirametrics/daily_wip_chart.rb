@@ -20,13 +20,16 @@ class DailyWipChart < ChartBase
     header_text default_header_text
     description_text default_description_text
 
-    if block
-      instance_eval(&block)
-    else
+    instance_eval(&block) if block
+
+    unless @group_by_block
       grouping_rules do |issue, rules|
         default_grouping_rules issue: issue, rules: rules
       end
     end
+
+    # Because this one will size itself as needed, we start with a smaller default size
+    # @canvas_height = 80
   end
 
   def run
@@ -41,6 +44,8 @@ class DailyWipChart < ChartBase
         trend_line_data_set(data: data_sets, group_labels: group_labels, color: line_color)
       end + data_sets
     end
+
+    # grow_chart_height_if_too_many_data_sets data_sets.size
 
     wrap_and_render(binding, __FILE__)
   end
@@ -114,7 +119,7 @@ class DailyWipChart < ChartBase
   end
 
   def configure_rule issue:, date:
-    raise 'grouping_rules must be set' if @group_by_block.nil?
+    raise "#{self.class}: grouping_rules must be set" if @group_by_block.nil?
 
     rules = DailyGroupingRules.new
     rules.current_date = date
@@ -168,5 +173,12 @@ class DailyWipChart < ChartBase
       pointStyle: 'dash',
       hidden: false
     }
+  end
+
+  def grow_chart_height_if_too_many_data_sets count
+    px_per_bar = 8
+    bars_per_issue = 0.5
+    preferred_height = count * px_per_bar * bars_per_issue
+    @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
   end
 end
