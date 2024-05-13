@@ -285,7 +285,7 @@ class Issue
         end
       elsif change.link?
         unless /^This issue (?<link_text>.+) (?<issue_key>.+)$/ =~ (change.value || change.old_value)
-          puts "Can't parse link text: #{change.value || change.old_value}"
+          puts "Issue(#{key}) Can't parse link text: #{change.value || change.old_value}"
           next
         end
 
