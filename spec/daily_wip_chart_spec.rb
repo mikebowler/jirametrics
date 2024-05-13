@@ -35,7 +35,9 @@ describe DailyWipChart do
         [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
       ]
       chart.issues = [issue1]
-      expect { chart.group_issues_by_active_dates }.to raise_error('grouping_rules must be set')
+      expect { chart.group_issues_by_active_dates }.to raise_error(
+        'If you use this class directly then you must provide grouping_rules'
+      )
     end
 
     it 'returns nothing when grouping rules ignore everything' do
