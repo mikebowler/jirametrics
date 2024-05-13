@@ -57,7 +57,7 @@ class Exporter
           end
 
           discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
-
+hierarchy_table
           cycletime_scatterplot do
             show_trend_lines
           end
@@ -94,8 +94,14 @@ class Exporter
               tickets</a>. Neither of those is desirable.
             TEXT
             grouping_rules do |issue, rules|
-              rules.label = issue.parent&.key || 'No parent'
-              rules.color = '--body-background' if rules.label == 'No parent'
+              parent = issue.parent&.key
+              if parent
+                rules.label = parent
+              else
+                rules.label = "No parent"
+                rules.group_priority = 1000
+                rules.color = '--body-background'
+              end
             end
           end
           expedited_chart

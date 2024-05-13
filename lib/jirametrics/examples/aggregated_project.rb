@@ -40,21 +40,22 @@ class Exporter
           daily_wip_chart do
             header_text 'Daily WIP by Parent'
             description_text <<-TEXT
-              <p>How much work is in progress, grouped by the parent of the issue. This will give us an
+              How much work is in progress, grouped by the parent of the issue. This will give us an
               indication of how focused we are on higher level objectives. If there are many parent
               tickets in progress at the same time, either this team has their focus scattered or we
               aren't doing a good job of
               <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
-              tickets</a>. Neither of those is desirable.</p>
-              <p>If you're expecting all work items to have parents and there are a lot that don't,
-              that's also something to look at. Consider whether there is even value in aggregating
-              these projects if they don't share parent dependencies. Aggregation helps us when we're
-              looking at related work and if there aren't parent dependencies then the work may not
-              be related.</p>
+              tickets</a>. Neither of those is desirable.
             TEXT
             grouping_rules do |issue, rules|
-              rules.label = issue.parent&.key || 'No parent'
-              rules.color = 'white' if rules.label == 'No parent'
+              parent = issue.parent&.key
+              if parent
+                rules.label = parent
+              else
+                rules.label = "No parent"
+                rules.group_priority = 1000
+                rules.color = '--body-background'
+              end
             end
           end
           aging_work_table do
