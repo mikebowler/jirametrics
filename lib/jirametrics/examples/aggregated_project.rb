@@ -32,31 +32,15 @@ class Exporter
         html_report do
           cycletime_scatterplot do
             show_trend_lines
+            # For an aggregated report we group by board rather than by type
             grouping_rules do |issue, rules|
               rules.label = issue.board.name
             end
           end
           # aging_work_in_progress_chart
-          daily_wip_chart do
-            header_text 'Daily WIP by Parent'
-            description_text <<-TEXT
-              How much work is in progress, grouped by the parent of the issue. This will give us an
-              indication of how focused we are on higher level objectives. If there are many parent
-              tickets in progress at the same time, either this team has their focus scattered or we
-              aren't doing a good job of
-              <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
-              tickets</a>. Neither of those is desirable.
-            TEXT
-            grouping_rules do |issue, rules|
-              parent = issue.parent&.key
-              if parent
-                rules.label = parent
-              else
-                rules.label = "No parent"
-                rules.group_priority = 1000
-                rules.color = '--body-background'
-              end
-            end
+          daily_wip_by_parent_chart do
+            # When aggregating, the chart tends to need more vertical space
+            canvas height: 400, width: 800
           end
           aging_work_table do
             # In an aggregated report, we likely only care about items that are old so exclude anything

@@ -284,6 +284,7 @@ class Issue
           blocking_status = change.value
         end
       elsif change.link?
+        # Example: "This issue is satisfied by ANON-30465"
         unless /^This issue (?<link_text>.+) (?<issue_key>.+)$/ =~ (change.value || change.old_value)
           puts "Issue(#{key}) Can't parse link text: #{change.value || change.old_value}"
           next

@@ -102,6 +102,10 @@ class HtmlReportConfig
     execute_chart DailyWipByBlockedStalledChart.new
   end
 
+  def daily_wip_by_parent_chart &block
+    execute_chart DailyWipByParentChart.new block
+  end
+
   def throughput_chart &block
     execute_chart ThroughputChart.new(block)
   end

@@ -57,7 +57,7 @@ class Exporter
           end
 
           discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
-hierarchy_table
+
           cycletime_scatterplot do
             show_trend_lines
           end
@@ -83,27 +83,7 @@ hierarchy_table
           aging_work_table
           daily_wip_by_age_chart
           daily_wip_by_blocked_stalled_chart
-          daily_wip_chart do
-            header_text 'Daily WIP by Parent'
-            description_text <<-TEXT
-              How much work is in progress, grouped by the parent of the issue. This will give us an
-              indication of how focused we are on higher level objectives. If there are many parent
-              tickets in progress at the same time, either this team has their focus scattered or we
-              aren't doing a good job of
-              <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
-              tickets</a>. Neither of those is desirable.
-            TEXT
-            grouping_rules do |issue, rules|
-              parent = issue.parent&.key
-              if parent
-                rules.label = parent
-              else
-                rules.label = "No parent"
-                rules.group_priority = 1000
-                rules.color = '--body-background'
-              end
-            end
-          end
+          daily_wip_by_parent_chart
           expedited_chart
           sprint_burndown
           story_point_accuracy_chart

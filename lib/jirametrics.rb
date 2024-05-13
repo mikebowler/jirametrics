@@ -66,6 +66,7 @@ class JiraMetrics < Thor
     require 'jirametrics/sprint'
     require 'jirametrics/issue'
     require 'jirametrics/daily_wip_by_age_chart'
+    require 'jirametrics/daily_wip_by_parent_chart'
     require 'jirametrics/aging_work_in_progress_chart'
     require 'jirametrics/cycletime_scatterplot'
     require 'jirametrics/sprint_issue_change_data'
