@@ -271,7 +271,7 @@ class DataQualityReport < ChartBase
       board_names = entry_list.collect { |entry| entry.issue.board.name.inspect }
       entry_list.first.report(
         problem_key: :issue_on_multiple_boards,
-        detail: "Found on boards: #{board_names.join(', ')}"
+        detail: "Found on boards: #{board_names.sort.join(', ')}"
       )
     end
   end
