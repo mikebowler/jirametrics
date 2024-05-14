@@ -8,7 +8,7 @@ class ProjectConfig
 
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings
+    :settings, :aggregate_config
   attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil

@@ -30,6 +30,16 @@ class Exporter
         end
 
         html_report do
+          html '<h1>Boards included in this report</h1><ul>', type: :header
+          board_lines = []
+          included_projects.each do |project|
+            project.all_boards.values.each do |board|
+              board_lines << "<a href='#{project.file_prefix}.html'>#{board.name}</a> from project #{project.name}"
+            end
+          end
+          board_lines.sort.each { |line| html "<li>#{line}</li>", type: :header }
+          html '</ul>', type: :header
+
           cycletime_scatterplot do
             show_trend_lines
             # For an aggregated report we group by board rather than by type

@@ -26,6 +26,11 @@ class HtmlReportConfig
     end
   end
 
+  # Mostly this is its own method so it can be called from the config
+  def included_projects
+    @file_config.project_config.aggregate_config.included_projects
+  end
+
   def run
     instance_eval(&@block)
 
@@ -123,7 +128,8 @@ class HtmlReportConfig
   end
 
   def html string, type: :body
-    raise "Unexpected type: #{type}" unless %i[body header].include? type
+    allowed_types = %i[body header]
+    raise "Unexpected type: #{type} allowed_types: #{allowed_types.inspect}" unless allowed_types.include? type
 
     @sections << [string, type]
   end

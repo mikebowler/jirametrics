@@ -3,7 +3,7 @@
 require 'date'
 
 class AggregateConfig
-  attr_reader :project_config
+  attr_reader :project_config, :included_projects
 
   def initialize project_config:, block:
     @project_config = project_config
