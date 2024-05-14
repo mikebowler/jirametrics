@@ -170,10 +170,12 @@ class Downloader
     json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
     exit_if_call_failed json
 
-    @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
-
     file_prefix = @download_config.project_config.file_prefix
     @file_system.save_json json: json, filename: "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+
+    # We have a reported bug that blew up on this line. Moved it after the save so we can
+    # actually look at the returned json.
+    @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
 
     download_sprints board_id: board_id if json['type'] == 'scrum'
   end
