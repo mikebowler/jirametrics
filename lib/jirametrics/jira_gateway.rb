@@ -13,7 +13,10 @@ class JiraGateway
 
   def call_url relative_url:
     command = make_curl_command url: "#{@jira_url}#{relative_url}"
-    JSON.parse call_command command
+    result = call_command command
+    JSON.parse result
+  rescue => e # rubocop:disable Style/RescueStandardError
+    puts "Error #{e.inspect} when parsing result: #{result.inspect}"
   end
 
   def call_command command
