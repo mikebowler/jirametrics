@@ -148,9 +148,9 @@ class Downloader
 
   def exit_if_call_failed json
     # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
-    return unless json['errorMessages'] || json['errorMessage']
+    return unless json['error'] || json['errorMessages'] || json['errorMessage']
 
-    log "Download failed. See #{@logfile_name} for details.", both: true
+    log "Download failed. See #{@file_system.logfile_name} for details.", both: true
     log "  #{JSON.pretty_generate(json)}"
     exit 1
   end
@@ -168,6 +168,7 @@ class Downloader
   def download_board_configuration board_id:
     log "  Downloading board configuration for board #{board_id}", both: true
     json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
+
     exit_if_call_failed json
 
     file_prefix = @download_config.project_config.file_prefix
