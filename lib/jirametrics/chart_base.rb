@@ -42,6 +42,7 @@ class ChartBase
     result = +''
     result << "<h1>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
+    result
   end
 
   # Render the file and then wrap it with standard headers and quality checks.
