@@ -69,7 +69,7 @@ class Issue
   end
 
   def key_as_i
-    $1.to_i if key =~ /-(\d+)$/
+    key =~ /-(\d+)$/ ? $1.to_i : 0
   end
 
   def component_names

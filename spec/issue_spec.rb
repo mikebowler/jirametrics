@@ -852,4 +852,36 @@ describe Issue do
       expect(issue1.created).to be_nil
     end
   end
+
+  context 'key_as_i' do
+    it 'returns when valid' do
+      expect(issue1.key_as_i).to eq 1
+    end
+
+    it 'returns 0 when invalid' do
+      issue1.raw['key'] = 'ABC'
+      expect(issue1.key_as_i).to eq 0
+    end
+  end
+
+  context 'component_names' do
+    it 'returns empty when there are none' do
+      issue1.raw['fields']['components'] = nil
+      expect(issue1.component_names).to be_empty
+    end
+
+    it 'returns names' do
+      issue1.raw['fields']['components'] = [
+        {'name' => 'One'}
+      ]
+      expect(issue1.component_names).to eq ['One']
+    end
+  end
+
+  it 'blows up if status can\'t be found for find_status_by_name' do
+    expect { issue1.find_status_by_name 'undefined_status_name' }.to raise_error(
+      'Status name "undefined_status_name" for issue SP-1 not found in ["Backlog", ' \
+        '"Selected for Development", "In Progress", "Review", "Done"]'
+    )
+  end
 end
