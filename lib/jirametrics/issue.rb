@@ -478,6 +478,31 @@ class Issue
     comparison
   end
 
+  def dump
+    result = +''
+    result << "#{key} (#{type}): #{compact_text summary, 200}\n"
+
+    assignee = raw['fields']['assignee']
+    result << "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>\n" unless assignee.nil?
+
+    raw['fields']['issuelinks'].each do |link|
+      result << "  [link] #{link['type']['outward']} #{link['outwardIssue']['key']}\n" if link['outwardIssue']
+      result << "  [link] #{link['type']['inward']} #{link['inwardIssue']['key']}\n" if link['inwardIssue']
+    end
+    changes.each do |change|
+      value = change.value
+      old_value = change.old_value
+
+      message = "  [change] #{change.time} [#{change.field}] "
+      message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
+      message << compact_text(value).inspect
+      message << " (#{change.author})"
+      message << ' <<artificial entry>>' if change.artificial?
+      result << message << "\n"
+    end
+    result
+  end
+
   private
 
   def assemble_author raw
@@ -507,5 +532,13 @@ class Issue
       created = parse_time(comment['created'])
       @changes << ChangeItem.new(raw: raw, time: created, author: author, artificial: true)
     end
+  end
+
+  def compact_text text, max = 60
+    return nil if text.nil?
+
+    text = text.gsub(/\s+/, ' ').strip
+    text = "#{text[0..max]}..." if text.length > max
+    text
   end
 end

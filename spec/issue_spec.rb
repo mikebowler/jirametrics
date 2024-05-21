@@ -798,4 +798,58 @@ describe Issue do
       expect(issue1.author).to eq 'Mike Bowler'
     end
   end
+
+  context 'dump' do
+    it 'dumps simple issue' do
+      expect(issue1.dump).to eq <<~TEXT
+        SP-1 (Story): Create new draft event
+          [change] 2021-06-18 18:41:29 +0000 [status] "Backlog" (Mike Bowler) <<artificial entry>>
+          [change] 2021-06-18 18:41:29 +0000 [priority] "Medium" (Mike Bowler) <<artificial entry>>
+          [change] 2021-06-18 18:43:34 +0000 [status] "Backlog" -> "Selected for Development" (Mike Bowler)
+          [change] 2021-06-18 18:44:21 +0000 [status] "Selected for Development" -> "In Progress" (Mike Bowler)
+          [change] 2021-08-29 18:04:39 +0000 [Flagged] "Impediment" (Mike Bowler)
+      TEXT
+    end
+
+    it 'dumps complex issue' do
+      fields = issue1.raw['fields']
+      fields['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
+      fields['issuelinks'] = [
+        {
+          'type' => {
+            'inward' => 'Clones'
+          },
+          'inwardIssue' => {
+            'key' => 'ABC123'
+          }
+        },
+        {
+          'type' => {
+            'outward' => 'Cloned by'
+          },
+          'outwardIssue' => {
+            'key' => 'ABC456'
+          }
+        }
+      ]
+      expect(issue1.dump).to eq <<~TEXT
+        SP-1 (Story): Create new draft event
+          [assignee] "Barney Rubble" <barney@rubble.com>
+          [link] Clones ABC123
+          [link] Cloned by ABC456
+          [change] 2021-06-18 18:41:29 +0000 [status] "Backlog" (Mike Bowler) <<artificial entry>>
+          [change] 2021-06-18 18:41:29 +0000 [priority] "Medium" (Mike Bowler) <<artificial entry>>
+          [change] 2021-06-18 18:43:34 +0000 [status] "Backlog" -> "Selected for Development" (Mike Bowler)
+          [change] 2021-06-18 18:44:21 +0000 [status] "Selected for Development" -> "In Progress" (Mike Bowler)
+          [change] 2021-08-29 18:04:39 +0000 [Flagged] "Impediment" (Mike Bowler)
+      TEXT
+    end
+  end
+
+  context 'created' do
+    it "doesn't blow up if created is missing" do # Seen in production
+      issue1.raw['fields']['created'] = nil
+      expect(issue1.created).to be_nil
+    end
+  end
 end
