@@ -4,8 +4,20 @@ require './spec/spec_helper'
 
 describe AggregateConfig do
   context 'include_issues_from' do
-    let(:exporter) { Exporter.new }
+    let(:exporter) { Exporter.new file_system: MockFileSystem.new }
     let(:target_path) { 'spec/testdata/' }
+
+    it 'raises error if project not found' do
+      project = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'aggregate'
+      )
+      subject = described_class.new project_config: project, block: nil
+
+      subject.include_issues_from 'foobar'
+      expect(exporter.file_system.log_messages).to eq [
+        'Warning: Aggregated project "aggregate" is attempting to load project "foobar" but it can\'t be found. Is it disabled?'
+      ]
+    end
 
     it 'does not allow aggregating projects from different jira instances' do
       project1 = ProjectConfig.new(

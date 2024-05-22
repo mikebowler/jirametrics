@@ -40,7 +40,7 @@ class AggregateConfig
   def include_issues_from project_name
     project = @project_config.exporter.project_configs.find { |p| p.name == project_name }
     if project.nil?
-      puts "Warning: Aggregated project #{@project_config.name.inspect} is attempting to load " \
+      log "Warning: Aggregated project #{@project_config.name.inspect} is attempting to load " \
         "project #{project_name.inspect} but it can't be found. Is it disabled?"
       return
     end
@@ -57,7 +57,7 @@ class AggregateConfig
     else
       issues = project.file_configs.first.issues
       if project.file_configs.size > 1
-        puts 'More than one file section is defined. For the aggregated view, we always use ' \
+        log 'More than one file section is defined. For the aggregated view, we always use ' \
           'the first file section'
       end
     end
@@ -78,5 +78,11 @@ class AggregateConfig
     raise "Can't calculate range" if earliest.nil? || latest.nil?
 
     earliest..latest
+  end
+
+  private
+
+  def log message
+    @project_config.exporter.file_system.log message
   end
 end
