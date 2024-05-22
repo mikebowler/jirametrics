@@ -115,6 +115,15 @@ describe AgingWorkTable do
       table.issues = [issue1, issue2]
       expect(table.select_aging_issues).to eq [issue1]
     end
+
+    it 'ignores issues younger than the cutoff' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
+      table.age_cutoff 5
+      table.today = to_date '2021-01-03'
+      table.issues = [issue1]
+      expect(table.select_aging_issues).to be_empty
+      expect(table.age_cutoff).to eq 5 # Pull it back out just to verify that we can.
+    end
   end
 
   context 'fix_versions_text' do
@@ -175,5 +184,38 @@ describe AgingWorkTable do
           "Sprint2 <span title='Sprint closed' style='font-size: 0.8em;'>✅</span>"
       )
     end
+  end
+
+  context 'parent_hierarchy' do
+    it 'works when no parent' do
+      expect(table.parent_hierarchy(issue1)).to eq [issue1]
+    end
+
+    it 'handles simple hierarchy' do
+      issue1.parent = issue2
+      expect(table.parent_hierarchy(issue1)).to eq [issue2, issue1]
+    end
+
+    it 'handles recursive loops' do
+      issue1.parent = issue2
+      issue2.parent = issue1
+      expect(table.parent_hierarchy(issue1)).to eq [issue1, issue2, issue1]
+    end
+  end
+
+  it 'should find expedited_but_not_started' do
+    issue3 = empty_issue key: 'SP-3', created: '2024-01-01', board: board
+    # issue3.changes << mock_change(field: 'Priority', value: 'Highest', time: '2024-01-02')
+    issue3.raw['fields']['priority'] = {'name' => 'Highest'}
+
+    board.cycletime = mock_cycletime_config stub_values: [
+      [issue1, nil, nil],
+      [issue2, nil, nil],
+      [issue3, nil, nil],
+    ]
+    board.expedited_priority_names = ['Highest']
+    table.issues = [issue1, issue2, issue3]
+
+    expect(table.expedited_but_not_started).to eq [issue3]
   end
 end

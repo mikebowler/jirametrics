@@ -212,7 +212,9 @@ describe ChartBase do
     it 'handles todo statuses' do
       expect(chart_base.format_status 'Backlog', board: board).to eq(
         "<span title='Category: To Do'><div class='color_block' " \
-          "style='background: var(--status-category-todo-color);'></div> Backlog</span>"
+          "style='background: var(--status-category-todo-color);'></div> Backlog</span>" \
+          "<span title='Not visible: The status \"Backlog\" is not mapped to any column and " \
+          "will not be visible' style='font-size: 0.8em;'> 👀</span>"
       )
     end
 

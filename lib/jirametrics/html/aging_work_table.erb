@@ -7,7 +7,7 @@
       <th>Issue</th>
       <th>Status</th>
       <th>Fix versions</th>
-      <% if any_scrum_boards? %>
+      <% if any_scrum_boards %>
         <th>Sprints</th>
       <% end %>
       <th><%= aggregated_project? ? 'Board' : 'Who' %></th>
@@ -40,9 +40,9 @@
             </div>
           <% end %>
         </td>
-        <td><%= format_status issue.status.name, board: issue.board %><%= unmapped_status_text(issue) unless current_status_visible? issue %></td>
+        <td><%= format_status issue.status.name, board: issue.board %></td>
         <td><%= fix_versions_text(issue) %></td>
-        <% if any_scrum_boards? %>
+        <% if any_scrum_boards %>
           <td><%= sprints_text(issue) %></td>
         <% end %>
         <td><%= aggregated_project? ? issue.board.name : issue.assigned_to %></td>

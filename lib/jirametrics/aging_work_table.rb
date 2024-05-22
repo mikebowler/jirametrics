@@ -4,6 +4,7 @@ require 'jirametrics/chart_base'
 
 class AgingWorkTable < ChartBase
   attr_accessor :today, :board_id
+  attr_reader :any_scrum_boards
 
   def initialize block
     super()
@@ -28,15 +29,16 @@ class AgingWorkTable < ChartBase
 
   def run
     @today = date_range.end
-    aging_issues = select_aging_issues
-
-    expedited_but_not_started = @issues.select do |issue|
-      cycletime = issue.board.cycletime
-      cycletime.started_time(issue).nil? && cycletime.stopped_time(issue).nil? && issue.expedited?
-    end
-    aging_issues += expedited_but_not_started.sort_by(&:created)
+    aging_issues = select_aging_issues + expedited_but_not_started
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def expedited_but_not_started
+    @issues.select do |issue|
+      cycletime = issue.board.cycletime
+      cycletime.started_time(issue).nil? && cycletime.stopped_time(issue).nil? && issue.expedited?
+    end.sort_by(&:created)
   end
 
   def select_aging_issues
@@ -52,10 +54,6 @@ class AgingWorkTable < ChartBase
     end
     @any_scrum_boards = aging_issues.any? { |issue| issue.board.scrum? }
     aging_issues.sort { |a, b| b.board.cycletime.age(b, today: @today) <=> a.board.cycletime.age(a, today: @today) }
-  end
-
-  def icon_span title:, icon:
-    "<span title='#{title}' style='font-size: 0.8em;'>#{icon}</span>"
   end
 
   def expedited_text issue
@@ -83,13 +81,6 @@ class AgingWorkTable < ChartBase
         color_block '--stalled-color', title: current.reasons
       end
     end
-  end
-
-  def unmapped_status_text issue
-    icon_span(
-      title: "Not visible: The status #{issue.status.name.inspect} is not mapped to any column and will not be visible",
-      icon: ' 👀'
-    )
   end
 
   def fix_versions_text issue
@@ -124,17 +115,9 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
-  def current_status_visible? issue
-    issue.board.visible_columns.any? { |column| column.status_ids.include? issue.status.id }
-  end
-
   def age_cutoff age = nil
     @age_cutoff = age.to_i if age
     @age_cutoff
-  end
-
-  def any_scrum_boards?
-    @any_scrum_boards
   end
 
   def parent_hierarchy issue
