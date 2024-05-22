@@ -64,23 +64,6 @@ class AggregateConfig
     @project_config.add_issues issues
   end
 
-  def date_range range
-    @project_config.time_range = date_range_to_time_range(
-      date_range: range, timezone_offset: project_config.exporter.timezone_offset
-    )
-  end
-
-  def date_range_to_time_range date_range:, timezone_offset:
-    start_of_first_day = Time.new(
-      date_range.begin.year, date_range.begin.month, date_range.begin.day, 0, 0, 0, timezone_offset
-    )
-    end_of_last_day = Time.new(
-      date_range.end.year, date_range.end.month, date_range.end.day, 23, 59, 59, timezone_offset
-    )
-
-    start_of_first_day..end_of_last_day
-  end
-
   def find_time_range projects:
     raise "Can't calculate aggregated range as no projects were included." if projects.empty?
 
