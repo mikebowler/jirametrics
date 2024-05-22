@@ -116,4 +116,64 @@ describe AgingWorkTable do
       expect(table.select_aging_issues).to eq [issue1]
     end
   end
+
+  context 'fix_versions_text' do
+    it 'returns blank when no fix versions' do
+      expect(table.fix_versions_text issue1).to eq ''
+    end
+
+    it 'returns correctly with a mix of fix versions' do
+      issue1.fix_versions << FixVersion.new({'name' => 'One', 'released' => false})
+      issue1.fix_versions << FixVersion.new({'name' => 'Two', 'released' => true})
+      expect(table.fix_versions_text issue1).to eq(
+        "One<br />Two <span title='Released. Likely not on the board anymore.' style='font-size: 0.8em;'>✅</span>"
+      )
+    end
+  end
+
+  context 'sprints_text' do
+    it 'returns empty when no sprints' do
+      expect(table.sprints_text issue1).to eq ''
+    end
+
+          # {
+          #   "field": "Sprint",
+          #   "fieldtype": "custom",
+          #   "fieldId": "customfield_10020",
+          #   "from": "7",
+          #   "fromString": "Scrum Sprint 7",
+          #   "to": "7, 8",
+          #   "toString": "Scrum Sprint 7, Scrum Sprint 8"
+          # }
+
+    it 'returns when one active sprint' do
+      # Put a non-sprint change there to ensure it doesn't blow up on those
+      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
+      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1', value_id: "2", time: '2020-10-03')
+
+      issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
+        'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
+      })
+      expect(table.sprints_text issue1).to eq(
+        "Sprint1 <span title='Active sprint' style='font-size: 0.8em;'>➡️</span>"
+      )
+    end
+
+    it 'returns when multiple sprint' do
+      # Put a non-sprint change there to ensure it doesn't blow up on those
+      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
+      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1, Sprint2', value_id: "2, 3", time: '2020-10-03')
+
+      issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
+        'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
+      })
+      issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
+        'id' => 3, 'state' => 'inactive', 'name' => 'Sprint2'
+      })
+      expect(table.sprints_text issue1).to eq(
+        "Sprint1 <span title='Active sprint' style='font-size: 0.8em;'>➡️</span><br />" \
+          "Sprint2 <span title='Sprint closed' style='font-size: 0.8em;'>✅</span>"
+      )
+    end
+  end
 end
