@@ -2,9 +2,9 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
-    :time_range, :data_quality, :holiday_dates, :settings
+    :time_range, :data_quality, :holiday_dates, :settings, :issues
   attr_writer :aggregated_project
-  attr_reader :issues, :canvas_width, :canvas_height
+  attr_reader :canvas_width, :canvas_height
 
   @@chart_counter = 0
 
@@ -153,17 +153,6 @@ class ChartBase
     end
   end
 
-  def sprints_in_time_range board
-    board.sprints.select do |sprint|
-      sprint_end_time = sprint.completed_time || sprint.end_time
-      sprint_start_time = sprint.start_time
-      next false if sprint_start_time.nil?
-
-      time_range.include?(sprint_start_time) || time_range.include?(sprint_end_time) ||
-        (sprint_start_time < time_range.begin && sprint_end_time > time_range.end)
-    end || []
-  end
-
   def chart_format object
     if object.is_a? Time
       # "2022-04-09T11:38:30-07:00"
@@ -188,12 +177,9 @@ class ChartBase
   def format_status name_or_id, board:, is_category: false
     begin
       statuses = board.possible_statuses.expand_statuses([name_or_id])
-    rescue RuntimeError => e
-      return "<span style='color: red'>#{name_or_id}</span>" if e.message.match?(/^Status not found:/)
-
-      throw e
+    rescue StatusNotFoundError => e
+      return "<span style='color: red'>#{name_or_id}</span>"
     end
-    raise "Expected exactly one match and got #{statuses.inspect} for #{name_or_id.inspect}" if statuses.size > 1
 
     status = statuses.first
     color = status_category_color status
@@ -216,10 +202,10 @@ class ChartBase
 
   def status_category_color status
     case status.category_name
-    when nil then 'black'
     when 'To Do' then CssVariable['--status-category-todo-color']
     when 'In Progress' then CssVariable['--status-category-inprogress-color']
     when 'Done' then CssVariable['--status-category-done-color']
+    else 'black' # Theoretically impossible but seen in prod.
     end
   end
 
@@ -235,18 +221,6 @@ class ChartBase
 
   def canvas_responsive?
     @canvas_responsive
-  end
-
-  def filter_issues &block
-    @filter_issues_block = block
-  end
-
-  def issues= issues
-    @issues = issues
-    return unless @filter_issues_block
-
-    @issues = issues.filter_map { |i| @filter_issues_block.call(i) }.uniq
-    puts @issues.collect(&:key).join(', ')
   end
 
   def color_block color, title: nil

@@ -108,6 +108,17 @@ class SprintBurndown < ChartBase
     result
   end
 
+  def sprints_in_time_range board
+    board.sprints.select do |sprint|
+      sprint_end_time = sprint.completed_time || sprint.end_time
+      sprint_start_time = sprint.start_time
+      next false if sprint_start_time.nil?
+
+      time_range.include?(sprint_start_time) || time_range.include?(sprint_end_time) ||
+        (sprint_start_time < time_range.begin && sprint_end_time > time_range.end)
+    end || []
+  end
+
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
   def changes_for_one_issue issue:, sprint:
     story_points = 0.0

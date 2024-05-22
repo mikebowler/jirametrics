@@ -252,4 +252,13 @@ describe ChartBase do
       )
     end
   end
+
+  it 'returns black for an unknown status category' do
+    expect(chart_base.status_category_color(Status.new)).to eq 'black'
+  end
+
+  it 'returns reasonable random color' do
+    # Since it's random, all we can verify is the format.
+    expect(chart_base.random_color).to match(/^#[0-9a-f]{6}$/)
+  end
 end
