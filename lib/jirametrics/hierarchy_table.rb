@@ -3,7 +3,7 @@
 require 'jirametrics/chart_base'
 
 class HierarchyTable < ChartBase
-  def initialize block = nil
+  def initialize block
     super()
 
     header_text 'Hierarchy Table'
@@ -11,7 +11,7 @@ class HierarchyTable < ChartBase
       <p>Shows all issues through this time period and the full hierarchy of their parents.</p>
     HTML
 
-    instance_eval(&block) if block
+    instance_eval(&block)
   end
 
   def run

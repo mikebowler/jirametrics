@@ -175,3 +175,7 @@ end
 def to_date string
   Date.parse string
 end
+
+def empty_config_block
+  ->(_) {}
+end

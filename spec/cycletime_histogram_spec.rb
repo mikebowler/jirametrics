@@ -7,15 +7,14 @@ describe CycletimeHistogram do
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
   let(:issue10) { load_issue 'SP-10', board: board }
+  let(:chart) { described_class.new(empty_config_block) }
 
   context 'histogram_data_for' do
     it 'handles no issues' do
-      chart = described_class.new
       expect(chart.histogram_data_for issues: []).to be_empty
     end
 
     it 'handles a mix of issues' do
-      chart = described_class.new
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2022-01-01', '2022-01-04'],
         [issue2, '2022-01-01', '2022-01-04'],
@@ -27,7 +26,6 @@ describe CycletimeHistogram do
 
   context 'data_set_for' do
     it 'handles no data' do
-      chart = described_class.new
       expect(chart.data_set_for histogram_data: {}, label: 'foo', color: 'red').to eq({
         backgroundColor: 'red',
         borderRadius: 0,
@@ -38,7 +36,6 @@ describe CycletimeHistogram do
     end
 
     it 'handles simple data' do
-      chart = described_class.new
       expect(chart.data_set_for histogram_data: { 4 => 2, 3 => 0 }, label: 'foo', color: 'red').to eq({
         backgroundColor: 'red',
         borderRadius: 0,

@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe AgingWorkBarChart do
-  let(:chart) { described_class.new }
+  let(:chart) { described_class.new(empty_config_block)}
 
   context 'data_set_by_block' do
     it 'handles nothing blocked at all' do

@@ -4,20 +4,11 @@ require './spec/spec_helper'
 
 describe HierarchyTable do
   it 'initializes for no issues' do
-    table = described_class.new ->(_) { description_text 'foo'}
+    table = described_class.new ->(_) { description_text 'foo' }
     table.issues = []
     table.run
     expect(table.description_text).to eq(
       'foo'
-    )
-  end
-
-  it 'initializes with no block' do
-    table = described_class.new
-    table.issues = []
-    table.run
-    expect(table.description_text.strip).to eq(
-      '<p>Shows all issues through this time period and the full hierarchy of their parents.</p>'
     )
   end
 
@@ -34,7 +25,7 @@ describe HierarchyTable do
     issue1.parent = issue2
     issue2.parent = issue1
 
-    table = described_class.new ->(_) {}
+    table = described_class.new empty_config_block
     table.issues = [issue1, issue2]
     table.run
     expect(table.description_text.strip).to eq(

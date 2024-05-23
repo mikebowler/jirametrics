@@ -18,7 +18,6 @@ describe DailyWipChart do
   let(:issue2) { load_issue 'SP-2', board: board }
 
   let(:chart) do
-    empty_config_block = ->(_) {}
     chart = described_class.new empty_config_block
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-04-02')
     chart

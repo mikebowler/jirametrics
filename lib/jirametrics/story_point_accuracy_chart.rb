@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class StoryPointAccuracyChart < ChartBase
-  def initialize configuration_block = nil
+  def initialize configuration_block
     super()
 
     header_text 'Estimate Accuracy'
@@ -12,7 +12,7 @@ class StoryPointAccuracyChart < ChartBase
       </div>
       <div class="p">
         The #{color_block '--estimate-accuracy-chart-completed-fill-color'} completed dots indicate
-        cycletimes. 
+        cycletimes.
         <% if @has_aging_data %>
           The #{color_block '--estimate-accuracy-chart-active-fill-color'} aging dots
           (click on the legend to turn them on) show the current
@@ -27,7 +27,7 @@ class StoryPointAccuracyChart < ChartBase
     @y_axis_block = ->(issue, start_time) { story_points_at(issue: issue, start_time: start_time)&.to_f }
     @y_axis_sort_order = nil
 
-    instance_eval(&configuration_block) if configuration_block
+    instance_eval(&configuration_block)
   end
 
   def run

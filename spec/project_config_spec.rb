@@ -60,8 +60,6 @@ describe ProjectConfig do
   end
 
   context 'download/aggregate config' do
-    let(:empty_block) { ->(_) {} }
-
     it 'fails if a second download is set' do
       project_config.download do
         file_suffix 'a'

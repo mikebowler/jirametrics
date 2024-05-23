@@ -5,7 +5,7 @@ require 'jirametrics/chart_base'
 class AgingWorkBarChart < ChartBase
   @@next_id = 0
 
-  def initialize block = nil
+  def initialize block
     super()
 
     header_text 'Aging Work Bar Chart'
@@ -27,13 +27,13 @@ class AgingWorkBarChart < ChartBase
           <li>The bottom bar indicated #{color_block '--expedited-color'} expedited.</li>
         </ol>
       </p>
-      #{ describe_non_working_days }
+      #{describe_non_working_days}
     HTML
 
     # Because this one will size itself as needed, we start with a smaller default size
     @canvas_height = 80
 
-    instance_eval(&block) if block
+    instance_eval(&block)
   end
 
   def run

@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe AgingWorkTable do
   let(:table) do
-    described_class.new(nil).tap do |table|
+    described_class.new(empty_config_block).tap do |table|
       table.date_range = to_date('2021-01-01')..to_date('2021-01-31')
       table.time_range = to_time('2021-01-01')..to_time('2021-01-31T23:59:59')
       table.today = table.date_range.end + 1

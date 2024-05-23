@@ -130,7 +130,7 @@ describe AggregateConfig do
 
   context 'evaluate_next_level' do
     it 'raises error if no projects set' do
-      subject = described_class.new project_config: aggregated_project, block: ->(_) {}
+      subject = described_class.new project_config: aggregated_project, block: empty_config_block
       expect { subject.evaluate_next_level }.to raise_error(
         'aggregate: When aggregating, you must include at least one other project'
       )

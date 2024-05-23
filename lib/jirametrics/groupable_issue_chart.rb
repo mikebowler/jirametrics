@@ -5,10 +5,8 @@ require 'jirametrics/grouping_rules'
 
 module GroupableIssueChart
   def init_configuration_block user_provided_block, &default_block
-    if user_provided_block
-      instance_eval(&user_provided_block)
-      return if @group_by_block
-    end
+    instance_eval(&user_provided_block)
+    return if @group_by_block
 
     instance_eval(&default_block)
   end

@@ -10,14 +10,15 @@ class HtmlReportConfig
   attr_reader :file_config, :sections
 
   def self.define_chart name:, classname:, deprecated_warning: nil, deprecated_date: nil
-    code = +''
-    code += "def #{name} &block\n"
+    lines = []
+    lines << "def #{name} &block"
+    lines << '  block = ->(_) {} unless block'
     if deprecated_warning
-      code += "  deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}\n"
+      lines << "  deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}"
     end
-    code += "  execute_chart #{classname}.new(block)\n"
-    code += 'end'
-    module_eval code, __FILE__, __LINE__
+    lines << "  execute_chart #{classname}.new(block)"
+    lines << 'end'
+    module_eval lines.join("\n"), __FILE__, __LINE__
   end
 
   define_chart name: 'aging_work_bar_chart', classname: 'AgingWorkBarChart'
@@ -25,17 +26,18 @@ class HtmlReportConfig
   define_chart name: 'cycletime_scatterplot', classname: 'CycletimeScatterplot'
   define_chart name: 'daily_wip_chart', classname: 'DailyWipChart'
   define_chart name: 'daily_wip_by_age_chart', classname: 'DailyWipByAgeChart'
-  define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
-    deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
   define_chart name: 'daily_wip_by_blocked_stalled_chart', classname: 'DailyWipByBlockedStalledChart'
   define_chart name: 'daily_wip_by_parent_chart', classname: 'DailyWipByParentChart'
   define_chart name: 'throughput_chart', classname: 'ThroughputChart'
-  # define_chart name: 'expedited_chart', classname: 'ExpeditedChart'
+  define_chart name: 'expedited_chart', classname: 'ExpeditedChart'
   define_chart name: 'cycletime_histogram', classname: 'CycletimeHistogram'
-  define_chart name: 'story_point_accuracy_chart', classname: 'StoryPointAccuracyChart',
-    deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
   define_chart name: 'estimate_accuracy_chart', classname: 'StoryPointAccuracyChart'
   define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
+
+  define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
+    deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
+  define_chart name: 'story_point_accuracy_chart', classname: 'StoryPointAccuracyChart',
+    deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
 
   def initialize file_config:, block:
     @file_config = file_config
@@ -107,6 +109,8 @@ class HtmlReportConfig
   end
 
   def aging_work_in_progress_chart board_id: nil, &block
+    block ||= ->(_) {}
+
     if board_id.nil?
       ids = issues.collect { |i| i.board.id }.uniq.sort
     else
@@ -118,10 +122,6 @@ class HtmlReportConfig
         chart.board_id = id
       end
     end
-  end
-
-  def expedited_chart
-    execute_chart ExpeditedChart.new
   end
 
   def random_color

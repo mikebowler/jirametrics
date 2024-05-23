@@ -14,7 +14,7 @@ end
 class DailyWipChart < ChartBase
   attr_accessor :possible_statuses
 
-  def initialize block = nil
+  def initialize block
     super()
 
     header_text default_header_text
@@ -27,9 +27,6 @@ class DailyWipChart < ChartBase
         default_grouping_rules issue: issue, rules: rules
       end
     end
-
-    # Because this one will size itself as needed, we start with a smaller default size
-    # @canvas_height = 80
   end
 
   def run

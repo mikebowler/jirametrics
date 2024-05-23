@@ -10,7 +10,7 @@ end
 describe AgingWorkInProgressChart do
   let(:board) { load_complete_sample_board }
   let :chart do
-    chart = described_class.new
+    chart = described_class.new(empty_config_block)
     chart.board_id = 1
     chart.all_boards = { 1 => load_complete_sample_board }
     board.cycletime = default_cycletime_config

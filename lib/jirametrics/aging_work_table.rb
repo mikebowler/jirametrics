@@ -24,7 +24,7 @@ class AgingWorkTable < ChartBase
       </p>
     TEXT
 
-    instance_eval(&block) if block
+    instance_eval(&block)
   end
 
   def run

@@ -52,7 +52,7 @@ class DependencyChart < ChartBase
   end
 
   def run
-    instance_eval(&@rules_block) if @rules_block
+    instance_eval(&@rules_block)
 
     dot_graph = build_dot_graph
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if dot_graph.nil?

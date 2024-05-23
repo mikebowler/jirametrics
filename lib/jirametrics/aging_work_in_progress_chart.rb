@@ -8,7 +8,7 @@ class AgingWorkInProgressChart < ChartBase
   attr_accessor :possible_statuses, :board_id
   attr_reader :board_columns
 
-  def initialize block = nil
+  def initialize block
     super()
     header_text 'Aging Work in Progress'
     description_text <<-HTML

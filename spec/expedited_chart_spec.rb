@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe ExpeditedChart do
   let(:chart) do
-    chart = described_class.new
+    chart = described_class.new(empty_config_block)
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-01-30')
     chart
   end

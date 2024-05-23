@@ -5,7 +5,7 @@ require 'jirametrics/cycletime_scatterplot'
 
 describe CycletimeScatterplot do
   let(:chart) do
-    described_class.new.tap do |chart|
+    described_class.new(empty_config_block).tap do |chart|
       chart.time_range = to_time('2020-01-01')..to_time('2020-02-01')
     end
   end

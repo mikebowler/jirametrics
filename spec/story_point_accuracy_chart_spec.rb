@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe StoryPointAccuracyChart do
-  let(:chart) { described_class.new }
+  let(:chart) { described_class.new empty_config_block }
 
   context 'story_points_at' do
     it 'handles no story points' do

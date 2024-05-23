@@ -39,10 +39,9 @@ describe HtmlReportConfig do
   end
 
   it 'shouldnt allow multiple cycletimes (yet)' do
-    empty_block = ->(_) {}
     config = described_class.new file_config: file_config, block: nil
-    config.cycletime '1st', &empty_block
-    expect { config.cycletime '2nd', &empty_block }.to raise_error 'Multiple cycletimes not supported yet'
+    config.cycletime '1st', &empty_config_block
+    expect { config.cycletime '2nd', &empty_config_block }.to raise_error 'Multiple cycletimes not supported yet'
   end
 
   context 'load_css' do

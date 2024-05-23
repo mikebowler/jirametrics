@@ -20,7 +20,7 @@ class ExpeditedChart < ChartBase
   attr_accessor :issues, :cycletime, :possible_statuses, :date_range
   attr_reader :expedited_label
 
-  def initialize
+  def initialize block
     super()
 
     header_text 'Expedited work'
@@ -38,6 +38,8 @@ class ExpeditedChart < ChartBase
       </div>
       #{describe_non_working_days}
     HTML
+
+    instance_eval(&block)
   end
 
   def run

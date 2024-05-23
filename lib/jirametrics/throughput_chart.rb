@@ -5,7 +5,7 @@ class ThroughputChart < ChartBase
 
   attr_accessor :possible_statuses
 
-  def initialize block = nil
+  def initialize block
     super()
 
     header_text 'Throughput Chart'

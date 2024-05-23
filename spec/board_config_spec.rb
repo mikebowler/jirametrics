@@ -11,7 +11,7 @@ describe BoardConfig do
 
   it 'sets expedited names' do
     project_config.all_boards[1] = sample_board
-    board_config = described_class.new project_config: project_config, id: 1, block: ->(_) {}
+    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
     board_config.run
     board_config.expedited_priority_names 'Highest', 'Critical'
     expect(board_config.board.expedited_priority_names).to eq %w[Highest Critical]
@@ -19,7 +19,7 @@ describe BoardConfig do
 
   it 'raises error if cycletime set twice' do
     project_config.all_boards[1] = sample_board
-    board_config = described_class.new project_config: project_config, id: 1, block: ->(_) {}
+    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
     board_config.run
 
     board_config.cycletime default_cycletime_config

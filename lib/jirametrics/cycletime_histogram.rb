@@ -6,7 +6,7 @@ class CycletimeHistogram < ChartBase
   include GroupableIssueChart
   attr_accessor :possible_statuses
 
-  def initialize block = nil
+  def initialize block
     super()
 
     header_text 'Cycletime Histogram'
