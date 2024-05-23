@@ -162,12 +162,14 @@ class ChartBase
     end
   end
 
-  def header_text text
-    @header_text = text
+  def header_text text = nil
+    @header_text = text if text
+    @header_text
   end
 
-  def description_text text
-    @description_text = text
+  def description_text text = nil
+    @description_text = text if text
+    @description_text
   end
 
   def format_integer number

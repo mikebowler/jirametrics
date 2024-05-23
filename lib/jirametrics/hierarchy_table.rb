@@ -7,8 +7,8 @@ class HierarchyTable < ChartBase
     super()
 
     header_text 'Hierarchy Table'
-    description_text <<-HTML
-      <p>content goes here</p>
+    description_text <<~HTML
+      <p>Shows all issues through this time period and the full hierarchy of their parents.</p>
     HTML
 
     instance_eval(&block) if block
