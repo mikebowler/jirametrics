@@ -11,18 +11,21 @@ class TestableChart < ChartBase
 end
 
 describe HtmlReportConfig do
-  let(:exporter) { Exporter.new }
+  let(:exporter) { Exporter.new file_system: MockFileSystem.new }
+  let(:project_config) do
+    project_config = ProjectConfig.new(
+      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
+    )
+    project_config.file_prefix 'sample'
+    project_config.load_status_category_mappings
+    project_config.load_all_boards
+    project_config
+  end
+  let(:file_config) { FileConfig.new project_config: project_config, block: nil }
 
   context 'no injectable dependencies' do
     it 'still passes if no dependencies supported' do
-      project_config = ProjectConfig.new(
-        exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
-      )
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
       project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
-      file_config = FileConfig.new project_config: project_config, block: nil
       config = described_class.new file_config: file_config, block: nil
       config.board_id 1
 
@@ -37,15 +40,38 @@ describe HtmlReportConfig do
 
   it 'shouldnt allow multiple cycletimes (yet)' do
     empty_block = ->(_) {}
-    project_config = ProjectConfig.new(
-      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
-    )
-    project_config.file_prefix 'sample'
-    project_config.load_status_category_mappings
-    project_config.load_all_boards
-    file_config = FileConfig.new project_config: project_config, block: nil
     config = described_class.new file_config: file_config, block: nil
     config.cycletime '1st', &empty_block
     expect { config.cycletime '2nd', &empty_block }.to raise_error 'Multiple cycletimes not supported yet'
+  end
+
+  context 'load_css' do
+    it 'loads standard css' do
+      config = described_class.new file_config: file_config, block: nil
+      config.load_css html_directory: 'lib/jirametrics/html'
+      expect(exporter.file_system.log_messages).to eq [
+        'Loaded CSS:  lib/jirametrics/html/index.css'
+      ]
+    end
+
+    it 'fails to load missing extra css' do
+      project_config.settings['include_css'] = 'not_found.css'
+      config = described_class.new file_config: file_config, block: nil
+      config.load_css html_directory: 'lib/jirametrics/html'
+      expect(exporter.file_system.log_messages).to eq [
+        'Loaded CSS:  lib/jirametrics/html/index.css',
+        'Unable to find specified CSS file: not_found.css'
+      ]
+    end
+
+    it 'loads extra css' do
+      project_config.settings['include_css'] = 'Gemfile' # It just needs to be a text file and this is handy.
+      config = described_class.new file_config: file_config, block: nil
+      config.load_css html_directory: 'lib/jirametrics/html'
+      expect(exporter.file_system.log_messages).to eq [
+        'Loaded CSS:  lib/jirametrics/html/index.css',
+        'Loaded CSS:  Gemfile'
+      ]
+    end
   end
 end

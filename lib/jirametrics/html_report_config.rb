@@ -47,13 +47,26 @@ class HtmlReportConfig
     end
   end
 
-  def load_css html_directory:
-    base_css = File.read(File.join(html_directory, 'index.css'))
-    extra_css_filename = settings['include_css']
-    return base_css unless extra_css_filename && File.exist?(extra_css_filename)
+  def log message
+    @file_config.project_config.exporter.file_system.log message
+  end
 
-    @file_config.project_config.exporter.file_system.log("including css from file: #{extra_css_filename}")
-    base_css << "\n\n" << File.read(extra_css_filename)
+  def load_css html_directory:
+    base_css_filename = File.join(html_directory, 'index.css')
+    base_css = File.read(base_css_filename)
+    log("Loaded CSS:  #{base_css_filename}")
+
+    extra_css_filename = settings['include_css']
+    if extra_css_filename
+      if File.exist?(extra_css_filename)
+        base_css << "\n\n" << File.read(extra_css_filename)
+        log("Loaded CSS:  #{extra_css_filename}")
+      else
+        log("Unable to find specified CSS file: #{extra_css_filename}")
+      end
+    end
+
+    base_css
   end
 
   def board_id id = nil
