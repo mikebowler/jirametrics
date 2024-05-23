@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BoardConfig
-  attr_reader :id, :project_config
+  attr_reader :id, :project_config, :board
 
   def initialize id:, block:, project_config:
     @id = id
@@ -26,6 +26,6 @@ class BoardConfig
   end
 
   def expedited_priority_names *priority_names
-    @board.expedited_priority_names = priority_names unless priority_names.empty?
+    @board.expedited_priority_names = priority_names
   end
 end
