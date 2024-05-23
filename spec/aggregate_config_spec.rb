@@ -20,7 +20,8 @@ describe AggregateConfig do
 
       subject.include_issues_from 'foobar'
       expect(exporter.file_system.log_messages).to eq [
-        'Warning: Aggregated project "aggregate" is attempting to load project "foobar" but it can\'t be found. Is it disabled?'
+        'Warning: Aggregated project "aggregate" is attempting to load project "foobar" but it ' \
+          'can\'t be found. Is it disabled?'
       ]
     end
 
@@ -128,12 +129,11 @@ describe AggregateConfig do
   end
 
   context 'evaluate_next_level' do
-    it 'should raise error if no projects set' do
-      subject = described_class.new project_config: aggregated_project, block: lambda {|_|}
+    it 'raises error if no projects set' do
+      subject = described_class.new project_config: aggregated_project, block: ->(_) {}
       expect { subject.evaluate_next_level }.to raise_error(
         'aggregate: When aggregating, you must include at least one other project'
       )
     end
-
   end
 end
