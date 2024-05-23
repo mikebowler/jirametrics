@@ -86,7 +86,7 @@ class Exporter
           daily_wip_by_parent_chart
           expedited_chart
           sprint_burndown
-          story_point_accuracy_chart
+          estimate_accuracy_chart
 
           dependency_chart do
             link_rules do |link, rules|

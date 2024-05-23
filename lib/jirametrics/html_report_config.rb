@@ -9,6 +9,34 @@ class HtmlReportConfig
 
   attr_reader :file_config, :sections
 
+  def self.define_chart name:, classname:, deprecated_warning: nil, deprecated_date: nil
+    code = +''
+    code += "def #{name} &block\n"
+    if deprecated_warning
+      code += "  deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}\n"
+    end
+    code += "  execute_chart #{classname}.new(block)\n"
+    code += 'end'
+    module_eval code, __FILE__, __LINE__
+  end
+
+  define_chart name: 'aging_work_bar_chart', classname: 'AgingWorkBarChart'
+  define_chart name: 'aging_work_table', classname: 'AgingWorkTable'
+  define_chart name: 'cycletime_scatterplot', classname: 'CycletimeScatterplot'
+  define_chart name: 'daily_wip_chart', classname: 'DailyWipChart'
+  define_chart name: 'daily_wip_by_age_chart', classname: 'DailyWipByAgeChart'
+  define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
+    deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
+  define_chart name: 'daily_wip_by_blocked_stalled_chart', classname: 'DailyWipByBlockedStalledChart'
+  define_chart name: 'daily_wip_by_parent_chart', classname: 'DailyWipByParentChart'
+  define_chart name: 'throughput_chart', classname: 'ThroughputChart'
+  # define_chart name: 'expedited_chart', classname: 'ExpeditedChart'
+  define_chart name: 'cycletime_histogram', classname: 'CycletimeHistogram'
+  define_chart name: 'story_point_accuracy_chart', classname: 'StoryPointAccuracyChart',
+    deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
+  define_chart name: 'estimate_accuracy_chart', classname: 'StoryPointAccuracyChart'
+  define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
+
   def initialize file_config:, block:
     @file_config = file_config
     @block = block
@@ -92,48 +120,8 @@ class HtmlReportConfig
     end
   end
 
-  def aging_work_bar_chart &block
-    execute_chart AgingWorkBarChart.new(block)
-  end
-
-  def aging_work_table &block
-    execute_chart AgingWorkTable.new(block)
-  end
-
-  def cycletime_scatterplot &block
-    execute_chart CycletimeScatterplot.new block
-  end
-
-  def daily_wip_chart &block
-    execute_chart DailyWipChart.new(block)
-  end
-
-  def daily_wip_by_age_chart &block
-    execute_chart DailyWipByAgeChart.new block
-  end
-
-  def daily_wip_by_type &block
-    execute_chart DailyWipChart.new block
-  end
-
-  def daily_wip_by_blocked_stalled_chart
-    execute_chart DailyWipByBlockedStalledChart.new
-  end
-
-  def daily_wip_by_parent_chart &block
-    execute_chart DailyWipByParentChart.new block
-  end
-
-  def throughput_chart &block
-    execute_chart ThroughputChart.new(block)
-  end
-
   def expedited_chart
     execute_chart ExpeditedChart.new
-  end
-
-  def cycletime_histogram &block
-    execute_chart CycletimeHistogram.new block
   end
 
   def random_color
@@ -151,14 +139,6 @@ class HtmlReportConfig
     execute_chart SprintBurndown.new do |chart|
       chart.options = options
     end
-  end
-
-  def story_point_accuracy_chart &block
-    execute_chart StoryPointAccuracyChart.new block
-  end
-
-  def hierarchy_table &block
-    execute_chart HierarchyTable.new block
   end
 
   def discard_changes_before_hook issues_cutoff_times
