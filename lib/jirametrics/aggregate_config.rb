@@ -19,14 +19,15 @@ class AggregateConfig
       raise "#{@project_config.name}: When aggregating, you must include at least one other project"
     end
 
-    # If the date range wasn't set then calculate it now
+    # If the time range wasn't set then calculate it now
     @project_config.time_range = find_time_range projects: @included_projects if @project_config.time_range.nil?
 
-    adjust_issue_links
+    adjust_issue_links issues: @project_config.issues
   end
 
-  def adjust_issue_links
-    issues = @project_config.issues
+  # IssueLinks just have a reference to the key. Walk through all of them to see if we have a full
+  # issue that we'd already loaded. If we do, then replace it.
+  def adjust_issue_links issues:
     issues.each do |issue|
       issue.issue_links.each do |link|
         other_issue_key = link.other_issue.key
@@ -74,8 +75,6 @@ class AggregateConfig
       earliest = range.begin if earliest.nil? || range.begin < earliest
       latest = range.end if latest.nil? || range.end > latest
     end
-
-    raise "Can't calculate range" if earliest.nil? || latest.nil?
 
     earliest..latest
   end
