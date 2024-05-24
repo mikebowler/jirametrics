@@ -37,17 +37,13 @@ class AgingWorkBarChart < ChartBase
   end
 
   def run
-    aging_issues = @issues.select do |issue|
-      cycletime = issue.board.cycletime
-      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
-    end
+    aging_issues = select_aging_issues issues: @issues
 
     grow_chart_height_if_too_many_issues aging_issues.size
 
     today = date_range.end
-    aging_issues.sort! do |a, b|
-      a.board.cycletime.age(b, today: today) <=> b.board.cycletime.age(a, today: today)
-    end
+    sort_by_age! issues: aging_issues, today: today
+
     data_sets = []
     aging_issues.each do |issue|
       cycletime = issue.board.cycletime
@@ -79,6 +75,19 @@ class AgingWorkBarChart < ChartBase
     percentage_line_x = date_range.end - calculate_percent_line if percentage
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def sort_by_age! issues:, today:
+    issues.sort! do |a, b|
+      a.board.cycletime.age(b, today: today) <=> b.board.cycletime.age(a, today: today)
+    end
+  end
+
+  def select_aging_issues issues:
+    issues.select do |issue|
+      cycletime = issue.board.cycletime
+      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
+    end
   end
 
   def grow_chart_height_if_too_many_issues aging_issue_count

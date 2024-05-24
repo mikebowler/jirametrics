@@ -3,13 +3,15 @@
 require './spec/spec_helper'
 
 describe AgingWorkBarChart do
-  let(:chart) { described_class.new(empty_config_block)}
+  let(:chart) { described_class.new(empty_config_block) }
+  let(:board) { sample_board }
+  let(:issue1) { load_issue('SP-1', board: board) }
+  let(:issue2) { load_issue('SP-2', board: board) }
 
   context 'data_set_by_block' do
     it 'handles nothing blocked at all' do
-      issue = load_issue('SP-1')
       data_sets = chart.data_set_by_block(
-        issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
+        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |_day| false }
 
@@ -23,9 +25,8 @@ describe AgingWorkBarChart do
     end
 
     it 'handles a single blocked range completely within the date range' do
-      issue = load_issue('SP-1')
       data_sets = chart.data_set_by_block(
-        issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
+        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |day| (3..6).cover? day.day }
 
@@ -47,9 +48,8 @@ describe AgingWorkBarChart do
     end
 
     it 'handles multiple blocked ranges, all completely within the date range' do
-      issue = load_issue('SP-1')
       data_set = chart.data_set_by_block(
-        issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
+        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |day| (3..4).cover?(day.day) || day.day == 6 }
 
@@ -69,9 +69,8 @@ describe AgingWorkBarChart do
     end
 
     it 'never becomes unblocked' do
-      issue = load_issue('SP-1')
       data_set = chart.data_set_by_block(
-        issue: issue, issue_label: issue.key, title_label: 'Blocked', stack: 'blocked',
+        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
         color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
       ) { |_day| true }
 
@@ -214,6 +213,28 @@ describe AgingWorkBarChart do
           type: 'bar'
         }
       ])
+    end
+  end
+
+  context 'sort_by_age!' do
+    it 'leaves an already sorted list alone' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', nil],
+        [issue2, '2024-01-02', nil]
+      ]
+      expect(chart.sort_by_age! issues: [issue1, issue2], today: to_date('2024-01-05')).to eq [
+        issue1, issue2
+      ]
+    end
+
+    it 'sorts the list' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-02', nil],
+        [issue2, '2024-01-01', nil]
+      ]
+      expect(chart.sort_by_age! issues: [issue1, issue2], today: to_date('2024-01-05')).to eq [
+        issue2, issue1
+      ]
     end
   end
 end
