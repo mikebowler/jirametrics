@@ -44,37 +44,39 @@ class AgingWorkBarChart < ChartBase
     today = date_range.end
     sort_by_age! issues: aging_issues, today: today
 
-    data_sets = []
-    aging_issues.each do |issue|
-      cycletime = issue.board.cycletime
-      issue_start_time = cycletime.started_time(issue)
-      issue_start_date = issue_start_time.to_date
-      issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
-      [
-        status_data_sets(issue: issue, label: issue_label, today: today),
-        blocked_data_sets(
-          issue: issue,
-          issue_label: issue_label,
-          stack: 'blocked',
-          issue_start_time: issue_start_time
-        ),
-        data_set_by_block(
-          issue: issue,
-          issue_label: issue_label,
-          title_label: 'Expedited',
-          stack: 'expedited',
-          color: CssVariable['--expedited-color'],
-          start_date: issue_start_date
-        ) { |day| issue.expedited_on_date?(day) }
-      ].compact.flatten.each do |data|
-        data_sets << data
-      end
-    end
+    data_sets = aging_issues
+      .collect { |issue| data_sets_for_one_issue issue: issue, today: today }
+      .flatten
+      .compact
 
     percentage = calculate_percent_line
     percentage_line_x = date_range.end - calculate_percent_line if percentage
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def data_sets_for_one_issue issue:, today:
+    cycletime = issue.board.cycletime
+    issue_start_time = cycletime.started_time(issue)
+    issue_start_date = issue_start_time.to_date
+    issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
+    [
+      status_data_sets(issue: issue, label: issue_label, today: today),
+      blocked_data_sets(
+        issue: issue,
+        issue_label: issue_label,
+        stack: 'blocked',
+        issue_start_time: issue_start_time
+      ),
+      data_set_by_block(
+        issue: issue,
+        issue_label: issue_label,
+        title_label: 'Expedited',
+        stack: 'expedited',
+        color: CssVariable['--expedited-color'],
+        start_date: issue_start_date
+      ) { |day| issue.expedited_on_date?(day) }
+    ]
   end
 
   def sort_by_age! issues:, today:
@@ -228,6 +230,8 @@ class AgingWorkBarChart < ChartBase
         title: "#{issue.type} : #{title_label} #{label_days (end_date - started).to_i + 1}"
       }
     end
+
+    return [] if data.empty?
 
     {
       type: 'bar',
