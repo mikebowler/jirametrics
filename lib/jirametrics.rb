@@ -61,7 +61,7 @@ class JiraMetrics < Thor
     require 'jirametrics/trend_line_calculator'
     require 'jirametrics/status'
     require 'jirametrics/issue_link'
-    require 'jirametrics/story_point_accuracy_chart'
+    require 'jirametrics/estimate_accuracy_chart'
     require 'jirametrics/status_collection'
     require 'jirametrics/sprint'
     require 'jirametrics/issue'

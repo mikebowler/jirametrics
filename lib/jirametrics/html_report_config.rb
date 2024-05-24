@@ -31,12 +31,12 @@ class HtmlReportConfig
   define_chart name: 'throughput_chart', classname: 'ThroughputChart'
   define_chart name: 'expedited_chart', classname: 'ExpeditedChart'
   define_chart name: 'cycletime_histogram', classname: 'CycletimeHistogram'
-  define_chart name: 'estimate_accuracy_chart', classname: 'StoryPointAccuracyChart'
+  define_chart name: 'estimate_accuracy_chart', classname: 'EstimateAccuracyChart'
   define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
 
   define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
     deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
-  define_chart name: 'story_point_accuracy_chart', classname: 'StoryPointAccuracyChart',
+  define_chart name: 'story_point_accuracy_chart', classname: 'EstimateAccuracyChart',
     deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
 
   def initialize file_config:, block:

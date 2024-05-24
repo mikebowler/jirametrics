@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class StoryPointAccuracyChart < ChartBase
+class EstimateAccuracyChart < ChartBase
   def initialize configuration_block
     super()
 
@@ -39,26 +39,7 @@ class StoryPointAccuracyChart < ChartBase
   end
 
   def scan_issues
-    aging_hash = {}
-    completed_hash = {}
-
-    issues.each do |issue|
-      cycletime = issue.board.cycletime
-      start_time = cycletime.started_time(issue)
-      stop_time = cycletime.stopped_time(issue)
-
-      next unless start_time
-
-      hash = stop_time ? completed_hash : aging_hash
-
-      estimate = @y_axis_block.call issue, start_time
-      cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
-
-      next if estimate.nil?
-
-      key = [estimate, cycle_time]
-      (hash[key] ||= []) << issue
-    end
+    completed_hash, aging_hash = split_into_completed_and_aging issues: issues
 
     @has_aging_data = !aging_hash.empty?
 
@@ -93,7 +74,32 @@ class StoryPointAccuracyChart < ChartBase
         'borderColor' => border_color,
         'hidden' => starts_hidden
       }
-    end.compact
+    end
+  end
+
+  def split_into_completed_and_aging issues:
+    aging_hash = {}
+    completed_hash = {}
+
+    issues.each do |issue|
+      cycletime = issue.board.cycletime
+      start_time = cycletime.started_time(issue)
+      stop_time = cycletime.stopped_time(issue)
+
+      next unless start_time
+
+      hash = stop_time ? completed_hash : aging_hash
+
+      estimate = @y_axis_block.call issue, start_time
+      cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
+
+      next if estimate.nil?
+
+      key = [estimate, cycle_time]
+      (hash[key] ||= []) << issue
+    end
+
+    [completed_hash, aging_hash]
   end
 
   def hash_sorter

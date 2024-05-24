@@ -2,7 +2,7 @@
 
 require './spec/spec_helper'
 
-describe StoryPointAccuracyChart do
+describe EstimateAccuracyChart do
   let(:chart) { described_class.new empty_config_block }
 
   context 'story_points_at' do
@@ -48,6 +48,37 @@ describe StoryPointAccuracyChart do
         actual = list.sort(&chart.hash_sorter).collect { |estimate, values| "#{estimate[0]}:#{values.size}" }
         expect(actual).to eq expected
       end
+    end
+  end
+
+  context 'split_into_completed_and_aging' do
+    it 'works for no issues' do
+      expect(chart.split_into_completed_and_aging issues: []).to eq [{}, {}]
+    end
+
+    it 'works for one of each' do
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
+      board = sample_board
+      issue1 = load_issue 'SP-1', board: board
+      issue1.changes << mock_change(field: 'Story Points', value: 5, time: '2024-01-01')
+
+      issue2 = load_issue 'SP-2', board: board
+      issue2.changes << mock_change(field: 'Story Points', value: 5, time: '2024-01-01')
+
+      issue_with_no_estimate = load_issue 'SP-1', board: board
+      issue_not_started = load_issue 'SP-1', board: board
+
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-02', '2024-01-02'],
+        [issue2, '2024-01-02', nil],
+        [issue_with_no_estimate, '2024-01-02', nil]
+      ]
+
+      issues = [issue1, issue2, issue_not_started, issue_with_no_estimate]
+      expect(chart.split_into_completed_and_aging issues: issues).to eq [
+        { [5.0, 1] => [issue1] },
+        { [5.0, 4] => [issue2] }
+      ]
     end
   end
 end
