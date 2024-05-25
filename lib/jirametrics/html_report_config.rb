@@ -69,12 +69,10 @@ class HtmlReportConfig
     execute_chart DataQualityReport.new(@original_issue_times || {})
     @sections.rotate!(-1)
 
-    # File.open @file_config.output_filename, 'w' do |file|
     html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
     css = load_css html_directory: html_directory
     erb = ERB.new File.read(File.join(html_directory, 'index.erb'))
     file_system.save_file content: erb.result(binding), filename: @file_config.output_filename
-    # end
   end
 
   def file_system
@@ -196,19 +194,8 @@ class HtmlReportConfig
     @file_config.issues
   end
 
+  # For use by the user config
   def find_board id
     @file_config.project_config.all_boards[id]
-  end
-
-  def project_name
-    @file_config.project_config.name
-  end
-
-  def boards
-    @file_config.project_config.board_configs.collect(&:id).collect { |id| find_board id }
-  end
-
-  def find_project_by_name name
-    @file_config.project_config.exporter.project_configs.find { |p| p.name == name }
   end
 end
