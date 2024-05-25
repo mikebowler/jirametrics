@@ -35,16 +35,6 @@ class Issue
     raise "Unable to initialize #{raw['key']}"
   end
 
-  def sort_changes!
-    @changes.sort! do |a, b|
-      # It's common that a resolved will happen at the same time as a status change.
-      # Put them in a defined order so tests can be deterministic.
-      compare = a.time <=> b.time
-      compare = 1 if compare.zero? && a.resolution?
-      compare
-    end
-  end
-
   def key = @raw['key']
 
   def type = @raw['fields']['issuetype']['name']
@@ -53,9 +43,7 @@ class Issue
 
   def summary = @raw['fields']['summary']
 
-  def status
-    Status.new raw: @raw['fields']['status']
-  end
+  def status = Status.new(raw: @raw['fields']['status'])
 
   def labels = @raw['fields']['labels'] || []
 
@@ -74,30 +62,6 @@ class Issue
 
   def component_names
     @raw['fields']['components']&.collect { |component| component['name'] } || []
-  end
-
-  def fabricate_change field_name:
-    first_status = nil
-    first_status_id = nil
-
-    created_time = parse_time @raw['fields']['created']
-    first_change = @changes.find { |change| change.field == field_name }
-    if first_change.nil?
-      # There have been no changes of this type yet so we have to look at the current one
-      return nil unless @raw['fields'][field_name]
-
-      first_status = @raw['fields'][field_name]['name']
-      first_status_id = @raw['fields'][field_name]['id'].to_i
-    else
-      # Otherwise, we look at what the first one had changed away from.
-      first_status = first_change.old_value
-      first_status_id = first_change.old_value_id
-    end
-    ChangeItem.new time: created_time, artificial: true, author: author, raw: {
-      'field' => field_name,
-      'to' => first_status_id,
-      'toString' => first_status
-    }
   end
 
   def first_time_in_status *status_names
@@ -195,7 +159,7 @@ class Issue
   end
 
   def created
-    # This shouldn't be necessary and yet we've seen one case where it was.
+    # This nil check shouldn't be necessary and yet we've seen one case where it was.
     parse_time @raw['fields']['created'] if @raw['fields']['created']
   end
 
@@ -540,5 +504,39 @@ class Issue
     text = text.gsub(/\s+/, ' ').strip
     text = "#{text[0..max]}..." if text.length > max
     text
+  end
+
+  def sort_changes!
+    @changes.sort! do |a, b|
+      # It's common that a resolved will happen at the same time as a status change.
+      # Put them in a defined order so tests can be deterministic.
+      compare = a.time <=> b.time
+      compare = 1 if compare.zero? && a.resolution?
+      compare
+    end
+  end
+
+  def fabricate_change field_name:
+    first_status = nil
+    first_status_id = nil
+
+    created_time = parse_time @raw['fields']['created']
+    first_change = @changes.find { |change| change.field == field_name }
+    if first_change.nil?
+      # There have been no changes of this type yet so we have to look at the current one
+      return nil unless @raw['fields'][field_name]
+
+      first_status = @raw['fields'][field_name]['name']
+      first_status_id = @raw['fields'][field_name]['id'].to_i
+    else
+      # Otherwise, we look at what the first one had changed away from.
+      first_status = first_change.old_value
+      first_status_id = first_change.old_value_id
+    end
+    ChangeItem.new time: created_time, artificial: true, author: author, raw: {
+      'field' => field_name,
+      'to' => first_status_id,
+      'toString' => first_status
+    }
   end
 end
