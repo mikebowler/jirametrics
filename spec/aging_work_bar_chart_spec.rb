@@ -285,4 +285,47 @@ describe AgingWorkBarChart do
       ]
     end
   end
+
+  context 'calculate_percent_line' do
+    it 'returns nil when no issues' do
+      chart.issues = []
+      expect(chart.calculate_percent_line).to be_nil
+    end
+
+    it 'returns percentage' do
+      issue1 = empty_issue key: 'SP-1', created: '2024-01-01', board: board
+      issue2 = empty_issue key: 'SP-2', created: '2024-01-01', board: board
+      issue3 = empty_issue key: 'SP-3', created: '2024-01-01', board: board
+
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', '2024-01-10'], # age 10
+        [issue2, '2024-01-01', '2024-01-20'], # age 20
+        [issue3, '2024-01-01', '2024-01-30']  # age 30
+      ]
+      chart.issues = [issue1, issue2, issue3]
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+
+      expect(chart.calculate_percent_line percentage: 5).to eq 10
+      expect(chart.calculate_percent_line percentage: 45).to eq 20
+      expect(chart.calculate_percent_line percentage: 95).to eq 30
+    end
+  end
+
+  context 'grow_chart_height_if_too_many_issues' do
+    it 'is the minimum height when only one issue' do
+      chart.grow_chart_height_if_too_many_issues aging_issue_count: 1
+      expect(chart.canvas_height).to eq 80
+    end
+
+    it 'ignores this when a larger height was already specified' do
+      chart.grow_chart_height_if_too_many_issues aging_issue_count: 1
+      chart.canvas width: 10, height: 100
+      expect(chart.canvas_height).to eq 100
+    end
+
+    it 'grows as needed' do
+      chart.grow_chart_height_if_too_many_issues aging_issue_count: 100
+      expect(chart.canvas_height).to eq 2400
+    end
+  end
 end

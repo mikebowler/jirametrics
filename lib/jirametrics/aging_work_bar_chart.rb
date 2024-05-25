@@ -39,7 +39,7 @@ class AgingWorkBarChart < ChartBase
   def run
     aging_issues = select_aging_issues issues: @issues
 
-    grow_chart_height_if_too_many_issues aging_issues.size
+    grow_chart_height_if_too_many_issues aging_issue_count: aging_issues.size
 
     today = date_range.end
     sort_by_age! issues: aging_issues, today: today
@@ -92,7 +92,7 @@ class AgingWorkBarChart < ChartBase
     end
   end
 
-  def grow_chart_height_if_too_many_issues aging_issue_count
+  def grow_chart_height_if_too_many_issues aging_issue_count:
     px_per_bar = 8
     bars_per_issue = 3
     preferred_height = aging_issue_count * px_per_bar * bars_per_issue
