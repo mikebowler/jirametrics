@@ -4,26 +4,29 @@ require './spec/spec_helper'
 
 describe FileConfig do
   let(:exporter) { Exporter.new }
-  let(:config) do
+  let(:project_config) do
     project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
     project_config.file_prefix 'sample'
     project_config.load_status_category_mappings
     project_config.load_all_boards
+    project_config
+  end
+  let(:file_config) do
     described_class.new project_config: project_config, block: nil
   end
 
   context 'conversions' do
     it 'converts string' do
-      expect(config.to_string(5)).to eql '5'
+      expect(file_config.to_string(5)).to eql '5'
     end
 
     it 'converts date with null' do
       time = Time.now
-      expect(config.to_date(time)).to eql time.to_date
+      expect(file_config.to_date(time)).to eql time.to_date
     end
 
     it 'converts nil to date' do
-      expect(config.to_date(nil)).to be_nil
+      expect(file_config.to_date(nil)).to be_nil
     end
   end
 
@@ -31,18 +34,12 @@ describe FileConfig do
     it 'sorts nils to the bottom' do
       input = [[nil, 1], [1, 2], [nil, 3], [4, 4]]
       expected = [[1, 2], [4, 4], [nil, 3], [nil, 1]]
-      expect(config.sort_output(input)).to eq expected
+      expect(file_config.sort_output(input)).to eq expected
     end
   end
 
   context 'output_filename' do
     it 'creates filename' do
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
-
-      file_config = described_class.new project_config: project_config, block: nil
       file_config.file_suffix '.csv'
       expect(file_config.output_filename).to eq 'spec/testdata/sample.csv'
     end
@@ -50,12 +47,6 @@ describe FileConfig do
 
   context 'prepare_grid' do
     it 'prepares grid without headers' do
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
-
-      file_config = described_class.new project_config: project_config, block: nil
       file_config.columns do
         string 'id', key
         string 'summary', summary
@@ -71,11 +62,6 @@ describe FileConfig do
     end
 
     it 'prepares grid with headers' do
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
-      file_config = described_class.new project_config: project_config, block: nil
       file_config.columns do
         write_headers true
         string 'id', key
@@ -93,11 +79,6 @@ describe FileConfig do
     end
 
     it 'prepares grid only_use_row_if' do
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
-      file_config = described_class.new project_config: project_config, block: nil
       file_config.only_use_row_if do |row|
         !row[1].include? 'Create'
       end
@@ -117,13 +98,15 @@ describe FileConfig do
 
   context 'columns' do
     it 'raises error if multiples are set' do
-      project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.file_prefix 'sample'
-      project_config.load_status_category_mappings
-      project_config.load_all_boards
-      file_config = described_class.new project_config: project_config, block: nil
       file_config.columns { 'a' }
       expect { file_config.columns { 'a' } }.to raise_error(/Can only have one/)
+    end
+  end
+
+  context 'run' do
+    it 'raises error if neither columns or html_report specified' do
+      file_config = described_class.new project_config: project_config, block: empty_config_block
+      expect { file_config.run }.to raise_error('Must specify one of "columns" or "html_report"')
     end
   end
 end
