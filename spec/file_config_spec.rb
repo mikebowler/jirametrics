@@ -122,5 +122,15 @@ describe FileConfig do
         'spec/testdata/sample-2024-01-01.csv' => "created,Key\n2021-06-18,SP-1\n"
       })
     end
+
+    it 'writes an html' do
+      project_config.time_range = to_time('2024-01-01')..to_time('2024-01-01')
+      file_config.file_suffix '.html'
+      file_config.html_report do
+        html '<h1>Hello World</h1>'
+      end
+      file_config.run
+      expect(exporter.file_system.saved_files['spec/testdata/sample.html']).to match(/Hello World/)
+    end
   end
 end

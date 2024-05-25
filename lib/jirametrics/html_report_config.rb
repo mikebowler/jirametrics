@@ -69,16 +69,20 @@ class HtmlReportConfig
     execute_chart DataQualityReport.new(@original_issue_times || {})
     @sections.rotate!(-1)
 
-    File.open @file_config.output_filename, 'w' do |file|
-      html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
-      css = load_css html_directory: html_directory
-      erb = ERB.new File.read(File.join(html_directory, 'index.erb'))
-      file.puts erb.result(binding)
-    end
+    # File.open @file_config.output_filename, 'w' do |file|
+    html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
+    css = load_css html_directory: html_directory
+    erb = ERB.new File.read(File.join(html_directory, 'index.erb'))
+    file_system.save_file content: erb.result(binding), filename: @file_config.output_filename
+    # end
+  end
+
+  def file_system
+    @file_config.project_config.exporter.file_system
   end
 
   def log message
-    @file_config.project_config.exporter.file_system.log message
+    file_system.log message
   end
 
   def load_css html_directory:
