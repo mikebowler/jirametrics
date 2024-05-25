@@ -81,5 +81,33 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group).to eq ['Blocked', CssVariable.new('--blocked-color')]
       expect(rules.group_priority).to eq 1
     end
+
+    it 'is completed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_date('2022-01-01'), to_date('2022-01-02')]
+      ]
+      chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
+
+      rules = DailyGroupingRules.new
+      rules.current_date = Date.parse('2022-01-02')
+      chart.default_grouping_rules issue: issue1, rules: rules
+      expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color']]
+      expect(rules.group_priority).to eq(-2)
+    end
+
+    it 'is completed, without being started' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, to_date('2022-01-02')]
+      ]
+      chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
+
+      rules = DailyGroupingRules.new
+      rules.current_date = Date.parse('2022-01-02')
+      chart.default_grouping_rules issue: issue1, rules: rules
+      expect(rules.group).to eq [
+        'Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color']
+      ]
+      expect(rules.group_priority).to eq(-1)
+    end
   end
 end
