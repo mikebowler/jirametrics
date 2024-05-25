@@ -42,7 +42,6 @@ class HtmlReportConfig
   def initialize file_config:, block:
     @file_config = file_config
     @block = block
-    # @cycletimes = []
     @sections = []
   end
 
