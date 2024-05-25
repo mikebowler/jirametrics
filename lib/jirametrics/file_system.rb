@@ -12,10 +12,14 @@ class FileSystem
   end
 
   def save_json json:, filename:
+    save_file content: JSON.pretty_generate(compress json), filename: filename
+  end
+
+  def save_file content:, filename:
     file_path = File.dirname(filename)
     FileUtils.mkdir_p file_path unless File.exist?(file_path)
 
-    File.write(filename, JSON.pretty_generate(compress json))
+    File.write(filename, content)
   end
 
   def log message

@@ -5,10 +5,11 @@ require 'csv'
 class FileConfig
   attr_reader :project_config, :issues
 
-  def initialize project_config:, block:
+  def initialize project_config:, block:, today: Date.today
     @project_config = project_config
     @block = block
     @columns = nil
+    @today = today
   end
 
   def run
@@ -18,11 +19,8 @@ class FileConfig
     if @columns
       all_lines = prepare_grid
 
-      File.open(output_filename, 'w') do |file|
-        all_lines.each do |output_line|
-          file.puts CSV.generate_line(output_line)
-        end
-      end
+      content = all_lines.collect { |line| CSV.generate_line line }.join
+      project_config.exporter.file_system.save_file content: content, filename: output_filename
     elsif @html_report
       @html_report.run
     else
@@ -59,7 +57,7 @@ class FileConfig
     segments = []
     segments << project_config.target_path
     segments << project_config.file_prefix
-    segments << (@file_suffix || "-#{Date.today}.csv")
+    segments << (@file_suffix || "-#{@today}.csv")
     segments.join
   end
 

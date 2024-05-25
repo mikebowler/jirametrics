@@ -3,12 +3,13 @@
 require 'json'
 
 class MockFileSystem < FileSystem
-  attr_reader :log_messages, :saved_json
+  attr_reader :log_messages, :saved_json, :saved_files
 
   def initialize
     super
     @data = {}
     @saved_json = {}
+    @saved_files = {}
     @log_messages = []
   end
 
@@ -23,6 +24,10 @@ class MockFileSystem < FileSystem
 
   def save_json filename:, json:
     @saved_json[filename] = JSON.generate(json)
+  end
+
+  def save_file filename:, content:
+    @saved_files[filename] = content
   end
 
   def when_loading file:, json:

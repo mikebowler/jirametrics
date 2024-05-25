@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe FileConfig do
-  let(:exporter) { Exporter.new }
+  let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:project_config) do
     project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
     project_config.file_prefix 'sample'
@@ -12,7 +12,7 @@ describe FileConfig do
     project_config
   end
   let(:file_config) do
-    described_class.new project_config: project_config, block: nil
+    described_class.new project_config: project_config, block: empty_config_block, today: to_date('2024-01-01')
   end
 
   context 'conversions' do
@@ -107,6 +107,20 @@ describe FileConfig do
     it 'raises error if neither columns or html_report specified' do
       file_config = described_class.new project_config: project_config, block: empty_config_block
       expect { file_config.run }.to raise_error('Must specify one of "columns" or "html_report"')
+    end
+
+    it 'writes a csv' do
+      project_config.issues << load_issue('SP-1')
+      file_config.columns do
+        write_headers true
+
+        date 'created', created
+        string 'Key', key
+      end
+      file_config.run
+      expect(exporter.file_system.saved_files).to eq({
+        'spec/testdata/sample-2024-01-01.csv' => "created,Key\n2021-06-18,SP-1\n"
+      })
     end
   end
 end
