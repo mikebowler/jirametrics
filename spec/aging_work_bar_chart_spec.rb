@@ -328,4 +328,14 @@ describe AgingWorkBarChart do
       expect(chart.canvas_height).to eq 2400
     end
   end
+
+  context 'run' do
+    it 'escapes early if no active items' do
+      chart.issues = []
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+
+      expect(chart.run).to eq '<h1>Aging Work Bar Chart</h1><p>There is no aging work</p>'
+    end
+
+  end
 end

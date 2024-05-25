@@ -39,10 +39,10 @@ class AgingWorkBarChart < ChartBase
   def run
     aging_issues = select_aging_issues issues: @issues
 
-    grow_chart_height_if_too_many_issues aging_issue_count: aging_issues.size
-
     today = date_range.end
     sort_by_age! issues: aging_issues, today: today
+
+    grow_chart_height_if_too_many_issues aging_issue_count: aging_issues.size
 
     data_sets = aging_issues
       .collect { |issue| data_sets_for_one_issue issue: issue, today: today }
@@ -51,6 +51,11 @@ class AgingWorkBarChart < ChartBase
 
     percentage = calculate_percent_line
     percentage_line_x = date_range.end - calculate_percent_line if percentage
+
+    if aging_issues.empty?
+      @description_text = "<p>There is no aging work</p>"
+      return render_top_text(binding) #if aging_issues.empty?
+    end
 
     wrap_and_render(binding, __FILE__)
   end
