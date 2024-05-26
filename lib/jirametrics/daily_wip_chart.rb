@@ -42,8 +42,6 @@ class DailyWipChart < ChartBase
       end + data_sets
     end
 
-    # grow_chart_height_if_too_many_data_sets data_sets.size
-
     wrap_and_render(binding, __FILE__)
   end
 
@@ -170,12 +168,5 @@ class DailyWipChart < ChartBase
       pointStyle: 'dash',
       hidden: false
     }
-  end
-
-  def grow_chart_height_if_too_many_data_sets count
-    px_per_bar = 8
-    bars_per_issue = 0.5
-    preferred_height = count * px_per_bar * bars_per_issue
-    @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
   end
 end
