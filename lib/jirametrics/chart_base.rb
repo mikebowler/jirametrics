@@ -2,7 +2,7 @@
 
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
-    :time_range, :data_quality, :holiday_dates, :settings, :issues
+    :time_range, :data_quality, :holiday_dates, :settings, :issues, :file_system
   attr_writer :aggregated_project
   attr_reader :canvas_width, :canvas_height
 
@@ -34,7 +34,7 @@ class ChartBase
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
     @html_directory = "#{pathname.dirname}/html"
-    erb = ERB.new File.read "#{@html_directory}/#{$1}.erb"
+    erb = ERB.new file_system.load "#{@html_directory}/#{$1}.erb"
     erb.result(caller_binding)
   end
 
@@ -100,7 +100,7 @@ class ChartBase
     issues_id = next_id
 
     issue_descriptions.sort! { |a, b| a[0].key_as_i <=> b[0].key_as_i }
-    erb = ERB.new File.read "#{@html_directory}/collapsible_issues_panel.erb"
+    erb = ERB.new file_system.load "#{@html_directory}/collapsible_issues_panel.erb"
     erb.result(binding)
   end
 
@@ -240,5 +240,5 @@ class ChartBase
         and any other holidays mentioned in the configuration.
       </div>
     TEXT
-  end  
+  end
 end

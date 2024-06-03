@@ -5,6 +5,7 @@ require './spec/spec_helper'
 describe HierarchyTable do
   it 'initializes for no issues' do
     table = described_class.new ->(_) { description_text 'foo' }
+    table.file_system = MockFileSystem.new
     table.issues = []
     table.run
     expect(table.description_text).to eq(
@@ -26,6 +27,7 @@ describe HierarchyTable do
     issue2.parent = issue1
 
     table = described_class.new empty_config_block
+    table.file_system = MockFileSystem.new
     table.issues = [issue1, issue2]
     table.run
     expect(table.description_text.strip).to eq(

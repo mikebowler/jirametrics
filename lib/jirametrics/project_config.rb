@@ -49,7 +49,7 @@ class ProjectConfig
   end
 
   def load_settings
-    JSON.parse(File.read(File.join(__dir__, 'settings.json')))
+    JSON.parse(file_system.load(File.join(__dir__, 'settings.json')))
   end
 
   def guess_project_id
@@ -89,6 +89,8 @@ class ProjectConfig
     raise 'Not allowed to have both an aggregate and a download section. Pick only one.' if @download_config
 
     @aggregate_config = AggregateConfig.new project_config: self, block: block
+
+    # Processing of aggregates should only happen during the export
     return if @exporter.downloading?
 
     @aggregate_config.evaluate_next_level
@@ -120,7 +122,7 @@ class ProjectConfig
 
   def load_board board_id:, filename:
     board = Board.new(
-      raw: JSON.parse(File.read(filename)), possible_statuses: @possible_statuses
+      raw: JSON.parse(file_system.load(filename)), possible_statuses: @possible_statuses
     )
     board.project_config = self
     @all_boards[board_id] = board
@@ -162,7 +164,7 @@ class ProjectConfig
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
 
-    statuses = JSON.parse(File.read(filename))
+    statuses = JSON.parse(file_system.load(filename))
       .map { |snippet| Status.new(raw: snippet) }
     statuses
       .find_all { |status| status.global? }
@@ -178,7 +180,7 @@ class ProjectConfig
 
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
-      JSON.parse(File.read("#{target_path}#{file}"))['values'].each do |json|
+      JSON.parse(file_system.load("#{target_path}#{file}"))['values'].each do |json|
         @all_boards[board_id].sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
     end
@@ -231,7 +233,7 @@ class ProjectConfig
 
   def load_project_metadata
     filename = "#{@target_path}/#{file_prefix}_meta.json"
-    json = JSON.parse(File.read(filename))
+    json = JSON.parse(file_system.load(filename))
 
     @data_version = json['version'] || 1
 
@@ -360,7 +362,7 @@ class ProjectConfig
     default_board = nil
 
     group_filenames_and_board_ids(path: path).each do |filename, board_ids|
-      content = File.read(File.join(path, filename))
+      content = file_system.load(File.join(path, filename))
       if board_ids == :unknown
         boards = [(default_board ||= find_default_board)]
       else
@@ -434,5 +436,9 @@ class ProjectConfig
       exporter.file_system.log message
     end
     exporter.file_system.log "Discarded data from #{issues_cutoff_times.count} issues out of a total #{issues.size}"
+  end
+
+  def file_system
+    @exporter.file_system
   end
 end

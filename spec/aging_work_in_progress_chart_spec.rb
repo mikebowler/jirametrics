@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 def complete_sample_board_columns
-  json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
+  json = JSON.parse(file_system.load('./spec/complete_sample/sample_board_1_configuration.json'))
   json['columnConfig']['columns'].collect { |raw| BoardColumn.new raw }
 end
 
@@ -11,6 +11,7 @@ describe AgingWorkInProgressChart do
   let(:board) { load_complete_sample_board }
   let :chart do
     chart = described_class.new(empty_config_block)
+    chart.file_system = MockFileSystem.new
     chart.board_id = 1
     chart.all_boards = { 1 => load_complete_sample_board }
     board.cycletime = default_cycletime_config

@@ -3,6 +3,7 @@
 require './spec/spec_helper'
 
 describe AgingWorkBarChart do
+  let(:exporter) { Exporter.new(file_system: MockFileSystem.new) }
   let(:chart) { described_class.new(empty_config_block) }
   let(:board) { sample_board }
   let(:issue1) { load_issue('SP-1', board: board) }
@@ -116,7 +117,7 @@ describe AgingWorkBarChart do
     let(:board) do
       board = sample_board
       board.project_config = ProjectConfig.new(
-        exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
+        exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
       )
       board
     end
@@ -257,7 +258,7 @@ describe AgingWorkBarChart do
   context 'data_sets_for_one_issue' do
     it 'processes issue with no blocked, stalled, or expedited' do
       issue = empty_issue key: 'SP-1', created: '2024-01-01', board: board
-      project_config = ProjectConfig.new(exporter: nil, jira_config: nil, block: nil)
+      project_config = ProjectConfig.new(exporter: exporter, jira_config: nil, block: nil)
       board.project_config = project_config
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]

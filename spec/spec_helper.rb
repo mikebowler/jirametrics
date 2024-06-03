@@ -18,18 +18,22 @@ end
 require 'require_all'
 require_all 'lib'
 
+def file_read filename
+  File.read filename, encoding: 'UTF-8'
+end
+
 def make_test_filename basename
   "spec/tmp/#{basename}"
 end
 
 def sample_board
   statuses = load_statuses './spec/testdata/sample_statuses.json'
-  Board.new raw: JSON.parse(File.read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
+  Board.new raw: JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
 end
 
 def load_issue key, board: nil
   board = sample_board if board.nil?
-  Issue.new(raw: JSON.parse(File.read("spec/testdata/#{key}.json")), board: board)
+  Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
 end
 
 def empty_issue created:, board: sample_board, key: 'SP-1'
@@ -70,7 +74,7 @@ def load_complete_sample_issues board:
   Dir.each_child './spec/complete_sample/sample_issues' do |file|
     next unless file.match?(/SP-.+/)
 
-    result << Issue.new(raw: JSON.parse(File.read("./spec/complete_sample/sample_issues/#{file}")), board: board)
+    result << Issue.new(raw: JSON.parse(file_read("./spec/complete_sample/sample_issues/#{file}")), board: board)
   end
 
   # Sort them back into the order they would have come from Jira because some of the tests are order dependant.
@@ -78,7 +82,7 @@ def load_complete_sample_issues board:
 end
 
 def load_complete_sample_board
-  json = JSON.parse(File.read('./spec/complete_sample/sample_board_1_configuration.json'))
+  json = JSON.parse(file_read('./spec/complete_sample/sample_board_1_configuration.json'))
   board = Board.new raw: json, possible_statuses: load_complete_sample_statuses
   board.project_config = ProjectConfig.new(
     exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil

@@ -5,10 +5,15 @@ require 'json'
 class FileSystem
   attr_accessor :logfile, :logfile_name
 
+  # Effectively the same as File.read except it forces the encoding to UTF-8
+  def load filename
+    File.read filename, encoding: 'UTF-8'
+  end
+
   def load_json filename, fail_on_error: true
     return nil if fail_on_error == false && File.exist?(filename) == false
 
-    JSON.parse File.read(filename)
+    JSON.parse load(filename)
   end
 
   def save_json json:, filename:
