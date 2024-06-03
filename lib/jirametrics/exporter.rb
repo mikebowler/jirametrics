@@ -32,11 +32,12 @@ class Exporter
 
   def initialize file_system: FileSystem.new
     @project_configs = []
-    @timezone_offset = '+00:00'
     @target_path = '.'
     @holiday_dates = []
     @downloading = false
     @file_system = file_system
+
+    timezone_offset '+00:00'
   end
 
   def export name_filter:
@@ -79,7 +80,6 @@ class Exporter
   end
 
   def project name: nil, &block
-    raise 'target_path was never set!' if @target_path.nil?
     raise 'jira_config not set' if @jira_config.nil?
 
     @project_configs << ProjectConfig.new(
