@@ -71,7 +71,10 @@ class DataQualityReport < ChartBase
 
   # Return a format that's easier to assert against
   def testable_entries
-    @entries.collect { |entry| [entry.started.to_s, entry.stopped.to_s, entry.issue] }
+    format = '%Y-%m-%d %H:%M:%S %z'
+    @entries.collect do |entry|
+      [entry.started&.strftime(format) || '', entry.stopped&.strftime(format) || '', entry.issue]
+    end
   end
 
   def entries_with_problems
