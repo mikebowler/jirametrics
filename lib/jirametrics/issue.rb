@@ -511,7 +511,10 @@ class Issue
       # It's common that a resolved will happen at the same time as a status change.
       # Put them in a defined order so tests can be deterministic.
       compare = a.time <=> b.time
-      compare = 1 if compare.zero? && a.resolution?
+      if compare.zero?
+        compare = 1 if a.resolution?
+        compare = -1 if b.resolution?
+      end
       compare
     end
   end

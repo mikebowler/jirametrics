@@ -110,18 +110,18 @@ describe Issue do
       expect(issue10.changes).to eq [
         mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
         mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
-        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+00:00'),
-        mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+00:00'),
-        mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+00:00'),
-        mock_change(field: 'status',     value: 'In Progress',              time: '2021-08-29T18:06:55+00:00'),
-        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-09-06T04:33:11+00:00'),
-        mock_change(field: 'Flagged',    value: 'Impediment',               time: '2021-09-06T04:33:30+00:00'),
-        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-09-06T04:33:50+00:00'),
-        mock_change(field: 'Flagged',    value: '',                         time: '2021-09-06T04:33:55+00:00'),
-        mock_change(field: 'status',     value: 'In Progress',              time: '2021-09-06T04:34:02+00:00'),
-        mock_change(field: 'status',     value: 'Review',                   time: '2021-09-06T04:34:21+00:00'),
-        mock_change(field: 'status',     value: 'Done',                     time: '2021-09-06T04:34:26+00:00'),
-        mock_change(field: 'resolution', value: 'Done',                     time: '2021-09-06T04:34:26+00:00')
+        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+0000'),
+        mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+0000'),
+        mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+0000'),
+        mock_change(field: 'status',     value: 'In Progress',              time: '2021-08-29T18:06:55+0000'),
+        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-09-06T04:33:11+0000'),
+        mock_change(field: 'Flagged',    value: 'Impediment',               time: '2021-09-06T04:33:30+0000'),
+        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-09-06T04:33:50+0000'),
+        mock_change(field: 'Flagged',    value: '',                         time: '2021-09-06T04:33:55+0000'),
+        mock_change(field: 'status',     value: 'In Progress',              time: '2021-09-06T04:34:02+0000'),
+        mock_change(field: 'status',     value: 'Review',                   time: '2021-09-06T04:34:21+0000'),
+        mock_change(field: 'status',     value: 'Done',                     time: '2021-09-06T04:34:26+0000'),
+        mock_change(field: 'resolution', value: 'Done',                     time: '2021-09-06T04:34:26+0000')
        ]
     end
 
