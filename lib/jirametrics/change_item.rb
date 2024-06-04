@@ -36,7 +36,8 @@ class ChangeItem
   def link? = (field == 'Link')
 
   def to_s
-    message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: \"#{@time}\""
+    message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, " \
+      "time: #{@time.strftime '%Y-%m-%d %H:%M:%S %z'.inspect}"
     message += ', artificial' if artificial?
     message += ')'
     message

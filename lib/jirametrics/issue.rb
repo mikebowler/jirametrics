@@ -457,7 +457,7 @@ class Issue
       value = change.value
       old_value = change.old_value
 
-      message = "  [change] #{change.time} [#{change.field}] "
+      message = "  [change] #{change.time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{change.field}] "
       message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
       message << compact_text(value).inspect
       message << " (#{change.author})"

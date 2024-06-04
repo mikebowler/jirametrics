@@ -135,7 +135,7 @@ describe Issue do
 
   context 'first_time_in_status' do
     it 'first time in status' do
-      expect(issue10.first_time_in_status('In Progress').to_s).to eql '2021-08-29 18:06:55 +0000'
+      expect(time_to_s issue10.first_time_in_status('In Progress')).to eql '2021-08-29 18:06:55 +0000'
     end
 
     it "first time in status that doesn't match any" do
@@ -145,7 +145,7 @@ describe Issue do
 
   context 'first_time_not_in_status' do
     it 'first time not in status' do
-      expect(issue10.first_time_not_in_status('Backlog').to_s).to eql '2021-08-29 18:06:28 +0000'
+      expect(time_to_s issue10.first_time_not_in_status('Backlog')).to eql '2021-08-29 18:06:28 +0000'
     end
 
     it "first time not in status where it's never in that status" do
@@ -216,13 +216,13 @@ describe Issue do
         category_id: 2
       )
 
-      expect(issue10.first_time_in_status_category('finished').to_s).to eq '2021-09-06 04:34:26 +0000'
+      expect(time_to_s issue10.first_time_in_status_category('finished')).to eq '2021-09-06 04:34:26 +0000'
     end
   end
 
   context 'first_status_change_after_created' do
     it "finds first time for any status change - created doesn't count as status change" do
-      expect(issue10.first_status_change_after_created.to_s).to eql '2021-08-29 18:06:28 +0000'
+      expect(time_to_s issue10.first_status_change_after_created).to eql '2021-08-29 18:06:28 +0000'
     end
 
     it %(first status change after created, where there isn't anything after created) do
@@ -872,7 +872,7 @@ describe Issue do
 
     it 'returns names' do
       issue1.raw['fields']['components'] = [
-        {'name' => 'One'}
+        { 'name' => 'One' }
       ]
       expect(issue1.component_names).to eq ['One']
     end
