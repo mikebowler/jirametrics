@@ -5,7 +5,6 @@ class ChangeItem
   attr_accessor :value, :old_value, :time
 
   def initialize raw:, time:, author:, artificial: false
-    # raw will only ever be nil in a test and in that case field and value should be passed in
     @raw = raw
     @time = time
     raise "Time must be an object of type Time in the correct timezone: #{@time}" if @time.is_a? String
@@ -36,17 +35,17 @@ class ChangeItem
   def link? = (field == 'Link')
 
   def to_s
-    message = "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, " \
-      "time: #{@time.strftime '%Y-%m-%d %H:%M:%S %z'.inspect}"
-    message += ', artificial' if artificial?
-    message += ')'
+    message = +''
+    message << "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: #{time_to_s(@time).inspect}"
+    message << ', artificial' if artificial?
+    message << ')'
     message
   end
 
   def inspect = to_s
 
   def == other
-    field.eql?(other.field) && value.eql?(other.value) && time.to_s.eql?(other.time.to_s)
+    field.eql?(other.field) && value.eql?(other.value) && time_to_s(time).eql?(time_to_s(other.time))
   end
 
   def current_status_matches *status_names_or_ids
@@ -77,5 +76,13 @@ class ChangeItem
         name_or_id == @old_value_id
       end
     end
+  end
+
+  private
+
+  def time_to_s time
+    # MRI and JRuby return different strings for to_s() so we have to explicitly provide a full
+    # format so that tests work under both environments.
+    time.strftime '%Y-%m-%d %H:%M:%S %z'
   end
 end
