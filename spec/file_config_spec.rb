@@ -33,7 +33,7 @@ describe FileConfig do
   context 'sort all rows' do
     it 'sorts nils to the bottom' do
       input = [[nil, 1], [1, 2], [nil, 3], [4, 4]]
-      expected = [[1, 2], [4, 4], [nil, 3], [nil, 1]]
+      expected = [[1, 2], [4, 4], [nil, 1], [nil, 3]]
       expect(file_config.sort_output(input)).to eq expected
     end
   end

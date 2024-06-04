@@ -66,7 +66,9 @@ class FileConfig
   # is that all empty values in the first column should be at the bottom.
   def sort_output all_lines
     all_lines.sort do |a, b|
-      if a[0].nil?
+      if a[0] == b[0]
+        a[1..] <=> b[1..]
+      elsif a[0].nil?
         1
       elsif b[0].nil?
         -1
