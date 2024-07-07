@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 
 ruby '>= 3'
 
+gem 'csv' # No longer core in ruby 3.4
 gem 'rake'
 gem 'random-word'
 gem 'require_all'
