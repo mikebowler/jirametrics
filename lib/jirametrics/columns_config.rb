@@ -34,6 +34,10 @@ class ColumnsConfig
     @columns << [:string, label, proc]
   end
 
+  def integer label, proc
+    @columns << [:integer, label, proc]
+  end
+
   def column_entry_times board_id: nil
     @file_config.project_config.find_board_by_id(board_id).visible_columns.each do |column|
       date column.name, first_time_in_status(*column.status_ids)

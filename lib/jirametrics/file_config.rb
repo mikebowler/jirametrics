@@ -112,6 +112,10 @@ class FileConfig
     object.to_s
   end
 
+  def to_integer object
+    object.to_i
+  end
+
   def file_suffix suffix = nil
     @file_suffix = suffix unless suffix.nil?
     @file_suffix

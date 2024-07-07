@@ -24,6 +24,13 @@ describe ColumnsConfig do
       actual = config.columns.collect { |type, name, proc| [type, name, proc.call(1)] }
       expect(actual).to eq [[:date, 'foo', 'date:1']]
     end
+
+    it 'handles integer types' do
+      config = described_class.new file_config: nil, block: nil
+      config.integer('foo', ->(issue) { "integer:#{issue}" })
+      actual = config.columns.collect { |type, name, proc| [type, name, proc.call(1)] }
+      expect(actual).to eq [[:integer, 'foo', 'integer:1']]
+    end
   end
 
   context 'column_entry_times' do
