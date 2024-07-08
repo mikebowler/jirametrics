@@ -35,4 +35,14 @@ class BlockedStalledChange
     end
     result.join(', ')
   end
+
+  def inspect
+    text = +"BlockedStalledChange(time: '#{@time}', "
+    if active?
+      text << 'Active'
+    else
+      text << reasons
+    end
+    text << ')'
+  end
 end
