@@ -36,6 +36,16 @@ class BlockedStalledChange
     result.join(', ')
   end
 
+  def as_symbol
+    if blocked?
+      :blocked
+    elsif stalled?
+      :stalled
+    else
+      :active
+    end
+  end
+
   def inspect
     text = +"BlockedStalledChange(time: '#{@time}', "
     if active?

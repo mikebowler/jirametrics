@@ -185,30 +185,42 @@ class Issue
     "Issue(#{key.inspect})"
   end
 
-  def blocked_on_date? date, end_time:
-    blocked_stalled_changes_on_date(date: date, end_time: end_time) do |change|
-      return true if change.blocked?
-    end
-    false
+  def blocked_on_date? date, end_time: nil
+    deprecated message: 'end_time is no longer used', date: '2024-07-09' if end_time
+
+    (blocked_stalled_by_date date_range: date..date)[date] == :blocked
   end
 
-  def blocked_stalled_changes_on_date date:, end_time:
-    next_day_start_time = (date + 1).to_time
-    this_day_start_time = date.to_time
+  def blocked_stalled_by_date date_range:, settings: nil
+    active = BlockedStalledChange.new time: nil
 
-    # changes_affecting_date = []
-    previous_change_time = nil
-    blocked_stalled_changes(end_time: end_time).each do |change|
-      if previous_change_time.nil?
-        previous_change_time = change.time
-        next
+    results = date_range.to_a.to_h { |day| [day, active] }
+    end_of_day = (date_range.end + 1).to_time - 1
+    changes = blocked_stalled_changes(end_time: end_of_day, settings: settings)
+    return results if changes.empty?
+
+    previous_day_change = nil
+    previous_day = nil
+    changes.each do |change|
+      change_date = change.time.to_date
+      if previous_day && previous_day < change_date && previous_day_change
+        (previous_day...change_date).each do |day|
+          results[day] = previous_day_change if results.key? day
+        end
       end
 
-      yield change if previous_change_time < next_day_start_time && change.time >= this_day_start_time
+      day = change.time.to_date
+      results[day] = change if results.key?(day) && (change.blocked? || (change.stalled? && !results[day].blocked?))
+
+      previous_day = day unless previous_day == day
+      previous_day_change = results[day]
     end
+    results
   end
 
-  def blocked_stalled_changes end_time:, settings: @board.project_config.settings
+  def blocked_stalled_changes end_time:, settings: nil
+    settings ||= @board.project_config.settings
+
     blocked_statuses = settings['blocked_statuses']
     stalled_statuses = settings['stalled_statuses']
     unless blocked_statuses.is_a?(Array) && stalled_statuses.is_a?(Array)

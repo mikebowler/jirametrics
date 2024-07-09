@@ -5,7 +5,7 @@ require 'fileutils'
 class Object
   def deprecated message:, date:
     text = +''
-    text << "Deprecated(#{date}):"
+    text << "Deprecated(#{date}): "
     text << message
     text << "\n-> Called from #{caller(1..1).first}"
     warn text

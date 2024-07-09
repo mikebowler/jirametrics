@@ -500,6 +500,59 @@ describe Issue do
     end
   end
 
+  context 'blocked_stalled_by_date' do
+    it 'handles no changes' do
+      issue = empty_issue created: '2021-10-01', board: board
+      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      expect(actual.transform_values(&:as_symbol)).to eq({
+        to_date('2021-10-02') => :active,
+        to_date('2021-10-03') => :active,
+        to_date('2021-10-04') => :active
+      })
+    end
+
+    it 'tracks blocked over multiple days' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+
+      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      expect(actual.transform_values(&:as_symbol)).to eq({
+        to_date('2021-10-02') => :active,
+        to_date('2021-10-03') => :blocked,
+        to_date('2021-10-04') => :blocked
+      })
+    end
+
+    it 'tracks blocked then unblocked' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+
+      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      expect(actual.transform_values(&:as_symbol)).to eq({
+        to_date('2021-10-02') => :active,
+        to_date('2021-10-03') => :blocked,
+        to_date('2021-10-04') => :active
+      })
+    end
+
+    it 'tracks blocked then stalled then active' do
+      issue = empty_issue created: '2021-08-01', board: board
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-08-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+
+      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      expect(actual.transform_values(&:as_symbol)).to eq({
+        to_date('2021-10-02') => :active,
+        to_date('2021-10-03') => :blocked,
+        to_date('2021-10-04') => :active
+      })
+    end
+  end
+
   context 'inspect' do
     it 'returns a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
