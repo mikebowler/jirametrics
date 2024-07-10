@@ -249,7 +249,7 @@ class ProjectConfig
 
   def to_time string, end_of_day: false
     time = end_of_day ? '23:59:59' : '00:00:00'
-    string = "#{string}T#{time}#{@timezone_offset}" if string.match?(/^\d{4}-\d{2}-\d{2}$/)
+    string = "#{string}T#{time}#{exporter.timezone_offset}" if string.match?(/^\d{4}-\d{2}-\d{2}$/)
     Time.parse string
   end
 
