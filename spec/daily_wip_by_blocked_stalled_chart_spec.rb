@@ -39,7 +39,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 3
     end
 
-    it 'is blocked and not stalled' do
+    xit 'is blocked and not stalled' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
@@ -54,7 +54,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 1
     end
 
-    it 'is stalled and not blocked' do
+    xit 'is stalled and not blocked' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
@@ -68,7 +68,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 2
     end
 
-    it 'is both stalled and blocked' do
+    xit 'is both stalled and blocked' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]

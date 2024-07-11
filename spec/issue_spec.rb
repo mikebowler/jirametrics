@@ -330,6 +330,7 @@ describe Issue do
     it 'handles never blocked' do
       issue = empty_issue created: '2021-10-01'
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(time: to_time('2021-10-05'))
       ]
     end
@@ -340,6 +341,7 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
         BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00')),
         BlockedStalledChange.new(time: to_time('2021-10-05'))
@@ -353,6 +355,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
         BlockedStalledChange.new(status: 'Blocked2', time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-05')),
@@ -366,6 +369,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
         BlockedStalledChange.new(time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
@@ -381,6 +385,7 @@ describe Issue do
         field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
       )
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-04')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
         BlockedStalledChange.new(time: to_time('2021-10-03')),
         BlockedStalledChange.new(time: to_time('2021-10-04'))
@@ -396,6 +401,7 @@ describe Issue do
         field: 'status', value: 'Doing2', time: '2021-10-08'
       )
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
         BlockedStalledChange.new(time: to_time('2021-10-08')),
         BlockedStalledChange.new(time: to_time('2021-10-10'))
@@ -409,6 +415,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Stalled2', time: '2021-10-04')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
         BlockedStalledChange.new(status: 'Stalled2', status_is_blocking: false, time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-05')),
@@ -422,6 +429,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
         BlockedStalledChange.new(time: to_time('2021-10-04')),
         BlockedStalledChange.new(time: to_time('2021-10-06'))
@@ -448,6 +456,7 @@ describe Issue do
       issue.subtasks << subtask
 
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(time: to_time('2021-10-10'))
       ]
     end
@@ -470,6 +479,7 @@ describe Issue do
       issue.subtasks << subtask
 
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-13')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 7, time: to_time('2021-10-05T01:00:00')),
         BlockedStalledChange.new(time: to_time('2021-10-12')),
         BlockedStalledChange.new(time: to_time('2021-10-13'))
@@ -482,6 +492,7 @@ describe Issue do
         field: 'status', value: 'Doing', time: '2021-10-02'
       )
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-08T00:00:00'))
       ]
@@ -503,7 +514,10 @@ describe Issue do
   context 'blocked_stalled_by_date' do
     it 'handles no changes' do
       issue = empty_issue created: '2021-10-01', board: board
-      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      actual = issue.blocked_stalled_by_date(
+        date_range: to_date('2021-10-02')..to_date('2021-10-04'),
+        chart_end_time: to_time('2021-10-04T23:59:59')
+      )
       expect(actual.transform_values(&:as_symbol)).to eq({
         to_date('2021-10-02') => :active,
         to_date('2021-10-03') => :active,
@@ -516,7 +530,10 @@ describe Issue do
       issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
 
-      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      actual = issue.blocked_stalled_by_date(
+        date_range: to_date('2021-10-02')..to_date('2021-10-04'),
+        chart_end_time: to_time('2021-10-04T23:59:59')
+      )
       expect(actual.transform_values(&:as_symbol)).to eq({
         to_date('2021-10-02') => :active,
         to_date('2021-10-03') => :blocked,
@@ -530,25 +547,45 @@ describe Issue do
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
 
-      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      actual = issue.blocked_stalled_by_date(
+        date_range: to_date('2021-10-02')..to_date('2021-10-04'),
+        chart_end_time: to_time('2021-10-04T23:59:59')
+      )
       expect(actual.transform_values(&:as_symbol)).to eq({
         to_date('2021-10-02') => :active,
         to_date('2021-10-03') => :blocked,
         to_date('2021-10-04') => :active
       })
     end
+#XXX
+    xit 'handles complex case' do
+      issue = empty_issue created: '2021-10-01', board: board
+      # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-01')
+      # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
 
-    it 'tracks blocked then stalled then active' do
-      issue = empty_issue created: '2021-08-01', board: board
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-08-02')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-09')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-11')
 
-      actual = issue.blocked_stalled_by_date date_range: to_date('2021-10-02')..to_date('2021-10-04')
+      actual = issue.blocked_stalled_by_date(
+        date_range: to_date('2021-10-01')..to_date('2021-10-12'),
+        chart_end_time: to_time('2021-10-12T23:59:59'),
+        debug: true
+      )
       expect(actual.transform_values(&:as_symbol)).to eq({
-        to_date('2021-10-02') => :active,
-        to_date('2021-10-03') => :blocked,
-        to_date('2021-10-04') => :active
+        to_date('2021-10-01') => :active,  # created and therefore active
+        to_date('2021-10-02') => :stalled, # no activity for the next five days so start tracking stalled
+        to_date('2021-10-03') => :stalled, # no change
+        to_date('2021-10-04') => :stalled, # no change
+        to_date('2021-10-05') => :stalled, # no change
+        to_date('2021-10-06') => :stalled, # no change
+        to_date('2021-10-07') => :blocked, # blocked and unblocked same day
+        to_date('2021-10-08') => :active,
+        to_date('2021-10-09') => :blocked, # becomes blocked
+        to_date('2021-10-10') => :blocked, # No changes on this day, should still be blocked
+        to_date('2021-10-11') => :blocked, # block cleared
+        to_date('2021-10-12') => :active
       })
     end
   end

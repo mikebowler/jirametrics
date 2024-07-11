@@ -15,12 +15,12 @@ class BlockedStalledChange
     @time = time
   end
 
-  def blocked? = @flag || blocked_by_status? || @blocking_issue_keys
-  def stalled? = @stalled_days || stalled_by_status?
+  def blocked? = !!(@flag || blocked_by_status? || @blocking_issue_keys)
+  def stalled? = !!(@stalled_days || stalled_by_status?)
   def active? = !blocked? && !stalled?
 
-  def blocked_by_status? = @status && @status_is_blocking
-  def stalled_by_status? = @status && !@status_is_blocking
+  def blocked_by_status? = !!(@status && @status_is_blocking)
+  def stalled_by_status? = !!(@status && !@status_is_blocking)
 
   def reasons
     result = []

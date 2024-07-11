@@ -185,36 +185,54 @@ class Issue
     "Issue(#{key.inspect})"
   end
 
-  def blocked_on_date? date, end_time: nil
-    deprecated message: 'end_time is no longer used', date: '2024-07-09' if end_time
-
-    (blocked_stalled_by_date date_range: date..date)[date] == :blocked
+  def blocked_on_date? date, chart_end_time:
+    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date].blocked?
   end
 
-  def blocked_stalled_by_date date_range:, settings: nil
+  # For any day in the day range...
+  # If the issue was blocked at any point in this day, the whole day is blocked.
+  # If the issue was active at any point in this day, the whole day is active
+  # If the day was stalled for the entire day then it's stalled
+  # If there was no activity at all on this day then the last change from the previous day carries over
+  def blocked_stalled_by_date date_range:, chart_end_time:, settings: nil, debug: false
     active = BlockedStalledChange.new time: nil
 
     results = date_range.to_a.to_h { |day| [day, active] }
-    end_of_day = (date_range.end + 1).to_time - 1
-    changes = blocked_stalled_changes(end_time: end_of_day, settings: settings)
+    changes = blocked_stalled_changes(end_time: chart_end_time, settings: settings)
     return results if changes.empty?
 
-    previous_day_change = nil
+    if debug
+      puts "\n===="
+      puts 'Issue.changes'
+      @changes.each {|c| puts "  #{c.inspect}" }
+    end
+    previous_day_final_change = nil
+    previous_change = nil
     previous_day = nil
     changes.each do |change|
+      puts "change: #{change.inspect}" if debug
       change_date = change.time.to_date
-      if previous_day && previous_day < change_date && previous_day_change
-        (previous_day...change_date).each do |day|
-          results[day] = previous_day_change if results.key? day
+      previous_day_final_change = previous_change if change_date != previous_day
+
+      if previous_day && previous_day < change_date && results[previous_day]
+        ((previous_day + 1)...change_date).each do |day|
+          # puts "Copying change from previous day for #{day}"
+          results[day] = previous_day_final_change if results.key? day
         end
       end
 
-      day = change.time.to_date
-      results[day] = change if results.key?(day) && (change.blocked? || (change.stalled? && !results[day].blocked?))
+      if results.key?(change_date)
+        if (change.blocked? || (change.stalled? && !results[change_date].blocked?))
+          results[change_date] = change
+        elsif change.active? && previous_day_final_change&.blocked?
+          results[change_date] = previous_day_final_change
+        end
+      end
 
-      previous_day = day unless previous_day == day
-      previous_day_change = results[day]
+      previous_day = change_date
+      previous_change = change
     end
+
     results
   end
 
@@ -234,7 +252,7 @@ class Issue
     blocking_issue_keys = []
 
     result = []
-    previous_was_active = true
+    previous_was_active = false # Must start as false so that the creation will insert an :active
     previous_change_time = created
 
     blocking_status = nil
@@ -243,6 +261,7 @@ class Issue
     # This mock change is to force the writing of one last entry at the end of the time range.
     # By doing this, we're able to eliminate a lot of duplicated code in charts.
     mock_change = ChangeItem.new time: end_time, author: '', artificial: true, raw: { 'field' => '' }
+
     (changes + [mock_change]).each do |change|
       previous_was_active = false if check_for_stalled(
         change_time: change.time,
@@ -304,6 +323,7 @@ class Issue
         stalled_days: result[-1].stalled_days
       )
     end
+
     result
   end
 
