@@ -12,8 +12,8 @@ describe AgingWorkTable do
   end
 
   let(:board) { load_complete_sample_board }
-  let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
-  let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
+  let(:issue1) { empty_issue(created: '2021-01-01', board: board, key: 'SP-1') }
+  let(:issue2) { empty_issue(created: '2021-01-01', board: board, key: 'SP-2') }
 
   context 'icon_span' do
     it 'creates span' do
@@ -23,12 +23,12 @@ describe AgingWorkTable do
 
   context 'expedited_text' do
     it 'is empty when not expedited' do
-      issue1.raw['fields']['priority']['name'] = 'Not set'
+      issue1.raw['fields']['priority'] = {'name' => 'Not set'}
       expect(table.expedited_text issue1).to be_nil
     end
 
     it 'creates span when expedited' do
-      issue1.raw['fields']['priority']['name'] = 'Highest'
+      issue1.raw['fields']['priority'] = {'name' => 'Highest'}
       issue1.board.expedited_priority_names = ['Highest']
       expect(table.expedited_text issue1).to eq(
         "<div class='color_block' style='background: var(--expedited-color);' " \

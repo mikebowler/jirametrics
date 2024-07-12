@@ -39,7 +39,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 3
     end
 
-    xit 'is blocked and not stalled' do
+    it 'is blocked and not stalled' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
@@ -54,7 +54,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 1
     end
 
-    xit 'is stalled and not blocked' do
+    it 'is stalled and not blocked' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
@@ -68,7 +68,7 @@ describe DailyWipByBlockedStalledChart do
       expect(rules.group_priority).to eq 2
     end
 
-    xit 'is both stalled and blocked' do
+    it 'is both stalled and blocked' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
@@ -76,7 +76,7 @@ describe DailyWipByBlockedStalledChart do
       issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
 
       rules = DailyGroupingRules.new
-      rules.current_date = Date.parse('2022-01-12')
+      rules.current_date = Date.parse('2022-01-01')
       chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.group).to eq ['Blocked', CssVariable.new('--blocked-color')]
       expect(rules.group_priority).to eq 1

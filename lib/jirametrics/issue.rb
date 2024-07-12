@@ -186,7 +186,7 @@ class Issue
   end
 
   def blocked_on_date? date, chart_end_time:
-    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date].blocked?
+    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date]&.blocked?
   end
 
   # For any day in the day range...
@@ -195,17 +195,53 @@ class Issue
   # If the day was stalled for the entire day then it's stalled
   # If there was no activity at all on this day then the last change from the previous day carries over
   def blocked_stalled_by_date date_range:, chart_end_time:, settings: nil, debug: false
+    results = {}
+    current_date = nil
+    blocked_stalled_changes(end_time: chart_end_time, settings: settings).each do |change|
+      current_date = change.time.to_date
+
+      winning_change, last_change = results[current_date]
+      if winning_change.nil?
+        winning_change = change
+      elsif change.blocked?
+        winning_change = change # Just overwrite
+      elsif change.active? && (winning_change.active? || winning_change.stalled?)
+        winning_change = change
+      elsif change.stalled? && winning_change.stalled?
+        winning_change = change
+      end
+
+      results[current_date] = [winning_change, change]
+    end
+
+    last_populated_date = nil
+    (results.keys.min..results.keys.max).each do |date|
+      if results.key? date
+        last_populated_date = date
+      else
+        _winner, last = results[last_populated_date]
+        results[date] = [last, last]
+      end
+    end
+    results = results.transform_values(&:first)
+
+    # To make the code simpler, we've been accumulating data for every date. Now remove anything
+    # that isn't in the requested date_range
+    results.select! { |date, _value| date_range.include? date }
+
+    results.keys.sort.each do |date|
+      change = results[date]
+    end
+    results
+  end
+
+  def xxblocked_stalled_by_date date_range:, chart_end_time:, settings: nil, debug: false
     active = BlockedStalledChange.new time: nil
 
     results = date_range.to_a.to_h { |day| [day, active] }
     changes = blocked_stalled_changes(end_time: chart_end_time, settings: settings)
     return results if changes.empty?
 
-    if debug
-      puts "\n===="
-      puts 'Issue.changes'
-      @changes.each {|c| puts "  #{c.inspect}" }
-    end
     previous_day_final_change = nil
     previous_change = nil
     previous_day = nil

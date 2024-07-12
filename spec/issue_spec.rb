@@ -557,8 +557,8 @@ describe Issue do
         to_date('2021-10-04') => :active
       })
     end
-#XXX
-    xit 'handles complex case' do
+
+    it 'handles complex case' do
       issue = empty_issue created: '2021-10-01', board: board
       # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-01')
       # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
@@ -584,7 +584,7 @@ describe Issue do
         to_date('2021-10-08') => :active,
         to_date('2021-10-09') => :blocked, # becomes blocked
         to_date('2021-10-10') => :blocked, # No changes on this day, should still be blocked
-        to_date('2021-10-11') => :blocked, # block cleared
+        to_date('2021-10-11') => :active, # block cleared
         to_date('2021-10-12') => :active
       })
     end
