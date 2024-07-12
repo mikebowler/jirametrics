@@ -558,10 +558,24 @@ describe Issue do
       })
     end
 
+    it 'handles a date range that covers time before the issue starts and after it finishes' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-02')
+
+      actual = issue.blocked_stalled_by_date(
+        date_range: to_date('2021-09-30')..to_date('2021-10-03'),
+        chart_end_time: to_time('2021-10-04T23:59:59')
+      )
+      expect(actual.transform_values(&:as_symbol)).to eq({
+        to_date('2021-09-30') => :active,
+        to_date('2021-10-01') => :active,
+        to_date('2021-10-02') => :blocked,
+        to_date('2021-10-03') => :blocked
+      })
+    end
+
     it 'handles complex case' do
       issue = empty_issue created: '2021-10-01', board: board
-      # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-01')
-      # issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
       issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
 
@@ -570,8 +584,7 @@ describe Issue do
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-01')..to_date('2021-10-12'),
-        chart_end_time: to_time('2021-10-12T23:59:59'),
-        debug: true
+        chart_end_time: to_time('2021-10-12T23:59:59')
       )
       expect(actual.transform_values(&:as_symbol)).to eq({
         to_date('2021-10-01') => :active,  # created and therefore active

@@ -186,7 +186,7 @@ class Issue
   end
 
   def blocked_on_date? date, chart_end_time:
-    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date]&.blocked?
+    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date].blocked?
   end
 
   # For any day in the day range...
@@ -194,10 +194,11 @@ class Issue
   # If the issue was active at any point in this day, the whole day is active
   # If the day was stalled for the entire day then it's stalled
   # If there was no activity at all on this day then the last change from the previous day carries over
-  def blocked_stalled_by_date date_range:, chart_end_time:, settings: nil, debug: false
+  def blocked_stalled_by_date date_range:, chart_end_time:, settings: nil
     results = {}
     current_date = nil
-    blocked_stalled_changes(end_time: chart_end_time, settings: settings).each do |change|
+    blocked_stalled_changes = blocked_stalled_changes(end_time: chart_end_time, settings: settings)
+    blocked_stalled_changes.each do |change|
       current_date = change.time.to_date
 
       winning_change, _last_change = results[current_date]
@@ -222,6 +223,14 @@ class Issue
       end
     end
     results = results.transform_values(&:first)
+
+    # The requested date range may span outside the actual changes we find in the changelog
+    date_of_first_change = blocked_stalled_changes[0].time.to_date
+    date_of_last_change = blocked_stalled_changes[-1].time.to_date
+    date_range.each do |date|
+      results[date] = blocked_stalled_changes[0] if date < date_of_first_change
+      results[date] = blocked_stalled_changes[-1] if date > date_of_last_change
+    end
 
     # To make the code simpler, we've been accumulating data for every date. Now remove anything
     # that isn't in the requested date_range
