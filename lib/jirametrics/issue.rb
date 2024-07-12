@@ -185,8 +185,8 @@ class Issue
     "Issue(#{key.inspect})"
   end
 
-  def blocked_on_date? date, chart_end_time:
-    (blocked_stalled_by_date date_range: date..date, chart_end_time: chart_end_time)[date].blocked?
+  def blocked_on_date? date, end_time:
+    (blocked_stalled_by_date date_range: date..date, chart_end_time: end_time)[date].blocked?
   end
 
   # For any day in the day range...

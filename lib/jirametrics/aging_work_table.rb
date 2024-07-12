@@ -47,7 +47,7 @@ class AgingWorkTable < ChartBase
       started = cycletime.started_time(issue)
       stopped = cycletime.stopped_time(issue)
       next false if started.nil? || stopped
-      next true if issue.blocked_on_date?(@today, chart_end_time: time_range.end) || issue.expedited?
+      next true if issue.blocked_on_date?(@today, end_time: time_range.end) || issue.expedited?
 
       age = (@today - started.to_date).to_i + 1
       age > @age_cutoff
