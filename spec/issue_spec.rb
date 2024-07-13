@@ -509,6 +509,18 @@ describe Issue do
       expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
         .to raise_error 'blocked_statuses(["Blocked", "Blocked2"]) and stalled_statuses("") must both be arrays'
     end
+
+    it 'shows blocked even when there has been a big enough gap to be stalled' do
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-10')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-02')),
+        BlockedStalledChange.new(time: to_time('2021-10-10')),
+        BlockedStalledChange.new(time: to_time('2021-10-10'))
+      ]
+    end
   end
 
   context 'blocked_stalled_by_date' do

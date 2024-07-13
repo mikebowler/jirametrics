@@ -336,6 +336,9 @@ class Issue
     # The most common case will be nothing to split so quick escape.
     return false if (change_time - previous_change_time).to_i < stalled_threshold_seconds
 
+    # If the last identified change was blocked then it doesn't matter now long we've waited, we're still blocked.
+    return false if blocking_stalled_changes[-1]&.blocked?
+
     list = [previous_change_time..change_time]
     all_subtask_activity_times.each do |time|
       matching_range = list.find { |range| time >= range.begin && time <= range.end }
