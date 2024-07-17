@@ -13,7 +13,8 @@ class Object
 end
 
 class Exporter
-  attr_reader :project_configs, :file_system
+  attr_reader :project_configs
+  attr_accessor :file_system
 
   def self.configure &block
     logfile_name = 'jirametrics.log'
@@ -99,7 +100,10 @@ class Exporter
   end
 
   def jira_config filename = nil
-    @jira_config = file_system.load_json(filename) unless filename.nil?
+    if filename
+      @jira_config = file_system.load_json(filename)
+      @jira_config['url'] = $1 if @jira_config['url'] =~ /^(.+)\/+$/
+    end
     @jira_config
   end
 

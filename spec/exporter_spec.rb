@@ -32,6 +32,13 @@ describe Exporter do
       exporter.jira_config 'spec/testdata/jira-config.json'
       expect(exporter.jira_config['url']).to eq 'https://improvingflow.atlassian.net'
     end
+
+    it 'strips trailing slash from url' do
+      exporter.file_system = MockFileSystem.new
+      exporter.file_system.when_loading file: 'jira-config.json', json: { 'url' => 'foo/'}
+      exporter.jira_config 'jira-config.json'
+      expect(exporter.jira_config['url']).to eq 'foo'
+    end
   end
 
   context 'project' do
