@@ -48,15 +48,17 @@ class JiraGateway
   end
 
   def make_curl_command url:
-    command = 'curl'
-    command += ' -s'
-    command += ' -k' if @ignore_ssl_errors
-    command += " --cookie #{@cookies.inspect}" unless @cookies.empty?
-    command += " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
-    command += " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
-    command += ' --request GET'
-    command += ' --header "Accept: application/json"'
-    command += " --url \"#{url}\""
+    command = +''
+    command << 'curl'
+    command << ' -L' # follow redirects
+    command << ' -s' # silent
+    command << ' -k' if @ignore_ssl_errors # insecure
+    command << " --cookie #{@cookies.inspect}" unless @cookies.empty?
+    command << " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
+    command << " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
+    command << ' --request GET'
+    command << ' --header "Accept: application/json"'
+    command << " --url \"#{url}\""
     command
   end
 end

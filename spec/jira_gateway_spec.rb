@@ -9,7 +9,7 @@ describe JiraGateway do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
 
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -s --request GET --header "Accept: application/json" --url "http://foo")
+        %(curl -L -s --request GET --header "Accept: application/json" --url "http://foo")
       )
     end
 
@@ -17,7 +17,7 @@ describe JiraGateway do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
       gateway.ignore_ssl_errors = true
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -s -k --request GET --header "Accept: application/json" --url "http://foo")
+        %(curl -L -s -k --request GET --header "Accept: application/json" --url "http://foo")
       )
     end
 
@@ -27,7 +27,7 @@ describe JiraGateway do
         'personal_access_token' => 'yy'
       })
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
+        %(curl -L -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
       )
     end
   end
@@ -61,13 +61,13 @@ describe JiraGateway do
   context 'Build curl command' do
     it 'generates with url only' do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
-      expected = 'curl -s --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s --request GET --header "Accept: application/json" --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
 
     it 'generates with cookies' do
       gateway.load_jira_config({ 'url' => 'https://example.com', 'cookies' => { 'a' => 'b' } })
-      expected = 'curl -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
 
@@ -75,7 +75,7 @@ describe JiraGateway do
       gateway.load_jira_config(
         { 'url' => 'https://example.com', 'email' => 'fred@flintstone', 'api_token' => 'bedrock' }
       )
-      expected = 'curl -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
   end
