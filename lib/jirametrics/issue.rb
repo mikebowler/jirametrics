@@ -433,6 +433,10 @@ class Issue
     @fix_versions
   end
 
+  def looks_like_issue_key? key
+    key.is_a?(String) && key =~ /^[^-]+-\d+$/
+  end
+
   def parent_key project_config: @board.project_config
     # Although Atlassian is trying to standardize on one way to determine the parent, today it's a mess.
     # We try a variety of ways to get the parent and hopefully one of them will work. See this link:
@@ -454,8 +458,13 @@ class Issue
 
       custom_field_names&.each do |field_name|
         parent = fields[field_name]
-        # A break would be more appropriate than a return but the runtime caused an error when we do that
-        return parent if parent
+        next if parent.nil?
+        break if looks_like_issue_key? parent
+
+        project_config.file_system.log(
+          "Custom field #{field_name.inspect} should point to a parent id but found #{parent.inspect}"
+        )
+        parent = nil
       end
     end
 

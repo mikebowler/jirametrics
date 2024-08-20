@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe Issue do
-  let(:exporter) { Exporter.new }
+  let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:target_path) { 'spec/testdata/' }
   let(:project_config) do
     ProjectConfig.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
@@ -810,6 +810,16 @@ describe Issue do
         issue.board.project_config = project_config
         issue.raw['fields']['customfield_1'] = 'ABC-1'
         expect(issue.parent_key).to eq 'ABC-1'
+      end
+
+      it 'warns when parent link points to something that is not a parent id' do
+        project_config.settings['customfield_parent_links'] = 'customfield_1'
+        issue.board.project_config = project_config
+        issue.raw['fields']['customfield_1'] = 'BadData'
+        expect(issue.parent_key).to be_nil
+        expect(exporter.file_system.log_messages).to eq([
+          'Custom field "customfield_1" should point to a parent id but found "BadData"'
+        ])
       end
     end
   end
