@@ -824,6 +824,22 @@ describe Issue do
     end
   end
 
+  context 'looks_like_issue_key?' do
+    let(:issue) { empty_issue created: '2020-01-01' }
+
+    it 'returns true for valid key' do
+      expect(issue.looks_like_issue_key? 'ABC-123').to be true
+    end
+
+    it 'returns false for invalid key' do
+      expect(issue.looks_like_issue_key? 'BadData').to be false
+    end
+
+    it 'returns false for value that is not a string' do
+      expect(issue.looks_like_issue_key?({ a: 1 })).to be false
+    end
+  end
+
   context 'expedited?' do
     let(:issue) { empty_issue created: '2020-01-01' }
 

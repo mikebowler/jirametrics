@@ -434,7 +434,7 @@ class Issue
   end
 
   def looks_like_issue_key? key
-    key.is_a?(String) && key =~ /^[^-]+-\d+$/
+    !!(key.is_a?(String) && key =~ /^[^-]+-\d+$/)
   end
 
   def parent_key project_config: @board.project_config
