@@ -180,7 +180,7 @@ class ProjectConfig
 
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
-      JSON.parse(file_system.load("#{target_path}#{file}"))['values'].each do |json|
+      JSON.parse(file_system.load("#{target_path}#{file}"))['values']&.each do |json|
         @all_boards[board_id].sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
     end
