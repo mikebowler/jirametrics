@@ -199,7 +199,11 @@ class Downloader
       )
       is_last = json['isLast']
       max_results = json['maxResults']
-      start_at += json['values'].size
+      if json['values']
+        start_at += json['values'].size
+      else
+        log "  No sprints found for board #{board_id}"
+      end
     end
   end
 

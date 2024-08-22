@@ -226,5 +226,25 @@ describe Downloader do
         'spec/testdata/sample_board_2_sprints_1.json' => '{"isLast":true,"maxResults":1,"values":[{"a":2}]}'
       })
     end
+
+    it 'does not blow up for a board with no sprints' do
+      url = '/rest/agile/1.0/board/2/configuration'
+      jira_gateway.when(
+        url: url,
+        response: { 'filter' => { 'id' => 1 }, 'type' => 'scrum' }
+      )
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
+        response: { 'isLast' => true, 'maxResults' => 1, 'values' => nil }
+      )
+
+      downloader.download_board_configuration board_id: 2
+
+      expect(file_system.log_messages).to eq([
+        'Downloading board configuration for board 2',
+        'Downloading sprints for board 2',
+        'No sprints found for board 2'
+      ])
+    end
   end
 end
