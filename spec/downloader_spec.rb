@@ -58,13 +58,45 @@ describe Downloader do
       expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
     end
 
-    it 'uses the filter id in the board config' do
-      download_config.rolling_date_count 90
-      expected = 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
-        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+    context 'with dates' do
+      it 'pulls from all time when rolling_date_count not set' do
+        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+        expect(jql).to eql 'filter=5'
+      end
 
-      jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
-      expect(jql).to eql expected
+      it 'pulls from specified date when only no_earlier_than is set' do
+        download_config.no_earlier_than '2020-08-15'
+
+        jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
+        expect(jql).to eql 'filter=5 AND (updated >= "2020-08-15 00:00" OR ' \
+          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+      end
+
+      it 'pulls only the days specified by rolling_date_count' do
+        download_config.rolling_date_count 90
+
+        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+        expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
+          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+      end
+
+      it 'pulls only issues after no_earlier_than when that is later than rolling date count' do
+        download_config.rolling_date_count 90
+        download_config.no_earlier_than '2021-08-10'
+
+        jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
+        expect(jql).to eql 'filter=5 AND (updated >= "2021-08-10 00:00" OR ' \
+          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+      end
+
+      it 'ignores no_earlier_than if it is earlier than the rolling date count' do
+        download_config.rolling_date_count 90
+        download_config.no_earlier_than '2020-08-10'
+
+        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+        expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
+          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+      end
     end
   end
 

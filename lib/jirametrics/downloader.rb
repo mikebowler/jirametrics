@@ -275,8 +275,10 @@ class Downloader
     segments = []
     segments << "filter=#{filter_id}"
 
-    unless @download_config.rolling_date_count.nil?
-      @download_date_range = (today.to_date - @download_config.rolling_date_count)..today.to_date
+    start_date = @download_config.start_date today: today
+
+    if start_date
+      @download_date_range = start_date..today.to_date
 
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.

@@ -6,7 +6,8 @@
 # See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
-      default_board: nil, anonymize: false, settings: {}, status_category_mappings: {}
+      default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
+      rolling_date_count: 90, no_earlier_than: nil
 
     project name: name do
       puts name
@@ -21,7 +22,8 @@ class Exporter
 
       file_prefix file_prefix
       download do
-        rolling_date_count 90
+        self.rolling_date_count(rolling_date_count) if rolling_date_count
+        self.no_earlier_than(no_earlier_than) if no_earlier_than
       end
 
       boards.each_key do |board_id|

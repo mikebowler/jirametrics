@@ -19,4 +19,16 @@ class DownloadConfig
     @rolling_date_count = count unless count.nil?
     @rolling_date_count
   end
+
+  def no_earlier_than date = nil
+    @no_earlier_than = Date.parse(date) unless date.nil?
+    @no_earlier_than
+  end
+
+  def start_date today:
+    date = today.to_date - @rolling_date_count if @rolling_date_count
+    date = [date, @no_earlier_than].max if date && @no_earlier_than
+    date = @no_earlier_than if date.nil? && @no_earlier_than
+    date
+  end
 end
