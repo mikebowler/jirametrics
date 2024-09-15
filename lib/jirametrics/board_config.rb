@@ -11,7 +11,6 @@ class BoardConfig
 
   def run
     @board = @project_config.all_boards[id]
-    @board.expedited_priority_names = []
 
     instance_eval(&@block)
   end
@@ -26,6 +25,7 @@ class BoardConfig
   end
 
   def expedited_priority_names *priority_names
-    @board.expedited_priority_names = priority_names
+    deprecated date: '2024-09-15', message: 'Expedited priority names are now specified in settings'
+    @project_config.settings['expedited_priority_names'] = priority_names
   end
 end

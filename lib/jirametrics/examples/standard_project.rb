@@ -7,13 +7,12 @@
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
       default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
-      rolling_date_count: 90, no_earlier_than: nil, dependency_chart_block: nil
+      rolling_date_count: 90, no_earlier_than: nil
 
     project name: name do
       puts name
       self.anonymize if anonymize
 
-      settings['blocked_link_text'] = ['is blocked by']
       self.settings.merge! settings
 
       status_category_mappings.each do |status, category|
@@ -36,7 +35,6 @@ class Exporter
         end
         board id: board_id do
           cycletime(&block)
-          expedited_priority_names 'Critical', 'Highest', 'Immediate Gating'
         end
       end
 

@@ -2,6 +2,8 @@
   "stalled_threshold_days": 5,
   "stalled_statuses": [],
 
-  "blocked_link_text": [],
-  "blocked_statuses": []
+  "blocked_link_text": ["is blocked by"],
+  "blocked_statuses": [],
+
+  "expedited_priority_names": ["Critical", "Highest"]
 }

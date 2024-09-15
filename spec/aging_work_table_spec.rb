@@ -29,7 +29,7 @@ describe AgingWorkTable do
 
     it 'creates span when expedited' do
       issue1.raw['fields']['priority'] = {'name' => 'Highest'}
-      issue1.board.expedited_priority_names = ['Highest']
+      issue1.board.project_config.settings['expedited_priority_names'] = ['Highest']
       expect(table.expedited_text issue1).to eq(
         "<div class='color_block' style='background: var(--expedited-color);' " \
           'title="Expedited: Has a priority of &quot;Highest&quot;"></div>'
@@ -213,7 +213,7 @@ describe AgingWorkTable do
       [issue2, nil, nil],
       [issue3, nil, nil],
     ]
-    board.expedited_priority_names = ['Highest']
+    board.project_config.settings['expedited_priority_names'] = ['Highest']
     table.issues = [issue1, issue2, issue3]
 
     expect(table.expedited_but_not_started).to eq [issue3]

@@ -371,7 +371,9 @@ class Issue
   end
 
   def expedited?
-    names = @board&.expedited_priority_names
+    return false unless @board&.project_config
+
+    names = @board.project_config.settings['expedited_priority_names']
     return false unless names
 
     current_priority = raw['fields']['priority']&.[]('name')
@@ -380,7 +382,9 @@ class Issue
 
   def expedited_on_date? date
     expedited_start = nil
-    expedited_names = @board&.expedited_priority_names
+    return false unless @board&.project_config
+
+    expedited_names = @board.project_config.settings['expedited_priority_names']
 
     changes.each do |change|
       next unless change.priority?

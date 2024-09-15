@@ -57,7 +57,7 @@ class ExpeditedChart < ChartBase
   def prepare_expedite_data issue
     expedite_start = nil
     result = []
-    expedited_priority_names = issue.board.expedited_priority_names
+    expedited_priority_names = issue.board.project_config.settings['expedited_priority_names']
 
     issue.changes.each do |change|
       next unless change.priority?

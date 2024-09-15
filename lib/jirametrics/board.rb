@@ -2,14 +2,13 @@
 
 class Board
   attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :backlog_statuses
-  attr_accessor :cycletime, :project_config, :expedited_priority_names
+  attr_accessor :cycletime, :project_config
 
   def initialize raw:, possible_statuses: StatusCollection.new
     @raw = raw
     @board_type = raw['type']
     @possible_statuses = possible_statuses
     @sprints = []
-    @expedited_priority_names = []
 
     columns = raw['columnConfig']['columns']
 

@@ -841,7 +841,7 @@ describe Issue do
   end
 
   context 'expedited?' do
-    let(:issue) { empty_issue created: '2020-01-01' }
+    let(:issue) { empty_issue created: '2020-01-01', board: board }
 
     it 'no board' do
       expect(empty_issue(created: '2020-01-01', board: nil)).not_to be_expedited
@@ -858,7 +858,7 @@ describe Issue do
 
     it 'priority set to expedited' do
       issue.raw['fields']['priority'] = { 'name' => 'high' }
-      issue.board.expedited_priority_names = ['high']
+      issue.board.project_config.settings['expedited_priority_names'] = ['high']
       expect(issue).to be_expedited
     end
   end
@@ -870,8 +870,8 @@ describe Issue do
     end
 
     it 'works when expedited turns on and off on same day' do
-      issue = empty_issue created: '2021-10-01'
-      issue.board.expedited_priority_names = ['high']
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = ['high']
 
       issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
       issue.changes << mock_change(field: 'priority', value: '',     time: '2021-10-03T00:02:00')
@@ -885,8 +885,8 @@ describe Issue do
     end
 
     it 'works when one expedite follows another' do
-      issue = empty_issue created: '2021-10-01'
-      issue.board.expedited_priority_names = %w[high higher]
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       issue.changes << mock_change(field: 'priority', value: 'higher', time: '2021-10-03T00:02:00')
@@ -902,8 +902,8 @@ describe Issue do
     end
 
     it 'works when still expedited at end of data' do
-      issue = empty_issue created: '2021-10-01'
-      issue.board.expedited_priority_names = %w[high higher]
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
 

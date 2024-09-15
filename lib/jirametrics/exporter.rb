@@ -7,7 +7,9 @@ class Object
     text = +''
     text << "Deprecated(#{date}): "
     text << message
-    text << "\n-> Called from #{caller(1..1).first}"
+    caller(1..2).each do |line|
+      text << "\n-> Called from #{line}"
+    end
     warn text
   end
 end

@@ -8,7 +8,11 @@ describe ExpeditedChart do
     chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-01-30')
     chart
   end
-  let(:board) { load_complete_sample_board.tap { |b| b.expedited_priority_names = ['expedite'] } }
+  let(:board) do
+    load_complete_sample_board.tap do |b|
+      b.project_config.settings['expedited_priority_names'] = ['expedite']
+    end
+  end
   let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
   let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
