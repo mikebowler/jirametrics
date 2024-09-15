@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Rules
-  def ignore
-    @ignore = true
+  def ignore value = true
+    @ignore = value
   end
 
   def ignored?
