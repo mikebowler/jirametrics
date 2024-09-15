@@ -260,4 +260,43 @@ describe DependencyChart do
       )
     end
   end
+
+  context 'default_issue_rules' do
+    it 'handles done' do
+      rules = DependencyChart::IssueRules.new
+      issue13.board.cycletime = mock_cycletime_config stub_values: [
+        [issue13, '2024-01-01', '2024-01-02']
+      ]
+      chart.default_issue_rules.call issue13, rules
+      expect(rules.label).to eq '<<S>SP-13 </S>  [Story]<BR/>Done<BR/>Report of people checked in at an event>'
+    end
+
+    it 'Handles in progress' do
+      rules = DependencyChart::IssueRules.new
+      issue13.board.cycletime = mock_cycletime_config stub_values: [
+        [issue13, '2024-01-01', nil]
+      ]
+      chart.default_issue_rules.call issue13, rules
+      expect(rules.label).to eq '<SP-13 [Story]<BR/>Age: 258 days<BR/>Report of people checked in at an event>'
+    end
+
+    it 'handles in not started' do
+      rules = DependencyChart::IssueRules.new
+      issue13.board.cycletime = mock_cycletime_config stub_values: [
+        [issue13, nil, nil]
+      ]
+      chart.default_issue_rules.call issue13, rules
+      expect(rules.label).to eq '<SP-13 [Story]<BR/>Not started<BR/>Report of people checked in at an event>'
+    end
+
+    it 'handles artificial issue' do
+      rules = DependencyChart::IssueRules.new
+      issue13.raw['exporter'] = nil
+      issue13.board.cycletime = mock_cycletime_config stub_values: [
+        [issue13, nil, nil]
+      ]
+      chart.default_issue_rules.call issue13, rules
+      expect(rules.label).to eq '<<S>SP-13 </S>  [Story]<BR/>(unknown state)<BR/>Report of people checked in at an event>'
+    end
+  end
 end

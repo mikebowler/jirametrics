@@ -44,11 +44,7 @@ class DependencyChart < ChartBase
     @rules_block = rules_block
     @link_rules_block = ->(link_name, link_rules) {}
 
-    issue_rules do |issue, rules|
-      key = issue.key
-      key = "<S>#{key} </S> " if issue.status.category_name == 'Done'
-      rules.label = "<#{key} [#{issue.type}]<BR/>#{word_wrap issue.summary}>"
-    end
+    issue_rules(&default_issue_rules)
   end
 
   def run
@@ -218,5 +214,28 @@ class DependencyChart < ChartBase
         line
       end
     end.join(separator)
+  end
+
+  def default_issue_rules
+    lambda do |issue, rules|
+      is_done = issue.done?
+
+      key = issue.key
+      key = "<S>#{key} </S> " if is_done
+      line2 = +'<BR/>'
+      if issue.artificial?
+        line2 << '(unknown state)' # Shouldn't happen if we've done a full download but is still possible.
+      elsif is_done
+        line2 << 'Done'
+      else
+        started_at = issue.board.cycletime.started_time(issue)
+        if started_at.nil?
+          line2 << 'Not started'
+        else
+          line2 << "Age: #{issue.board.cycletime.age(issue)} days"
+        end
+      end
+      rules.label = "<#{key} [#{issue.type}]#{line2}<BR/>#{word_wrap issue.summary}>"
+    end
   end
 end

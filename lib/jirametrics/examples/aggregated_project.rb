@@ -64,13 +64,15 @@ class Exporter
 
             # By default, the issue doesn't show what board it's on and this is important for an
             # aggregated view
+            chart = self
             issue_rules do |issue, rules|
-              key = issue.key
-              key = "<S>#{key} </S> " if issue.status.category_name == 'Done'
-              rules.label = "<#{key} [#{issue.type}]<BR/>#{issue.board.name}<BR/>#{word_wrap issue.summary}>"
+              chart.default_issue_rules.call(issue, rules)
+              rules.label = rules.label.split('<BR/>').insert(1, "Board: #{issue.board.name}").join('<BR/>')
             end
 
             link_rules do |link, rules|
+              rules.ignore if link.origin.done? && link.other_issue.done?
+
               # By default, the dependency chart shows everything. Clean it up a bit.
               case link.name
               when 'Cloners'
@@ -85,7 +87,7 @@ class Exporter
               end
 
               # Because this is the aggregated view, let's hide any link that doesn't cross boards.
-              rules.ignore if link.origin.board == link.other_issue.board
+              # rules.ignore if link.origin.board == link.other_issue.board
             end
           end
         end

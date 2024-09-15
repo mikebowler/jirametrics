@@ -33,7 +33,9 @@ end
 
 def load_issue key, board: nil
   board = sample_board if board.nil?
-  Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
+  issue = Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
+  issue.raw['exporter'] = 1 # Make it look like this issue was actually loaded from Jira. Ie not artificial.
+  issue
 end
 
 def empty_issue created:, board: sample_board, key: 'SP-1'

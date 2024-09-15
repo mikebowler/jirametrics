@@ -92,18 +92,17 @@ class Exporter
 
           dependency_chart do
             link_rules do |link, rules|
+              rules.ignore if link.origin.done? && link.other_issue.done?
+
               case link.name
               when 'Cloners'
                 rules.ignore
-              when 'Dependency', 'Blocks', 'Parent/Child', 'Cause', 'Satisfy Requirement', 'Relates'
+              when 'Blocks'
+                # For blocks, by default Jira will have links going both
+                # ways and we want them only going one way. Also make the
+                # link red.
                 rules.merge_bidirectional keep: 'outward'
-                rules.merge_bidirectional keep: 'outward'
-              when 'Sync'
-                rules.use_bidirectional_arrows
-              else
-                # This is a link type that we don't recognize. Dump it to standard out to draw attention
-                # to it.
-                puts "name=#{link.name}, label=#{link.label}"
+                rules.line_color = 'red'
               end
             end
           end
