@@ -71,23 +71,10 @@ class Exporter
             end
 
             link_rules do |link, rules|
-              rules.ignore if link.origin.done? && link.other_issue.done?
-
-              # By default, the dependency chart shows everything. Clean it up a bit.
-              case link.name
-              when 'Cloners'
-                # We don't want to see any clone links at all.
-                rules.ignore
-              when 'Blocks'
-                # For blocks, by default Jira will have links going both
-                # ways and we want them only going one way. Also make the
-                # link red.
-                rules.merge_bidirectional keep: 'outward'
-                rules.line_color = 'red'
-              end
+              chart.default_link_rules.call(link, rules)
 
               # Because this is the aggregated view, let's hide any link that doesn't cross boards.
-              # rules.ignore if link.origin.board == link.other_issue.board
+              rules.ignore if link.origin.board == link.other_issue.board
             end
           end
         end

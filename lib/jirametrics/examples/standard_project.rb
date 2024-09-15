@@ -7,7 +7,7 @@
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
       default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
-      rolling_date_count: 90, no_earlier_than: nil
+      rolling_date_count: 90, no_earlier_than: nil, dependency_chart_block: nil
 
     project name: name do
       puts name
@@ -89,23 +89,7 @@ class Exporter
           expedited_chart
           sprint_burndown
           estimate_accuracy_chart
-
-          dependency_chart do
-            link_rules do |link, rules|
-              rules.ignore if link.origin.done? && link.other_issue.done?
-
-              case link.name
-              when 'Cloners'
-                rules.ignore
-              when 'Blocks'
-                # For blocks, by default Jira will have links going both
-                # ways and we want them only going one way. Also make the
-                # link red.
-                rules.merge_bidirectional keep: 'outward'
-                rules.line_color = 'red'
-              end
-            end
-          end
+          dependency_chart
         end
       end
     end

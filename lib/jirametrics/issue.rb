@@ -515,7 +515,7 @@ class Issue
   end
 
   def done?
-    if artificial?
+    if artificial? || board.cycletime.nil?
       # This was probably loaded as a linked issue, which means we don't know what board it really
       # belonged to. The best we can do is look at the status category. This case should be rare but
       # it can happen.

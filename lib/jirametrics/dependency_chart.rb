@@ -42,13 +42,13 @@ class DependencyChart < ChartBase
     HTML
 
     @rules_block = rules_block
-    @link_rules_block = ->(link_name, link_rules) {}
 
     issue_rules(&default_issue_rules)
+    link_rules(&default_link_rules)
   end
 
   def run
-    instance_eval(&@rules_block)
+    instance_eval(&@rules_block) if @rules_block
 
     dot_graph = build_dot_graph
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if dot_graph.nil?
@@ -217,6 +217,7 @@ class DependencyChart < ChartBase
   end
 
   def default_issue_rules
+    chart = self
     lambda do |issue, rules|
       is_done = issue.done?
 
@@ -232,10 +233,18 @@ class DependencyChart < ChartBase
         if started_at.nil?
           line2 << 'Not started'
         else
-          line2 << "Age: #{issue.board.cycletime.age(issue)} days"
+          line2 << "Age: #{issue.board.cycletime.age(issue, today: chart.date_range.end)} days"
         end
       end
       rules.label = "<#{key} [#{issue.type}]#{line2}<BR/>#{word_wrap issue.summary}>"
+    end
+  end
+
+  def default_link_rules
+    lambda do |link, rules|
+      rules.ignore if link.origin.done? && link.other_issue.done?
+      rules.ignore if link.name == 'Cloners'
+      rules.merge_bidirectional keep: 'outward'
     end
   end
 end

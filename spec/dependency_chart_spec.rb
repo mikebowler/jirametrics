@@ -18,19 +18,16 @@ describe DependencyChart do
     end
 
     it 'handles simple graph of relationships with default configuration' do
+      # Cloner should be excluded and the bi-directional block should become one.
       chart.issues = [issue13, issue14, issue15]
       chart.issue_rules(&empty_issue_rules)
       expect(chart.build_dot_graph).to eq [
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
         %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
         %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];),
         %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
         '}'
       ]
     end
@@ -276,8 +273,9 @@ describe DependencyChart do
       issue13.board.cycletime = mock_cycletime_config stub_values: [
         [issue13, '2024-01-01', nil]
       ]
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       chart.default_issue_rules.call issue13, rules
-      expect(rules.label).to eq '<SP-13 [Story]<BR/>Age: 258 days<BR/>Report of people checked in at an event>'
+      expect(rules.label).to eq '<SP-13 [Story]<BR/>Age: 5 days<BR/>Report of people checked in at an event>'
     end
 
     it 'handles in not started' do
