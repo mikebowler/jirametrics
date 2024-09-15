@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Rules
-  def ignore value = true
+  def ignore value = true # rubocop:disable Style/OptionalBooleanParameter
     @ignore = value
   end
 
