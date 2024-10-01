@@ -1080,23 +1080,24 @@ describe Issue do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-02')]
       ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-04'), settings: settings))
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-04'), settings: settings, debug: true))
         .to eq [seconds_per_day, seconds_per_day]
     end
 
-    xit 'becomes blocked and then unblocked before start' do
+    it 'becomes blocked and then unblocked before start' do
       issue = empty_issue created: '2000-01-01', board: sample_board
       issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-03')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-04'), nil]
       ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings, debug: true))
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [seconds_per_day, seconds_per_day]
     end
 
     # Created in done status
     # Created in blocked status
+    # Two blocked in a row
 
   end
 end

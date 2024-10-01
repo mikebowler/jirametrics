@@ -373,30 +373,34 @@ class Issue
     end_time = issue_stop if issue_stop && issue_stop < end_time
 
     active_start = nil
-    puts "About to walk changes" if debug
-    puts "issue start: #{issue_start}" if debug
     blocked_stalled_changes(end_time: end_time, settings: settings).each_with_index do |change, index|
+      break if change.time > end_time
+
       if index.zero?
-        puts "First change: #{change.inspect}" if debug
-        active_start = change.time if change.active?
+        active_start = change.time # if change.active?
         next
       end
 
-      puts change.inspect if debug
       # Already active and we just got another active.
       next if active_start && change.active?
 
       if change.active?
         active_start = change.time
-      else
-        value_add_time += (end_time - [issue_start, active_start].max) if active_start
-        puts "Adding time: " if active_start && debug
+      elsif active_start && change.time >= issue_start
+        # Not active now but we have been. Record the active time.
+        change_delta = change.time - [issue_start, active_start].max
+        if active_start && change_delta.positive?
+          value_add_time += change_delta 
+        end
         active_start = nil
       end
     end
 
-    value_add_time += (end_time - [issue_start, active_start].max) if active_start
-    puts "Value add time: #{value_add_time / 60 / 60} hours" if debug
+    if active_start
+      change_delta = end_time - [issue_start, active_start].max
+      value_add_time += change_delta if change_delta.positive?
+    end
+
     [value_add_time, end_time - issue_start]
   end
 
