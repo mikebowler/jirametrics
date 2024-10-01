@@ -362,6 +362,44 @@ class Issue
     inserted_stalled
   end
 
+  # return [number of active seconds, total seconds] that this issue had up to the end_time.
+  # It does not include data before issue start or after issue end
+  def flow_efficiency_numbers end_time:, settings: {}, debug: false
+    issue_start = @board.cycletime.started_time(self)
+    return [0.0, 0.0] if !issue_start || issue_start > end_time
+
+    value_add_time = 0.0
+    issue_stop = @board.cycletime.stopped_time(self)
+    end_time = issue_stop if issue_stop && issue_stop < end_time
+
+    active_start = nil
+    puts "About to walk changes" if debug
+    puts "issue start: #{issue_start}" if debug
+    blocked_stalled_changes(end_time: end_time, settings: settings).each_with_index do |change, index|
+      if index.zero?
+        puts "First change: #{change.inspect}" if debug
+        active_start = change.time if change.active?
+        next
+      end
+
+      puts change.inspect if debug
+      # Already active and we just got another active.
+      next if active_start && change.active?
+
+      if change.active?
+        active_start = change.time
+      else
+        value_add_time += (end_time - [issue_start, active_start].max) if active_start
+        puts "Adding time: " if active_start && debug
+        active_start = nil
+      end
+    end
+
+    value_add_time += (end_time - [issue_start, active_start].max) if active_start
+    puts "Value add time: #{value_add_time / 60 / 60} hours" if debug
+    [value_add_time, end_time - issue_start]
+  end
+
   def all_subtask_activity_times
     subtask_activity_times = []
     @subtasks.each do |subtask|
