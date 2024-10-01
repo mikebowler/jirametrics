@@ -377,7 +377,7 @@ class Issue
       break if change.time > end_time
 
       if index.zero?
-        active_start = change.time # if change.active?
+        active_start = change.time if change.active?
         next
       end
 

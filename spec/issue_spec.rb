@@ -1095,6 +1095,15 @@ describe Issue do
         .to eq [seconds_per_day, seconds_per_day]
     end
 
+    it 'was created in blocked status' do
+      issue = empty_issue created: '2000-01-01', board: sample_board, creation_status: ['Blocked', 1]
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, to_time('2000-01-01'), nil]
+      ]
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings, debug: true))
+        .to eq [0.0, seconds_per_day]
+    end
+
     # Created in done status
     # Created in blocked status
     # Two blocked in a row

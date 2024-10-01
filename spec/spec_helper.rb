@@ -38,7 +38,7 @@ def load_issue key, board: nil
   issue
 end
 
-def empty_issue created:, board: sample_board, key: 'SP-1'
+def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: ['Backlog', 999]
   Issue.new(
     raw: {
       'key' => key,
@@ -46,8 +46,8 @@ def empty_issue created:, board: sample_board, key: 'SP-1'
       'fields' => {
         'created' => to_time(created).to_s,
         'status' => {
-          'name' => 'Backlog',
-          'id' => '999'
+          'name' => creation_status[0],
+          'id' => creation_status[1].to_s
         },
         'issuetype' => {
           'name' => 'Bug'
