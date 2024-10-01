@@ -1080,7 +1080,7 @@ describe Issue do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-02')]
       ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-04'), settings: settings, debug: true))
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-04'), settings: settings))
         .to eq [seconds_per_day, seconds_per_day]
     end
 
@@ -1100,7 +1100,7 @@ describe Issue do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), nil]
       ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings, debug: true))
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [0.0, seconds_per_day]
     end
 
@@ -1109,7 +1109,7 @@ describe Issue do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-01')]
       ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings, debug: true))
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [0.0, 0.0]
     end
 

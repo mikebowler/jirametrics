@@ -364,7 +364,7 @@ class Issue
 
   # return [number of active seconds, total seconds] that this issue had up to the end_time.
   # It does not include data before issue start or after issue end
-  def flow_efficiency_numbers end_time:, settings: {}, debug: false
+  def flow_efficiency_numbers end_time:, settings: {}
     issue_start = @board.cycletime.started_time(self)
     return [0.0, 0.0] if !issue_start || issue_start > end_time
 
