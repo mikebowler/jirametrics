@@ -1104,9 +1104,33 @@ describe Issue do
         .to eq [0.0, seconds_per_day]
     end
 
-    # Created in done status
-    # Created in blocked status
-    # Two blocked in a row
+    it 'was created in done status' do
+      issue = empty_issue created: '2000-01-01', board: sample_board, creation_status: ['Done', 1]
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, to_time('2000-01-01'), to_time('2000-01-01')]
+      ]
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings, debug: true))
+        .to eq [0.0, 0.0]
+    end
 
+    it 'handles complex case with multiple block/unblock' do
+      issue = empty_issue created: '2000-01-01', board: sample_board
+      # active for a day here
+      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-03')
+      # active for a day here
+      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-04')
+      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-05') # second blocked
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-06')
+      # active for a day here, then issue finishes. The last two blocked should be ignored
+      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-09')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-10')
+
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, to_time('2000-01-01'), to_time('2000-01-08')]
+      ]
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-07'), settings: settings))
+        .to eq [seconds_per_day*3, seconds_per_day*6]
+    end
   end
 end

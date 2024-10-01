@@ -389,9 +389,7 @@ class Issue
       elsif active_start && change.time >= issue_start
         # Not active now but we have been. Record the active time.
         change_delta = change.time - [issue_start, active_start].max
-        if active_start && change_delta.positive?
-          value_add_time += change_delta 
-        end
+        value_add_time += change_delta
         active_start = nil
       end
     end
