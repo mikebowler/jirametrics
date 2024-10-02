@@ -136,13 +136,6 @@ class Downloader
     issue.raw['fields']['subtasks']&.each do |raw_subtask|
       @issue_keys_pending_download << raw_subtask['key']
     end
-
-    # Links
-    # We shouldn't blindly follow links as some, like cloners, aren't valuable and are just wasting time/effort
-    # to download
-    # issue.raw['fields']['issuelinks'].each do |raw_link|
-    #   @issue_keys_pending_download << IssueLink(raw: raw_link).other_issue.key
-    # end
   end
 
   def exit_if_call_failed json
