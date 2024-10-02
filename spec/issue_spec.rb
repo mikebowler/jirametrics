@@ -1020,10 +1020,12 @@ describe Issue do
   end
 
   it 'blows up if status can\'t be found for find_status_by_name' do
-    expect { issue1.find_status_by_name 'undefined_status_name' }.to raise_error(
-      'Status name "undefined_status_name" for issue SP-1 not found in ["Backlog", ' \
-        '"Selected for Development", "In Progress", "Review", "Done"]'
-    )
+    expect(issue1.find_status_by_name('undefined_status_name').name).to eq 'undefined_status_name'
+    expect(exporter.file_system.log_messages).to eq([
+      'Warning: Status name "undefined_status_name" for issue SP-1 not found in ' \
+      '["Backlog", "Selected for Development", "In Progress", "Review", "Done"]' \
+      "\n  See Q1 in the FAQ for more details: https://github.com/mikebowler/jirametrics/wiki/FAQ"
+    ])
   end
 
   context 'flow_efficiency_numbers' do # part of a flow efficiency calculation

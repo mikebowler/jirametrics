@@ -52,5 +52,6 @@ describe Status do
       'Status(name="FakeBacklog", id=10017, category_name="In Progress", category_id=4, project_id=10002)'
     )
     expect(status).to be_project_scoped
+    expect(status).not_to be_artificial
   end
 end

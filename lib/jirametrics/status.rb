@@ -38,8 +38,18 @@ class Status
   end
 
   def to_s
-    "Status(name=#{@name.inspect}, id=#{@id.inspect}," \
-      " category_name=#{@category_name.inspect}, category_id=#{@category_id.inspect}, project_id=#{@project_id})"
+    result = +"Status(name=#{@name.inspect}," \
+      " id=#{@id.inspect}," \
+      " category_name=#{@category_name.inspect}," \
+      " category_id=#{@category_id.inspect}," \
+      " project_id=#{@project_id}"
+    result << ' artificial' if artificial?
+    result << ')'
+    result
+  end
+
+  def artificial?
+    @raw.nil?
   end
 
   def value_equality_ignored_variables

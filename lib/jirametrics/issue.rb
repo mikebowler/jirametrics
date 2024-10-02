@@ -137,7 +137,14 @@ class Issue
     status = board.possible_statuses.find_by_name(name)
     return status if status
 
-    raise "Status name #{name.inspect} for issue #{key} not found in #{board.possible_statuses.collect(&:name).inspect}"
+    @board.project_config.file_system.log(
+      "Warning: Status name #{name.inspect} for issue #{key} not found in" \
+      " #{board.possible_statuses.collect(&:name).inspect}" \
+      "\n  See Q1 in the FAQ for more details: https://github.com/mikebowler/jirametrics/wiki/FAQ\n"
+    )
+    status = Status.new(name: name, category_name: 'In Progress')
+    board.possible_statuses << status
+    status
   end
 
   def first_status_change_after_created
