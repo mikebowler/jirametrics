@@ -31,7 +31,6 @@ describe Downloader do
   let(:downloader) do
     described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
       .tap do |d|
-        d.quiet_mode = true
         d.init_gateway
       end
   end

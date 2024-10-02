@@ -34,7 +34,7 @@ class MockFileSystem < FileSystem
     @data[file] = json.clone
   end
 
-  def log message
+  def log message, also_write_to_stderr: false
     # Ignore blank lines and whitespace on either end
     message = message.strip
     @log_messages << message unless message == ''

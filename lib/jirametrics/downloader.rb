@@ -6,7 +6,7 @@ require 'json'
 class Downloader
   CURRENT_METADATA_VERSION = 4
 
-  attr_accessor :metadata, :quiet_mode
+  attr_accessor :metadata
   attr_reader :file_system
 
   # For testing only
@@ -54,8 +54,7 @@ class Downloader
   end
 
   def log text, both: false
-    @file_system.log text
-    puts text if both && !@quiet_mode
+    @file_system.log text, also_write_to_stderr: both
   end
 
   def find_board_ids

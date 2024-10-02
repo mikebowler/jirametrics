@@ -27,8 +27,9 @@ class FileSystem
     File.write(filename, content)
   end
 
-  def log message
+  def log message, also_write_to_stderr: false
     logfile.puts message
+    $stderr.puts message if also_write_to_stderr
   end
 
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
