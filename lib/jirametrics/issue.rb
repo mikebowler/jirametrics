@@ -258,6 +258,7 @@ class Issue
 
     blocked_link_texts = settings['blocked_link_text']
     stalled_threshold = settings['stalled_threshold_days']
+    flagged_means_blocked = !!settings['flagged_means_blocked']
 
     blocking_issue_keys = []
 
@@ -280,7 +281,7 @@ class Issue
         blocking_stalled_changes: result
       )
 
-      if change.flagged?
+      if change.flagged? && flagged_means_blocked
         flag = change.value
         flag = nil if change.value == ''
       elsif change.status?

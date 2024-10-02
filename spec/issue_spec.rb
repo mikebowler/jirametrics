@@ -323,7 +323,8 @@ describe Issue do
         'blocked_statuses' => %w[Blocked Blocked2],
         'stalled_statuses' => %w[Stalled Stalled2],
         'blocked_link_text' => ['is blocked by'],
-        'stalled_threshold_days' => 5
+        'stalled_threshold_days' => 5,
+        'flagged_means_blocked' => true
       }
     end
 
@@ -344,6 +345,18 @@ describe Issue do
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
         BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
+      ]
+    end
+
+    it 'ignores flagged when "flagged_means_blocked" is false' do
+      settings['flagged_means_blocked'] = false
+      issue = empty_issue created: '2021-10-01'
+      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(time: to_time('2021-10-05'))
       ]
     end
