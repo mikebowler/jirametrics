@@ -3,9 +3,13 @@
 require 'thor'
 
 class JiraMetrics < Thor
+  def self.exit_on_failure?
+    true
+  end
+
   option :config
   option :name
-  desc 'export only', "Export data into either reports or CSV's as per the configuration"
+  desc 'export', "Export data into either reports or CSV's as per the configuration"
   def export
     load_config options[:config]
     Exporter.instance.export(name_filter: options[:name] || '*')
@@ -13,7 +17,7 @@ class JiraMetrics < Thor
 
   option :config
   option :name
-  desc 'download only', 'Download data from Jira'
+  desc 'download', 'Download data from Jira'
   def download
     load_config options[:config]
     Exporter.instance.download(name_filter: options[:name] || '*')
@@ -21,7 +25,7 @@ class JiraMetrics < Thor
 
   option :config
   option :name
-  desc 'download and export', 'Same as running download, followed by export'
+  desc 'go', 'Same as running download, followed by export'
   def go
     load_config options[:config]
     Exporter.instance.download(name_filter: options[:name] || '*')
@@ -69,6 +73,7 @@ class JiraMetrics < Thor
     require 'jirametrics/daily_wip_by_parent_chart'
     require 'jirametrics/aging_work_in_progress_chart'
     require 'jirametrics/cycletime_scatterplot'
+    require 'jirametrics/flow_efficiency_chart'
     require 'jirametrics/sprint_issue_change_data'
     require 'jirametrics/cycletime_histogram'
     require 'jirametrics/daily_wip_by_blocked_stalled_chart'
@@ -97,6 +102,4 @@ class JiraMetrics < Thor
     require 'jirametrics/board'
     load config_file
   end
-
-  # Dir.foreach('lib/jirametrics') {|file| puts "require 'jirametrics/#{$1}'" if file =~ /^(.+)\.rb$/}
 end
