@@ -30,7 +30,7 @@ class ProjectConfig
     instance_eval(&@block) if @block
   end
 
-  def run
+  def run load_only: false
     unless aggregated_project?
       load_all_boards
       @id = guess_project_id
@@ -39,6 +39,8 @@ class ProjectConfig
       load_sprints
     end
     anonymize_data if @anonymizer_needed
+
+    return if load_only
 
     @board_configs.each do |board_config|
       board_config.run

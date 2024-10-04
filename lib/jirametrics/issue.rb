@@ -373,7 +373,7 @@ class Issue
 
   # return [number of active seconds, total seconds] that this issue had up to the end_time.
   # It does not include data before issue start or after issue end
-  def flow_efficiency_numbers end_time:, settings: {}
+  def flow_efficiency_numbers end_time:, settings: @board.project_config.settings
     issue_start = @board.cycletime.started_time(self)
     return [0.0, 0.0] if !issue_start || issue_start > end_time
 
@@ -549,7 +549,7 @@ class Issue
     assignee = raw['fields']['assignee']
     result << "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>\n" unless assignee.nil?
 
-    raw['fields']['issuelinks'].each do |link|
+    raw['fields']['issuelinks']&.each do |link|
       result << "  [link] #{link['type']['outward']} #{link['outwardIssue']['key']}\n" if link['outwardIssue']
       result << "  [link] #{link['type']['inward']} #{link['inwardIssue']['key']}\n" if link['inwardIssue']
     end

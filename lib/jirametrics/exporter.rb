@@ -72,6 +72,29 @@ class Exporter
     puts "Full output from downloader in #{file_system.logfile_name}"
   end
 
+  def info keys, name_filter:
+    selected = []
+    each_project_config(name_filter: name_filter) do |project|
+      project.evaluate_next_level
+      next if project.aggregated_project?
+
+      project.run load_only: true
+      project.issues.each do |issue|
+        selected << [project, issue] if keys.include? issue.key
+      end
+    rescue => e
+      # This ugly hack is because in order to determine if it is aggregated, we have to try to
+      # load it and the loader will fail because it's aggregated
+      raise e unless project.aggregated_project?
+    end
+
+    selected.each do |project, issue|
+      puts "\nProject #{project.name}"
+      puts issue.dump
+    end
+
+  end
+
   def each_project_config name_filter:
     @project_configs.each do |project|
       yield project if project.name.nil? || File.fnmatch(name_filter, project.name)
