@@ -53,10 +53,7 @@ class CycletimeScatterplot < ChartBase
   def create_datasets completed_issues
     data_sets = []
 
-    groups = group_issues completed_issues
-
-    groups.each_key do |rules|
-      completed_issues_by_type = groups[rules]
+    group_issues(completed_issues).each do |rules, completed_issues_by_type|
       label = rules.label
       color = rules.color
       percent_line = calculate_percent_line completed_issues_by_type
