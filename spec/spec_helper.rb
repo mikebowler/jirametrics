@@ -54,7 +54,8 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: ['B
         },
         'creator' => {
           'displayName' => 'Tolkien'
-        }
+        },
+        'summary' => 'Do the thing'
       }
     },
     board: board
