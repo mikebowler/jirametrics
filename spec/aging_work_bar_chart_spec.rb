@@ -273,7 +273,7 @@ describe AgingWorkBarChart do
               {
                 title: 'Bug : Backlog',
                 x: ['2024-01-01T00:00:00+0000', '2024-01-10T00:00:00'],
-                y: '[10 days] SP-1: '
+                y: '[10 days] SP-1: Do the thing'
               }
             ],
             stack: 'status',
