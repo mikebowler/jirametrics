@@ -68,4 +68,8 @@ class StatusCollection
   def empty? = @list.empty?
   def clear = @list.clear
   def delete(object) = @list.delete(object)
+
+  def inspect
+    "StatusCollection(#{@list.collect(&:inspect).join(', ')})"
+  end
 end
