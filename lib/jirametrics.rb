@@ -80,7 +80,7 @@ class JiraMetrics < Thor
     require 'jirametrics/daily_wip_by_parent_chart'
     require 'jirametrics/aging_work_in_progress_chart'
     require 'jirametrics/cycletime_scatterplot'
-    require 'jirametrics/flow_efficiency_chart'
+    require 'jirametrics/flow_efficiency_scatterplot'
     require 'jirametrics/sprint_issue_change_data'
     require 'jirametrics/cycletime_histogram'
     require 'jirametrics/daily_wip_by_blocked_stalled_chart'

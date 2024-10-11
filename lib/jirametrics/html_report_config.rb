@@ -33,6 +33,7 @@ class HtmlReportConfig
   define_chart name: 'cycletime_histogram', classname: 'CycletimeHistogram'
   define_chart name: 'estimate_accuracy_chart', classname: 'EstimateAccuracyChart'
   define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
+  define_chart name: 'flow_efficiency_scatterplot', classname: 'FlowEfficiencyScatterplot'
 
   define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
     deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'

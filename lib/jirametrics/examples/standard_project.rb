@@ -52,7 +52,7 @@ class Exporter
           html "<H1>#{name}</H1>", type: :header
           boards.each_key do |id|
             board = find_board id
-            html "<div><a href='#{board.url}'>#{id} #{board.name}</a></div>",
+            html "<div><a href='#{board.url}'>#{id} #{board.name}</a> (#{board.board_type})</div>",
                  type: :header
           end
 

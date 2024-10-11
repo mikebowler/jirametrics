@@ -1,0 +1,85 @@
+<div class="chart">
+  <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
+</div>
+<script>
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
+  type: 'scatter',
+  data: {
+    datasets: <%= JSON.generate(data_sets) %>
+  },
+  options: {
+    title: {
+      display: true,
+      text: "Cycletime Scatterplot"
+    },
+    responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen
+    scales: {
+      x: {
+        scaleLabel: {
+          display: true,
+          labelString: 'Days'
+        },
+        title: {
+          display: true,
+          text: 'Total time (days)'
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
+
+      },
+      y: {
+        scaleLabel: {
+          display: true,
+          labelString: 'Percentage',
+          min: 0,
+          max: <%= @highest_cycletime %>
+        },
+        title: {
+          display: true,
+          text: 'Time adding value (days)'
+        },
+        grid: {
+          color: <%= CssVariable['--grid-line-color'].to_json %>
+        },
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return context.dataset.data[context.dataIndex].title
+          }
+        }
+      },
+      autocolors: false,
+      legend: {
+        onClick: (evt, legendItem, legend) => {
+          // Find the datasetMeta that corresponds to the item clicked
+          var i = 0
+          while(legendItem.text != legend.chart.getDatasetMeta(i).label) {
+            i++;
+          }
+          nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
+
+          // Hide/show the 85% line for that dataset
+          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
+
+          // Hide/show the trendline for this dataset, if they were enabled. The trendline is always
+          // there but not always visible.
+          legend.chart.setDatasetVisibility(i+1, <%= !!@show_trend_lines %> && nextVisibility);
+
+          // Still run the default behaviour
+          Chart.defaults.plugins.legend.onClick(evt, legendItem, legend);
+        },
+        labels: {
+          filter: function(item, chart) {
+            // Logic to remove a particular legend item goes here
+            return !item.text.includes('Trendline');
+          }
+        }
+      }
+    }
+  }
+});
+</script>
