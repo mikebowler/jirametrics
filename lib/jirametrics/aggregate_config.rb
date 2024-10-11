@@ -62,7 +62,12 @@ class AggregateConfig
           'the first file section'
       end
     end
-    @project_config.add_issues issues
+
+    if issues.nil?
+      log "No issues found for #{project_name}"
+    else
+      @project_config.add_issues issues
+    end
   end
 
   def find_time_range projects:
