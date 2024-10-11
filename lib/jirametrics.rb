@@ -34,6 +34,13 @@ class JiraMetrics < Thor
     Exporter.instance.export(name_filter: options[:name] || '*')
   end
 
+  option :config
+  desc 'info', 'Dump information about one issue'
+  def info keys
+    load_config options[:config]
+    Exporter.instance.info(keys, name_filter: options[:name] || '*')
+  end
+
   private
 
   def load_config config_file
