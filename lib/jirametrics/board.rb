@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Board
-  attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :backlog_statuses
+  attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :board_type
   attr_accessor :cycletime, :project_config
 
   def initialize raw:, possible_statuses: StatusCollection.new
@@ -15,22 +15,24 @@ class Board
     # For a Kanban board, the first column here will always be called 'Backlog' and will NOT be
     # visible on the board. If the board is configured to have a kanban backlog then it will have
     # statuses matched to it and otherwise, there will be no statuses.
-    if kanban?
-      @backlog_statuses = @possible_statuses.expand_statuses(status_ids_from_column columns[0]) do |unknown_status|
-        # There is a status defined as being 'backlog' that is no longer being returned in statuses.
-        # We used to display a warning for this but honestly, there is nothing that anyone can do about it
-        # so now we just quietly ignore it.
-      end
-      columns = columns[1..]
-    else
-      # We currently don't know how to get the backlog status for a Scrum board
-      @backlog_statuses = []
-    end
+    columns = columns[1..] if kanban?
 
+    @backlog_statuses = []
     @visible_columns = columns.filter_map do |column|
       # It's possible for a column to be defined without any statuses and in this case, it won't be visible.
       BoardColumn.new column unless status_ids_from_column(column).empty?
     end
+  end
+
+  def backlog_statuses
+    if @backlog_statuses.empty? && kanban?
+      status_ids = status_ids_from_column raw['columnConfig']['columns'].first
+      @backlog_statuses = @possible_statuses.expand_statuses(status_ids) do |unknown_status|
+        # If a status is returned here that is no longer in the system then there's nothing useful
+        # we can do about it. Ignore it.
+      end
+    end
+    @backlog_statuses
   end
 
   def server_url_prefix
