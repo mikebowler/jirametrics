@@ -24,19 +24,27 @@ class ProjectConfig
     @all_boards = {}
     @settings = load_settings
     @id = id
+    @has_loaded_data = false
   end
 
   def evaluate_next_level
     instance_eval(&@block) if @block
   end
 
+  def load_data
+    return if @has_loaded_data
+
+    @has_loaded_data = true
+    load_all_boards
+    @id = guess_project_id
+    load_status_category_mappings
+    load_project_metadata
+    load_sprints
+  end
+
   def run load_only: false
-    unless aggregated_project?
-      load_all_boards
-      @id = guess_project_id
-      load_status_category_mappings
-      load_project_metadata
-      load_sprints
+    if !aggregated_project?
+      load_data
     end
     anonymize_data if @anonymizer_needed
 
@@ -119,7 +127,7 @@ class ProjectConfig
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
-    raise "No boards found for #{@file_prefix} in #{@target_path.inspect}" if @all_boards.empty?
+    raise "No boards found for #{@file_prefix.inspect} in #{@target_path.inspect}" if @all_boards.empty?
   end
 
   def load_board board_id:, filename:
@@ -245,7 +253,7 @@ class ProjectConfig
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
-    puts "== Can't load files from the target directory. Did you forget to download first? =="
+    puts "== Can't load files from the target directory #{@target_path.inspect}. Did you forget to download first? =="
     raise
   end
 
@@ -261,7 +269,7 @@ class ProjectConfig
     unless all_boards&.size == 1
       message = "If the board_id isn't set then we look for all board configurations in the target" \
         ' directory. '
-      if all_boards.nil? || all_boards.empty?
+      if all_boards.empty?
         message += ' In this case, we couldn\'t find any configuration files in the target directory.'
       else
         message += 'If there is only one, we use that. In this case we found configurations for' \
@@ -293,13 +301,12 @@ class ProjectConfig
   end
 
   def issues
-    raise "issues are being loaded before boards in project #{name.inspect}" if all_boards.nil? && !aggregated_project?
-
     unless @issues
-      if @aggregate_config
+      if aggregated_project?
         raise 'This is an aggregated project and issues should have been included with the include_issues_from ' \
           'declaration but none are here. Check your config.'
       end
+      load_data if all_boards.empty?
 
       timezone_offset = exporter.timezone_offset
 
