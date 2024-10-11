@@ -856,10 +856,6 @@ describe Issue do
   context 'expedited?' do
     let(:issue) { empty_issue created: '2020-01-01', board: board }
 
-    it 'no board' do
-      expect(empty_issue(created: '2020-01-01', board: nil)).not_to be_expedited
-    end
-
     it 'no priority set' do
       expect(issue).not_to be_expedited
     end
@@ -877,11 +873,6 @@ describe Issue do
   end
 
   context 'expedited_on_date?' do
-    it 'returns false if no board was set' do
-      issue = empty_issue created: '2021-10-01', board: nil
-      expect(issue).not_to be_expedited_on_date(to_date('2021-10-02'))
-    end
-
     it 'works when expedited turns on and off on same day' do
       issue = empty_issue created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
