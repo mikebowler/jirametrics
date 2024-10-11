@@ -76,23 +76,25 @@ class Exporter
     selected = []
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
-      next if project.aggregated_project?
+      # next if project.aggregated_project?
 
       project.run load_only: true
+      project.board_configs.each do |board_config|
+        board_config.run
+      end
       project.issues.each do |issue|
         selected << [project, issue] if keys.include? issue.key
       end
-    rescue => e
-      # This ugly hack is because in order to determine if it is aggregated, we have to try to
-      # load it and the loader will fail because it's aggregated
-      raise e unless project.aggregated_project?
+    rescue => e # rubocop:disable Style/RescueStandardError
+      # This happens when we're attempting to load an aggregated project because it hasn't been
+      # properly initialized. Since we don't care about aggregated projects, we just ignore it.
+      raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'
     end
 
     selected.each do |project, issue|
       puts "\nProject #{project.name}"
       puts issue.dump
     end
-
   end
 
   def each_project_config name_filter:
