@@ -13,6 +13,7 @@ class Issue
     @changes = []
     @board = board
 
+    raise "No board for issue #{key}" if board.nil?
     return unless @raw['changelog']
 
     load_history_into_changes
@@ -553,6 +554,7 @@ class Issue
       result << "  [link] #{link['type']['outward']} #{link['outwardIssue']['key']}\n" if link['outwardIssue']
       result << "  [link] #{link['type']['inward']} #{link['inwardIssue']['key']}\n" if link['inwardIssue']
     end
+    # puts "Issue.dump() board.cycletime: #{board.cycletime.inspect}"
     changes.each do |change|
       value = change.value
       old_value = change.old_value
