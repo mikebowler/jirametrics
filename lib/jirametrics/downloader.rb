@@ -41,8 +41,8 @@ class Downloader
     remove_old_files
     download_statuses
     find_board_ids.each do |id|
-      download_board_configuration board_id: id
-      download_issues board_id: id
+      board = download_board_configuration board_id: id
+      download_issues board: board
     end
 
     save_metadata
@@ -64,19 +64,19 @@ class Downloader
     ids
   end
 
-  def download_issues board_id:
-    log "  Downloading primary issues for board #{board_id}", both: true
+  def download_issues board:
+    log "  Downloading primary issues for board #{board.id}", both: true
     path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
     unless Dir.exist?(path)
       log "  Creating path #{path}"
       Dir.mkdir(path)
     end
 
-    filter_id = @board_id_to_filter_id[board_id]
+    filter_id = @board_id_to_filter_id[board.id]
     jql = make_jql(filter_id: filter_id)
-    jira_search_by_jql(jql: jql, initial_query: true, board_id: board_id, path: path)
+    jira_search_by_jql(jql: jql, initial_query: true, board: board, path: path)
 
-    log "  Downloading linked issues for board #{board_id}", both: true
+    log "  Downloading linked issues for board #{board.id}", both: true
     loop do
       @issue_keys_pending_download.reject! { |key| @issue_keys_downloaded_in_current_run.include? key }
       break if @issue_keys_pending_download.empty?
@@ -84,11 +84,11 @@ class Downloader
       keys_to_request = @issue_keys_pending_download[0..99]
       @issue_keys_pending_download.reject! { |key| keys_to_request.include? key }
       jql = "key in (#{keys_to_request.join(', ')})"
-      jira_search_by_jql(jql: jql, initial_query: false, board_id: board_id, path: path)
+      jira_search_by_jql(jql: jql, initial_query: false, board: board, path: path)
     end
   end
 
-  def jira_search_by_jql jql:, initial_query:, board_id:, path:
+  def jira_search_by_jql jql:, initial_query:, board:, path:
     intercept_jql = @download_config.project_config.settings['intercept_jql']
     jql = intercept_jql.call jql if intercept_jql
 
@@ -108,8 +108,8 @@ class Downloader
         issue_json['exporter'] = {
           'in_initial_query' => initial_query
         }
-        identify_other_issues_to_be_downloaded issue_json
-        file = "#{issue_json['key']}-#{board_id}.json"
+        identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
+        file = "#{issue_json['key']}-#{board.id}.json"
 
         @file_system.save_json(json: issue_json, filename: File.join(path, file))
       end
@@ -124,8 +124,8 @@ class Downloader
     end
   end
 
-  def identify_other_issues_to_be_downloaded raw_issue
-    issue = Issue.new raw: raw_issue, board: nil
+  def identify_other_issues_to_be_downloaded raw_issue:, board:
+    issue = Issue.new raw: raw_issue, board: board
     @issue_keys_downloaded_in_current_run << issue.key
 
     # Parent
@@ -171,6 +171,7 @@ class Downloader
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
 
     download_sprints board_id: board_id if json['type'] == 'scrum'
+    Board.new raw: json
   end
 
   def download_sprints board_id:

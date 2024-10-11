@@ -117,7 +117,10 @@ describe Downloader do
       url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
       jira_gateway.when url: url, response: { 'issues' => [], 'total' => 0, 'maxResults' => 0 }
 
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 1, path: '/abc'
+      board = sample_board
+      board.raw['id'] = 2
+
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
 
       expect(file_system.log_messages).to eq(
         [
@@ -136,7 +139,9 @@ describe Downloader do
       }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
 
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 2, path: '/abc'
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
 
       expect(file_system.log_messages).to eq(
         [
@@ -158,7 +163,10 @@ describe Downloader do
       issue_json = { 'key' => 'ABC-125', 'fields' => {} }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
 
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board_id: 2, path: '/abc'
+      board = sample_board
+      board.raw['id'] = 2
+
+      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
 
       expect(file_system.log_messages).to eq([
         'JQL: project=ABC',
@@ -177,9 +185,10 @@ describe Downloader do
       url = '/rest/api/2/search?jql=filter%3D123&maxResults=100&startAt=0&expand=changelog&fields=*all'
       issue_json = { 'key' => 'ABC-123', 'fields' => {} }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
-
+      board = sample_board
+      board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
-      downloader.download_issues board_id: 2
+      downloader.download_issues board: board
 
       expect(file_system.log_messages).to eq([
         'Downloading primary issues for board 2',
@@ -196,26 +205,52 @@ describe Downloader do
 
   context 'download_board_configuration' do
     it 'suceeds for kanban board' do
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'kanban',
+        'columnConfig' => {
+          'columns' => [
+            # A kanban board will always have a first column
+            {
+              'name' => 'Backlog',
+              'statuses' => [
+                {
+                  'id' => '10000'
+                }
+              ]
+            }
+          ]
+        },
+        'statuses' => []
+      }
       url = '/rest/agile/1.0/board/2/configuration'
-      jira_gateway.when url: url, response: { 'filter' => { 'id' => 1 }, 'type' => 'kanban' }
+      jira_gateway.when url: url, response: configuration_json
 
       downloader.download_board_configuration board_id: 2
 
       expect(file_system.log_messages).to eq(['Downloading board configuration for board 2'])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => '{"filter":{"id":1},"type":"kanban"}'
+        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json)
       })
     end
 
     it 'pulls extra data for scrum board' do
-      url = '/rest/agile/1.0/board/2/configuration'
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'scrum',
+        'columnConfig' => { 'columns' => [] }
+      }
       jira_gateway.when(
-        url: url,
-        response: { 'filter' => { 'id' => 1 }, 'type' => 'scrum' }
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
       )
+
+      sprints_json = { 'isLast' => true, 'maxResults' => 100, 'values' => 1 }
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
-        response: { 'isLast' => true, 'maxResults' => 100, 'values' => 1 }
+        response: sprints_json
       )
 
       downloader.download_board_configuration board_id: 2
@@ -225,16 +260,21 @@ describe Downloader do
         'Downloading sprints for board 2'
       ])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => '{"filter":{"id":1},"type":"scrum"}',
-        'spec/testdata/sample_board_2_sprints_0.json' => '{"isLast":true,"maxResults":100,"values":1}'
+        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
+        'spec/testdata/sample_board_2_sprints_0.json' => JSON.generate(sprints_json)
       })
     end
 
     it 'pulls extra data for scrum board with pagination' do
-      url = '/rest/agile/1.0/board/2/configuration'
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'scrum',
+        'columnConfig' => { 'columns' => [] }
+      }
       jira_gateway.when(
-        url: url,
-        response: { 'filter' => { 'id' => 1 }, 'type' => 'scrum' }
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
       )
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
@@ -252,17 +292,22 @@ describe Downloader do
         'Downloading sprints for board 2'
       ])
       expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => '{"filter":{"id":1},"type":"scrum"}',
+        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
         'spec/testdata/sample_board_2_sprints_0.json' => '{"isLast":false,"maxResults":1,"values":[{"a":2}]}',
         'spec/testdata/sample_board_2_sprints_1.json' => '{"isLast":true,"maxResults":1,"values":[{"a":2}]}'
       })
     end
 
     it 'does not blow up for a board with no sprints' do
-      url = '/rest/agile/1.0/board/2/configuration'
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'scrum',
+        'columnConfig' => { 'columns' => [] }
+      }
       jira_gateway.when(
-        url: url,
-        response: { 'filter' => { 'id' => 1 }, 'type' => 'scrum' }
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
       )
       jira_gateway.when(
         url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
