@@ -554,18 +554,33 @@ class Issue
       result << "  [link] #{link['type']['outward']} #{link['outwardIssue']['key']}\n" if link['outwardIssue']
       result << "  [link] #{link['type']['inward']} #{link['inwardIssue']['key']}\n" if link['inwardIssue']
     end
-    # puts "Issue.dump() board.cycletime: #{board.cycletime.inspect}"
+    history = [] # time, type, detail
+
+    started_at = board.cycletime.started_time(self)
+    history << [started_at, 'start', '↓↓↓↓ Started here ↓↓↓↓'] if started_at
+    stopped_at = board.cycletime.stopped_time(self)
+    history << [stopped_at, 'stop', '↑↑↑↑ Finished here ↑↑↑↑'] if stopped_at
+
     changes.each do |change|
       value = change.value
       old_value = change.old_value
 
-      message = "  [change] #{change.time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{change.field}] "
+      message = +''
       message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
       message << compact_text(value).inspect
-      message << " (#{change.author})"
+      message << " (Author: #{change.author})"
       message << ' <<artificial entry>>' if change.artificial?
-      result << message << "\n"
+
+      history << [change.time, change.field, message]
     end
+
+    result << "  History:\n"
+    type_width = history.collect { |_time, type, _detail| type.length }.max
+    history.sort_by(&:first).each do |time, type, detail|
+      padding = ' ' * (type_width - type.length)
+      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{padding}#{type}] #{detail}\n"
+    end
+
     result
   end
 
