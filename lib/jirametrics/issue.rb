@@ -557,9 +557,9 @@ class Issue
     history = [] # time, type, detail
 
     started_at = board.cycletime.started_time(self)
-    history << [started_at, 'start', '↓↓↓↓ Started here ↓↓↓↓'] if started_at
+    history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
     stopped_at = board.cycletime.stopped_time(self)
-    history << [stopped_at, 'stop', '↑↑↑↑ Finished here ↑↑↑↑'] if stopped_at
+    history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
 
     changes.each do |change|
       value = change.value
@@ -568,17 +568,28 @@ class Issue
       message = +''
       message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
       message << compact_text(value).inspect
-      message << " (Author: #{change.author})"
-      message << ' <<artificial entry>>' if change.artificial?
-
-      history << [change.time, change.field, message]
+      if change.artificial?
+        message << ' (Artificial entry)' if change.artificial?
+      else
+        message << " (Author: #{change.author})"
+      end
+      history << [change.time, change.field, message, change.artificial?]
     end
 
     result << "  History:\n"
-    type_width = history.collect { |_time, type, _detail| type.length }.max
-    history.sort_by(&:first).each do |time, type, detail|
-      padding = ' ' * (type_width - type.length)
-      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{padding}#{type}] #{detail}\n"
+    type_width = history.collect { |_time, type, _detail, _artificial| type&.length || 0 }.max
+    history.sort_by(&:first).each do |time, type, detail, artificial|
+      if type.nil?
+        type = '-' * type_width
+      else
+        type = (' ' * (type_width - type.length)) << type
+      end
+      if artificial
+        type = "<#{type}>"
+      else
+        type = "[#{type}]"
+      end
+      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} #{type} #{detail}\n"
     end
 
     result

@@ -953,8 +953,8 @@ describe Issue do
       expect(issue1.dump).to eq <<~TEXT
         SP-1 (Story): Create new draft event
           History:
-            2021-06-18 18:41:29 +0000 [  status] "Backlog" (Author: Mike Bowler) <<artificial entry>>
-            2021-06-18 18:41:29 +0000 [priority] "Medium" (Author: Mike Bowler) <<artificial entry>>
+            2021-06-18 18:41:29 +0000 <  status> "Backlog" (Artificial entry)
+            2021-06-18 18:41:29 +0000 <priority> "Medium" (Artificial entry)
             2021-06-18 18:43:34 +0000 [  status] "Backlog" -> "Selected for Development" (Author: Mike Bowler)
             2021-06-18 18:44:21 +0000 [  status] "Selected for Development" -> "In Progress" (Author: Mike Bowler)
             2021-08-29 18:04:39 +0000 [ Flagged] "Impediment" (Author: Mike Bowler)
@@ -991,11 +991,11 @@ describe Issue do
           [link] Clones ABC123
           [link] Cloned by ABC456
           History:
-            2021-06-18 18:41:29 +0000 [  status] "Backlog" (Author: Mike Bowler) <<artificial entry>>
-            2021-06-18 18:41:29 +0000 [priority] "Medium" (Author: Mike Bowler) <<artificial entry>>
+            2021-06-18 18:41:29 +0000 <  status> "Backlog" (Artificial entry)
+            2021-06-18 18:41:29 +0000 <priority> "Medium" (Artificial entry)
             2021-06-18 18:43:34 +0000 [  status] "Backlog" -> "Selected for Development" (Author: Mike Bowler)
             2021-06-18 18:44:21 +0000 [  status] "Selected for Development" -> "In Progress" (Author: Mike Bowler)
-            2021-06-18 18:44:21 -0700 [   start] ↓↓↓↓ Started here ↓↓↓↓
+            2021-06-18 18:44:21 -0700 <--------> ↓↓↓↓ Started here ↓↓↓↓
             2021-08-29 18:04:39 +0000 [ Flagged] "Impediment" (Author: Mike Bowler)
       TEXT
     end
