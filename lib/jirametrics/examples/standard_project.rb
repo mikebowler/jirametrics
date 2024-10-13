@@ -7,7 +7,7 @@
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
       default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
-      rolling_date_count: 90, no_earlier_than: nil
+      rolling_date_count: 90, no_earlier_than: nil, ignore_types: %w[Sub-task Subtask Epic]
 
     project name: name do
       puts name
@@ -38,11 +38,14 @@ class Exporter
         end
       end
 
+      issues.reject! do |issue|
+        ignore_types.include? issue.type
+      end
+
+      discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
+
       file do
         file_suffix '.html'
-        issues.reject! do |issue|
-          %w[Sub-task Epic].include? issue.type
-        end
 
         issues.reject! { |issue| ignore_issues.include? issue.key } if ignore_issues
 
@@ -55,8 +58,6 @@ class Exporter
             html "<div><a href='#{board.url}'>#{id} #{board.name}</a> (#{board.board_type})</div>",
                  type: :header
           end
-
-          discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
 
           cycletime_scatterplot do
             show_trend_lines
