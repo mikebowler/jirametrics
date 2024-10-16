@@ -36,12 +36,12 @@ class CycleTimeConfig
 
   def started_time issue
     deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
-    @start_at.call(issue)
+    started_stopped_times(issue).first
   end
 
   def stopped_time issue
     deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
-    @stop_at.call(issue)
+    started_stopped_times(issue).last
   end
 
   def started_stopped_times issue
