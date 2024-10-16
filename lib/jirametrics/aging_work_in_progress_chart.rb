@@ -114,7 +114,7 @@ class AgingWorkInProgressChart < ChartBase
   def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
     issues.filter_map do |issue|
       stop = issue.first_time_in_status(*status_ids)
-      start = issue.board.cycletime.started_time(issue)
+      start, = issue.board.cycletime.started_stopped_times(issue)
 
       # Skip if either it hasn't crossed the boundary or we can't tell when it started.
       next if stop.nil? || start.nil?

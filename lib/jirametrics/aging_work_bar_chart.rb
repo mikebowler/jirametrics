@@ -53,8 +53,8 @@ class AgingWorkBarChart < ChartBase
     percentage_line_x = date_range.end - calculate_percent_line if percentage
 
     if aging_issues.empty?
-      @description_text = "<p>There is no aging work</p>"
-      return render_top_text(binding) #if aging_issues.empty?
+      @description_text = '<p>There is no aging work</p>'
+      return render_top_text(binding)
     end
 
     wrap_and_render(binding, __FILE__)
@@ -62,7 +62,7 @@ class AgingWorkBarChart < ChartBase
 
   def data_sets_for_one_issue issue:, today:
     cycletime = issue.board.cycletime
-    issue_start_time = cycletime.started_time(issue)
+    issue_start_time, _stopped_time = cycletime.started_stopped_times(issue)
     issue_start_date = issue_start_time.to_date
     issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
     [
@@ -92,8 +92,8 @@ class AgingWorkBarChart < ChartBase
 
   def select_aging_issues issues:
     issues.select do |issue|
-      cycletime = issue.board.cycletime
-      cycletime.started_time(issue) && cycletime.stopped_time(issue).nil?
+      started_time, stopped_time = issue.board.cycletime.started_stopped_times(issue)
+      started_time && stopped_time.nil?
     end
   end
 
@@ -107,7 +107,7 @@ class AgingWorkBarChart < ChartBase
   def status_data_sets issue:, label:, today:
     cycletime = issue.board.cycletime
 
-    issue_started_time = cycletime.started_time(issue)
+    issue_started_time, _issue_stopped_time = cycletime.started_stopped_times(issue)
 
     previous_start = nil
     previous_status = nil

@@ -114,7 +114,7 @@ class CycletimeScatterplot < ChartBase
 
     {
       y: cycle_time,
-      x: chart_format(issue.board.cycletime.stopped_time(issue)),
+      x: chart_format(issue.board.cycletime.started_stopped_times(issue).last),
       title: ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
     }
   end

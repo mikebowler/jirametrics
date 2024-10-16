@@ -18,7 +18,7 @@ describe CycletimeHistogram do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2022-01-01', '2022-01-04'],
         [issue2, '2022-01-01', '2022-01-04'],
-        [issue10, '2022-01-01', '2022-01-01']
+        [issue10, '2022-01-01', '2022-01-01T01:00:00']
       ]
       expect(chart.histogram_data_for issues: [issue1, issue2, issue10]).to eq({ 4 => 2, 1 => 1 })
     end

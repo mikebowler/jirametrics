@@ -144,8 +144,7 @@ class ChartBase
   def completed_issues_in_range include_unstarted: false
     issues.select do |issue|
       cycletime = issue.board.cycletime
-      stopped_time = cycletime.stopped_time(issue)
-      started_time = cycletime.started_time(issue)
+      started_time, stopped_time = cycletime.started_stopped_times(issue)
 
       stopped_time &&
         date_range.include?(stopped_time.to_date) && # Remove outside range

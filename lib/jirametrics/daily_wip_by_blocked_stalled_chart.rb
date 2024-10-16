@@ -39,8 +39,8 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    started = issue.board.cycletime.started_time(issue)
-    stopped_date = issue.board.cycletime.stopped_time(issue)&.to_date
+    started, stopped = issue.board.cycletime.started_stopped_times(issue)
+    stopped_date = stopped&.to_date
 
     date = rules.current_date
     change = issue.blocked_stalled_by_date(date_range: date..date, chart_end_time: time_range.end)[date]

@@ -87,9 +87,7 @@ class DataQualityReport < ChartBase
 
   def initialize_entries
     @entries = @issues.filter_map do |issue|
-      cycletime = issue.board.cycletime
-      started = cycletime.started_time(issue)
-      stopped = cycletime.stopped_time(issue)
+      started, stopped = issue.board.cycletime.started_stopped_times(issue)
       next if stopped && stopped < time_range.begin
       next if started && started > time_range.end
 
@@ -223,7 +221,7 @@ class DataQualityReport < ChartBase
 
     started_subtasks = []
     entry.issue.subtasks.each do |subtask|
-      started_subtasks << subtask if subtask.board.cycletime.started_time(subtask)
+      started_subtasks << subtask if subtask.board.cycletime.started_stopped_times(subtask).first
     end
 
     return if started_subtasks.empty?

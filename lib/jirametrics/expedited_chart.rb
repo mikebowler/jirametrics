@@ -109,8 +109,7 @@ class ExpeditedChart < ChartBase
 
   def make_expedite_lines_data_set issue:, expedite_data:
     cycletime = issue.board.cycletime
-    started_time = cycletime.started_time(issue)
-    stopped_time = cycletime.stopped_time(issue)
+    started_time, stopped_time = cycletime.started_stopped_times(issue)
 
     expedite_data << [started_time, :issue_started] if started_time
     expedite_data << [stopped_time, :issue_stopped] if stopped_time

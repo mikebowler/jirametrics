@@ -49,9 +49,7 @@ class DailyWipByAgeChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    cycletime = issue.board.cycletime
-    started = cycletime.started_time(issue)&.to_date
-    stopped = cycletime.stopped_time(issue)&.to_date
+    started, stopped = issue.board.cycletime.started_stopped_dates(issue)
 
     rules.issue_hint = "(age: #{label_days (rules.current_date - started + 1).to_i})" if started
 

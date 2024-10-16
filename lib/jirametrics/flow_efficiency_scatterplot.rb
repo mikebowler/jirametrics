@@ -87,8 +87,7 @@ class FlowEfficiencyScatterplot < ChartBase
         # If this happens then something is probably misconfigured. We've seen it in production though
         # so we have to handle it.
         file_system.log(
-          "Issue(#{issue.key}) flow_efficiency: NaN, active_time: #{active_time}, total_time: #{total_time}",
-          also_write_to_stderr: true
+          "Issue(#{issue.key}) flow_efficiency: NaN, active_time: #{active_time}, total_time: #{total_time}"
         )
         flow_efficiency = 0.0
       end

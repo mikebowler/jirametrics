@@ -36,16 +36,15 @@ class AgingWorkTable < ChartBase
 
   def expedited_but_not_started
     @issues.select do |issue|
-      cycletime = issue.board.cycletime
-      cycletime.started_time(issue).nil? && cycletime.stopped_time(issue).nil? && issue.expedited?
+      started_time, stopped_time = issue.board.cycletime.started_stopped_times(issue)
+      started_time.nil? && stopped_time.nil? && issue.expedited?
     end.sort_by(&:created)
   end
 
   def select_aging_issues
     aging_issues = @issues.select do |issue|
       cycletime = issue.board.cycletime
-      started = cycletime.started_time(issue)
-      stopped = cycletime.stopped_time(issue)
+      started, stopped = cycletime.started_stopped_times(issue)
       next false if started.nil? || stopped
       next true if issue.blocked_on_date?(@today, end_time: time_range.end) || issue.expedited?
 
@@ -64,7 +63,7 @@ class AgingWorkTable < ChartBase
   end
 
   def blocked_text issue
-    started_time = issue.board.cycletime.started_time(issue)
+    started_time, _stopped_time = issue.board.cycletime.started_stopped_times(issue)
     return nil if started_time.nil?
 
     current = issue.blocked_stalled_changes(end_time: time_range.end)[-1]

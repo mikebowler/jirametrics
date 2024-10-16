@@ -126,7 +126,7 @@ class SprintBurndown < ChartBase
     currently_in_sprint = false
     change_data = []
 
-    issue_completed_time = issue.board.cycletime.stopped_time(issue)
+    issue_completed_time = issue.board.cycletime.started_stopped_times(issue).last
     completed_has_been_tracked = false
 
     issue.changes.each do |change|

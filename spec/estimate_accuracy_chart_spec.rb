@@ -69,7 +69,7 @@ describe EstimateAccuracyChart do
       issue_not_started = load_issue 'SP-1', board: board
 
       board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', '2024-01-02'],
+        [issue1, '2024-01-02', '2024-01-02T01:00:00'],
         [issue2, '2024-01-02', nil],
         [issue_with_no_estimate, '2024-01-02', nil]
       ]

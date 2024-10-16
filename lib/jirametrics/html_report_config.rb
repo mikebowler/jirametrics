@@ -146,7 +146,7 @@ class HtmlReportConfig
 
     @original_issue_times = {}
     issues_cutoff_times.each do |issue, cutoff_time|
-      started = issue.board.cycletime.started_time(issue)
+      started = issue.board.cycletime.started_stopped_times(issue).first
       if started && started <= cutoff_time
         # We only need to log this if data was discarded
         @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }

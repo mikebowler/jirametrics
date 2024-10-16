@@ -83,8 +83,7 @@ class EstimateAccuracyChart < ChartBase
 
     issues.each do |issue|
       cycletime = issue.board.cycletime
-      start_time = cycletime.started_time(issue)
-      stop_time = cycletime.stopped_time(issue)
+      start_time, stop_time = cycletime.started_stopped_times(issue)
 
       next unless start_time
 

@@ -82,7 +82,7 @@ class ThroughputChart < ChartBase
   def throughput_dataset periods:, completed_issues:
     periods.collect do |period|
       closed_issues = completed_issues.filter_map do |issue|
-        stop_date = issue.board.cycletime.stopped_time(issue)&.to_date
+        stop_date = issue.board.cycletime.started_stopped_times(issue).last&.to_date
         [stop_date, issue] if stop_date && period.include?(stop_date)
       end
 

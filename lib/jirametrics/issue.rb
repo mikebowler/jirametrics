@@ -375,11 +375,10 @@ class Issue
   # return [number of active seconds, total seconds] that this issue had up to the end_time.
   # It does not include data before issue start or after issue end
   def flow_efficiency_numbers end_time:, settings: @board.project_config.settings
-    issue_start = @board.cycletime.started_time(self)
+    issue_start, issue_stop = @board.cycletime.started_stopped_times(self)
     return [0.0, 0.0] if !issue_start || issue_start > end_time
 
     value_add_time = 0.0
-    issue_stop = @board.cycletime.stopped_time(self)
     end_time = issue_stop if issue_stop && issue_stop < end_time
 
     active_start = nil
@@ -570,9 +569,8 @@ class Issue
     end
     history = [] # time, type, detail
 
-    started_at = board.cycletime.started_time(self)
+    started_at, stopped_at = board.cycletime.started_stopped_times(self)
     history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
-    stopped_at = board.cycletime.stopped_time(self)
     history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
 
     @discarded_change_times&.each do |time|
