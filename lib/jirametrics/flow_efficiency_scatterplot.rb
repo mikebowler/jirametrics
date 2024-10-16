@@ -74,18 +74,30 @@ class FlowEfficiencyScatterplot < ChartBase
   def create_dataset issues:, label:, color:
     return nil if issues.empty?
 
-    data = issues.collect do |issue|
+    data = issues.filter_map do |issue|
       active_time, total_time = issue.flow_efficiency_numbers(
         end_time: time_range.end, settings: settings
       )
+
       active_days = to_days(active_time)
       total_days = to_days(total_time)
-      flow_efficiency = (active_time * 100.0 / total_time).to_i
+      flow_efficiency = active_time * 100.0 / total_time
+
+      if flow_efficiency.nan?
+        # If this happens then something is probably misconfigured. We've seen it in production though
+        # so we have to handle it.
+        file_system.log(
+          "Issue(#{issue.key}) flow_efficiency: NaN, active_time: #{active_time}, total_time: #{total_time}",
+          also_write_to_stderr: true
+        )
+        flow_efficiency = 0.0
+      end
+
       {
         y: active_days,
         x: total_days,
         title: [
-          "#{issue.key} : #{issue.summary}, flow efficiency: #{flow_efficiency}%," \
+          "#{issue.key} : #{issue.summary}, flow efficiency: #{flow_efficiency.to_i}%," \
           " total: #{total_days.round(1)} days," \
           " active: #{active_days.round(1)} days"
         ]
