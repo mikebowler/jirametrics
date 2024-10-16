@@ -543,6 +543,20 @@ class Issue
     comparison
   end
 
+  def discard_changes_before cutoff_time
+    rejected_any = false
+    @changes.reject! do |change|
+      reject = change.status? && change.time <= cutoff_time && change.artificial? == false
+      if reject
+        (@discarded_changes ||= []) << change
+        rejected_any = true
+      end
+      reject
+    end
+
+    (@discarded_change_times ||= []) << cutoff_time if rejected_any
+  end
+
   def dump
     result = +''
     result << "#{key} (#{type}): #{compact_text summary, 200}\n"
@@ -561,7 +575,11 @@ class Issue
     stopped_at = board.cycletime.stopped_time(self)
     history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
 
-    changes.each do |change|
+    @discarded_change_times&.each do |time|
+      history << [time, nil, '↑↑↑↑ Changes discarded ↑↑↑↑', true]
+    end
+
+    (changes + (@discarded_changes || [])).each do |change|
       value = change.value
       old_value = change.old_value
 
@@ -578,18 +596,26 @@ class Issue
 
     result << "  History:\n"
     type_width = history.collect { |_time, type, _detail, _artificial| type&.length || 0 }.max
-    history.sort_by(&:first).each do |time, type, detail, artificial|
+    history.sort! do |a, b|
+      if a[0] == b[0]
+        if a[1].nil?
+          1
+        elsif b[1].nil?
+          -1
+        else
+          a[1] <=> b[1]
+        end
+      else
+        a[0] <=> b[0]
+      end
+    end
+    history.each do |time, type, detail, artificial|
       if type.nil?
         type = '-' * type_width
       else
         type = (' ' * (type_width - type.length)) << type
       end
-      if artificial
-        type = "<#{type}>"
-      else
-        type = "[#{type}]"
-      end
-      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} #{type} #{detail}\n"
+      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{type}] #{detail}\n"
     end
 
     result
