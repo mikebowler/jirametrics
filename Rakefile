@@ -25,6 +25,6 @@ task export: [:initialize_config] do
 end
 
 desc 'Same as calling download and then export'
-task go: [:initialize_config, :download, :export]
+task go: %i[initialize_config download export]
 
 RSpec::Core::RakeTask.new(:spec)
