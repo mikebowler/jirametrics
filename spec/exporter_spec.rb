@@ -35,7 +35,7 @@ describe Exporter do
 
     it 'strips trailing slash from url' do
       exporter.file_system = MockFileSystem.new
-      exporter.file_system.when_loading file: 'jira-config.json', json: { 'url' => 'foo/'}
+      exporter.file_system.when_loading file: 'jira-config.json', json: { 'url' => 'foo/' }
       exporter.jira_config 'jira-config.json'
       expect(exporter.jira_config['url']).to eq 'foo'
     end
@@ -101,8 +101,7 @@ describe Exporter do
   context 'download' do
     it 'fails if download block is missing' do
       exporter.jira_config 'spec/testdata/jira-config.json'
-      exporter.project name: 'foo' # do # rubocop:disable Lint/EmptyBlock
-      # end
+      exporter.project name: 'foo'
       expect { exporter.download name_filter: '*' }.to raise_error(
         'Project "foo" is missing a download section in the config. That is required in order to download'
       )

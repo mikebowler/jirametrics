@@ -47,7 +47,7 @@ class BlockedStalledChange
   end
 
   def inspect
-    text = +"BlockedStalledChange(time: '#{@time}', "
+    text = "BlockedStalledChange(time: '#{@time}', "
     if active?
       text << 'Active'
     else

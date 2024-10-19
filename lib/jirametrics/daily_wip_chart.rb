@@ -6,7 +6,7 @@ class DailyGroupingRules < GroupingRules
   attr_accessor :current_date, :group_priority, :issue_hint
 
   def initialize
-    super()
+    super
     @group_priority = 0
   end
 end
@@ -22,10 +22,10 @@ class DailyWipChart < ChartBase
 
     instance_eval(&block) if block
 
-    unless @group_by_block
-      grouping_rules do |issue, rules|
-        default_grouping_rules issue: issue, rules: rules
-      end
+    return if @group_by_block
+
+    grouping_rules do |issue, rules|
+      default_grouping_rules issue: issue, rules: rules
     end
   end
 
@@ -156,7 +156,7 @@ class DailyWipChart < ChartBase
 
     {
       type: 'line',
-      label: "Trendline",
+      label: 'Trendline',
       data: data_points,
       fill: false,
       borderWidth: 1,

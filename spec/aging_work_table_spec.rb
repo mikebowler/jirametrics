@@ -23,12 +23,12 @@ describe AgingWorkTable do
 
   context 'expedited_text' do
     it 'is empty when not expedited' do
-      issue1.raw['fields']['priority'] = {'name' => 'Not set'}
+      issue1.raw['fields']['priority'] = { 'name' => 'Not set' }
       expect(table.expedited_text issue1).to be_nil
     end
 
     it 'creates span when expedited' do
-      issue1.raw['fields']['priority'] = {'name' => 'Highest'}
+      issue1.raw['fields']['priority'] = { 'name' => 'Highest' }
       issue1.board.project_config.settings['expedited_priority_names'] = ['Highest']
       expect(table.expedited_text issue1).to eq(
         "<div class='color_block' style='background: var(--expedited-color);' " \
@@ -132,8 +132,8 @@ describe AgingWorkTable do
     end
 
     it 'returns correctly with a mix of fix versions' do
-      issue1.fix_versions << FixVersion.new({'name' => 'One', 'released' => false})
-      issue1.fix_versions << FixVersion.new({'name' => 'Two', 'released' => true})
+      issue1.fix_versions << FixVersion.new({ 'name' => 'One', 'released' => false })
+      issue1.fix_versions << FixVersion.new({ 'name' => 'Two', 'released' => true })
       expect(table.fix_versions_text issue1).to eq(
         "One<br />Two <span title='Released. Likely not on the board anymore.' style='font-size: 0.8em;'>✅</span>"
       )
@@ -145,20 +145,10 @@ describe AgingWorkTable do
       expect(table.sprints_text issue1).to eq ''
     end
 
-          # {
-          #   "field": "Sprint",
-          #   "fieldtype": "custom",
-          #   "fieldId": "customfield_10020",
-          #   "from": "7",
-          #   "fromString": "Scrum Sprint 7",
-          #   "to": "7, 8",
-          #   "toString": "Scrum Sprint 7, Scrum Sprint 8"
-          # }
-
     it 'returns when one active sprint' do
       # Put a non-sprint change there to ensure it doesn't blow up on those
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
-      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1', value_id: "2", time: '2020-10-03')
+      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1', value_id: '2', time: '2020-10-03')
 
       issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
         'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
@@ -171,7 +161,7 @@ describe AgingWorkTable do
     it 'returns when multiple sprint' do
       # Put a non-sprint change there to ensure it doesn't blow up on those
       issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
-      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1, Sprint2', value_id: "2, 3", time: '2020-10-03')
+      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1, Sprint2', value_id: '2, 3', time: '2020-10-03')
 
       issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
         'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
@@ -203,15 +193,15 @@ describe AgingWorkTable do
     end
   end
 
-  it 'should find expedited_but_not_started' do
+  it 'finds expedited_but_not_started' do
     issue3 = empty_issue key: 'SP-3', created: '2024-01-01', board: board
     # issue3.changes << mock_change(field: 'Priority', value: 'Highest', time: '2024-01-02')
-    issue3.raw['fields']['priority'] = {'name' => 'Highest'}
+    issue3.raw['fields']['priority'] = { 'name' => 'Highest' }
 
     board.cycletime = mock_cycletime_config stub_values: [
       [issue1, nil, nil],
       [issue2, nil, nil],
-      [issue3, nil, nil],
+      [issue3, nil, nil]
     ]
     board.project_config.settings['expedited_priority_names'] = ['Highest']
     table.issues = [issue1, issue2, issue3]

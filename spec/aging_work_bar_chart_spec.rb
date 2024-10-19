@@ -337,6 +337,5 @@ describe AgingWorkBarChart do
 
       expect(chart.run).to eq '<h1>Aging Work Bar Chart</h1><p>There is no aging work</p>'
     end
-
   end
 end

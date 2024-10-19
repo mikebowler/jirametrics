@@ -33,7 +33,7 @@ class Exporter
           html '<h1>Boards included in this report</h1><ul>', type: :header
           board_lines = []
           included_projects.each do |project|
-            project.all_boards.values.each do |board|
+            project.all_boards.each_value do |board|
               board_lines << "<a href='#{project.file_prefix}.html'>#{board.name}</a> from project #{project.name}"
             end
           end

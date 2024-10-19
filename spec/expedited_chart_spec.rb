@@ -158,7 +158,7 @@ describe ExpeditedChart do
         backgroundColor: [
           CssVariable['--expedited-chart-dot-issue-started-color'],
           CssVariable['--expedited-chart-dot-expedite-started-color'],
-          ""
+          ''
         ],
         pointBorderColor: 'black',
         pointStyle: %w[rect circle dash],

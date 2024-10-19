@@ -75,7 +75,11 @@ describe JiraGateway do
       gateway.load_jira_config(
         { 'url' => 'https://example.com', 'email' => 'fred@flintstone', 'api_token' => 'bedrock' }
       )
-      expected = 'curl -L -s --user fred@flintstone:bedrock --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s' \
+        ' --user fred@flintstone:bedrock' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
   end

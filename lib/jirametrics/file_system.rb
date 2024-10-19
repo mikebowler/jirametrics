@@ -29,7 +29,7 @@ class FileSystem
 
   def log message, also_write_to_stderr: false
     logfile.puts message
-    $stderr.puts message if also_write_to_stderr
+    $stderr.puts message if also_write_to_stderr # rubocop:disable Style/StderrPuts
   end
 
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen

@@ -4,7 +4,7 @@ require 'jirametrics/daily_wip_chart'
 
 class DailyWipByAgeChart < DailyWipChart
   def initialize block
-    super(block)
+    super
 
     add_trend_line line_color: '--aging-work-in-progress-by-age-trend-line-color', group_labels: [
       'Less than a day',

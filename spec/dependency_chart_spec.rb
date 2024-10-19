@@ -294,7 +294,9 @@ describe DependencyChart do
         [issue13, nil, nil]
       ]
       chart.default_issue_rules.call issue13, rules
-      expect(rules.label).to eq '<<S>SP-13 </S>  [Story]<BR/>(unknown state)<BR/>Report of people checked in at an event>'
+      expect(rules.label).to eq(
+        '<<S>SP-13 </S>  [Story]<BR/>(unknown state)<BR/>Report of people checked in at an event>'
+      )
     end
   end
 end

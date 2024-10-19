@@ -24,7 +24,7 @@ class CycletimeScatterplot < ChartBase
         predict that most work of this type will complete in <%= overall_percent_line %> days or
         less. The other lines reflect the 85% line for that respective type of work.
       </div>
-      #{ describe_non_working_days }
+      #{describe_non_working_days}
     HTML
 
     init_configuration_block block do

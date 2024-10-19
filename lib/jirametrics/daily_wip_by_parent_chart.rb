@@ -3,10 +3,6 @@
 require 'jirametrics/daily_wip_chart'
 
 class DailyWipByParentChart < DailyWipChart
-  def initialize block
-    super(block)
-  end
-
   def default_header_text
     'Daily WIP, grouped by the parent ticket (Epic, Feature, etc)'
   end

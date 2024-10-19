@@ -43,9 +43,7 @@ class ProjectConfig
   end
 
   def run load_only: false
-    if !aggregated_project?
-      load_data
-    end
+    load_data unless aggregated_project?
     anonymize_data if @anonymizer_needed
 
     return if load_only

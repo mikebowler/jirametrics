@@ -38,7 +38,7 @@ class Status
   end
 
   def to_s
-    result = +"Status(name=#{@name.inspect}," \
+    result = "Status(name=#{@name.inspect}," \
       " id=#{@id.inspect}," \
       " category_name=#{@category_name.inspect}," \
       " category_id=#{@category_id.inspect}," \

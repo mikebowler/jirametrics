@@ -6,7 +6,7 @@ require 'English'
 
 class MockJiraGateway < JiraGateway
   def initialize file_system:
-    super(file_system: file_system)
+    super
     @data = {}
   end
 

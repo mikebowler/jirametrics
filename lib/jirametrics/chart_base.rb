@@ -178,7 +178,7 @@ class ChartBase
   def format_status name_or_id, board:, is_category: false
     begin
       statuses = board.possible_statuses.expand_statuses([name_or_id])
-    rescue StatusNotFoundError => e
+    rescue StatusNotFoundError
       return "<span style='color: red'>#{name_or_id}</span>"
     end
 
@@ -188,10 +188,9 @@ class ChartBase
     visibility = ''
     if is_category == false && board.visible_columns.none? { |column| column.status_ids.include? status.id }
       visibility = icon_span(
-      title: "Not visible: The status #{status.name.inspect} is not mapped to any column and will not be visible",
-      icon: ' 👀'
-    )
-
+        title: "Not visible: The status #{status.name.inspect} is not mapped to any column and will not be visible",
+        icon: ' 👀'
+      )
     end
     text = is_category ? status.category_name : status.name
     "<span title='Category: #{status.category_name}'>#{color_block color.name} #{text}</span>#{visibility}"

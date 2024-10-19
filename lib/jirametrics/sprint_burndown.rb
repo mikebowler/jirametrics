@@ -18,7 +18,7 @@ class SprintBurndown < ChartBase
   attr_accessor :board_id
 
   def initialize
-    super()
+    super
 
     @summary_stats = {}
     header_text 'Sprint burndown'

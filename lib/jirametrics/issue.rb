@@ -260,7 +260,7 @@ class Issue
 
     blocked_link_texts = settings['blocked_link_text']
     stalled_threshold = settings['stalled_threshold_days']
-    flagged_means_blocked = !!settings['flagged_means_blocked']
+    flagged_means_blocked = !!settings['flagged_means_blocked'] # rubocop:disable Style/DoubleNegation
 
     blocking_issue_keys = []
 
@@ -607,7 +607,7 @@ class Issue
         a[0] <=> b[0]
       end
     end
-    history.each do |time, type, detail, artificial|
+    history.each do |time, type, detail, _artificial|
       if type.nil?
         type = '-' * type_width
       else

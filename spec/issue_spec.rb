@@ -585,7 +585,7 @@ describe Issue do
 
     it 'handles a date range that covers time before the issue starts and after it finishes' do
       issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-02')
+      issue.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2021-10-02')
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-09-30')..to_date('2021-10-03'),
@@ -1058,7 +1058,7 @@ describe Issue do
         [issue, nil, nil]
       ]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
-        .to eq [0,0]
+        .to eq [0, 0]
     end
 
     it 'is created in active status and never changed' do
@@ -1146,7 +1146,7 @@ describe Issue do
         [issue, to_time('2000-01-01'), to_time('2000-01-08')]
       ]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-07'), settings: settings))
-        .to eq [seconds_per_day*3, seconds_per_day*6]
+        .to eq [seconds_per_day * 3, seconds_per_day * 6]
     end
   end
 end

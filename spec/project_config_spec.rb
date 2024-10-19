@@ -72,7 +72,8 @@ describe ProjectConfig do
 
   context 'evaluate_next_level' do
     it 'executes the original block that had been passed in, in its own context' do
-      columns = described_class.new exporter: exporter, target_path: nil, jira_config: nil, block: ->(_) { self.class.to_s }
+      columns = described_class.new exporter: exporter, target_path: nil, jira_config: nil,
+        block: ->(_) { self.class.to_s }
       expect(columns.evaluate_next_level).to eq('ProjectConfig')
     end
   end
