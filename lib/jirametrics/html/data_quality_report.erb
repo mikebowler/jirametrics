@@ -114,6 +114,18 @@
 %>
 
 <% 
+  problems = problems_for :incomplete_subtasks_when_issue_done
+  unless problems.empty? 
+%>
+  <p>
+    <span class="quality_note_bullet">⮕</span> <%= label_issues problems.size %> issues were marked as done while subtasks were still not done.
+    <%= collapsible_issues_panel problems %>
+  </p>
+<% 
+  end
+%>
+
+<% 
   problems = problems_for :issue_on_multiple_boards
   unless problems.empty? 
 %>

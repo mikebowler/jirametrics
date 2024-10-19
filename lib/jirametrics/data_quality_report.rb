@@ -48,6 +48,7 @@ class DataQualityReport < ChartBase
       scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_statuses: backlog_statuses
       scan_for_stopped_before_started entry: entry
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
+      scan_for_incomplete_subtasks_when_issue_done entry: entry
       scan_for_discarded_data entry: entry
     end
 
@@ -227,11 +228,51 @@ class DataQualityReport < ChartBase
     return if started_subtasks.empty?
 
     subtask_labels = started_subtasks.collect do |subtask|
-      "Started subtask: #{link_to_issue(subtask)} (#{format_status subtask.status.name, board: entry.issue.board}) " \
-        "#{subtask.summary[..50].inspect}"
+      subtask_label(subtask)
     end
     entry.report(
       problem_key: :issue_not_started_but_subtasks_have,
+      detail: subtask_labels.join('<br />')
+    )
+  end
+
+  def subtask_label subtask
+    "<img src='#{subtask.type_icon_url}' /> #{link_to_issue(subtask)} #{subtask.summary[..50].inspect}"
+  end
+
+  def time_as_english(from_time, to_time)
+    delta = (to_time - from_time).to_i
+    return "#{delta} seconds" if delta < 60
+
+    delta /= 60
+    return "#{delta} minutes" if delta < 60
+
+    delta /= 60
+    return "#{delta} hours" if delta < 24
+
+    delta /= 24
+    "#{delta} days"
+  end
+
+  def scan_for_incomplete_subtasks_when_issue_done entry:
+    return unless entry.stopped
+
+    subtask_labels = entry.issue.subtasks.filter_map do |subtask|
+      subtask_started, subtask_stopped = subtask.board.cycletime.started_stopped_times(subtask)
+
+      if !subtask_started && !subtask_stopped
+        "#{subtask_label subtask} (Not even started)"
+      elsif !subtask_stopped
+        "#{subtask_label subtask} (Still not done)"
+      elsif subtask_stopped > entry.stopped
+        "#{subtask_label subtask} (Closed #{time_as_english entry.stopped, subtask_stopped} later)"
+      end
+    end
+
+    return if subtask_labels.empty?
+
+    entry.report(
+      problem_key: :incomplete_subtasks_when_issue_done,
       detail: subtask_labels.join('<br />')
     )
   end

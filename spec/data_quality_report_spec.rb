@@ -270,12 +270,102 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :issue_not_started_but_subtasks_have,
-          "Started subtask: <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>SP-2</a> " \
-            "(<span title='Category: In Progress'><div class='color_block' " \
-            "style='background: var(--status-category-inprogress-color);'></div> Selected for Development</span>) " \
-            '"Update existing event"'
+          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
+          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
+          'SP-2</a> "Update existing event"'
         ]
       ]
+    end
+
+    it 'catches subtasks that are not started when main issue is closed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [subtask, nil, nil]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: to_time('2024-01-01'), issue: issue1
+      )
+      issue1.subtasks << subtask
+
+      report.scan_for_incomplete_subtasks_when_issue_done entry: entry
+
+      expect(entry.problems).to eq [
+        [
+          :incomplete_subtasks_when_issue_done,
+          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
+          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
+          'SP-2</a> "Update existing event" (Not even started)'
+        ]
+      ]
+    end
+
+    it 'catches subtasks that are closed after the main issue' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [subtask, nil, to_time('2024-01-10')]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: to_time('2024-01-01'), issue: issue1
+      )
+      issue1.subtasks << subtask
+
+      report.scan_for_incomplete_subtasks_when_issue_done entry: entry
+
+      expect(entry.problems).to eq [
+        [
+          :incomplete_subtasks_when_issue_done,
+          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
+          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
+          'SP-2</a> "Update existing event" (Closed 9 days later)'
+        ]
+      ]
+    end
+
+    it 'catches subtasks that still are not closed after the main issue was closed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [subtask, to_time('2024-01-02'), nil]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: to_time('2024-01-01'), issue: issue1
+      )
+      issue1.subtasks << subtask
+
+      report.scan_for_incomplete_subtasks_when_issue_done entry: entry
+
+      expect(entry.problems).to eq [
+        [
+          :incomplete_subtasks_when_issue_done,
+          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
+          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
+          'SP-2</a> "Update existing event" (Still not done)'
+        ]
+      ]
+    end
+
+    it 'ignores subtasks that did close before the main issue was closed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [subtask, nil, to_time('2024-01-01')]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: to_time('2024-01-02'), issue: issue1
+      )
+      issue1.subtasks << subtask
+
+      report.scan_for_incomplete_subtasks_when_issue_done entry: entry
+
+      expect(entry.problems).to be_empty
+    end
+
+    it 'ignores issues that are not closed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [subtask, nil, to_time('2024-01-01')]
+      ]
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: nil, issue: issue1
+      )
+      issue1.subtasks << subtask
+
+      report.scan_for_incomplete_subtasks_when_issue_done entry: entry
+
+      expect(entry.problems).to be_empty
     end
 
     it 'ignores subtasks that are started when the main issue is also started' do
@@ -388,6 +478,20 @@ describe DataQualityReport do
         [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"']
       ]
       expect(entry2.problems).to be_empty
+    end
+  end
+
+  context 'time_as_english' do
+    it 'handles seconds' do
+      expect(report.time_as_english to_time('2024-01-01'), to_time('2024-01-01T00:00:07')).to eq('7 seconds')
+    end
+
+    it 'handles minutes' do
+      expect(report.time_as_english to_time('2024-01-01'), to_time('2024-01-01T00:08:00')).to eq('8 minutes')
+    end
+
+    it 'handles hours' do
+      expect(report.time_as_english to_time('2024-01-01'), to_time('2024-01-01T11:00:00')).to eq('11 hours')
     end
   end
 end
