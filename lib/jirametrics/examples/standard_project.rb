@@ -7,7 +7,8 @@
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
       default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
-      rolling_date_count: 90, no_earlier_than: nil, ignore_types: %w[Sub-task Subtask Epic]
+      rolling_date_count: 90, no_earlier_than: nil, ignore_types: %w[Sub-task Subtask Epic],
+      show_experimental_charts: false
 
     project name: name do
       puts name
@@ -85,6 +86,7 @@ class Exporter
           daily_wip_by_age_chart
           daily_wip_by_blocked_stalled_chart
           daily_wip_by_parent_chart
+          flow_efficiency_scatterplot if show_experimental_charts
           expedited_chart
           sprint_burndown
           estimate_accuracy_chart
