@@ -56,6 +56,14 @@ describe JiraGateway do
         "You can't specify both an api-token and a personal-access-token. They don't work together."
       )
     end
+
+    it 'fails when url not provided' do
+      expect do
+        gateway.load_jira_config({})
+      end.to raise_error(
+        'Must specify URL in config'
+      )
+    end
   end
 
   context 'Build curl command' do
@@ -81,6 +89,18 @@ describe JiraGateway do
         ' --header "Accept: application/json"' \
         ' --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
+    end
+  end
+
+  context 'call_url' do
+    it 'adds detail to exception when unable to parse result' do
+      def gateway.call_command _command
+        'foo'
+      end
+      gateway.load_jira_config({ 'url' => 'https://example.com' })
+      expect { gateway.call_url relative_url: 'foo' }.to raise_error(
+        "Error \"unexpected token at 'foo'\" when parsing result: \"foo\""
+      )
     end
   end
 end

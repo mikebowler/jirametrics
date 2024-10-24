@@ -16,7 +16,7 @@ class JiraGateway
     result = call_command command
     JSON.parse result
   rescue => e # rubocop:disable Style/RescueStandardError
-    puts "Error #{e.inspect} when parsing result: #{result.inspect}"
+    raise "Error #{e.message.inspect} when parsing result: #{result.inspect}"
   end
 
   def call_command command
