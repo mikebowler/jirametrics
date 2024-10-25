@@ -183,9 +183,8 @@ class DependencyChart < ChartBase
       return stdout.read
     end
   rescue # rubocop:disable Style/RescueStandardError
-    message = "Unable to execute the command 'dot' which is part of graphviz. " \
-      'Ensure that graphviz is installed and that dot is in your path.'
-    puts message
+    message = 'Unable to generate the dependency chart because graphviz could not be found in the path.'
+    file_system.log message, also_write_to_stderr: true
     message
   end
 

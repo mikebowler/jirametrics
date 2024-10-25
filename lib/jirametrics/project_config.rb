@@ -240,7 +240,7 @@ class ProjectConfig
   end
 
   def load_project_metadata
-    filename = "#{@target_path}/#{file_prefix}_meta.json"
+    filename = File.join @target_path, "#{file_prefix}_meta.json"
     json = JSON.parse(file_system.load(filename))
 
     @data_version = json['version'] || 1
@@ -251,7 +251,7 @@ class ProjectConfig
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
-    puts "== Can't load files from the target directory #{@target_path.inspect}. Did you forget to download first? =="
+    file_system.log "Can't load #{filename}. Have you done a download?", also_write_to_stderr: true
     raise
   end
 
@@ -308,11 +308,12 @@ class ProjectConfig
 
       timezone_offset = exporter.timezone_offset
 
-      issues_path = "#{@target_path}#{file_prefix}_issues/"
+      issues_path = File.join @target_path, "#{file_prefix}_issues"
       if File.exist?(issues_path) && File.directory?(issues_path)
         issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
       else
-        puts "Can't find issues in #{path}. Has a download been done?"
+        file_system.log "Can't find directory #{issues_path}. Has a download been done?", also_write_to_stderr: true
+        return []
       end
 
       # Attach related issues
@@ -358,8 +359,8 @@ class ProjectConfig
     raise "No boards found for project #{name.inspect}" if all_boards.empty?
 
     if all_boards.size != 1
-      puts "Multiple boards are in use for project #{name.inspect}. " \
-        "Picked #{default_board.name.inspect} to attach issues to."
+      file_system.log "Multiple boards are in use for project #{name.inspect}. " \
+        "Picked #{default_board.name.inspect} to attach issues to.", also_write_to_stderr: true
     end
     default_board
   end

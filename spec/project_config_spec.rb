@@ -413,4 +413,47 @@ describe ProjectConfig do
   it 'loaded settings' do
     expect(project_config.settings['stalled_threshold_days']).not_to be_nil
   end
+
+  context 'load_project_metadata' do
+    it 'logs error when unable to find files' do
+      project_config.file_prefix 'foo'
+      expect { project_config.load_project_metadata }.to raise_error(
+        'No such file or directory @ rb_sysopen - spec/testdata/foo_meta.json'
+      )
+      expect(exporter.file_system.log_messages).to eq([
+        "Can't load spec/testdata/foo_meta.json. Have you done a download?"
+      ])
+    end
+  end
+
+  context 'issues' do
+    it 'warns when issues directory missing' do
+      project_config.file_prefix 'foo'
+      project_config.all_boards[1] = sample_board
+      project_config.issues
+      expect(exporter.file_system.log_messages).to eq([
+        "Can't find directory spec/testdata/foo_issues. Has a download been done?"
+      ])
+    end
+  end
+
+  context 'find_default_board' do
+    it 'defaults to first when multiple' do
+      board4 = sample_board
+      board4.raw['id'] = '4'
+      board5 = sample_board
+      board5.raw['id'] = '5'
+      project_config.all_boards[board4.id] = board4
+      project_config.all_boards[board5.id] = board5
+
+      expect(project_config.find_default_board.id).to be 4
+      expect(exporter.file_system.log_messages).to eq([
+        'Multiple boards are in use for project "". Picked "SP board" to attach issues to.'
+      ])
+    end
+
+    it 'raises error when no boards' do
+      expect { project_config.find_default_board }.to raise_error 'No boards found for project ""'
+    end
+  end
 end
