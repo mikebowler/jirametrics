@@ -25,6 +25,14 @@ class ChartBase
     @aggregated_project
   end
 
+  def html_directory
+    pathname = Pathname.new(File.realpath(__FILE__))
+    # basename = pathname.basename.to_s
+    # raise "Unexpected filename #{basename.inspect}" unless basename.match?(/^(.+)\.rb$/)
+
+    "#{pathname.dirname}/html"
+  end
+
   def render caller_binding, file
     pathname = Pathname.new(File.realpath(file))
     basename = pathname.basename.to_s
@@ -33,8 +41,8 @@ class ChartBase
     # Insert a incrementing chart_id so that all the chart names on the page are unique
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
-    @html_directory = "#{pathname.dirname}/html"
-    erb = ERB.new file_system.load "#{@html_directory}/#{$1}.erb"
+    # @html_directory = "#{pathname.dirname}/html"
+    erb = ERB.new file_system.load "#{html_directory}/#{$1}.erb"
     erb.result(caller_binding)
   end
 
@@ -100,7 +108,7 @@ class ChartBase
     issues_id = next_id
 
     issue_descriptions.sort! { |a, b| a[0].key_as_i <=> b[0].key_as_i }
-    erb = ERB.new file_system.load "#{@html_directory}/collapsible_issues_panel.erb"
+    erb = ERB.new file_system.load File.join(html_directory, 'collapsible_issues_panel.erb')
     erb.result(binding)
   end
 

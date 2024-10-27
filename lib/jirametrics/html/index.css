@@ -99,9 +99,6 @@ table.standard {
     background-color: #eee;
   }
 }
-.quality_note_bullet {
-  color: red;
-}
 
 .chart {
   background-color: white;
@@ -117,6 +114,16 @@ div.color_block {
   width: 0.9em;
   height: 0.9em;
   border: 1px solid black;
+}
+
+ul.quality_report {
+  list-style-type: '⮕';
+  ::marker {
+    color: red;
+  }
+  li {
+    padding: 0.2em;
+  }
 }
 
 @media screen and (prefers-color-scheme: dark) {

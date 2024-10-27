@@ -57,7 +57,27 @@ class DataQualityReport < ChartBase
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
 
-    wrap_and_render(binding, __FILE__)
+    caller_binding = binding
+    result = +''
+    result << render_top_text(caller_binding)
+
+    result << '<ul class="quality_report">'
+    result << render_problem_type(:discarded_changes)
+    result << render_problem_type(:completed_but_not_started)
+    result << render_problem_type(:status_changes_after_done)
+    result << render_problem_type(:backwards_through_status_categories)
+    result << render_problem_type(:backwords_through_statuses)
+    result << render_problem_type(:status_not_on_board)
+    result << render_problem_type(:created_in_wrong_status)
+    result << render_problem_type(:stopped_before_started)
+    result << render_problem_type(:issue_not_started_but_subtasks_have)
+    result << render_problem_type(:incomplete_subtasks_when_issue_done)
+    result << render_problem_type(:issue_on_multiple_boards)
+    result << '</ul>'
+
+    # result << '<hr />'
+    # result << render(binding, __FILE__)
+    result
   end
 
   def problems_for key
@@ -68,6 +88,18 @@ class DataQualityReport < ChartBase
       end
     end
     result
+  end
+
+  def render_problem_type problem_key
+    problems = problems_for problem_key
+    return '' if problems.empty?
+
+    <<-HTML
+      <li>
+        #{__send__ :"render_#{problem_key}", problems}
+        #{collapsible_issues_panel problems}
+      </li>
+    HTML
   end
 
   # Return a format that's easier to assert against
@@ -316,5 +348,95 @@ class DataQualityReport < ChartBase
         detail: "Found on boards: #{board_names.sort.join(', ')}"
       )
     end
+  end
+
+  def render_discarded_changes problems
+    <<-HTML
+      #{label_issues problems.size} have had information discarded. This configuration is set
+      to "reset the clock" if an item is moved back to the backlog after it's been started. This hides important
+      information and makes the data less accurate. <b>Moving items back to the backlog is strongly discouraged.</b>      HTML
+    HTML
+  end
+
+  def render_completed_but_not_started problems
+    percentage_work_included = ((issues.size - problems.size).to_f / issues.size * 100).to_i
+    html = <<-HTML
+      #{label_issues problems.size} were discarded from all charts using cycletime (scatterplot, histogram, etc)
+      as we couldn't determine when they started.
+    HTML
+    if percentage_work_included < 85
+      html << <<-HTML
+        Consider whether looking at only #{percentage_work_included}% of the total data points is enough
+        to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">
+        Survivorship Bias</a>.
+      HTML
+    end
+    html
+  end
+
+  def render_status_changes_after_done problems
+    <<-HTML
+      #{label_issues problems.size} had a status change after being identified as done. We should question
+      whether they were really done at that point or if we stopped the clock too early.
+    HTML
+  end
+
+  def render_backwards_through_status_categories problems
+    <<-HTML
+      #{label_issues problems.size} moved backwards across the board, <b>crossing status categories</b>.
+      This will almost certainly have impacted timings as the end times are often taken at status category
+      boundaries. You should assume that any timing measurements for this item are wrong.
+    HTML
+  end
+
+  def render_backwords_through_statuses problems
+    <<-HTML
+      #{label_issues problems.size} moved backwards across the board. Depending where we have set the
+      start and end points, this may give us incorrect timing data. Note that these items did not cross
+      a status category and may not have affected metrics.
+    HTML
+  end
+
+  def render_status_not_on_board problems
+    <<-HTML
+      #{label_issues problems.size} were not visible on the board for some period of time. This may impact
+      timings as the work was likely to have been forgotten if it wasn't visible.
+    HTML
+  end
+
+  def render_created_in_wrong_status problems
+    <<-HTML
+      #{label_issues problems.size} were created in a status not designated as Backlog. This will impact
+      the measurement of start times and will therefore impact whether it's shown as in progress or not.
+    HTML
+  end
+
+  def render_stopped_before_started problems
+    <<-HTML
+      #{label_issues problems.size} were stopped before they were started and this will play havoc with
+      any cycletime or WIP calculations. The most common case for this is when an item gets closed and
+      then moved back into an in-progress status.
+    HTML
+  end
+
+  def render_issue_not_started_but_subtasks_have problems
+    <<-HTML
+      #{label_issues problems.size} still showing 'not started' while sub-tasks underneath them have
+      started. This is almost always a mistake; if we're working on subtasks, the top level item should
+      also have started.
+    HTML
+  end
+
+  def render_incomplete_subtasks_when_issue_done problems
+    <<-HTML
+      #{label_issues problems.size} issues were marked as done while subtasks were still not done.
+    HTML
+  end
+
+  def render_issue_on_multiple_boards problems
+    <<-HTML
+      For #{label_issues problems.size}, we have an issue that shows up on more than one board. This
+      could result in more data points showing up on a chart then there really should be.
+    HTML
   end
 end
