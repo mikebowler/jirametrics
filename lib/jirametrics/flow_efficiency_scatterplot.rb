@@ -19,14 +19,12 @@ class FlowEfficiencyScatterplot < ChartBase
       </div>
       <div class="p">
         <math>
-          <mn>Flow efficiency</mn>
+          <mn>Flow efficiency (%)</mn>
           <mo>=</mo>
           <mfrac>
             <mrow><mn>Time adding value</mn></mrow>
             <mrow><mn>Total time</mn></mrow>
           </mfrac>
-          <mo>x</mo>
-          <mn>100%</mn>
         </math>
       </div>
       <div style="background: yellow">Note that for this calculation to be accurate, we must be moving items into a
