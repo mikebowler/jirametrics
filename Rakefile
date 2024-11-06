@@ -11,7 +11,7 @@ task :initialize_config do # rubocop:disable Rake/Desc
 
   require 'jirametrics'
   puts "Deprecated: This project is now packaged as the ruby gem 'jirametrics' and should be " \
-    'called through that. See https://github.com/mikebowler/jirametrics/wiki'
+    'called through that. See https://jirametrics.org'
 end
 
 desc 'Download data from Jira'
