@@ -1038,7 +1038,7 @@ describe Issue do
     expect(exporter.file_system.log_messages).to eq([
       'Warning: Status name "undefined_status_name" for issue SP-1 not found in ' \
       '["Backlog", "Selected for Development", "In Progress", "Review", "Done"]' \
-      "\n  See Q1 in the FAQ for more details: https://github.com/mikebowler/jirametrics/wiki/FAQ"
+      "\n  See https://jirametrics.org/faq/#q1"
     ])
   end
 

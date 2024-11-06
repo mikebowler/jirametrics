@@ -3,8 +3,6 @@
 # This file is really intended to give you ideas about how you might configure your own reports, not
 # as a complete setup that will work in every case.
 #
-# See https://github.com/mikebowler/jirametrics/wiki/Examples-folder for more details
-#
 # The point of an AGGREGATED report is that we're now looking at a higher level. We might use this in a
 # S2 meeting (Scrum of Scrums) to talk about the things that are happening across teams, not within a
 # single team. For that reason, we look at slightly different things that we would on a single team board.

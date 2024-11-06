@@ -141,7 +141,7 @@ class Issue
     @board.project_config.file_system.log(
       "Warning: Status name #{name.inspect} for issue #{key} not found in" \
       " #{board.possible_statuses.collect(&:name).inspect}" \
-      "\n  See Q1 in the FAQ for more details: https://github.com/mikebowler/jirametrics/wiki/FAQ\n",
+      "\n  See https://jirametrics.org/faq/#q1\n",
       also_write_to_stderr: true
     )
     status = Status.new(name: name, category_name: 'In Progress')
