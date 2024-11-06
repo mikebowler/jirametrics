@@ -75,8 +75,6 @@ class DataQualityReport < ChartBase
     result << render_problem_type(:issue_on_multiple_boards)
     result << '</ul>'
 
-    # result << '<hr />'
-    # result << render(binding, __FILE__)
     result
   end
 
