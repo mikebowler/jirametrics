@@ -430,10 +430,9 @@ describe ProjectConfig do
     it 'warns when issues directory missing' do
       project_config.file_prefix 'foo'
       project_config.all_boards[1] = sample_board
-      project_config.issues
-      expect(exporter.file_system.log_messages).to eq([
-        "Can't find directory spec/testdata/foo_issues. Has a download been done?"
-      ])
+      expect { project_config.issues }.to raise_error(
+        'No data found. Must do a download before an export'
+      )
     end
   end
 

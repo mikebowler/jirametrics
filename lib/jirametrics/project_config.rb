@@ -31,6 +31,10 @@ class ProjectConfig
     instance_eval(&@block) if @block
   end
 
+  def data_downloaded?
+    File.exist? File.join(@target_path, "#{file_prefix}_meta.json")
+  end
+
   def load_data
     return if @has_loaded_data
 
@@ -43,6 +47,8 @@ class ProjectConfig
   end
 
   def run load_only: false
+    return if @exporter.downloading?
+
     load_data unless aggregated_project?
     anonymize_data if @anonymizer_needed
 
@@ -304,6 +310,10 @@ class ProjectConfig
         raise 'This is an aggregated project and issues should have been included with the include_issues_from ' \
           'declaration but none are here. Check your config.'
       end
+
+      return @issues = [] if @exporter.downloading?
+      raise 'No data found. Must do a download before an export' unless data_downloaded?
+
       load_data if all_boards.empty?
 
       timezone_offset = exporter.timezone_offset
