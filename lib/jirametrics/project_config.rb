@@ -190,7 +190,7 @@ class ProjectConfig
 
   def load_sprints
     Dir.foreach(@target_path) do |file|
-      next unless file =~ /#{file_prefix}_board_(\d+)_sprints_\d+/
+      next unless file =~ /^#{file_prefix}_board_(\d+)_sprints_\d+.json$/
 
       board_id = $1.to_i
       timezone_offset = exporter.timezone_offset
