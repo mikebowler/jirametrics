@@ -189,13 +189,22 @@ class ProjectConfig
   end
 
   def load_sprints
-    Dir.foreach(@target_path) do |file|
+    file_system.foreach(@target_path) do |file|
       next unless file =~ /^#{file_prefix}_board_(\d+)_sprints_\d+.json$/
 
-      board_id = $1.to_i
+      file_path = File.join(@target_path, file)
+      board = @all_boards[$1.to_i]
+      unless board
+        @exporter.file_system.log(
+          'Found sprint data but can\'t find a matching board in config. ' \
+            "File: #{file_path}, Boards: #{@all_boards.keys.sort}"
+        )
+        next
+      end
+
       timezone_offset = exporter.timezone_offset
-      JSON.parse(file_system.load("#{target_path}#{file}"))['values']&.each do |json|
-        @all_boards[board_id].sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
+      file_system.load_json(file_path)['values']&.each do |json|
+        board.sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
     end
 

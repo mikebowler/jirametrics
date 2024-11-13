@@ -29,6 +29,7 @@ describe AggregateConfig do
       project1 = ProjectConfig.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'foo'
       )
+      exporter.file_system.when_foreach root: 'spec/testdata/', result: []
       project1.file_prefix 'sample'
       project1.run
       project1.jira_url = 'http://foo.com'
@@ -57,6 +58,7 @@ describe AggregateConfig do
       solo_project = ProjectConfig.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'solo'
       )
+      exporter.file_system.when_foreach root: 'spec/testdata/', result: []
       solo_project.file_prefix 'sample'
       solo_project.run
       solo_project.issues << empty_issue(key: 'SP-1', created: '2023-01-01')

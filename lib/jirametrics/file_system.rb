@@ -7,6 +7,7 @@ class FileSystem
 
   # Effectively the same as File.read except it forces the encoding to UTF-8
   def load filename
+    # deprecated message: 'call load_json instead', date: '2024-11-13' if filename.end_with? '.json'
     File.read filename, encoding: 'UTF-8'
   end
 
@@ -42,5 +43,9 @@ class FileSystem
       node.each { |a| compress a }
     end
     node
+  end
+
+  def foreach root, &block
+    Dir.foreach root, &block
   end
 end

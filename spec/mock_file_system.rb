@@ -8,6 +8,7 @@ class MockFileSystem < FileSystem
   def initialize
     super
     @data = {}
+    @foreach_data = {}
     @saved_json = {}
     @saved_files = {}
     @log_messages = []
@@ -32,6 +33,19 @@ class MockFileSystem < FileSystem
 
   def when_loading file:, json:
     @data[file] = json.clone
+  end
+
+  # iterating
+
+  def when_foreach root:, result:
+    @foreach_data[root] = result
+  end
+
+  def foreach root
+    results = @foreach_data[root]
+    raise "foreach called on directory #{root.inspect} but nothing set in the mock" unless results
+
+    results.each { |file| yield file } # rubocop:disable Style/ExplicitBlockArgument
   end
 
   def log message, also_write_to_stderr: false # rubocop:disable Lint/UnusedMethodArgument
