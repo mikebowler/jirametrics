@@ -33,7 +33,7 @@ class MockFileSystem < FileSystem
   end
 
   def when_loading file:, json:
-    raise "File must be a string or :not_mocked. Found #{file.inspect}" unless file.is_a? String || file == :not_mocked
+    raise "File must be a string or :not_mocked. Found #{file.inspect}" unless file.is_a?(String) || file == :not_mocked
 
     @data[file] = json.clone
   end

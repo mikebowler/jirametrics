@@ -7,8 +7,9 @@ class FileSystem
 
   # Effectively the same as File.read except it forces the encoding to UTF-8
   def load filename, supress_deprecation: false
-    # deprecated message: 'call load_json instead', date: '2024-11-13' if filename.end_with? '.json'
-    raise 'call load_json instead' if filename.end_with?('.json') && !supress_deprecation
+    if filename.end_with?('.json') && !supress_deprecation
+      deprecated(message: 'call load_json instead', date: '2024-11-13')
+    end
 
     File.read filename, encoding: 'UTF-8'
   end
