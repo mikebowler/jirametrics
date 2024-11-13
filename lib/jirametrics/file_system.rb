@@ -6,15 +6,17 @@ class FileSystem
   attr_accessor :logfile, :logfile_name
 
   # Effectively the same as File.read except it forces the encoding to UTF-8
-  def load filename
+  def load filename, supress_deprecation: false
     # deprecated message: 'call load_json instead', date: '2024-11-13' if filename.end_with? '.json'
+    raise 'call load_json instead' if filename.end_with?('.json') && !supress_deprecation
+
     File.read filename, encoding: 'UTF-8'
   end
 
   def load_json filename, fail_on_error: true
     return nil if fail_on_error == false && File.exist?(filename) == false
 
-    JSON.parse load(filename)
+    JSON.parse load(filename, supress_deprecation: true)
   end
 
   def save_json json:, filename:

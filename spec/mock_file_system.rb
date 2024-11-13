@@ -17,10 +17,11 @@ class MockFileSystem < FileSystem
   def load_json filename, fail_on_error: true
     json = @data[filename]
 
+    return super if json == :not_mocked
     return json if json
     return nil if fail_on_error == false
 
-    raise Errno::ENOENT
+    raise Errno::ENOENT, filename
   end
 
   def save_json filename:, json:
@@ -32,6 +33,8 @@ class MockFileSystem < FileSystem
   end
 
   def when_loading file:, json:
+    raise "File must be a string or :not_mocked. Found #{file.inspect}" unless file.is_a? String || file == :not_mocked
+
     @data[file] = json.clone
   end
 

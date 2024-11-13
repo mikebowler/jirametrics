@@ -15,6 +15,15 @@ end
 describe Anonymizer do
   let(:anonymizer) do
     exporter = Exporter.new file_system: MockFileSystem.new
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample//sample_statuses.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-7.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-11.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-1.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-2.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-5.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-8.json', json: :not_mocked
+
     project_config = ProjectConfig.new(
       exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )

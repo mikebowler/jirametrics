@@ -63,7 +63,8 @@ class ProjectConfig
   end
 
   def load_settings
-    JSON.parse(file_system.load(File.join(__dir__, 'settings.json')))
+    # This is the wierd exception that we don't ever want mocked out so we skip FileSystem entirely.
+    JSON.parse(File.read(File.join(__dir__, 'settings.json'), encoding: 'UTF-8'))
   end
 
   def guess_project_id
@@ -136,7 +137,7 @@ class ProjectConfig
 
   def load_board board_id:, filename:
     board = Board.new(
-      raw: JSON.parse(file_system.load(filename)), possible_statuses: @possible_statuses
+      raw: file_system.load_json(filename), possible_statuses: @possible_statuses
     )
     board.project_config = self
     @all_boards[board_id] = board
@@ -178,7 +179,7 @@ class ProjectConfig
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
 
-    statuses = JSON.parse(file_system.load(filename))
+    statuses = file_system.load_json(filename)
       .map { |snippet| Status.new(raw: snippet) }
     statuses
       .find_all { |status| status.global? }
@@ -256,7 +257,7 @@ class ProjectConfig
 
   def load_project_metadata
     filename = File.join @target_path, "#{file_prefix}_meta.json"
-    json = JSON.parse(file_system.load(filename))
+    json = file_system.load_json(filename)
 
     @data_version = json['version'] || 1
 
@@ -389,7 +390,7 @@ class ProjectConfig
     default_board = nil
 
     group_filenames_and_board_ids(path: path).each do |filename, board_ids|
-      content = file_system.load(File.join(path, filename))
+      content = file_system.load_json(File.join(path, filename))
       if board_ids == :unknown
         boards = [(default_board ||= find_default_board)]
       else
@@ -397,7 +398,7 @@ class ProjectConfig
       end
 
       boards.each do |board|
-        issues << Issue.new(raw: JSON.parse(content), timezone_offset: timezone_offset, board: board)
+        issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
       end
     end
 

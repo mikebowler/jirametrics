@@ -3,9 +3,16 @@
 require './spec/spec_helper'
 
 describe AggregateConfig do
-  let(:exporter) { Exporter.new file_system: MockFileSystem.new }
+  let(:exporter) do
+    Exporter.new(file_system: MockFileSystem.new).tap do |exporter|
+      exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
+      exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
+    end
+  end
   let(:target_path) { 'spec/testdata/' }
   let(:aggregated_project) do
+
     ProjectConfig.new(
       exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'aggregate'
     )

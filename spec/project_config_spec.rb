@@ -6,6 +6,9 @@ describe ProjectConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:target_path) { 'spec/testdata/' }
   let(:project_config) do
+    exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
+    
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
   end
   let(:issue1) { load_issue('SP-1') }
@@ -418,7 +421,7 @@ describe ProjectConfig do
     it 'logs error when unable to find files' do
       project_config.file_prefix 'foo'
       expect { project_config.load_project_metadata }.to raise_error(
-        'No such file or directory @ rb_sysopen - spec/testdata/foo_meta.json'
+        'No such file or directory - spec/testdata/foo_meta.json'
       )
       expect(exporter.file_system.log_messages).to eq([
         "Can't load spec/testdata/foo_meta.json. Have you done a download?"
