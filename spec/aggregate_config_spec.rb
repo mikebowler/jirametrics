@@ -12,7 +12,6 @@ describe AggregateConfig do
   end
   let(:target_path) { 'spec/testdata/' }
   let(:aggregated_project) do
-
     ProjectConfig.new(
       exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'aggregate'
     )

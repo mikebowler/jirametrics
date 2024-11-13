@@ -8,7 +8,7 @@ describe ProjectConfig do
   let(:project_config) do
     exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
-    
+
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
   end
   let(:issue1) { load_issue('SP-1') }
