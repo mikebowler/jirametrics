@@ -246,7 +246,7 @@ class ProjectConfig
   end
 
   def raise_ambiguous_project_id
-    raise 'Ambiguous project id: There is a project specific status that could affect out calculations. ' \
+    raise 'Ambiguous project id: There is a project specific status that could affect our calculations. ' \
       'We are unable to automatically detect the id of the project so you will have to set it manually ' \
       'in the configuration like: "project id: 5"'
   end
