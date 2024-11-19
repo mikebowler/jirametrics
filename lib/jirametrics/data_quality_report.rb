@@ -365,8 +365,8 @@ class DataQualityReport < ChartBase
     if percentage_work_included < 85
       html << <<-HTML
         Consider whether looking at only #{percentage_work_included}% of the total data points is enough
-        to come to any reasonable conclusions. See <a href="https://en.wikipedia.org/wiki/Survivorship_bias">
-        Survivorship Bias</a>.
+        to come to any reasonable conclusions. See <a href="https://unconsciousagile.com/2024/11/19/survivor-bias.html">
+        Survivor Bias</a>.
       HTML
     end
     html
