@@ -169,13 +169,13 @@ class ChartBase
     end
   end
 
-  def header_text text = nil
-    @header_text = text
+  def header_text text = :none
+    @header_text = text unless text == :none
     @header_text
   end
 
-  def description_text text = nil
-    @description_text = text
+  def description_text text = :none
+    @description_text = text unless text == :none
     @description_text
   end
 
