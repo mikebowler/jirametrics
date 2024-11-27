@@ -34,6 +34,8 @@ class ChangeItem
 
   def link? = (field == 'Link')
 
+  def labels? = (field == 'labels')
+
   def to_s
     message = +''
     message << "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: #{time_to_s(@time).inspect}"
