@@ -169,19 +169,20 @@ describe Issue do
   end
 
   context 'first_time_in_or_right_of_column' do
+    let(:issue) { empty_issue created: '2021-06-01', board: board }
+
     it 'fails for invalid column name' do
-      expect { issue1.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
+      expect { issue.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
         'No visible column with name: "NoSuchColumn" Possible options are: "Ready", "In Progress", "Review", "Done"'
       )
     end
 
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
-      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-07-18')
+      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
+      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-07-18')
 
-      expect(issue1.first_time_in_or_right_of_column 'In Progress').to eq to_time('2021-07-18')
+      expect(issue.first_time_in_or_right_of_column 'In Progress').to eq to_time('2021-07-18')
     end
 
     it 'returns nil when no matches' do
@@ -194,16 +195,17 @@ describe Issue do
   end
 
   context 'still_in_or_right_of_column' do
+    let(:issue) { empty_issue created: '2021-06-01', board: board }
+
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-01')
-      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-02')
-      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-03')
-      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-04')
-      issue1.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
+      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-01')
+      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-02')
+      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-03')
+      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-04')
+      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
 
-      expect(issue1.still_in_or_right_of_column 'In Progress').to eq to_time('2021-06-04')
+      expect(issue.still_in_or_right_of_column 'In Progress').to eq to_time('2021-06-04')
     end
   end
 
@@ -247,15 +249,18 @@ describe Issue do
   end
 
   context 'currently_in_status' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
     it 'item moved to done and then back to in progress' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue10.currently_in_status('Done')).to be_nil
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01')
+      expect(issue.currently_in_status('Done')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue10.currently_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      expect(issue.currently_in_status('Done')).to eql to_time('2021-10-04')
     end
   end
 
