@@ -22,7 +22,6 @@ describe Issue do
   end
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
-  let(:issue10) { load_issue 'SP-10', board: board }
 
   it 'gets key' do
     expect(issue2.key).to eql 'SP-2'
@@ -107,6 +106,7 @@ describe Issue do
     end
 
     it 'gets complex history with a mix of field types' do
+      issue10 = load_issue('SP-10', board: board)
       expect(issue10.changes).to eq [
         mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
         mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
