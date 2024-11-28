@@ -316,6 +316,32 @@ describe Issue do
     end
   end
 
+  context 'first_time_label_added' do
+    it 'does not match when no labels' do
+      expect(issue10.first_time_label_added('refined')).to be_nil
+    end
+
+    it 'does not match when wrong labels' do
+      issue10.changes << mock_change(field: 'labels', value: 'xxx', time: '2021-10-01')
+      expect(issue10.first_time_label_added('refined')).to be_nil
+    end
+
+    it 'matches for issue with one label' do
+      issue10.changes << mock_change(field: 'labels', value: 'refined', time: '2021-10-01')
+      expect(issue10.first_time_label_added('refined')).to eql to_time('2021-10-01')
+    end
+
+    it 'matches for issue with two labels' do
+      issue10.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      expect(issue10.first_time_label_added('refined')).to eql to_time('2021-10-01')
+    end
+
+    it 'matches second label for issue with two labels' do
+      issue10.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      expect(issue10.first_time_label_added('yyy', 'xxx')).to eql to_time('2021-10-01')
+    end
+  end
+
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do

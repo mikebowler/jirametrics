@@ -77,6 +77,16 @@ class Issue
     first_time_in_status(*board.status_ids_in_or_right_of_column(column_name))
   end
 
+  def first_time_label_added *labels
+    @changes.each do |change|
+      next unless change.labels?
+
+      change_labels = change.value.split
+      return change.time if change_labels.any? { |l| labels.include?(l) }
+    end
+    nil
+  end
+
   def still_in_or_right_of_column column_name
     still_in_status(*board.status_ids_in_or_right_of_column(column_name))
   end
