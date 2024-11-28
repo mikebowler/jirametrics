@@ -260,85 +260,99 @@ describe Issue do
   end
 
   context 'still_in_status' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
     it 'item moved to done and then back to in progress' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue10.still_in_status('Done')).to be_nil
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      expect(issue.still_in_status('Done')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue10.still_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      expect(issue.still_in_status('Done')).to eql to_time('2021-10-04')
     end
 
     it 'item moved to done twice should return first time only' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
-      expect(issue10.still_in_status('Done').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      expect(issue.still_in_status('Done')).to eql to_time('2021-10-03')
     end
 
     it "doesn't match any" do
-      expect(issue10.still_in_status('NoStatus')).to be_nil
+      expect(issue.still_in_status('NoStatus')).to be_nil
     end
   end
 
   context 'currently_in_status_category' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
     it 'item moved to done and then back to in progress' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue10.currently_in_status_category('finished')).to be_nil
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      expect(issue.currently_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue10.currently_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      expect(issue.currently_in_status_category('finished')).to eql to_time('2021-10-04')
     end
   end
 
   context 'still_in_status_category' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
     it 'item moved to done and then back to in progress' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      expect(issue10.still_in_status_category('finished')).to be_nil
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      expect(issue.still_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      expect(issue10.still_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-05')
+      expect(issue.still_in_status_category('finished')).to eql to_time('2021-10-05')
     end
 
     it 'item moved to done twice should return first time only' do
-      issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02T00:00:00+00:00')
-      issue10.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03T00:00:00+00:00')
-      expect(issue10.still_in_status_category('finished').to_s).to eql '2021-10-02 00:00:00 +0000'
+      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
+      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
+      expect(issue.still_in_status_category('finished')).to eql to_time('2021-10-02')
     end
   end
 
   context 'first_time_label_added' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
     it 'does not match when no labels' do
-      expect(issue10.first_time_label_added('refined')).to be_nil
+      expect(issue.first_time_label_added('refined')).to be_nil
     end
 
     it 'does not match when wrong labels' do
-      issue10.changes << mock_change(field: 'labels', value: 'xxx', time: '2021-10-01')
-      expect(issue10.first_time_label_added('refined')).to be_nil
+      issue.changes << mock_change(field: 'labels', value: 'xxx', time: '2021-10-01')
+      expect(issue.first_time_label_added('refined')).to be_nil
     end
 
     it 'matches for issue with one label' do
-      issue10.changes << mock_change(field: 'labels', value: 'refined', time: '2021-10-01')
-      expect(issue10.first_time_label_added('refined')).to eql to_time('2021-10-01')
+      issue.changes << mock_change(field: 'labels', value: 'refined', time: '2021-10-01')
+      expect(issue.first_time_label_added('refined')).to eql to_time('2021-10-01')
     end
 
     it 'matches for issue with two labels' do
-      issue10.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
-      expect(issue10.first_time_label_added('refined')).to eql to_time('2021-10-01')
+      issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      expect(issue.first_time_label_added('refined')).to eql to_time('2021-10-01')
     end
 
     it 'matches second label for issue with two labels' do
-      issue10.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
-      expect(issue10.first_time_label_added('yyy', 'xxx')).to eql to_time('2021-10-01')
+      issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      expect(issue.first_time_label_added('yyy', 'xxx')).to eql to_time('2021-10-01')
     end
   end
 
