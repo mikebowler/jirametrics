@@ -206,7 +206,7 @@ class HtmlReportConfig
   end
 
   def create_footer now: DateTime.now
-    now = now.new_offset(timezone_offset) if timezone_offset
+    now = now.new_offset(timezone_offset)
     version = Gem.loaded_specs['jirametrics']&.version || 'Next'
 
     <<~HTML
