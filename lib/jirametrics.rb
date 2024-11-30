@@ -7,6 +7,14 @@ class JiraMetrics < Thor
     true
   end
 
+
+  map %w[--version -v] => :__print_version
+
+  desc '--version, -v', 'print the version'
+  def __print_version
+    puts Gem.loaded_specs['jirametrics'].version
+  end
+
   option :config
   option :name
   desc 'export', "Export data into either reports or CSV's as per the configuration"

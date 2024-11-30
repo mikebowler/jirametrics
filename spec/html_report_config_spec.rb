@@ -76,4 +76,42 @@ describe HtmlReportConfig do
       ]
     end
   end
+
+  context 'create_footer' do
+    let(:now) { DateTime.parse '2010-01-02T01:02:03 +0000' }
+
+    it 'parses with unpackaged version' do
+      config = described_class.new file_config: file_config, block: nil
+      expect(config.create_footer now: now).to eq <<~HTML
+        <section id="footer">
+          Report generated on <b>2010-Jan-02</b> at <b>01:02:03am +00:00</b>
+          with <a href="https://jirametrics.org">JiraMetrics</a> <b>vNext</b>
+        </section>
+      HTML
+    end
+
+    it 'parses with packaged version' do
+      config = described_class.new file_config: file_config, block: nil
+      Gem.loaded_specs['jirametrics'] = Gem::Version.create('1.0.0')
+      expect(config.create_footer now: now).to eq <<~HTML
+        <section id="footer">
+          Report generated on <b>2010-Jan-02</b> at <b>01:02:03am +00:00</b>
+          with <a href="https://jirametrics.org">JiraMetrics</a> <b>v1.0.0</b>
+        </section>
+      HTML
+    ensure
+      Gem.loaded_specs['jirametrics'] = nil
+    end
+
+    it 'parses with timezone offset' do
+      config = described_class.new file_config: file_config, block: nil
+      exporter.timezone_offset '+0200'
+      expect(config.create_footer now: now).to eq <<~HTML
+        <section id="footer">
+          Report generated on <b>2010-Jan-02</b> at <b>03:02:03am +02:00</b>
+          with <a href="https://jirametrics.org">JiraMetrics</a> <b>vNext</b>
+        </section>
+      HTML
+    end
+  end
 end

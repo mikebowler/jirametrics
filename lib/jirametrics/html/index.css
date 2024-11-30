@@ -126,6 +126,12 @@ ul.quality_report {
   }
 }
 
+#footer {
+  text-align: center;
+  margin-top: 1em;
+  border-top: 1px solid gray;
+}
+
 @media screen and (prefers-color-scheme: dark) {
   :root {
     --non-working-days-color: #2f2f2f;

@@ -67,6 +67,8 @@ class HtmlReportConfig
     execute_chart DataQualityReport.new(@original_issue_times || {})
     @sections.rotate!(-1)
 
+    html create_footer
+
     html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
     css = load_css html_directory: html_directory
     erb = ERB.new file_system.load(File.join(html_directory, 'index.erb'))
@@ -201,5 +203,17 @@ class HtmlReportConfig
   # For use by the user config
   def boards
     @file_config.project_config.board_configs.collect(&:id).collect { |id| find_board id }
+  end
+
+  def create_footer now: DateTime.now
+    now = now.new_offset(timezone_offset) if timezone_offset
+    version = Gem.loaded_specs['jirametrics']&.version || 'Next'
+
+    <<~HTML
+      <section id="footer">
+        Report generated on <b>#{now.strftime('%Y-%b-%d')}</b> at <b>#{now.strftime('%I:%M:%S%P %Z')}</b>
+        with <a href="https://jirametrics.org">JiraMetrics</a> <b>v#{version}</b>
+      </section>
+    HTML
   end
 end

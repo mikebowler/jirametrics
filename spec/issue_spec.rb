@@ -194,10 +194,9 @@ describe Issue do
 
     it 'returns nil when no matches' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
+      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
 
-      expect(issue1.first_time_in_or_right_of_column 'In Progress').to be_nil
+      expect(issue.first_time_in_or_right_of_column 'In Progress').to be_nil
     end
   end
 
