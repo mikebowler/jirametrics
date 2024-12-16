@@ -20,8 +20,8 @@ class DownloadConfig
     @rolling_date_count
   end
 
-  def no_earlier_than date = nil
-    @no_earlier_than = Date.parse(date) unless date.nil?
+  def no_earlier_than date = :not_set
+    @no_earlier_than = Date.parse(date) unless date == :not_set
     @no_earlier_than
   end
 

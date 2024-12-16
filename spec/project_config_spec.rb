@@ -427,6 +427,53 @@ describe ProjectConfig do
         "Can't load spec/testdata/foo_meta.json. Have you done a download?"
       ])
     end
+
+    it 'adjusts start for no_earlier_than' do
+      project_config.file_prefix 'foo'
+      project_config.download do
+        no_earlier_than '2024-01-15'
+      end
+      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+        'date_start' => '2024-01-01',
+        'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.time_range).to eq to_time('2024-01-15')..to_time('2024-04-01T23:59:59')
+    end
+
+    it 'leaves start alone when no download block at all' do
+      project_config.file_prefix 'foo'
+      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+        'date_start' => '2024-01-01',
+        'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.time_range).to eq to_time('2024-01-01')..to_time('2024-04-01T23:59:59')
+    end
+
+    it 'leaves start alone when no_earlier_than not specified' do
+      project_config.file_prefix 'foo'
+      project_config.download &empty_config_block
+      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+        'date_start' => '2024-01-01',
+        'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.time_range).to eq to_time('2024-01-01')..to_time('2024-04-01T23:59:59')
+    end
+
+    it 'leaves start alone when no_earlier_than is already earlier than start' do
+      project_config.file_prefix 'foo'
+      project_config.download do
+        no_earlier_than '2023-12-15'
+      end
+      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+        'date_start' => '2024-01-01',
+        'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.time_range).to eq to_time('2024-01-01')..to_time('2024-04-01T23:59:59')
+    end
   end
 
   context 'issues' do

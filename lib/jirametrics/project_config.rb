@@ -261,9 +261,20 @@ class ProjectConfig
 
     @data_version = json['version'] || 1
 
-    start = json['date_start'] || json['time_start'] # date_start is the current format. Time is the old.
-    stop  = json['date_end'] || json['time_end']
-    @time_range = to_time(start)..to_time(stop, end_of_day: true)
+    start = to_time(json['date_start'] || json['time_start']) # date_start is the current format. Time is the old.
+    stop  = to_time(json['date_end'] || json['time_end'], end_of_day: true)
+
+    # If no_earlier_than was set then make sure it's applied here.
+    if download_config
+      download_config.run
+      no_earlier = download_config.no_earlier_than
+      if no_earlier
+        no_earlier = to_time(no_earlier.to_s)
+        start = no_earlier if start < no_earlier
+      end
+    end
+
+    @time_range = start..stop
 
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
