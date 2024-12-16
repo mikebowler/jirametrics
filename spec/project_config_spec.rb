@@ -453,7 +453,7 @@ describe ProjectConfig do
 
     it 'leaves start alone when no_earlier_than not specified' do
       project_config.file_prefix 'foo'
-      project_config.download &empty_config_block
+      project_config.download(&empty_config_block)
       exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
         'date_start' => '2024-01-01',
         'date_end' => '2024-04-01'
