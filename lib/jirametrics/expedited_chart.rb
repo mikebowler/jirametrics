@@ -63,7 +63,7 @@ class ExpeditedChart < ChartBase
       next unless change.priority?
 
       if expedited_priority_names.include? change.value
-        expedite_start = change.time
+        expedite_start = change.time.to_date
       elsif expedite_start
         start_date = expedite_start.to_date
         stop_date = change.time.to_date
@@ -72,7 +72,7 @@ class ExpeditedChart < ChartBase
            (start_date < date_range.begin && stop_date > date_range.end)
 
           result << [expedite_start, :expedite_start]
-          result << [change.time, :expedite_stop]
+          result << [change.time.to_date, :expedite_stop]
         end
         expedite_start = nil
       end
@@ -109,11 +109,11 @@ class ExpeditedChart < ChartBase
 
   def make_expedite_lines_data_set issue:, expedite_data:
     cycletime = issue.board.cycletime
-    started_time, stopped_time = cycletime.started_stopped_times(issue)
+    started_date, stopped_date = cycletime.started_stopped_dates(issue)
 
-    expedite_data << [started_time, :issue_started] if started_time
-    expedite_data << [stopped_time, :issue_stopped] if stopped_time
-    expedite_data.sort_by! { |a| a[0] }
+    expedite_data << [started_date, :issue_started] if started_date
+    expedite_data << [stopped_date, :issue_stopped] if stopped_date
+    expedite_data.sort_by!(&:first)
 
     # If none of the data would be visible on the chart then skip it.
     return nil unless expedite_data.any? { |time, _action| time.to_date >= date_range.begin }
@@ -150,7 +150,7 @@ class ExpeditedChart < ChartBase
 
     unless expedite_data.empty?
       last_change_time = expedite_data[-1][0].to_date
-      if last_change_time && last_change_time <= date_range.end && stopped_time.nil?
+      if last_change_time && last_change_time <= date_range.end && stopped_date.nil?
         data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
         dot_colors << '' # It won't be visible so it doesn't matter
         point_styles << 'dash'

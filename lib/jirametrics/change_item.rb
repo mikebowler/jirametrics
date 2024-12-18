@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :field, :value_id, :old_value_id, :raw, :author
-  attr_accessor :value, :old_value, :time
+  attr_reader :field, :value_id, :old_value_id, :raw, :author, :time
+  attr_accessor :value, :old_value
 
   def initialize raw:, time:, author:, artificial: false
     @raw = raw
     @time = time
-    raise "Time must be an object of type Time in the correct timezone: #{@time}" if @time.is_a? String
+    raise 'ChangeItem.new() time cannot be nil' if time.nil?
+    raise "Time must be an object of type Time in the correct timezone: #{@time.inspect}" unless @time.is_a? Time
 
-    @field = field || @raw['field']
-    @value = value || @raw['toString']
+    @field = @raw['field']
+    @value = @raw['toString']
     @value_id = @raw['to'].to_i
     @old_value = @raw['fromString']
     @old_value_id = @raw['from']&.to_i
@@ -35,6 +36,9 @@ class ChangeItem
   def link? = (field == 'Link')
 
   def labels? = (field == 'labels')
+
+  # An alias for time so that logic accepting a Time, Date, or ChangeItem can all respond to :to_time
+  def to_time = @time
 
   def to_s
     message = +''
@@ -85,6 +89,6 @@ class ChangeItem
   def time_to_s time
     # MRI and JRuby return different strings for to_s() so we have to explicitly provide a full
     # format so that tests work under both environments.
-    time.strftime '%Y-%m-%d %H:%M:%S %z'
+    @time.strftime '%Y-%m-%d %H:%M:%S %z'
   end
 end

@@ -62,16 +62,6 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: ['B
   )
 end
 
-def default_cycletime_config
-  today = Date.parse('2021-12-17')
-
-  block = lambda do |_|
-    start_at created
-    stop_at last_resolution
-  end
-  CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
-end
-
 def load_complete_sample_issues board:
   result = []
   Dir.each_child './spec/complete_sample/sample_issues' do |file|
@@ -150,10 +140,41 @@ def mock_cycletime_config stub_values: []
     line[2] = to_time(line[2]) if line[2].is_a? String
   end
 
+  # TODO: Remove duplication in each of start_at/stop_at
   config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
-  config.start_at ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](1) }
-  config.stop_at  ->(issue) { stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](2) }
+  config.start_at(lambda do |issue|
+    change = stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](1)
+    case change
+    when nil
+      nil
+    when ChangeItem
+      change
+    else
+      mock_change(field: 'status', value: 'fake', time: change&.to_time)
+    end
+  end)
+  config.stop_at(lambda do |issue|
+    change = stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](2)
+    case change
+    when nil
+      nil
+    when ChangeItem
+      change
+    else
+      mock_change(field: 'status', value: 'fake', time: change&.to_time)
+    end
+  end)
   config
+end
+
+def default_cycletime_config
+  today = Date.parse('2021-12-17')
+
+  block = lambda do |_|
+    start_at ->(issue) { mock_change field: 'status', value: 'fake', time: issue.created }
+    stop_at last_resolution
+  end
+  CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
 end
 
 # Duplicated from ChartBase. Should this be in a module?

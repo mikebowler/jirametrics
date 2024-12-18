@@ -66,11 +66,11 @@ class Issue
   end
 
   def first_time_in_status *status_names
-    @changes.find { |change| change.current_status_matches(*status_names) }&.time
+    @changes.find { |change| change.current_status_matches(*status_names) }
   end
 
   def first_time_not_in_status *status_names
-    @changes.find { |change| change.status? && status_names.include?(change.value) == false }&.time
+    @changes.find { |change| change.status? && status_names.include?(change.value) == false }
   end
 
   def first_time_in_or_right_of_column column_name
@@ -82,7 +82,7 @@ class Issue
       next unless change.labels?
 
       change_labels = change.value.split
-      return change.time if change_labels.any? { |l| labels.include?(l) }
+      return change if change_labels.any? { |l| labels.include?(l) }
     end
     nil
   end
@@ -92,19 +92,19 @@ class Issue
   end
 
   def still_in
-    time = nil
+    result = nil
     @changes.each do |change|
       next unless change.status?
 
       current_status_matched = yield change
 
-      if current_status_matched && time.nil?
-        time = change.time
-      elsif !current_status_matched && time
-        time = nil
+      if current_status_matched && result.nil?
+        result = change
+      elsif !current_status_matched && result
+        result = nil
       end
     end
-    time
+    result
   end
   private :still_in
 
@@ -127,21 +127,21 @@ class Issue
     changes.reverse.find { |change| change.status? }
   end
 
-  # Are we currently in this status? If yes, then return the time of the most recent status change.
+  # Are we currently in this status? If yes, then return the most recent status change.
   def currently_in_status *status_names
     change = most_recent_status_change
     return false if change.nil?
 
-    change.time if change.current_status_matches(*status_names)
+    change if change.current_status_matches(*status_names)
   end
 
-  # Are we currently in this status category? If yes, then return the time of the most recent status change.
+  # Are we currently in this status category? If yes, then return the most recent status change.
   def currently_in_status_category *category_names
     change = most_recent_status_change
     return false if change.nil?
 
     status = find_status_by_name change.value
-    change.time if status && category_names.include?(status.category_name)
+    change if status && category_names.include?(status.category_name)
   end
 
   def find_status_by_name name
@@ -160,7 +160,7 @@ class Issue
   end
 
   def first_status_change_after_created
-    @changes.find { |change| change.status? && change.artificial? == false }&.time
+    @changes.find { |change| change.status? && change.artificial? == false }
   end
 
   def first_time_in_status_category *category_names
@@ -168,7 +168,7 @@ class Issue
       next unless change.status?
 
       category = find_status_by_name(change.value).category_name
-      return change.time if category_names.include? category
+      return change if category_names.include? category
     end
     nil
   end
@@ -187,11 +187,11 @@ class Issue
   end
 
   def first_resolution
-    @changes.find { |change| change.resolution? }&.time
+    @changes.find { |change| change.resolution? }
   end
 
   def last_resolution
-    @changes.reverse.find { |change| change.resolution? }&.time
+    @changes.reverse.find { |change| change.resolution? }
   end
 
   def assigned_to

@@ -44,16 +44,37 @@ class CycleTimeConfig
     started_stopped_times(issue).last
   end
 
-  def started_stopped_times issue
+  def fabricate_change_item time
+    # deprecated date: '2024-12-16', message: 'This method should now return a ChangeItem not a Time', depth: 2
+    raw = {
+      'field' => 'Fabricated change',
+      'to' => '0',
+      'toString' => '',
+      'from' => '0',
+      'fromString' => ''
+    }
+    ChangeItem.new raw: raw, time: time, author: 'unknown', artificial: true
+  end
+
+  def started_stopped_changes issue
     started = @start_at.call(issue)
     stopped = @stop_at.call(issue)
+
+    # These are only here for backwards compatibility. Hopefully nobody will ever need them.
+    started = fabricate_change_item(started) if started && !started.is_a?(ChangeItem)
+    stopped = fabricate_change_item(stopped) if stopped && !stopped.is_a?(ChangeItem)
 
     # In the case where started and stopped are exactly the same time, we pretend that
     # it just stopped and never started. This allows us to have logic like 'in or right of'
     # for the start and not have it conflict.
-    started = nil if started == stopped
+    started = nil if started&.time == stopped&.time
 
     [started, stopped]
+  end
+
+  def started_stopped_times issue
+    started, stopped = started_stopped_changes(issue)
+    [started&.time, stopped&.time]
   end
 
   def started_stopped_dates issue

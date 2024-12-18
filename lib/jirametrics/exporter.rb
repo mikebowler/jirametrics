@@ -3,11 +3,11 @@
 require 'fileutils'
 
 class Object
-  def deprecated message:, date:
+  def deprecated message:, date:, depth: 2
     text = +''
     text << "Deprecated(#{date}): "
     text << message
-    caller(1..2).each do |line|
+    caller(1..depth).each do |line|
       text << "\n-> Called from #{line}"
     end
     warn text

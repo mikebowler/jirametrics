@@ -103,7 +103,7 @@ class FileConfig
   def to_datetime object
     return nil if object.nil?
 
-    object = object.to_datetime
+    object = object.to_time.to_datetime
     object = object.new_offset(@timezone_offset) if @timezone_offset
     object
   end

@@ -35,7 +35,7 @@ describe ExpeditedChart do
     it 'handles expedite starting and not ending' do
       issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2022-01-01')
       expect(chart.prepare_expedite_data(issue1)).to eq [
-        [to_time('2022-01-01'), :expedite_start]
+        [to_date('2022-01-01'), :expedite_start]
       ]
     end
 
@@ -49,8 +49,8 @@ describe ExpeditedChart do
       issue1.changes << mock_change(field: 'priority', value: 'expedite', time: '2020-01-01')
       issue1.changes << mock_change(field: 'priority', value: '', time: '2023-01-02')
       expect(chart.prepare_expedite_data(issue1)).to eq [
-        [to_time('2020-01-01'), :expedite_start],
-        [to_time('2023-01-02'), :expedite_stop]
+        [to_date('2020-01-01'), :expedite_start],
+        [to_date('2023-01-02'), :expedite_stop]
       ]
     end
   end

@@ -17,7 +17,7 @@ describe CycletimeScatterplot do
       board.cycletime = default_cycletime_config
       expect(chart.data_for_issue issue).to eq({
         title: ['SP-10 : Check in people at an event (81 days)'],
-        x: chart_format(issue.last_resolution),
+        x: chart_format(issue.last_resolution.time),
         y: 81
       })
     end
@@ -46,7 +46,7 @@ describe CycletimeScatterplot do
         data: [
           {
             title: ['SP-10 : Check in people at an event (81 days)'],
-            x: chart_format(issue.last_resolution),
+            x: chart_format(issue.last_resolution.time),
             y: 81
          }
         ],

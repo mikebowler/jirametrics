@@ -138,7 +138,7 @@ describe Issue do
 
     it 'first time in status' do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
-      expect(issue.first_time_in_status('In Progress')).to eql to_time('2021-10-02')
+      expect(issue.first_time_in_status('In Progress').time).to eql to_time('2021-10-02')
     end
 
     it "first time in status that doesn't match any" do
@@ -152,7 +152,7 @@ describe Issue do
 
     it 'first time not in status' do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
-      expect(issue.first_time_not_in_status('Backlog')).to eql to_time('2021-10-02')
+      expect(issue.first_time_not_in_status('Backlog').time).to eql to_time('2021-10-02')
     end
 
     it "first time not in status where it's never in that status" do
@@ -189,7 +189,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
       issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-07-18')
 
-      expect(issue.first_time_in_or_right_of_column 'In Progress').to eq to_time('2021-07-18')
+      expect(issue.first_time_in_or_right_of_column('In Progress').time).to eq to_time('2021-07-18')
     end
 
     it 'returns nil when no matches' do
@@ -211,7 +211,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-04')
       issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
 
-      expect(issue.still_in_or_right_of_column 'In Progress').to eq to_time('2021-06-04')
+      expect(issue.still_in_or_right_of_column('In Progress').time).to eq to_time('2021-06-04')
     end
   end
 
@@ -220,7 +220,7 @@ describe Issue do
 
     it 'matches first time in status category' do
       issue.changes << mock_change(field: 'status', value: 'Done', value_id: 9, time: '2021-06-02')
-      expect(issue.first_time_in_status_category('finished')).to eq to_time('2021-06-02')
+      expect(issue.first_time_in_status_category('finished').time).to eq to_time('2021-06-02')
     end
 
     it 'never matches' do
@@ -233,7 +233,7 @@ describe Issue do
 
     it "finds first time for any status change - created doesn't count as status change" do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
-      expect(issue.first_status_change_after_created).to eq to_time('2021-10-02')
+      expect(issue.first_status_change_after_created.time).to eq to_time('2021-10-02')
     end
 
     it %(first status change after created, where there isn't anything after created) do
@@ -269,7 +269,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
-      expect(issue.currently_in_status('Done')).to eql to_time('2021-10-04')
+      expect(issue.currently_in_status('Done').time).to eql to_time('2021-10-04')
     end
   end
 
@@ -286,14 +286,14 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
-      expect(issue.still_in_status('Done')).to eql to_time('2021-10-04')
+      expect(issue.still_in_status('Done').time).to eql to_time('2021-10-04')
     end
 
     it 'item moved to done twice should return first time only' do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
-      expect(issue.still_in_status('Done')).to eql to_time('2021-10-03')
+      expect(issue.still_in_status('Done').time).to eql to_time('2021-10-03')
     end
 
     it "doesn't match any" do
@@ -314,7 +314,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
-      expect(issue.currently_in_status_category('finished')).to eql to_time('2021-10-04')
+      expect(issue.currently_in_status_category('finished').time).to eql to_time('2021-10-04')
     end
   end
 
@@ -331,14 +331,14 @@ describe Issue do
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-05')
-      expect(issue.still_in_status_category('finished')).to eql to_time('2021-10-05')
+      expect(issue.still_in_status_category('finished').time).to eql to_time('2021-10-05')
     end
 
     it 'item moved to done twice should return first time only' do
       issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
       issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
-      expect(issue.still_in_status_category('finished')).to eql to_time('2021-10-02')
+      expect(issue.still_in_status_category('finished').time).to eql to_time('2021-10-02')
     end
   end
 
@@ -356,17 +356,17 @@ describe Issue do
 
     it 'matches for issue with one label' do
       issue.changes << mock_change(field: 'labels', value: 'refined', time: '2021-10-01')
-      expect(issue.first_time_label_added('refined')).to eql to_time('2021-10-01')
+      expect(issue.first_time_label_added('refined').time).to eql to_time('2021-10-01')
     end
 
     it 'matches for issue with two labels' do
       issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
-      expect(issue.first_time_label_added('refined')).to eql to_time('2021-10-01')
+      expect(issue.first_time_label_added('refined').time).to eql to_time('2021-10-01')
     end
 
     it 'matches second label for issue with two labels' do
       issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
-      expect(issue.first_time_label_added('yyy', 'xxx')).to eql to_time('2021-10-01')
+      expect(issue.first_time_label_added('yyy', 'xxx').time).to eql to_time('2021-10-01')
     end
   end
 
@@ -698,7 +698,7 @@ describe Issue do
       issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-06T02:00:00+00:00')
       issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
 
-      expect([issue.first_resolution, issue.last_resolution]).to eq [
+      expect([issue.first_resolution.time, issue.last_resolution.time]).to eq [
         to_time('2021-10-03T01:00:00+00:00'),
         to_time('2021-10-07T01:00:00+00:00')
       ]
