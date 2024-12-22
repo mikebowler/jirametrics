@@ -38,14 +38,14 @@ class Status
   end
 
   def to_s
-    result = "Status(name=#{@name.inspect}," \
-      " id=#{@id.inspect}," \
-      " category_name=#{@category_name.inspect}," \
-      " category_id=#{@category_id.inspect}," \
-      " project_id=#{@project_id}"
-    result << ' artificial' if artificial?
-    result << ')'
-    result
+    result = []
+    result << "Status(name: #{@name.inspect}"
+    result << "id: #{@id.inspect}" if @id
+    result << "category_name: #{@category_name.inspect}"
+    result << "category_id: #{@category_id.inspect}" if @category_id
+    result << "project_id: #{@project_id}" if @project_id
+    result << 'artificial' if artificial?
+    result.join(', ') << ')'
   end
 
   def artificial?
