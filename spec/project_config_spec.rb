@@ -11,7 +11,26 @@ describe ProjectConfig do
 
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
   end
-  let(:issue1) { load_issue('SP-1') }
+  let(:board) do
+    board = sample_board
+    board.project_config = project_config
+    statuses = board.possible_statuses
+    statuses.clear
+    statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2)
+    # statuses << Status.new(name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4)
+    # statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6)
+    # statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8)
+    # statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10)
+
+    # statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
+    # statuses << Status.new(name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10)
+    # statuses << Status.new(name: 'Doing2', id: 13, category_name: 'finished', category_id: 10)
+    # statuses << Status.new(name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6)
+    # statuses << Status.new(name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6)
+    board
+  end
+  let(:issue1) { load_issue('SP-1', board: board) }
 
   context 'board_configuration' do
     it 'loads' do
@@ -151,9 +170,9 @@ describe ProjectConfig do
   context 'discard_changes_before' do
     it 'discards for date provided' do
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-01')
-      issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02')
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-01')
+      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-03')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -168,9 +187,9 @@ describe ProjectConfig do
 
     it 'discards for block provided' do
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T07:00:00')
-      issue1.changes << mock_change(field: 'status', value: 'backlog', time: '2022-01-02T08:00:00')
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-02T09:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-02T07:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02T08:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-02T09:00:00')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -182,13 +201,23 @@ describe ProjectConfig do
     end
 
     it 'expands :backlog to the backlog statuses on the board' do
+      board.raw['columnConfig']['columns'] = [
+        {
+          'name' => 'Backlog',
+          'statuses' => [
+            {
+              'id' => '1'
+            }
+          ]
+        }
+      ]
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-01')
-      issue1.changes << mock_change(field: 'status', value: 'Backlog', time: '2022-01-02')
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: '2022-01-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-01')
+      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02')
+      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-03')
 
       # Verify that Backlog is the only status in backlog statuses. Otherwise the test is meaningless.
-      expect(issue1.board.backlog_statuses.collect(&:name)).to eq ['Backlog']
+      expect(issue1.board.backlog_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }).to eq ['"backlog":1']
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -378,15 +407,15 @@ describe ProjectConfig do
     it 'returns all when no statuses are found' do
       issues = [issue1]
       expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
-        ['Backlog', 'Selected for Development', 'In Progress']
+        [['Backlog', 10_000], ['Selected for Development', 10_001], ['In Progress', 3]]
       )
     end
 
     it 'returns only those missing categories' do
       issues = [issue1]
-      project_config.possible_statuses << Status.new(name: 'Backlog')
+      project_config.possible_statuses << Status.new(name: 'Backlog', id: 10_000)
       expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
-        ['Selected for Development', 'In Progress']
+        [['Selected for Development', 10_001], ['In Progress', 3]]
       )
     end
   end
@@ -394,7 +423,9 @@ describe ProjectConfig do
   context 'raise_with_message_about_missing_category_information' do
     it 'raises correct error' do
       issues = [issue1]
-      project_config.possible_statuses << Status.new(name: 'Backlog', category_name: 'Foo')
+      issue1.board.project_config.possible_statuses << Status.new(
+        name: 'Backlog', id: 10_000, category_name: 'Foo', category_id: 0
+      )
 
       expect { project_config.raise_with_message_about_missing_category_information(issues) }
         .to raise_error(
@@ -402,11 +433,11 @@ describe ProjectConfig do
             Could not determine categories for some of the statuses used in this data set.
             Use the 'status_category_mapping' declaration in your config to manually add one.
             The mappings we do know about are below:
-              status: "Backlog", category: "Foo"
+              status: "Backlog":10000, category: "Foo":0
 
             The ones we're missing are the following:
-              status: "Selected for Development", category: <unknown>
-              status: "In Progress", category: <unknown>
+              status: "Selected for Development":10001
+              status: "In Progress":3
           ERROR
           .chomp
         )

@@ -58,8 +58,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-02-01']
       ]
-      issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
-      issue.changes << mock_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
+      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: to_time('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
@@ -74,13 +74,13 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      issue.changes << mock_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      issue.changes << mock_change(field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
       sprint.raw['activatedDate'] = '2021-01-03'
-      issue.changes << mock_change(field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
+      add_mock_change(issue: issue, field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
       # Issue closes on Jan 5
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2022-01-05')
-      issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+      add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2022-01-06')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(

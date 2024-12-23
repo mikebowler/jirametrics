@@ -62,7 +62,7 @@ describe DataQualityReport do
 
   it 'identifies items with completed but not started' do
     issue1.changes.clear
-    issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     report.initialize_entries
 
     entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
@@ -79,15 +79,15 @@ describe DataQualityReport do
     # Issue 10 has a resolution with a status afterwards.
 
     issue1.changes.clear
-    issue1.changes << mock_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-    issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    add_mock_change(issue: issue1, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
 
     report.issues << issue2
 
     issue10.changes.clear
-    issue10.changes << mock_change(field: 'resolution', value: 'Done',    time: '2021-09-06T04:34:26+00:00')
-    issue10.changes << mock_change(field: 'status', value: 'Done',        time: '2021-09-06T04:34:26+00:00')
-    issue10.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-07T04:34:26+00:00')
+    add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+    add_mock_change(issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
+    add_mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00')
     report.initialize_entries
 
     entry = DataQualityReport::Entry.new(
@@ -108,17 +108,17 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
-      issue1.changes << mock_change(
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
+      add_mock_change(issue: issue1, 
         field: 'status', value: 'Selected for Development', old_value: 'In Progress',
-        time: '2021-09-06', value_id: 10_001
+        time: '2021-09-06', value_id: 10_001, old_value_id: 3
       )
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
       problem_key, _detail = *entry.problems.first
-      expect(problem_key).to match :backwords_through_statuses
+      expect(problem_key).to eq :backwords_through_statuses
     end
 
     it 'detects backwards status category' do
@@ -129,11 +129,13 @@ describe DataQualityReport do
 
       issue1.changes.clear
       # Rank is there just to ensure that it gets skipped appropriately
-      issue1.changes << mock_change(field: 'rank', value: 'more', time: '2021-09-04', value_id: 10_002)
-      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
-      issue1.changes << mock_change(
-        field: 'status', value: 'In Progress', old_value: 'Done',
-        time: '2021-09-06', value_id: 3
+      add_mock_change(issue: issue1, field: 'rank', value: 'more', time: '2021-09-04', value_id: 10_002)
+      add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
+      add_mock_change(
+        issue: issue1, field: 'status',
+        value: 'In Progress', value_id: 3,
+        old_value: 'Done', old_value_id: 10_002,
+        time: '2021-09-06'
       )
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
@@ -143,14 +145,14 @@ describe DataQualityReport do
       expect(problem_key).to eq :backwards_through_status_categories
     end
 
-    it 'detects statuses that just aren\'t on the board' do
+    it "detects statuses that just aren't on the board" do
       report.all_boards = { 1 => board }
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 999)
+      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012)
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
@@ -165,11 +167,12 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(
+      add_mock_change(
+        issue: issue1,
         field: 'status', value: 'Selected for Development', old_value: 'In Progress',
-        time: '2021-09-05', value_id: 10_001
+        time: '2021-09-05', value_id: 10_001, old_value_id: 3
       )
-      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -185,7 +188,7 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
+      add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
       board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
       report.scan_for_issues_not_created_in_a_backlog_status(
@@ -204,7 +207,7 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'ToDo', time: '2021-09-06', value_id: 10_000)
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', time: '2021-09-06', value_id: 10_000)
       board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2)
       report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses

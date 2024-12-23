@@ -118,7 +118,7 @@ class Issue
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category *category_names
     still_in do |change|
-      status = find_status_by_name change.value
+      status = find_status_by_id change.value_id
       category_names.include?(status.category_name) || category_names.include?(status.category_id)
     end
   end
@@ -140,23 +140,27 @@ class Issue
     change = most_recent_status_change
     return false if change.nil?
 
-    status = find_status_by_name change.value
+    status = find_status_by_id change.value_id
     change if status && category_names.include?(status.category_name)
   end
 
-  def find_status_by_name name
-    status = board.possible_statuses.find_by_name(name)
+  def find_status_by_id id
+    status = board.possible_statuses.find(id)
     return status if status
 
+    statuses_description = board.possible_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }.inspect
+    message = "Warning: Status id #{id} for issue #{key} not found in" \
+      " #{statuses_description}" \
+      "\n  See https://jirametrics.org/faq/#q1\n"
     @board.project_config.file_system.log(
-      "Warning: Status name #{name.inspect} for issue #{key} not found in" \
-      " #{board.possible_statuses.collect(&:name).inspect}" \
-      "\n  See https://jirametrics.org/faq/#q1\n",
+      message,
       also_write_to_stderr: true
     )
-    status = Status.new(name: name, category_name: 'In Progress')
-    board.possible_statuses << status
-    status
+
+    raise message
+    # status = Status.new(name: name, category_name: 'In Progress')
+    # board.possible_statuses << status
+    # status
   end
 
   def first_status_change_after_created
@@ -167,7 +171,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = find_status_by_name(change.value).category_name
+      category = find_status_by_id(change.value_id).category_name
       return change if category_names.include? category
     end
     nil

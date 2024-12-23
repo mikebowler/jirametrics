@@ -40,7 +40,7 @@ describe AgingWorkTable do
   context 'blocked_text' do
     it 'handles flagged' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
-      issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
+      add_mock_change(issue: issue1, field: 'Flagged', value: 'Blocked', time: '2020-10-03')
       expect(table.blocked_text issue1).to eq(
         "<div class='color_block' style='background: var(--blocked-color);' title=\"Blocked by flag\"></div>"
       )
@@ -48,10 +48,11 @@ describe AgingWorkTable do
 
     it 'handles blocked status' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
-      review_status = issue1.board.possible_statuses.find { |s| s.name == 'Review' }
+      review_status = issue1.board.possible_statuses.find 10011
+      expect(review_status.name).to eq 'Review' # Sanity check to ensure test data is correct.
 
       issue1.board.project_config.settings['blocked_statuses'] = [review_status.name]
-      issue1.changes << mock_change(field: 'status', value: review_status, time: '2020-10-03')
+      add_mock_change(issue: issue1, field: 'status', value: review_status, time: '2020-10-03')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 
       expect(table.blocked_text issue1).to eq(
@@ -62,7 +63,7 @@ describe AgingWorkTable do
 
     it 'handles stalled' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
-      issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 
       expect(table.blocked_text issue1).to eq(
@@ -73,7 +74,7 @@ describe AgingWorkTable do
 
     it 'handles dead' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
-      issue1.changes << mock_change(field: 'status', value: 'Doing', time: '2022-10-04')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-12-01')
 
       expect(table.blocked_text issue1).to eq(
@@ -83,13 +84,17 @@ describe AgingWorkTable do
     end
 
     it 'handles started but neither blocked nor stalled' do
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
+      add_mock_change(
+        issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: (table.today - 1).to_time
+      )
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
       expect(table.blocked_text issue1).to be_nil
     end
 
     it 'handles not started and also neither blocked nor stalled' do
-      issue1.changes << mock_change(field: 'status', value: 'doing', time: (table.today - 1).to_time)
+      add_mock_change(
+        issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: (table.today - 1).to_time
+      )
       board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
       expect(table.blocked_text issue1).to be_nil
     end
@@ -147,8 +152,8 @@ describe AgingWorkTable do
 
     it 'returns when one active sprint' do
       # Put a non-sprint change there to ensure it doesn't blow up on those
-      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
-      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1', value_id: '2', time: '2020-10-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2020-10-02')
+      add_mock_change(issue: issue1, field: 'Sprint', value: 'Sprint1', value_id: '2', time: '2020-10-03')
 
       issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
         'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
@@ -160,8 +165,8 @@ describe AgingWorkTable do
 
     it 'returns when multiple sprint' do
       # Put a non-sprint change there to ensure it doesn't blow up on those
-      issue1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-10-02')
-      issue1.changes << mock_change(field: 'Sprint', value: 'Sprint1, Sprint2', value_id: '2, 3', time: '2020-10-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2020-10-02')
+      add_mock_change(issue: issue1, field: 'Sprint', value: 'Sprint1, Sprint2', value_id: '2, 3', time: '2020-10-03')
 
       issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
         'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
@@ -195,7 +200,7 @@ describe AgingWorkTable do
 
   it 'finds expedited_but_not_started' do
     issue3 = empty_issue key: 'SP-3', created: '2024-01-01', board: board
-    # issue3.changes << mock_change(field: 'Priority', value: 'Highest', time: '2024-01-02')
+    # add_mock_change(issue: issue3, field: 'Priority', value: 'Highest', time: '2024-01-02')
     issue3.raw['fields']['priority'] = { 'name' => 'Highest' }
 
     board.cycletime = mock_cycletime_config stub_values: [

@@ -38,6 +38,10 @@ class Status
   end
 
   def to_s
+    "#{name.inspect}:#{id}"
+  end
+
+  def inspect
     result = []
     result << "Status(name: #{@name.inspect}"
     result << "id: #{@id.inspect}" if @id

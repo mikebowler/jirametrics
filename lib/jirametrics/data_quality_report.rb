@@ -112,8 +112,8 @@ class DataQualityReport < ChartBase
     @entries.reject { |entry| entry.problems.empty? }
   end
 
-  def category_name_for status_name:, board:
-    board.possible_statuses.find { |status| status.name == status_name }&.category_name
+  def category_name_for status_id:, board:
+    board.possible_statuses.find(status_id)&.category_name
   end
 
   def initialize_entries
@@ -198,8 +198,8 @@ class DataQualityReport < ChartBase
       elsif change.old_value.nil?
         # Do nothing
       elsif index < last_index
-        new_category = category_name_for(status_name: change.value, board: board)
-        old_category = category_name_for(status_name: change.old_value, board: board)
+        new_category = category_name_for(status_id: change.value_id, board: board)
+        old_category = category_name_for(status_id: change.old_value_id, board: board)
 
         if new_category == old_category
           entry.report(

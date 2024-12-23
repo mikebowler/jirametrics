@@ -18,6 +18,13 @@ describe Issue do
     statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6)
     statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8)
     statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10)
+
+    statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'Doing', id: 12, category_name: 'finished', category_id: 10)
+    statuses << Status.new(name: 'Doing2', id: 13, category_name: 'finished', category_id: 10)
+    statuses << Status.new(name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6)
     board
   end
   let(:issue1) { load_issue 'SP-1', board: board }
@@ -99,36 +106,64 @@ describe Issue do
   context 'changes' do
     it 'gets simple history with a single status' do
       expect(issue2.changes).to eq [
-        mock_change(field: 'status', value: 'Backlog', time: '2021-06-18T18:41:37.804+0000'),
-        mock_change(field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
-        mock_change(field: 'status', value: 'Selected for Development', time: '2021-06-18T18:43:38+00:00')
+        mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804+0000'),
+        mock_change(issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
+        mock_change(issue: issue2, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-06-18T18:43:38+00:00')
       ]
     end
 
     it 'gets complex history with a mix of field types' do
       issue10 = load_issue('SP-10', board: board)
       expect(issue10.changes).to eq [
-        mock_change(field: 'status',     value: 'Backlog',                  time: '2021-06-18T18:42:52.754+0000'),
-        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-06-18T18:42:52.754+0000'),
-        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-08-29T18:06:28+0000'),
-        mock_change(field: 'Rank',       value: 'Ranked higher',            time: '2021-08-29T18:06:28+0000'),
-        mock_change(field: 'priority',   value: 'Highest',                  time: '2021-08-29T18:06:43+0000'),
-        mock_change(field: 'status',     value: 'In Progress',              time: '2021-08-29T18:06:55+0000'),
-        mock_change(field: 'status',     value: 'Selected for Development', time: '2021-09-06T04:33:11+0000'),
-        mock_change(field: 'Flagged',    value: 'Impediment',               time: '2021-09-06T04:33:30+0000'),
-        mock_change(field: 'priority',   value: 'Medium',                   time: '2021-09-06T04:33:50+0000'),
-        mock_change(field: 'Flagged',    value: '',                         time: '2021-09-06T04:33:55+0000'),
-        mock_change(field: 'status',     value: 'In Progress',              time: '2021-09-06T04:34:02+0000'),
-        mock_change(field: 'status',     value: 'Review',                   time: '2021-09-06T04:34:21+0000'),
-        mock_change(field: 'status',     value: 'Done',                     time: '2021-09-06T04:34:26+0000'),
-        mock_change(field: 'resolution', value: 'Done',                     time: '2021-09-06T04:34:26+0000')
+        mock_change(
+          issue: issue10, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:42:52.754+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52.754+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-08-29T18:06:28+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'priority', value: 'Highest', time: '2021-08-29T18:06:43+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-08-29T18:06:55+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-09-06T04:33:11+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'priority', value: 'Medium', time: '2021-09-06T04:33:50+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'Flagged', value: '', time: '2021-09-06T04:33:55+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-09-06T04:34:02+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'Review', value_id: 7, time: '2021-09-06T04:34:21+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'status', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26+0000'
+        ),
+        mock_change(
+          issue: issue10, field: 'resolution', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26+0000'
+        )
        ]
     end
 
     it "defaults the first status if there really hasn't been any yet" do
       issue = empty_issue created: '2021-08-29T18:00:00+00:00'
       expect(issue.changes).to eq [
-        mock_change(field: 'status', value: 'Backlog', time: '2021-08-29T18:00:00+00:00')
+        mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00')
       ]
     end
   end
@@ -137,12 +172,12 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'first time in status' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       expect(issue.first_time_in_status('In Progress').time).to eql to_time('2021-10-02')
     end
 
     it "first time in status that doesn't match any" do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       expect(issue.first_time_in_status('NoStatus')).to be_nil
     end
   end
@@ -151,7 +186,7 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'first time not in status' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       expect(issue.first_time_not_in_status('Backlog').time).to eql to_time('2021-10-02')
     end
 
@@ -186,15 +221,15 @@ describe Issue do
 
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
-      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-07-18')
+      add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18')
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-07-18')
 
       expect(issue.first_time_in_or_right_of_column('In Progress').time).to eq to_time('2021-07-18')
     end
 
     it 'returns nil when no matches' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-18')
+      add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18')
 
       expect(issue.first_time_in_or_right_of_column 'In Progress').to be_nil
     end
@@ -205,11 +240,11 @@ describe Issue do
 
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
-      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-01')
-      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-02')
-      issue.changes << mock_change(field: 'status', value: 'A', value_id: 1, time: '2021-06-03')
-      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-04')
-      issue.changes << mock_change(field: 'status', value: 'B', value_id: 3, time: '2021-06-05')
+      add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-01')
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-06-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-06-04')
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-06-05')
 
       expect(issue.still_in_or_right_of_column('In Progress').time).to eq to_time('2021-06-04')
     end
@@ -219,7 +254,7 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-06-01', board: board }
 
     it 'matches first time in status category' do
-      issue.changes << mock_change(field: 'status', value: 'Done', value_id: 9, time: '2021-06-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-06-02')
       expect(issue.first_time_in_status_category('finished').time).to eq to_time('2021-06-02')
     end
 
@@ -232,7 +267,7 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it "finds first time for any status change - created doesn't count as status change" do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       expect(issue.first_status_change_after_created.time).to eq to_time('2021-10-02')
     end
 
@@ -261,14 +296,14 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-01')
       expect(issue.currently_in_status('Done')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.currently_in_status('Done').time).to eql to_time('2021-10-04')
     end
   end
@@ -277,22 +312,22 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
       expect(issue.still_in_status('Done')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.still_in_status('Done').time).to eql to_time('2021-10-04')
     end
 
     it 'item moved to done twice should return first time only' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.still_in_status('Done').time).to eql to_time('2021-10-03')
     end
 
@@ -305,15 +340,15 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
       expect(issue.currently_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.currently_in_status_category('finished').time).to eql to_time('2021-10-04')
     end
   end
@@ -322,22 +357,22 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
       expect(issue.still_in_status_category('finished')).to be_nil
     end
 
     it 'item moved to done, back to in progress, then to done again' do
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-05')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-05')
       expect(issue.still_in_status_category('finished').time).to eql to_time('2021-10-05')
     end
 
     it 'item moved to done twice should return first time only' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2021-10-01')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status', value: 'Done', time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
       expect(issue.still_in_status_category('finished').time).to eql to_time('2021-10-02')
     end
   end
@@ -350,22 +385,22 @@ describe Issue do
     end
 
     it 'does not match when wrong labels' do
-      issue.changes << mock_change(field: 'labels', value: 'xxx', time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'labels', value: 'xxx', time: '2021-10-01')
       expect(issue.first_time_label_added('refined')).to be_nil
     end
 
     it 'matches for issue with one label' do
-      issue.changes << mock_change(field: 'labels', value: 'refined', time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'labels', value: 'refined', time: '2021-10-01')
       expect(issue.first_time_label_added('refined').time).to eql to_time('2021-10-01')
     end
 
     it 'matches for issue with two labels' do
-      issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'labels', value: 'xxx refined', time: '2021-10-01')
       expect(issue.first_time_label_added('refined').time).to eql to_time('2021-10-01')
     end
 
     it 'matches second label for issue with two labels' do
-      issue.changes << mock_change(field: 'labels', value: 'xxx refined', time: '2021-10-01')
+      add_mock_change(issue: issue, field: 'labels', value: 'xxx refined', time: '2021-10-01')
       expect(issue.first_time_label_added('yyy', 'xxx').time).to eql to_time('2021-10-01')
     end
   end
@@ -383,7 +418,7 @@ describe Issue do
     end
 
     it 'handles never blocked' do
-      issue = empty_issue created: '2021-10-01'
+      issue = empty_issue created: '2021-10-01', board: board
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(time: to_time('2021-10-05'))
@@ -391,10 +426,10 @@ describe Issue do
     end
 
     it 'handles flagged and unflagged' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
@@ -405,10 +440,10 @@ describe Issue do
 
     it 'ignores flagged when "flagged_means_blocked" is false' do
       settings['flagged_means_blocked'] = false
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(time: to_time('2021-10-05'))
@@ -416,11 +451,11 @@ describe Issue do
     end
 
     it 'handles contiguous blocked status' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status',  value: 'Blocked2', time: '2021-10-04')
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked2', value_id: 15, time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
@@ -431,10 +466,10 @@ describe Issue do
     end
 
     it 'handles blocked statuses' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status',  value: 'Blocked', value_id: 10, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
@@ -444,13 +479,9 @@ describe Issue do
     end
 
     it 'handles blocked on issues' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(
-        field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02'
-      )
-      issue.changes << mock_change(
-        field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
-      )
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-04')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
@@ -460,13 +491,9 @@ describe Issue do
     end
 
     it 'handles stalled for inactivity' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-02'
-      )
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing2', time: '2021-10-08'
-      )
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
@@ -476,11 +503,11 @@ describe Issue do
     end
 
     it 'handles contiguous stalled status' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status',  value: 'Stalled2', time: '2021-10-04')
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-05')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status',  value: 'Stalled2', value_id: 14, time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-05')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
@@ -491,10 +518,10 @@ describe Issue do
     end
 
     it 'handles stalled statuses' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status',  value: 'Stalled', time: '2021-10-03')
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-04')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-06')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
@@ -508,18 +535,12 @@ describe Issue do
       # into account then we'd expect it to show stalled between those dates. Given that we
       # should consider subtasks, it should show nothing stalled through the period.
 
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-02'
-      )
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing2', time: '2021-10-08'
-      )
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
 
-      subtask = empty_issue created: '2021-10-01'
-      subtask.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-05'
-      )
+      subtask = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
       issue.subtasks << subtask
 
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
@@ -531,18 +552,12 @@ describe Issue do
     it 'splits stalled into sections if subtasks were active in between' do
       # The full range is 1st to 12th with subtask activity on the 5th. The only
       # stalled section in here is 5-12.
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-02'
-      )
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing2', time: '2021-10-12'
-      )
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-12')
 
-      subtask = empty_issue created: '2021-10-01'
-      subtask.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-05'
-      )
+      subtask = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
       issue.subtasks << subtask
 
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-13')).to eq [
@@ -554,10 +569,8 @@ describe Issue do
     end
 
     it 'ignores the final artificial change for the purposes of stalled' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(
-        field: 'status', value: 'Doing', time: '2021-10-02'
-      )
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
@@ -578,9 +591,9 @@ describe Issue do
     end
 
     it 'shows blocked even when there has been a big enough gap to be stalled' do
-      issue = empty_issue created: '2021-10-01'
-      issue.changes << mock_change(field: 'status',  value: 'Blocked', time: '2021-10-02')
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-10')
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-10')
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-10')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-02')),
@@ -606,8 +619,8 @@ describe Issue do
 
     it 'tracks blocked over multiple days' do
       issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-02')..to_date('2021-10-04'),
@@ -622,9 +635,9 @@ describe Issue do
 
     it 'tracks blocked then unblocked' do
       issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'status',  value: 'In Progress', time: '2021-10-02')
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-02')..to_date('2021-10-04'),
@@ -639,7 +652,7 @@ describe Issue do
 
     it 'handles a date range that covers time before the issue starts and after it finishes' do
       issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-02')
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-09-30')..to_date('2021-10-03'),
@@ -655,11 +668,11 @@ describe Issue do
 
     it 'handles complex case' do
       issue = empty_issue created: '2021-10-01', board: board
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
 
-      issue.changes << mock_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-09')
-      issue.changes << mock_change(field: 'Flagged', value: '',            time: '2021-10-11')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-09')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-11')
 
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-01')..to_date('2021-10-12'),
@@ -690,13 +703,13 @@ describe Issue do
 
   context 'resolutions' do
     it 'finds resolutions when they are present' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00'
-      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-02T00:00:00+00:00')
-      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-03T01:00:00+00:00')
-      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-04T02:00:00+00:00')
-      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-05T01:00:00+00:00')
-      issue.changes << mock_change(field: 'status',     value: 'In Progress',  time: '2021-10-06T02:00:00+00:00')
-      issue.changes << mock_change(field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
+      issue = empty_issue created: '2021-10-01T00:00:00+00:00', board: board
+      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-02T00:00:00+00:00')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-03T01:00:00+00:00')
+      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-04T02:00:00+00:00')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-05T01:00:00+00:00')
+      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-06T02:00:00+00:00')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
 
       expect([issue.first_resolution.time, issue.last_resolution.time]).to eq [
         to_time('2021-10-03T01:00:00+00:00'),
@@ -789,41 +802,41 @@ describe Issue do
   end
 
   context 'last_activity' do
-    let(:issue) { empty_issue created: '2020-01-01' }
+    let(:issue) { empty_issue created: '2020-01-01', board: board }
 
     it 'handles no activity, ever' do
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
 
     it 'picks most recent change' do
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-03')
       expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-03')
     end
 
     it 'handles subtask with no changes' do
-      subtask = empty_issue created: '2020-01-02'
+      subtask = empty_issue created: '2020-01-02', board: board
       issue.subtasks << subtask
       expect(issue.last_activity now: to_time('2021-02-01')).to eq to_time('2020-01-02')
     end
 
     it 'handles multiple subtasks, each with changes' do
-      subtask1 = empty_issue created: '2020-01-02'
-      subtask1.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-03')
+      subtask1 = empty_issue created: '2020-01-02', board: board
+      add_mock_change(issue: subtask1, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-03')
       issue.subtasks << subtask1
 
-      subtask2 = empty_issue created: '2020-01-02'
-      subtask2.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-04')
+      subtask2 = empty_issue created: '2020-01-02', board: board
+      add_mock_change(issue: subtask2, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-04')
       issue.subtasks << subtask2
 
       expect(issue.last_activity now: to_time('2021-01-01')).to eq to_time('2020-01-04')
     end
 
     it 'handles no activity on the subtask but activity on the main issue' do
-      subtask = empty_issue created: '2020-01-01'
+      subtask = empty_issue created: '2020-01-01', board: board
       issue.subtasks << subtask
 
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2020-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-02')
 
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
     end
@@ -931,8 +944,8 @@ describe Issue do
       issue = empty_issue created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
 
-      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
-      issue.changes << mock_change(field: 'priority', value: '',     time: '2021-10-03T00:02:00')
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: '',     time: '2021-10-03T00:02:00')
 
       actual = [
         issue.expedited_on_date?(to_date('2021-10-02')),
@@ -946,9 +959,9 @@ describe Issue do
       issue = empty_issue created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
-      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
-      issue.changes << mock_change(field: 'priority', value: 'higher', time: '2021-10-03T00:02:00')
-      issue.changes << mock_change(field: 'priority', value: '', time: '2021-10-03T00:04:00')
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: 'higher', time: '2021-10-03T00:02:00')
+      add_mock_change(issue: issue, field: 'priority', value: '', time: '2021-10-03T00:04:00')
 
       actual = [
         issue.expedited_on_date?(to_date('2021-10-01')),
@@ -963,7 +976,7 @@ describe Issue do
       issue = empty_issue created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
-      issue.changes << mock_change(field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
 
       actual = [
         issue.expedited_on_date?(to_date('2021-10-01')),
@@ -1087,15 +1100,6 @@ describe Issue do
     end
   end
 
-  it 'blows up if status can\'t be found for find_status_by_name' do
-    expect(issue1.find_status_by_name('undefined_status_name').name).to eq 'undefined_status_name'
-    expect(exporter.file_system.log_messages).to eq([
-      'Warning: Status name "undefined_status_name" for issue SP-1 not found in ' \
-      '["Backlog", "Selected for Development", "In Progress", "Review", "Done"]' \
-      "\n  See https://jirametrics.org/faq/#q1"
-    ])
-  end
-
   context 'flow_efficiency_numbers' do # part of a flow efficiency calculation
     let(:settings) do
       {
@@ -1125,8 +1129,8 @@ describe Issue do
     end
 
     it 'becomes blocked before issue starts and stays that way' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-01T00:01:00')
+      issue = empty_issue created: '2000-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-02'), nil]
       ]
@@ -1135,8 +1139,8 @@ describe Issue do
     end
 
     it 'becomes blocked but issue does not start before end_time' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-01T00:01:00')
+      issue = empty_issue created: '2000-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-04'), nil]
       ]
@@ -1145,8 +1149,8 @@ describe Issue do
     end
 
     it 'becomes blocked after done' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-03')
+      issue = empty_issue created: '2000-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-03')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-02')]
       ]
@@ -1155,9 +1159,9 @@ describe Issue do
     end
 
     it 'becomes blocked and then unblocked before start' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-03')
+      issue = empty_issue created: '2000-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-03')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-04'), nil]
       ]
@@ -1166,7 +1170,7 @@ describe Issue do
     end
 
     it 'was created in blocked status' do
-      issue = empty_issue created: '2000-01-01', board: sample_board, creation_status: ['Blocked', 1]
+      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Blocked', 1]
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), nil]
       ]
@@ -1175,7 +1179,7 @@ describe Issue do
     end
 
     it 'was created in done status' do
-      issue = empty_issue created: '2000-01-01', board: sample_board, creation_status: ['Done', 1]
+      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Done', 1]
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-01')]
       ]
@@ -1184,17 +1188,17 @@ describe Issue do
     end
 
     it 'handles complex case with multiple block/unblock' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
+      issue = empty_issue created: '2000-01-01', board: board
       # active for a day here
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-02')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-03')
       # active for a day here
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-04')
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-05') # second blocked
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-06')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-04')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-05') # 2nd blocked
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-06')
       # active for a day here, then issue finishes. The last two blocked should be ignored
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2000-01-09')
-      issue.changes << mock_change(field: 'status', value: 'In Progress', time: '2000-01-10')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-09')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-10')
 
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-08')]

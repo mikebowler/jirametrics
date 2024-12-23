@@ -49,10 +49,10 @@ describe ThroughputChart do
   context 'throughput_dataset' do
     it 'returns correct data' do
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       issue2.changes.clear
-      issue2.changes << mock_change(field: 'resolution', value: 'done', time: '2021-10-13T01:00:00')
+      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-13T01:00:00')
 
       issue10.changes.clear
 

@@ -29,7 +29,7 @@ describe DailyWipByBlockedStalledChart do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
-      issue1.changes << mock_change(field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
@@ -43,8 +43,8 @@ describe DailyWipByBlockedStalledChart do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
-      issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
-      issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
@@ -58,7 +58,7 @@ describe DailyWipByBlockedStalledChart do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
-      issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-13')
 
       rules = DailyGroupingRules.new
@@ -72,8 +72,8 @@ describe DailyWipByBlockedStalledChart do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, to_date('2022-01-01'), nil]
       ]
-      issue1.changes << mock_change(field: 'status', value: 'Doing', time: to_time('2022-01-01'))
-      issue1.changes << mock_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
+      add_mock_change(issue: issue1, field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
 
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-01')

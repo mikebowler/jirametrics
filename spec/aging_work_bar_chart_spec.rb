@@ -128,8 +128,8 @@ describe AgingWorkBarChart do
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
-      issue.changes << mock_change(field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
-      issue.changes << mock_change(field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
       data_sets = chart.blocked_data_sets(
         issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
@@ -152,14 +152,16 @@ describe AgingWorkBarChart do
     end
 
     it 'handles blocked by status' do
+      board.possible_statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
+
       chart.settings = board.project_config.settings
       chart.settings['blocked_statuses'] = ['Blocked']
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
-      issue.changes << mock_change(field: 'status', value: 'Blocked', time: '2021-01-02')
-      issue.changes << mock_change(field: 'status', value: 'Doing',   time: '2021-01-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-03')
 
       data_sets = chart.blocked_data_sets(
         issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
@@ -189,10 +191,10 @@ describe AgingWorkBarChart do
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
-      issue.changes << mock_change(
+      add_mock_change(issue: issue, 
         field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-01-02'
       )
-      issue.changes << mock_change(
+      add_mock_change(issue: issue, 
         field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 

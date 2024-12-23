@@ -38,7 +38,14 @@ def load_issue key, board: nil
   issue
 end
 
-def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: ['Backlog', 999]
+def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
+  unless creation_status
+    backlog_statuses = board.possible_statuses.find_all_by_name('Backlog')
+    raise 'No Backlog status found' if backlog_statuses.empty?
+
+    creation_status = [backlog_statuses.first.name, backlog_statuses.first.id]
+  end
+
   Issue.new(
     raw: {
       'key' => key,
@@ -107,8 +114,18 @@ def load_complete_sample_date_range
   to_time('2021-09-14T00:00:00+00:00')..to_time('2021-12-13T23:59:59+00:00')
 end
 
+def add_mock_change issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false
+  issue.changes << mock_change(
+    issue: issue,
+    field: field, time: time,
+    value: value, value_id: value_id,
+    old_value: old_value, old_value_id: old_value_id,
+    artificial: artificial
+  )
+end
+
 # If either value or old_value are statuses then the name and id will be pulled from that object
-def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id: nil, artificial: false
+def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false, issue: nil
   if value.is_a? Status
     value_id = value.id
     value = value.name
@@ -116,6 +133,46 @@ def mock_change field:, value:, time:, value_id: 2, old_value: nil, old_value_id
   if old_value.is_a? Status
     old_value_id = old_value.id
     old_value = old_value.name
+  end
+
+  # Now that we know that status names are not unique, we have to specify an id every time we use a status name
+  if field == 'status' && issue
+    possible_statuses = issue.board.possible_statuses
+
+    if value && !value_id
+      guesses = possible_statuses.find_all_by_name(value).collect(&:id)
+      message = "ID was not specified for new status #{value.inspect}. "
+      if guesses.empty?
+        message << "No statuses with name #{value.inspect} but did find these: #{possible_statuses.inspect}"
+      else
+        message << "Perhaps you meant one of #{guesses.inspect}"
+      end
+      raise message
+    end
+
+    if old_value && !old_value_id
+      guesses = possible_statuses.find_all_by_name(old_value).collect(&:id)
+      raise "ID was not specified for old status #{old_value.inspect}. Perhaps you meant one of #{guesses.inspect}"
+    end
+
+    if value_id
+      status = possible_statuses.find(value_id)
+      raise "No status found for id: #{value_id} (#{value.inspect}) in #{possible_statuses.inspect}" unless status
+
+      unless status.name == value
+        raise "Value passed to mock_change (#{value.inspect}:#{value_id.inspect}) " \
+          "doesn't match the status found in the board (#{status})"
+      end
+    end
+    if old_value_id
+      status = possible_statuses.find(old_value_id)
+      raise "No status found for id: #{old_value_id} (#{old_value.inspect}) in #{possible_statuses.inspect}" unless status
+
+      unless status.name == old_value
+        raise "Old value passed to mock_change (#{old_value.inspect}:#{old_value_id.inspect}) " \
+          "doesn't match the status found in the board (#{status})"
+      end
+    end
   end
 
   time = to_time(time) if time.is_a? String
@@ -150,7 +207,7 @@ def mock_cycletime_config stub_values: []
     when ChangeItem
       change
     else
-      mock_change(field: 'status', value: 'fake', time: change&.to_time)
+      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
     end
   end)
   config.stop_at(lambda do |issue|
@@ -161,7 +218,7 @@ def mock_cycletime_config stub_values: []
     when ChangeItem
       change
     else
-      mock_change(field: 'status', value: 'fake', time: change&.to_time)
+      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
     end
   end)
   config
@@ -171,7 +228,7 @@ def default_cycletime_config
   today = Date.parse('2021-12-17')
 
   block = lambda do |_|
-    start_at ->(issue) { mock_change field: 'status', value: 'fake', time: issue.created }
+    start_at ->(issue) { mock_change field: 'status', value: 'fake', value_id: 1_000_000, time: issue.created }
     stop_at last_resolution
   end
   CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today

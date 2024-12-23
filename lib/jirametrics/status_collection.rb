@@ -56,11 +56,18 @@ class StatusCollection
     filter_status_names category_name: 'Done', including: including, excluding: excluding
   end
 
-  def find_by_name name
-    find { |status| status.name == name }
+  # def find_by_name name
+  #   @list.find { |status| status.name == name }
+  # end
+
+  def find id
+    @list.find { |status| status.id == id }
   end
 
-  def find(&block)= @list.find(&block)
+  def find_all_by_name name
+    @list.select { |status| status.name == name }
+  end
+
   def collect(&block) = @list.collect(&block)
   def each(&block) = @list.each(&block)
   def select(&block) = @list.select(&block)
@@ -70,6 +77,6 @@ class StatusCollection
   def delete(object) = @list.delete(object)
 
   def inspect
-    "StatusCollection(#{@list.collect(&:inspect).join(', ')})"
+    "StatusCollection(#{@list.join(', ')})"
   end
 end

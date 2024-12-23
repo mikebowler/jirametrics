@@ -19,7 +19,7 @@ describe Status do
         'name' => 'In Progress'
       }
     }
-    expect(status.to_s).to(
+    expect(status.inspect).to(
       eq('Status(name: "InProgress", id: 3, category_name: "In Progress", category_id: 4)')
     )
     expect(status).to be_global
@@ -48,7 +48,7 @@ describe Status do
       }
     }
 
-    expect(status.to_s).to eq(
+    expect(status.inspect).to eq(
       'Status(name: "FakeBacklog", id: 10017, category_name: "In Progress", category_id: 4, project_id: 10002)'
     )
     expect(status).to be_project_scoped

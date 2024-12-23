@@ -14,7 +14,7 @@ describe EstimateAccuracyChart do
 
     it 'handles a single estimate set' do
       issue = empty_issue created: '2023-01-02'
-      issue.changes << mock_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
+      add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
 
       estimate = chart.story_points_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
@@ -22,8 +22,8 @@ describe EstimateAccuracyChart do
 
     it 'handles estimates set before and after' do
       issue = empty_issue created: '2023-01-02'
-      issue.changes << mock_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
-      issue.changes << mock_change(field: 'Story Points', value: '6.0', time: '2023-01-05')
+      add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
+      add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2023-01-05')
 
       estimate = chart.story_points_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
@@ -60,10 +60,10 @@ describe EstimateAccuracyChart do
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       board = sample_board
       issue1 = load_issue 'SP-1', board: board
-      issue1.changes << mock_change(field: 'Story Points', value: 5, time: '2024-01-01')
+      add_mock_change(issue: issue1, field: 'Story Points', value: 5, time: '2024-01-01')
 
       issue2 = load_issue 'SP-2', board: board
-      issue2.changes << mock_change(field: 'Story Points', value: 5, time: '2024-01-01')
+      add_mock_change(issue: issue2, field: 'Story Points', value: 5, time: '2024-01-01')
 
       issue_with_no_estimate = load_issue 'SP-1', board: board
       issue_not_started = load_issue 'SP-1', board: board

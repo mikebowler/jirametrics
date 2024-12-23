@@ -150,13 +150,14 @@ class ProjectConfig
       'The mappings we do know about are below:'
 
     @possible_statuses.each do |status|
-      message << "\n  status: #{status.name.inspect}, category: #{status.category_name.inspect}"
+      message << "\n  status: #{status.name.inspect}:#{status.id.inspect}, "
+      message << "category: #{status.category_name.inspect}:#{status.category_id.inspect}"
     end
 
     message << "\n\nThe ones we're missing are the following:"
 
-    find_statuses_with_no_category_information(all_issues).each do |status_name|
-      message << "\n  status: #{status_name.inspect}, category: <unknown>"
+    find_statuses_with_no_category_information(all_issues).each do |status_name, status_id|
+      message << "\n  status: #{status_name.inspect}:#{status_id.inspect}"
     end
 
     raise message
@@ -168,7 +169,7 @@ class ProjectConfig
       issue.changes.each do |change|
         next unless change.status?
 
-        missing_statuses << change.value unless find_status(name: change.value)
+        missing_statuses << [change.value, change.value_id] unless find_status(id: change.value_id)
       end
     end
     missing_statuses.uniq
@@ -215,7 +216,7 @@ class ProjectConfig
   end
 
   def add_possible_status status
-    existing_status = find_status(name: status.name)
+    existing_status = find_status(id: status.id)
 
     if status.project_scoped?
       # If the project specific status doesn't change anything then we don't care whether it's
@@ -242,7 +243,8 @@ class ProjectConfig
 
     # If we got this far then someone has called status_category_mapping and is attempting to
     # change the category.
-    raise "Redefining status category #{status} with #{existing_status}. Was one set in the config?"
+    raise "Redefining status category #{status.inspect} with " \
+      "#{existing_status.inspect}. Was one set in the config?"
   end
 
   def raise_ambiguous_project_id
@@ -251,8 +253,8 @@ class ProjectConfig
       'in the configuration like: "project id: 5"'
   end
 
-  def find_status name:
-    @possible_statuses.find_by_name name
+  def find_status id:
+    @possible_statuses.find id
   end
 
   def load_project_metadata
