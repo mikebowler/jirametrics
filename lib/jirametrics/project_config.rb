@@ -32,6 +32,8 @@ class ProjectConfig
   end
 
   def data_downloaded?
+    raise 'file_prefix has not been set yet. Move it higher in your configuration.' unless file_prefix
+
     File.exist? File.join(@target_path, "#{file_prefix}_meta.json")
   end
 
@@ -121,8 +123,40 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_category_mapping status:, category:, status_id: nil, category_id: nil
-    add_possible_status Status.new(name: status, category_name: category)
+  def status_guesses
+    statuses = {}
+    issues.each do |issue|
+      issue.changes.each do |change|
+        next unless change.status?
+
+        (statuses[change.value] ||= Set.new) << change.value_id
+        (statuses[change.old_value] ||= Set.new) << change.old_value_id if change.old_value
+      end
+    end
+    statuses
+  end
+
+  def status_category_mapping status:, category:, status_id: nil
+    if status_id.nil?
+      guesses = status_guesses[status]
+      if guesses.nil?
+        raise 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
+          "name #{status.inspect}. If you need this mapping then you must specify the status_id."
+      end
+
+      if guesses.size > 1
+        raise "Cannot guess status id as there are multiple ids for the name #{status.inspect}. " \
+          "Perhaps it's one of #{guesses.to_a.sort.inspect}. " \
+          'If you need this mapping then you must specify the status_id.'
+      end
+
+      status_id = guesses.first
+      file_system.log "status_category_mapping for #{status.inspect} has been mapped to id #{status_id}. " \
+        "If that's incorrect then specify the status_id."
+    end
+
+    category_id = possible_statuses.find_category_id_by_name category
+    add_possible_status Status.new(name: status, id: status_id, category_name: category, category_id: category_id)
   end
 
   def load_all_boards
@@ -177,7 +211,11 @@ class ProjectConfig
 
   def load_status_category_mappings
     filename = "#{@target_path}/#{file_prefix}_statuses.json"
+    # TODO: The join syntax should give the same results but it doesn't. Investigate
+    # filename = File.join @target_path, "#{file_prefix}_statuses.json"
+
     # We may not always have this file. Load it if we can.
+    puts filename unless File.exist? filename
     return unless File.exist? filename
 
     statuses = file_system.load_json(filename)

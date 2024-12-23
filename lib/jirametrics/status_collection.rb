@@ -68,6 +68,19 @@ class StatusCollection
     @list.select { |status| status.name == name }
   end
 
+  def find_category_id_by_name name
+    id = @list.find { |status| status.category_name == name }&.category_id
+    unless id
+      set = Set.new
+      @list.each do |status|
+        puts status.inspect
+        set << "#{status.category_name.inspect}:#{status.category_id}"
+      end
+      raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
+    end
+    id
+  end
+
   def collect(&block) = @list.collect(&block)
   def each(&block) = @list.each(&block)
   def select(&block) = @list.select(&block)

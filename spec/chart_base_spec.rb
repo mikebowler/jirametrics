@@ -257,7 +257,8 @@ describe ChartBase do
   end
 
   it 'returns black for an unknown status category' do
-    expect(chart_base.status_category_color(Status.new)).to eq 'black'
+    status = Status.new(name: 'unknown', id: 5, category_name: 'ToDo', category_id: 2)
+    expect(chart_base.status_category_color(status)).to eq 'black'
   end
 
   it 'returns reasonable random color' do

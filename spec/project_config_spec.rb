@@ -17,17 +17,7 @@ describe ProjectConfig do
     statuses = board.possible_statuses
     statuses.clear
     statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2)
-    # statuses << Status.new(name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4)
-    # statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6)
-    # statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8)
-    # statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10)
-
-    # statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
-    # statuses << Status.new(name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6)
     statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10)
-    # statuses << Status.new(name: 'Doing2', id: 13, category_name: 'finished', category_id: 10)
-    # statuses << Status.new(name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6)
-    # statuses << Status.new(name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6)
     board
   end
   let(:issue1) { load_issue('SP-1', board: board) }
@@ -317,6 +307,62 @@ describe ProjectConfig do
     end
   end
 
+  context 'status_category_mapping' do
+    let(:project_config) do
+      described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
+      ).tap do |subject|
+        exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+
+        subject.file_prefix 'sample'
+        subject.load_status_category_mappings
+        issue = empty_issue created: '2024-01-01'
+        issue.changes << mock_change(
+          field: 'status', time: '2024-01-02',
+          value: 'Walk', value_id: 99, old_value: 'Walk', old_value_id: 100
+        )
+        issue.changes << mock_change(
+          field: 'status', time: '2024-01-03',
+          value: 'Run', value_id: 101
+        )
+        subject.add_issues([issue])
+      end
+    end
+
+    it 'raises error if status_id cannot be guessed because no names match' do
+      expect { project_config.status_category_mapping status: 'foo', status_id: nil, category: 'ToDo' }
+        .to raise_error 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
+          'name "foo". If you need this mapping then you must specify the status_id.'
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'raises error if status_id cannot be guessed because too many names match' do
+      expect { project_config.status_category_mapping status: 'Walk', status_id: nil, category: 'ToDo' }
+        .to raise_error 'Cannot guess status id as there are multiple ids for the name "Walk". Perhaps it\'s ' \
+          'one of [99, 100]. If you need this mapping then you must specify the status_id.'
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'raises error if category name can\'t be found' do
+      expect { project_config.status_category_mapping status: 'Run', status_id: 101, category: 'unknown' }
+        .to raise_error 'Unable to find status category "unknown" in ["Done":3, "In Progress":4, "To Do":2]'
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'guesses status id correctly' do
+      project_config.status_category_mapping status: 'Run', status_id: nil, category: 'To Do'
+      expect(exporter.file_system.log_messages).to eq([
+        'status_category_mapping for "Run" has been mapped to id 101. If that\'s incorrect then specify the status_id.'
+      ])
+    end
+
+    # allows valid new status
+    # ignores status that is exactly the same as an existing status
+    # reject status that matches existing status_id but not status_name
+    # rejects status that matches existing status but not category
+    # guesses status_id from status name and logs deprecation if only single possible answer
+  end
+
   context 'add_possible_status' do
     let(:project_config) do
       described_class.new(
@@ -413,7 +459,7 @@ describe ProjectConfig do
 
     it 'returns only those missing categories' do
       issues = [issue1]
-      project_config.possible_statuses << Status.new(name: 'Backlog', id: 10_000)
+      project_config.possible_statuses << Status.new(name: 'Backlog', id: 10_000, category_name: 'ToDo', category_id: 2)
       expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
         [['Selected for Development', 10_001], ['In Progress', 3]]
       )

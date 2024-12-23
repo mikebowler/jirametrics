@@ -20,7 +20,11 @@ class Status
     )
   end
 
-  def initialize name: nil, id: nil, category_name: nil, category_id: nil, project_id: nil, artificial: true
+  def initialize name:, id:, category_name:, category_id:, project_id: nil, artificial: true
+    # These checks are needed because nils used to be possible and now they aren't.
+    raise 'id cannot be nil' if id.nil?
+    raise 'category_id cannot be nil' if category_id.nil?
+
     @name = name
     @id = id
     @category_name = category_name
