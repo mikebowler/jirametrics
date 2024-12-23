@@ -121,7 +121,7 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_category_mapping status:, category:
+  def status_category_mapping status:, category:, status_id: nil, category_id: nil
     add_possible_status Status.new(name: status, category_name: category)
   end
 
@@ -181,7 +181,7 @@ class ProjectConfig
     return unless File.exist? filename
 
     statuses = file_system.load_json(filename)
-      .map { |snippet| Status.new(raw: snippet) }
+      .map { |snippet| Status.from_raw(snippet) }
     statuses
       .find_all { |status| status.global? }
       .each { |status| add_possible_status status }

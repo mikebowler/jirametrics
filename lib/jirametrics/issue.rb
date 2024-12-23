@@ -44,7 +44,7 @@ class Issue
 
   def summary = @raw['fields']['summary']
 
-  def status = Status.new(raw: @raw['fields']['status'])
+  def status = Status.from_raw(@raw['fields']['status'])
 
   def labels = @raw['fields']['labels'] || []
 

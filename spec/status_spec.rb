@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe Status do
   it 'parses simple status from raw' do
-    status = described_class.new raw: {
+    status = described_class.from_raw({
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/3',
       'description' => 'This issue is being actively worked on at the moment by the assignee.',
       'iconUrl' => 'https://improvingflow.atlassian.net/images/icons/statuses/inprogress.png',
@@ -18,7 +18,7 @@ describe Status do
         'colorName' => 'yellow',
         'name' => 'In Progress'
       }
-    }
+    })
     expect(status.inspect).to(
       eq('Status(name: "InProgress", id: 3, category_name: "In Progress", category_id: 4)')
     )
@@ -26,7 +26,7 @@ describe Status do
   end
 
   it 'parses status with project id' do
-    status = described_class.new raw: {
+    status = described_class.from_raw({
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/10017',
       'description' => '',
       'iconUrl' => 'https://improvingflow.atlassian.net/',
@@ -46,7 +46,7 @@ describe Status do
           'id' => '10002'
         }
       }
-    }
+    })
 
     expect(status.inspect).to eq(
       'Status(name: "FakeBacklog", id: 10017, category_name: "In Progress", category_id: 4, project_id: 10002)'
