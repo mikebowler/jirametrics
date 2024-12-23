@@ -16,7 +16,7 @@ describe Anonymizer do
   let(:anonymizer) do
     exporter = Exporter.new file_system: MockFileSystem.new
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
-    exporter.file_system.when_loading file: 'spec/complete_sample//sample_statuses.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_statuses.json', json: :not_mocked
     [1, 2, 5, 7, 8, 11].each do |issue_num|
       exporter.file_system.when_loading(
         file: "spec/complete_sample/sample_issues/SP-#{issue_num}.json",

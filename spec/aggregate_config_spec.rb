@@ -6,7 +6,7 @@ describe AggregateConfig do
   let(:exporter) do
     Exporter.new(file_system: MockFileSystem.new).tap do |exporter|
       exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
-      exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+      exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
       exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
     end
   end

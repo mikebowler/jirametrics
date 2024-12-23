@@ -13,7 +13,7 @@ end
 describe HtmlReportConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:project_config) do
-    exporter.file_system.when_loading file: 'spec/complete_sample//sample_statuses.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/complete_sample/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
 
     project_config = ProjectConfig.new(

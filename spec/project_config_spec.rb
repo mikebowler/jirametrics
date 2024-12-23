@@ -6,7 +6,7 @@ describe ProjectConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:target_path) { 'spec/testdata/' }
   let(:project_config) do
-    exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
 
     described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
@@ -312,7 +312,7 @@ describe ProjectConfig do
       described_class.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
       ).tap do |subject|
-        exporter.file_system.when_loading file: 'spec/testdata//sample_statuses.json', json: :not_mocked
+        exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
 
         subject.file_prefix 'sample'
         subject.load_status_category_mappings

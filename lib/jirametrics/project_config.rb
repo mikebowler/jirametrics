@@ -210,12 +210,9 @@ class ProjectConfig
   end
 
   def load_status_category_mappings
-    filename = "#{@target_path}/#{file_prefix}_statuses.json"
-    # TODO: The join syntax should give the same results but it doesn't. Investigate
-    # filename = File.join @target_path, "#{file_prefix}_statuses.json"
+    filename = File.join @target_path, "#{file_prefix}_statuses.json"
 
     # We may not always have this file. Load it if we can.
-    puts filename unless File.exist? filename
     return unless File.exist? filename
 
     statuses = file_system.load_json(filename)

@@ -56,10 +56,6 @@ class StatusCollection
     filter_status_names category_name: 'Done', including: including, excluding: excluding
   end
 
-  # def find_by_name name
-  #   @list.find { |status| status.name == name }
-  # end
-
   def find id
     @list.find { |status| status.id == id }
   end
@@ -73,7 +69,6 @@ class StatusCollection
     unless id
       set = Set.new
       @list.each do |status|
-        puts status.inspect
         set << "#{status.category_name.inspect}:#{status.category_id}"
       end
       raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
