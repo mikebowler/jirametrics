@@ -355,11 +355,6 @@ describe ProjectConfig do
         'status_category_mapping for "Run" has been mapped to id 101. If that\'s incorrect then specify the status_id.'
       ])
     end
-
-    # allows valid new status
-    # ignores status that is exactly the same as an existing status
-    # reject status that matches existing status_id but not status_name
-    # rejects status that matches existing status but not category
   end
 
   context 'add_possible_status' do
@@ -385,6 +380,16 @@ describe ProjectConfig do
 
       expect { project_config.add_possible_status(status2) }.to raise_error(
         'Redefining status category for status "foo":1. original: "cfoo":2, new: "cfoo2":3'
+      )
+    end
+
+    it 'throws error if status names dont match' do
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      status2 = Status.new name: 'bar', id: 1, category_name: 'cfoo', category_id: 2
+      project_config.add_possible_status(status1)
+
+      expect { project_config.add_possible_status(status2) }.to raise_error(
+        'Attempting to redefine the name for status 1 from "foo" to "bar"'
       )
     end
 
