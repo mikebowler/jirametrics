@@ -56,7 +56,6 @@ class StatusCollection
     filter_status_names category_name: 'Done', including: including, excluding: excluding
   end
 
-  # TODO: Rename to find_by_id to leave find available
   def find_by_id id
     @list.find { |status| status.id == id }
   end
