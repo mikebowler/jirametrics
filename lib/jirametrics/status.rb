@@ -50,7 +50,6 @@ class Status
   end
 
   def == other
-    raise "other is #{other.class}" unless other.is_a? Status
     @id == other.id && @name == other.name && @category_id == other.category_id && @category_name == other.category_name
   end
 

@@ -145,7 +145,7 @@ class Issue
   end
 
   def find_status_by_id id
-    status = board.possible_statuses.find(id)
+    status = board.possible_statuses.find_by_id(id)
     return status if status
 
     statuses_description = board.possible_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }.inspect

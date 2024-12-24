@@ -57,7 +57,7 @@ class StatusCollection
   end
 
   # TODO: Rename to find_by_id to leave find available
-  def find id
+  def find_by_id id
     @list.find { |status| status.id == id }
   end
 

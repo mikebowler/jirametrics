@@ -276,7 +276,7 @@ class ProjectConfig
   end
 
   def find_status id:
-    @possible_statuses.find id
+    @possible_statuses.find_by_id id
   end
 
   def load_project_metadata

@@ -113,7 +113,7 @@ class DataQualityReport < ChartBase
   end
 
   def category_name_for status_id:, board:
-    board.possible_statuses.find(status_id)&.category_name
+    board.possible_statuses.find_by_id(status_id)&.category_name
   end
 
   def initialize_entries
@@ -184,7 +184,7 @@ class DataQualityReport < ChartBase
       index = entry.issue.board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         # If it's a backlog status then ignore it. Not supposed to be visible.
-        next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find(change.value_id))
+        next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find_by_id(change.value_id))
 
         detail = "Status #{format_status change.value, board: board} is not on the board"
         if issue.board.possible_statuses.expand_statuses(change.value).empty?

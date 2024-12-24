@@ -48,7 +48,7 @@ describe AgingWorkTable do
 
     it 'handles blocked status' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
-      review_status = issue1.board.possible_statuses.find 10011
+      review_status = issue1.board.possible_statuses.find_by_id 10_011
       expect(review_status.name).to eq 'Review' # Sanity check to ensure test data is correct.
 
       issue1.board.project_config.settings['blocked_statuses'] = [review_status.name]

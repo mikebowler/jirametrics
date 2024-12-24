@@ -156,7 +156,7 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
     end
 
     if value_id
-      status = possible_statuses.find(value_id)
+      status = possible_statuses.find_by_id(value_id)
       raise "No status found for id: #{value_id} (#{value.inspect}) in #{possible_statuses.inspect}" unless status
 
       unless status.name == value
@@ -165,7 +165,7 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
       end
     end
     if old_value_id
-      status = possible_statuses.find(old_value_id)
+      status = possible_statuses.find_by_id(old_value_id)
       raise "No status found for id: #{old_value_id} (#{old_value.inspect}) in #{possible_statuses.inspect}" unless status
 
       unless status.name == old_value
