@@ -184,7 +184,7 @@ class DataQualityReport < ChartBase
       index = entry.issue.board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
       if index.nil?
         # If it's a backlog status then ignore it. Not supposed to be visible.
-        next if entry.issue.board.backlog_statuses.include? change.value_id
+        next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find(change.value_id))
 
         detail = "Status #{format_status change.value, board: board} is not on the board"
         if issue.board.possible_statuses.expand_statuses(change.value).empty?

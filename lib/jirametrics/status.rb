@@ -49,6 +49,11 @@ class Status
     @artificial
   end
 
+  def == other
+    raise "other is #{other.class}" unless other.is_a? Status
+    @id == other.id && @name == other.name && @category_id == other.category_id && @category_name == other.category_name
+  end
+
   def inspect
     result = []
     result << "Status(name: #{@name.inspect}"

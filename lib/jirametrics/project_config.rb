@@ -151,12 +151,35 @@ class ProjectConfig
       end
 
       status_id = guesses.first
+      # TODO: This should be a deprecation instead but we can't currently assert against those
       file_system.log "status_category_mapping for #{status.inspect} has been mapped to id #{status_id}. " \
         "If that's incorrect then specify the status_id."
     end
 
     category_id = possible_statuses.find_category_id_by_name category
     add_possible_status Status.new(name: status, id: status_id, category_name: category, category_id: category_id)
+  end
+
+  def add_possible_status status
+    existing_status = find_status(id: status.id)
+
+    if existing_status && existing_status.name != status.name
+      raise "Attempting to redefine the name for status #{status.id} from " \
+        "#{existing_status.name.inspect} to #{status.name.inspect}"
+    end
+
+    # If it isn't there, add it and go.
+    return @possible_statuses << status unless existing_status
+
+    unless status == existing_status
+      raise "Redefining status category for status #{status}. " \
+        "original: #{existing_status.category_name.inspect}:#{existing_status.category_id}, " \
+        "new: #{status.category_name.inspect}:#{status.category_id}"
+    end
+
+    # We're registering one we already knew about. This may happen if someone specified a status_category_mapping
+    # for something that was already returned from jira. This isn't  problem so just ignore it.
+    existing_status
   end
 
   def load_all_boards
@@ -215,13 +238,9 @@ class ProjectConfig
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
 
-    statuses = file_system.load_json(filename)
+    file_system
+      .load_json(filename)
       .map { |snippet| Status.from_raw(snippet) }
-    statuses
-      .find_all { |status| status.global? }
-      .each { |status| add_possible_status status }
-    statuses
-      .find_all { |status| status.project_scoped? }
       .each { |status| add_possible_status status }
   end
 
@@ -248,38 +267,6 @@ class ProjectConfig
     @all_boards.each_value do |board|
       board.sprints.sort_by!(&:id)
     end
-  end
-
-  def add_possible_status status
-    existing_status = find_status(id: status.id)
-
-    if status.project_scoped?
-      # If the project specific status doesn't change anything then we don't care whether it's
-      # our project or not.
-      return if existing_status && existing_status.category_name == status.category_name
-
-      raise_ambiguous_project_id if @id.nil?
-
-      # Not our project, ignore it.
-      return unless status.project_id == @id
-
-      # Replace the old one with this
-      @possible_statuses.delete(existing_status)
-      @possible_statuses << status
-      return
-    end
-
-    # If it isn't there, add it and go.
-    return @possible_statuses << status unless existing_status
-
-    # We're registering the same one twice. Shouldn't be possible with the new status API but it
-    # did happen with the project specific one.
-    return if status.category_name == existing_status.category_name
-
-    # If we got this far then someone has called status_category_mapping and is attempting to
-    # change the category.
-    raise "Redefining status category #{status.inspect} with " \
-      "#{existing_status.inspect}. Was one set in the config?"
   end
 
   def raise_ambiguous_project_id
