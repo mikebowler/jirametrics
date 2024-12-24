@@ -136,7 +136,18 @@ class ProjectConfig
     statuses
   end
 
-  def status_category_mapping status:, category:, status_id: nil
+  def parse_status line
+    if line =~ /^(.+):(\d+)$/
+      [$1, $2]
+    else
+      [line, nil]
+    end
+  end
+
+  def status_category_mapping status:, category:
+    status, status_id = parse_status status
+    category, category_id = parse_status category
+
     if status_id.nil?
       guesses = status_guesses[status]
       if guesses.nil?
@@ -156,8 +167,12 @@ class ProjectConfig
         "If that's incorrect then specify the status_id."
     end
 
-    category_id = possible_statuses.find_category_id_by_name category
-    add_possible_status Status.new(name: status, id: status_id, category_name: category, category_id: category_id)
+    found_category_id = possible_statuses.find_category_id_by_name category
+    if category_id && category_id != found_category_id
+      raise "ID is incorrect for status category #{category.inspect}. Did you mean #{found_category_id}?"
+    end
+
+    add_possible_status Status.new(name: status, id: status_id, category_name: category, category_id: found_category_id)
   end
 
   def add_possible_status status

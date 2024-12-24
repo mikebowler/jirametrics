@@ -330,27 +330,33 @@ describe ProjectConfig do
     end
 
     it 'raises error if status_id cannot be guessed because no names match' do
-      expect { project_config.status_category_mapping status: 'foo', status_id: nil, category: 'ToDo' }
+      expect { project_config.status_category_mapping status: 'foo', category: 'ToDo' }
         .to raise_error 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
           'name "foo". If you need this mapping then you must specify the status_id.'
       expect(exporter.file_system.log_messages).to be_empty
     end
 
     it 'raises error if status_id cannot be guessed because too many names match' do
-      expect { project_config.status_category_mapping status: 'Walk', status_id: nil, category: 'ToDo' }
+      expect { project_config.status_category_mapping status: 'Walk', category: 'ToDo' }
         .to raise_error 'Cannot guess status id as there are multiple ids for the name "Walk". Perhaps it\'s ' \
           'one of [99, 100]. If you need this mapping then you must specify the status_id.'
       expect(exporter.file_system.log_messages).to be_empty
     end
 
     it 'raises error if category name can\'t be found' do
-      expect { project_config.status_category_mapping status: 'Run', status_id: 101, category: 'unknown' }
+      expect { project_config.status_category_mapping status: 'Run:101', category: 'unknown' }
         .to raise_error 'Unable to find status category "unknown" in ["Done":3, "In Progress":4, "To Do":2]'
       expect(exporter.file_system.log_messages).to be_empty
     end
 
+    it 'raises error if category name and id do not match' do
+      expect { project_config.status_category_mapping status: 'Run:101', category: 'To Do:500' }
+        .to raise_error 'ID is incorrect for status category "To Do". Did you mean 2?'
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
     it 'guesses status id correctly' do
-      project_config.status_category_mapping status: 'Run', status_id: nil, category: 'To Do'
+      project_config.status_category_mapping status: 'Run', category: 'To Do'
       expect(exporter.file_system.log_messages).to eq([
         'status_category_mapping for "Run" has been mapped to id 101. If that\'s incorrect then specify the status_id.'
       ])
