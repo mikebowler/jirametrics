@@ -330,14 +330,14 @@ describe ProjectConfig do
     end
 
     it 'raises error if status_id cannot be guessed because no names match' do
-      expect { project_config.status_category_mapping status: 'foo', category: 'ToDo' }
+      expect { project_config.status_category_mapping status: 'foo', category: 'To Do' }
         .to raise_error 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
           'name "foo". If you need this mapping then you must specify the status_id.'
       expect(exporter.file_system.log_messages).to be_empty
     end
 
     it 'raises error if status_id cannot be guessed because too many names match' do
-      expect { project_config.status_category_mapping status: 'Walk', category: 'ToDo' }
+      expect { project_config.status_category_mapping status: 'Walk', category: 'To Do' }
         .to raise_error 'Cannot guess status id as there are multiple ids for the name "Walk". Perhaps it\'s ' \
           'one of [99, 100]. If you need this mapping then you must specify the status_id.'
       expect(exporter.file_system.log_messages).to be_empty
