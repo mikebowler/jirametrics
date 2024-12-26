@@ -166,7 +166,9 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
     end
     if old_value_id
       status = possible_statuses.find_by_id(old_value_id)
-      raise "No status found for id: #{old_value_id} (#{old_value.inspect}) in #{possible_statuses.inspect}" unless status
+      unless status
+        raise "No status found for id: #{old_value_id} (#{old_value.inspect}) in #{possible_statuses.inspect}"
+      end
 
       unless status.name == old_value
         raise "Old value passed to mock_change (#{old_value.inspect}:#{old_value_id.inspect}) " \

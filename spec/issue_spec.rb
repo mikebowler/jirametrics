@@ -106,9 +106,16 @@ describe Issue do
   context 'changes' do
     it 'gets simple history with a single status' do
       expect(issue2.changes).to eq [
-        mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804+0000'),
-        mock_change(issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'),
-        mock_change(issue: issue2, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-06-18T18:43:38+00:00')
+        mock_change(
+          issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804+0000'
+        ),
+        mock_change(
+          issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'
+        ),
+        mock_change(
+          issue: issue2, field: 'status', value: 'Selected for Development', value_id: 3,
+          time: '2021-06-18T18:43:38+00:00'
+        )
       ]
     end
 
@@ -122,7 +129,8 @@ describe Issue do
           issue: issue10, field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52.754+0000'
         ),
         mock_change(
-          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-08-29T18:06:28+0000'
+          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3,
+          time: '2021-08-29T18:06:28+0000'
         ),
         mock_change(
           issue: issue10, field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28+0000'
@@ -134,7 +142,8 @@ describe Issue do
           issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-08-29T18:06:55+0000'
         ),
         mock_change(
-          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-09-06T04:33:11+0000'
+          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3,
+          time: '2021-09-06T04:33:11+0000'
         ),
         mock_change(
           issue: issue10, field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30+0000'
@@ -163,7 +172,9 @@ describe Issue do
     it "defaults the first status if there really hasn't been any yet" do
       issue = empty_issue created: '2021-08-29T18:00:00+00:00'
       expect(issue.changes).to eq [
-        mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00')
+        mock_change(
+          issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00'
+        )
       ]
     end
   end
@@ -480,8 +491,12 @@ describe Issue do
 
     it 'handles blocked on issues' do
       issue = empty_issue created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02')
-      add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03')
+      add_mock_change(
+        issue: issue, field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02'
+      )
+      add_mock_change(
+        issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
+      )
       expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-04')).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
@@ -704,12 +719,22 @@ describe Issue do
   context 'resolutions' do
     it 'finds resolutions when they are present' do
       issue = empty_issue created: '2021-10-01T00:00:00+00:00', board: board
-      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-02T00:00:00+00:00')
-      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-03T01:00:00+00:00')
-      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-04T02:00:00+00:00')
-      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-05T01:00:00+00:00')
-      add_mock_change(issue: issue, field: 'status',     value: 'In Progress', value_id: 5, time: '2021-10-06T02:00:00+00:00')
-      add_mock_change(issue: issue, field: 'resolution', value: 'Done',         time: '2021-10-07T01:00:00+00:00')
+      add_mock_change(
+        issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02T00:00:00+00:00'
+      )
+      add_mock_change(
+        issue: issue, field: 'resolution', value: 'Done', time: '2021-10-03T01:00:00+00:00'
+      )
+      add_mock_change(
+        issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-04T02:00:00+00:00'
+      )
+      add_mock_change(
+        issue: issue, field: 'resolution', value: 'Done', time: '2021-10-05T01:00:00+00:00'
+      )
+      add_mock_change(
+        issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-06T02:00:00+00:00'
+      )
+      add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-10-07T01:00:00+00:00')
 
       expect([issue.first_resolution.time, issue.last_resolution.time]).to eq [
         to_time('2021-10-03T01:00:00+00:00'),

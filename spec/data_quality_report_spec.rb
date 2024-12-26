@@ -87,7 +87,9 @@ describe DataQualityReport do
     issue10.changes.clear
     add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
     add_mock_change(issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
-    add_mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00')
+    add_mock_change(
+      issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
+    )
     report.initialize_entries
 
     entry = DataQualityReport::Entry.new(
@@ -109,7 +111,8 @@ describe DataQualityReport do
 
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
-      add_mock_change(issue: issue1, 
+      add_mock_change(
+        issue: issue1,
         field: 'status', value: 'Selected for Development', old_value: 'In Progress',
         time: '2021-09-06', value_id: 10_001, old_value_id: 3
       )

@@ -89,6 +89,6 @@ class ChangeItem
   def time_to_s time
     # MRI and JRuby return different strings for to_s() so we have to explicitly provide a full
     # format so that tests work under both environments.
-    @time.strftime '%Y-%m-%d %H:%M:%S %z'
+    time.strftime '%Y-%m-%d %H:%M:%S %z'
   end
 end

@@ -191,11 +191,11 @@ describe AgingWorkBarChart do
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: board
-      add_mock_change(issue: issue, 
-        field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-01-02'
+      add_mock_change(
+        issue: issue, field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-01-02'
       )
-      add_mock_change(issue: issue, 
-        field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
+      add_mock_change(
+        issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 
       data_sets = chart.blocked_data_sets(
