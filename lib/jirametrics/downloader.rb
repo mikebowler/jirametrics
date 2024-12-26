@@ -66,7 +66,7 @@ class Downloader
 
   def download_issues board:
     log "  Downloading primary issues for board #{board.id}", both: true
-    path = "#{@target_path}#{@download_config.project_config.file_prefix}_issues/"
+    path = "#{@target_path}#{file_prefix}_issues/"
     unless Dir.exist?(path)
       log "  Creating path #{path}"
       Dir.mkdir(path)
@@ -153,7 +153,7 @@ class Downloader
 
     @file_system.save_json(
       json: json,
-      filename: "#{@target_path}#{@download_config.project_config.file_prefix}_statuses.json"
+      filename: "#{@target_path}#{file_prefix}_statuses.json"
     )
   end
 
@@ -163,7 +163,6 @@ class Downloader
 
     exit_if_call_failed json
 
-    file_prefix = @download_config.project_config.file_prefix
     @file_system.save_json json: json, filename: "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
 
     # We have a reported bug that blew up on this line. Moved it after the save so we can
@@ -176,7 +175,6 @@ class Downloader
 
   def download_sprints board_id:
     log "  Downloading sprints for board #{board_id}", both: true
-    file_prefix = @download_config.project_config.file_prefix
     max_results = 100
     start_at = 0
     is_last = false
@@ -201,7 +199,7 @@ class Downloader
   end
 
   def metadata_pathname
-    "#{@target_path}#{@download_config.project_config.file_prefix}_meta.json"
+    "#{@target_path}#{file_prefix}_meta.json"
   end
 
   def load_metadata
@@ -244,7 +242,6 @@ class Downloader
   end
 
   def remove_old_files
-    file_prefix = @download_config.project_config.file_prefix
     Dir.foreach @target_path do |file|
       next unless file.match?(/^#{file_prefix}_\d+\.json$/)
 
@@ -291,5 +288,9 @@ class Downloader
     end
 
     segments.join ' AND '
+  end
+
+  def file_prefix
+    @download_config.project_config.get_file_prefix
   end
 end

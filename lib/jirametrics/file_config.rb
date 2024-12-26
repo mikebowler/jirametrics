@@ -56,7 +56,7 @@ class FileConfig
   def output_filename
     segments = []
     segments << project_config.target_path
-    segments << project_config.file_prefix
+    segments << project_config.get_file_prefix
     segments << (@file_suffix || "-#{@today}.csv")
     segments.join
   end

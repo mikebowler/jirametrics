@@ -9,7 +9,7 @@ describe ProjectConfig do
     exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
 
-    described_class.new exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+    described_class.new(exporter: exporter, target_path: target_path, jira_config: nil, block: nil)
   end
   let(:board) do
     board = sample_board
@@ -46,6 +46,7 @@ describe ProjectConfig do
 
   context 'possible_statuses' do
     it 'degrades gracefully when mappings not found' do
+      project_config.file_prefix 'not_found'
       project_config.load_status_category_mappings
       expect(project_config.possible_statuses).to be_empty
     end
@@ -406,51 +407,6 @@ describe ProjectConfig do
       project_config.add_possible_status(status2)
 
       expect(project_config.possible_statuses.collect(&:name)).to eq ['foo']
-    end
-  end
-
-  context 'find_statuses_with_no_category_information' do
-    it 'returns [] when no issues' do
-      expect(project_config.find_statuses_with_no_category_information([])).to be_empty
-    end
-
-    it 'returns all when no statuses are found' do
-      issues = [issue1]
-      expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
-        [['Backlog', 10_000], ['Selected for Development', 10_001], ['In Progress', 3]]
-      )
-    end
-
-    it 'returns only those missing categories' do
-      issues = [issue1]
-      project_config.possible_statuses << Status.new(name: 'Backlog', id: 10_000, category_name: 'ToDo', category_id: 2)
-      expect(project_config.find_statuses_with_no_category_information(issues)).to eq(
-        [['Selected for Development', 10_001], ['In Progress', 3]]
-      )
-    end
-  end
-
-  context 'raise_with_message_about_missing_category_information' do
-    it 'raises correct error' do
-      issues = [issue1]
-      issue1.board.project_config.possible_statuses << Status.new(
-        name: 'Backlog', id: 10_000, category_name: 'Foo', category_id: 0
-      )
-
-      expect { project_config.raise_with_message_about_missing_category_information(issues) }
-        .to raise_error(
-          <<~ERROR
-            Could not determine categories for some of the statuses used in this data set.
-            Use the 'status_category_mapping' declaration in your config to manually add one.
-            The mappings we do know about are below:
-              status: "Backlog":10000, category: "Foo":0
-
-            The ones we're missing are the following:
-              status: "Selected for Development":10001
-              status: "In Progress":3
-          ERROR
-          .chomp
-        )
     end
   end
 

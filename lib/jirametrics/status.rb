@@ -42,7 +42,7 @@ class Status
   end
 
   def to_s
-    "#{name.inspect}:#{id}"
+    "#{name.inspect}:#{id.inspect}"
   end
 
   def artificial?

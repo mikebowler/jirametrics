@@ -31,6 +31,10 @@ class FileSystem
     File.write(filename, content)
   end
 
+  def warning message
+    log "Warning: #{message}", also_write_to_stderr: true
+  end
+
   def log message, also_write_to_stderr: false
     logfile.puts message
     $stderr.puts message if also_write_to_stderr # rubocop:disable Style/StderrPuts

@@ -118,7 +118,7 @@ class Issue
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category *category_names
     still_in do |change|
-      status = find_status_by_id change.value_id
+      status = find_status_by_id change.value_id, name: change.value
       category_names.include?(status.category_name) || category_names.include?(status.category_id)
     end
   end
@@ -140,27 +140,35 @@ class Issue
     change = most_recent_status_change
     return false if change.nil?
 
-    status = find_status_by_id change.value_id
+    status = find_status_by_id change.value_id, name: change.value
     change if status && category_names.include?(status.category_name)
   end
 
-  def find_status_by_id id
+  def find_status_by_id id, name: nil
     status = board.possible_statuses.find_by_id(id)
     return status if status
 
-    statuses_description = board.possible_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }.inspect
-    message = "Warning: Status id #{id} for issue #{key} not found in" \
-      " #{statuses_description}" \
-      "\n  See https://jirametrics.org/faq/#q1\n"
-    @board.project_config.file_system.log(
-      message,
-      also_write_to_stderr: true
-    )
+    message = +'The history for issue '
+    message << key
+    message << ' references a status ('
+    message << name.inspect << ':' if name
+    message << id.to_s
+    message << ') that can\'t be found in ['
+    message << board.possible_statuses.collect(&:to_s).join(', ')
+    message << ']. We are going to pretend that this belongs to the "In Progress" status category '
+    message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
 
-    raise message
-    # status = Status.new(name: name, category_name: 'In Progress')
-    # board.possible_statuses << status
-    # status
+    board.project_config.file_system.warning message
+
+    # Fabricate a status for this purpose
+    status = Status.new(
+      name: name || 'unknown',
+      id: id,
+      category_name: 'In Progress',
+      category_id: board.possible_statuses.find_category_id_by_name('In Progress')
+    )
+    board.possible_statuses << status
+    status
   end
 
   def first_status_change_after_created

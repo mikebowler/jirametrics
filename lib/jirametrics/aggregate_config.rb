@@ -41,7 +41,7 @@ class AggregateConfig
   def include_issues_from project_name
     project = @project_config.exporter.project_configs.find { |p| p.name == project_name }
     if project.nil?
-      log "Warning: Aggregated project #{@project_config.name.inspect} is attempting to load " \
+      file_system.warning "Aggregated project #{@project_config.name.inspect} is attempting to load " \
         "project #{project_name.inspect} but it can't be found. Is it disabled?"
       return
     end
@@ -86,7 +86,7 @@ class AggregateConfig
 
   private
 
-  def log message
-    @project_config.exporter.file_system.log message
+  def file_system
+    @project_config.exporter.file_system
   end
 end

@@ -11,6 +11,7 @@ class Exporter
   def aggregated_project name:, project_names:, settings: {}
     project name: name do
       puts name
+      file_prefix name
       self.settings.merge! settings
 
       aggregate do
@@ -18,8 +19,6 @@ class Exporter
           include_issues_from project_name
         end
       end
-
-      file_prefix name
 
       file do
         file_suffix '.html'
@@ -32,7 +31,7 @@ class Exporter
           board_lines = []
           included_projects.each do |project|
             project.all_boards.each_value do |board|
-              board_lines << "<a href='#{project.file_prefix}.html'>#{board.name}</a> from project #{project.name}"
+              board_lines << "<a href='#{project.get_file_prefix}.html'>#{board.name}</a> from project #{project.name}"
             end
           end
           board_lines.sort.each { |line| html "<li>#{line}</li>", type: :header }

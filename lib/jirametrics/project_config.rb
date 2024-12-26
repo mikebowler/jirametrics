@@ -32,9 +32,7 @@ class ProjectConfig
   end
 
   def data_downloaded?
-    raise 'file_prefix has not been set yet. Move it higher in your configuration.' unless file_prefix
-
-    File.exist? File.join(@target_path, "#{file_prefix}_meta.json")
+    File.exist? File.join(@target_path, "#{get_file_prefix}_meta.json")
   end
 
   def load_data
@@ -43,7 +41,7 @@ class ProjectConfig
     @has_loaded_data = true
     load_all_boards
     @id = guess_project_id
-    load_status_category_mappings
+    # load_status_category_mappings
     load_project_metadata
     load_sprints
   end
@@ -118,8 +116,19 @@ class ProjectConfig
     @board_configs << config
   end
 
-  def file_prefix prefix = nil
-    @file_prefix = prefix unless prefix.nil?
+  def file_prefix prefix
+    raise 'file_prefix should only be set once' if @file_prefix
+
+    @file_prefix = prefix
+
+    # Yes, this is a wierd place to be initializing this but poor design up front requires it.
+    load_status_category_mappings
+    @file_prefix
+  end
+
+  def get_file_prefix
+    raise 'file_prefix has not been set yet. Move it higher in your configuration.' unless @file_prefix
+
     @file_prefix
   end
 
@@ -136,17 +145,12 @@ class ProjectConfig
     statuses
   end
 
-  def parse_status line
-    if line =~ /^(.+):(\d+)$/
-      [$1, $2]
-    else
-      [line, nil]
-    end
-  end
-
   def status_category_mapping status:, category:
-    status, status_id = parse_status status
-    category, category_id = parse_status category
+    # Status might just be a name like "Review" or it might be a name:id pair like "Review:4"
+    parse_status = ->(line) { line =~ /^(.+):(\d+)$/ ? [$1, $2.to_i] : [line, nil] }
+
+    status, status_id = parse_status.call status
+    category, category_id = parse_status.call category
 
     if status_id.nil?
       guesses = status_guesses[status]
@@ -176,7 +180,7 @@ class ProjectConfig
   end
 
   def add_possible_status status
-    existing_status = find_status(id: status.id)
+    existing_status = @possible_statuses.find_by_id status.id
 
     if existing_status && existing_status.name != status.name
       raise "Attempting to redefine the name for status #{status.id} from " \
@@ -199,12 +203,12 @@ class ProjectConfig
 
   def load_all_boards
     Dir.foreach(@target_path) do |file|
-      next unless file =~ /^#{@file_prefix}_board_(\d+)_configuration\.json$/
+      next unless file =~ /^#{get_file_prefix}_board_(\d+)_configuration\.json$/
 
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
-    raise "No boards found for #{@file_prefix.inspect} in #{@target_path.inspect}" if @all_boards.empty?
+    raise "No boards found for #{get_file_prefix.inspect} in #{@target_path.inspect}" if @all_boards.empty?
   end
 
   def load_board board_id:, filename:
@@ -215,40 +219,8 @@ class ProjectConfig
     @all_boards[board_id] = board
   end
 
-  def raise_with_message_about_missing_category_information all_issues = @issues
-    message = +''
-    message << "Could not determine categories for some of the statuses used in this data set.\n" \
-      "Use the 'status_category_mapping' declaration in your config to manually add one.\n" \
-      'The mappings we do know about are below:'
-
-    @possible_statuses.each do |status|
-      message << "\n  status: #{status.name.inspect}:#{status.id.inspect}, "
-      message << "category: #{status.category_name.inspect}:#{status.category_id.inspect}"
-    end
-
-    message << "\n\nThe ones we're missing are the following:"
-
-    find_statuses_with_no_category_information(all_issues).each do |status_name, status_id|
-      message << "\n  status: #{status_name.inspect}:#{status_id.inspect}"
-    end
-
-    raise message
-  end
-
-  def find_statuses_with_no_category_information all_issues
-    missing_statuses = []
-    all_issues.each do |issue|
-      issue.changes.each do |change|
-        next unless change.status?
-
-        missing_statuses << [change.value, change.value_id] unless find_status(id: change.value_id)
-      end
-    end
-    missing_statuses.uniq
-  end
-
   def load_status_category_mappings
-    filename = File.join @target_path, "#{file_prefix}_statuses.json"
+    filename = File.join @target_path, "#{get_file_prefix}_statuses.json"
 
     # We may not always have this file. Load it if we can.
     return unless File.exist? filename
@@ -261,7 +233,7 @@ class ProjectConfig
 
   def load_sprints
     file_system.foreach(@target_path) do |file|
-      next unless file =~ /^#{file_prefix}_board_(\d+)_sprints_\d+.json$/
+      next unless file =~ /^#{get_file_prefix}_board_(\d+)_sprints_\d+.json$/
 
       file_path = File.join(@target_path, file)
       board = @all_boards[$1.to_i]
@@ -284,18 +256,8 @@ class ProjectConfig
     end
   end
 
-  def raise_ambiguous_project_id
-    raise 'Ambiguous project id: There is a project specific status that could affect our calculations. ' \
-      'We are unable to automatically detect the id of the project so you will have to set it manually ' \
-      'in the configuration like: "project id: 5"'
-  end
-
-  def find_status id:
-    @possible_statuses.find_by_id id
-  end
-
   def load_project_metadata
-    filename = File.join @target_path, "#{file_prefix}_meta.json"
+    filename = File.join @target_path, "#{get_file_prefix}_meta.json"
     json = file_system.load_json(filename)
 
     @data_version = json['version'] || 1
@@ -378,7 +340,7 @@ class ProjectConfig
 
       timezone_offset = exporter.timezone_offset
 
-      issues_path = File.join @target_path, "#{file_prefix}_issues"
+      issues_path = File.join @target_path, "#{get_file_prefix}_issues"
       if File.exist?(issues_path) && File.directory?(issues_path)
         issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
       else

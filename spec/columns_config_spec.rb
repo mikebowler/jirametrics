@@ -37,7 +37,6 @@ describe ColumnsConfig do
     it 'succeeds' do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      project_config.load_status_category_mappings
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
       project_config.load_board(board_id: 1, filename: 'spec/testdata/sample_board_1_configuration.json')
