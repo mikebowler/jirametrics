@@ -41,7 +41,6 @@ class ProjectConfig
     @has_loaded_data = true
     load_all_boards
     @id = guess_project_id
-    # load_status_category_mappings
     load_project_metadata
     load_sprints
   end
