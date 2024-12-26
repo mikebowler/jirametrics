@@ -66,7 +66,7 @@ class Downloader
 
   def download_issues board:
     log "  Downloading primary issues for board #{board.id}", both: true
-    path = "#{@target_path}#{file_prefix}_issues/"
+    path = File.join(@target_path, "#{file_prefix}_issues/")
     unless Dir.exist?(path)
       log "  Creating path #{path}"
       Dir.mkdir(path)
@@ -153,7 +153,7 @@ class Downloader
 
     @file_system.save_json(
       json: json,
-      filename: "#{@target_path}#{file_prefix}_statuses.json"
+      filename: File.join(@target_path, "#{file_prefix}_statuses.json")
     )
   end
 
@@ -163,7 +163,10 @@ class Downloader
 
     exit_if_call_failed json
 
-    @file_system.save_json json: json, filename: "#{@target_path}#{file_prefix}_board_#{board_id}_configuration.json"
+    @file_system.save_json(
+      json: json,
+      filename: File.join(@target_path, "#{file_prefix}_board_#{board_id}_configuration.json")
+    )
 
     # We have a reported bug that blew up on this line. Moved it after the save so we can
     # actually look at the returned json.
@@ -186,7 +189,7 @@ class Downloader
 
       @file_system.save_json(
         json: json,
-        filename: "#{@target_path}#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json"
+        filename: File.join(@target_path, "#{file_prefix}_board_#{board_id}_sprints_#{start_at}.json")
       )
       is_last = json['isLast']
       max_results = json['maxResults']
@@ -199,7 +202,7 @@ class Downloader
   end
 
   def metadata_pathname
-    "#{@target_path}#{file_prefix}_meta.json"
+    File.join(@target_path, "#{file_prefix}_meta.json")
   end
 
   def load_metadata
@@ -245,13 +248,13 @@ class Downloader
     Dir.foreach @target_path do |file|
       next unless file.match?(/^#{file_prefix}_\d+\.json$/)
 
-      File.unlink "#{@target_path}#{file}"
+      File.unlink File.join(@target_path, file)
     end
 
     return if @cached_data_format_is_current
 
     # Also throw away all the previously downloaded issues.
-    path = File.join @target_path, "#{file_prefix}_issues"
+    path = File.join(@target_path, "#{file_prefix}_issues")
     return unless File.exist? path
 
     Dir.foreach path do |file|
