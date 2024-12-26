@@ -7,7 +7,6 @@ class JiraMetrics < Thor
     true
   end
 
-
   map %w[--version -v] => :__print_version
 
   desc '--version, -v', 'print the version'

@@ -172,7 +172,7 @@ class SprintBurndown < ChartBase
     change_item.raw['to'].split(/\s*,\s*/).any? { |id| id.to_i == sprint.id }
   end
 
-  def data_set_by_story_points sprint:, change_data_for_sprint:
+  def data_set_by_story_points sprint:, change_data_for_sprint: # rubocop:disable Metrics/CyclomaticComplexity
     summary_stats = SprintSummaryStats.new
     summary_stats.completed = 0.0
 
