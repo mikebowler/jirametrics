@@ -116,17 +116,24 @@ class ProjectConfig
   end
 
   def file_prefix prefix
-    raise 'file_prefix should only be set once' if @file_prefix
+    # The file_prefix has to be set before almost everything else. It really should have been an attribute
+    # on the project declaration itself. Hindsight is 20/20.
+    if @file_prefix
+      raise "file_prefix should only be set once. Was #{@file_prefix.inspect} and now changed to #{prefix.inspect}."
+    end
 
     @file_prefix = prefix
 
-    # Yes, this is a wierd place to be initializing this but poor design up front requires it.
+    # Yes, this is a wierd place to be initializing this. Unfortunately, it has to happen after the file_prefix
+    # is set but before anything inside the project block is run. If only we had made file_prefix an attribute
+    # on project, we wouldn't have this ugliness. 🤷‍♂️
     load_status_category_mappings
+
     @file_prefix
   end
 
-  def get_file_prefix
-    raise 'file_prefix has not been set yet. Move it higher in your configuration.' unless @file_prefix
+  def get_file_prefix # rubocop:disable Naming/AccessorMethodName
+    raise 'file_prefix has not been set yet. Move it to the top of the project declaration.' unless @file_prefix
 
     @file_prefix
   end
@@ -159,9 +166,8 @@ class ProjectConfig
       end
 
       if guesses.size > 1
-        raise "Cannot guess status id as there are multiple ids for the name #{status.inspect}. " \
-          "Perhaps it's one of #{guesses.to_a.sort.inspect}. " \
-          'If you need this mapping then you must specify the status_id.'
+        raise "Cannot guess status id as there are multiple ids for the name #{status.inspect}. Perhaps it's one " \
+          "of #{guesses.to_a.sort.inspect}. If you need this mapping then you must specify the status_id."
       end
 
       status_id = guesses.first

@@ -546,4 +546,19 @@ describe ProjectConfig do
       ])
     end
   end
+
+  context 'file_prefix' do
+    it 'can only be set once' do
+      project_config.file_prefix 'first'
+      expect { project_config.file_prefix 'second' }.to raise_error(
+        'file_prefix should only be set once. Was "first" and now changed to "second".'
+      )
+    end
+
+    it 'raises error if file_prefix not set early enough' do
+      expect { project_config.get_file_prefix }.to raise_error(
+        'file_prefix has not been set yet. Move it to the top of the project declaration.'
+      )
+    end
+  end
 end
