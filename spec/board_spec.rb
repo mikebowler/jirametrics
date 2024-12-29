@@ -11,8 +11,7 @@ describe Board do
         'columnConfig' => {
           'columns' => []
         }
-
-      }
+      }, possible_statuses: StatusCollection.new
       expect(board.url).to eq('https://improvingflow.atlassian.net/secure/RapidBoard.jspa?rapidView=3')
     end
 
@@ -23,7 +22,7 @@ describe Board do
         'columnConfig' => {
           'columns' => []
         }
-      }
+      }, possible_statuses: StatusCollection.new
       expect { board.url }.to raise_error 'Cannot parse self: "random string"'
     end
   end
@@ -39,7 +38,7 @@ describe Board do
         'columnConfig' => {
           'columns' => []
         }
-      }
+      }, possible_statuses: StatusCollection.new
       expect(board.project_id).to be_nil
     end
 
@@ -53,7 +52,7 @@ describe Board do
         'columnConfig' => {
           'columns' => []
         }
-      }
+      }, possible_statuses: StatusCollection.new
       expect(board.project_id).to eq 2
     end
   end

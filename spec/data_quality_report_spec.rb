@@ -474,7 +474,7 @@ describe DataQualityReport do
             }
           ]
         }
-      }
+      }, possible_statuses: StatusCollection.new
       issue1a = load_issue 'SP-1', board: board2
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1a)

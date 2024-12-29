@@ -56,6 +56,7 @@ class StatusCollection
     filter_status_names category_name: 'Done', including: including, excluding: excluding
   end
 
+  # Return the status matching this id or nil if it can't be found.
   def find_by_id id
     @list.find { |status| status.id == id }
   end
@@ -77,6 +78,7 @@ class StatusCollection
   end
 
   def collect(&block) = @list.collect(&block)
+  def find(&block) = @list.find(&block)
   def each(&block) = @list.each(&block)
   def select(&block) = @list.select(&block)
   def <<(arg) = @list << arg

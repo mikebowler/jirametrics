@@ -55,4 +55,8 @@ class FileSystem
   def foreach root, &block
     Dir.foreach root, &block
   end
+
+  def file_exist? filename
+    File.exist? filename
+  end
 end

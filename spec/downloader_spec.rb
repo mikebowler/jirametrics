@@ -107,6 +107,79 @@ describe Downloader do
     end
   end
 
+  context 'update_status_history_file' do
+    it 'does nothing when status file does not exist' do
+      downloader.update_status_history_file
+      expect(file_system.log_messages).to be_empty
+      expect(file_system.saved_json).to be_empty
+    end
+
+    it 'copies status to history when history did not exist' do
+      json = [{
+        'name' => 'Doing',
+        'id' => '5',
+        'statusCategory' => {
+          'id' => '2',
+          'name' => 'To Do'
+        }
+      }]
+      file_system.when_loading(file: 'spec/testdata/sample_statuses.json', json: json)
+
+      downloader.update_status_history_file
+      expect(file_system.log_messages).to eq([
+        'Creating status history file'
+      ])
+      expect(file_system.saved_json_expanded).to eq({
+        'spec/testdata/sample_status_history.json' => json
+      })
+    end
+
+    it 'merges history' do
+      file_system.when_loading(file: 'spec/testdata/sample_status_history.json', json: [
+        {
+          'name' => 'A', 'id' => '5',
+          'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+        },
+        {
+          'name' => 'B', 'id' => '2',
+          'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+        }
+      ])
+
+      file_system.when_loading(file: 'spec/testdata/sample_statuses.json', json: [
+        {
+          'name' => 'B', 'id' => '2',
+          'statusCategory' => { 'id' => '11', 'name' => 'Done' }
+        },
+        {
+          'name' => 'C', 'id' => '3',
+          'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+        }
+      ])
+
+      downloader.update_status_history_file
+      expect(file_system.log_messages).to eq([
+        'Updating status history file'
+      ])
+      expect(file_system.saved_json_expanded).to eq({
+        'spec/testdata/sample_status_history.json' => [
+          {
+            'name' => 'A', 'id' => '5',
+            'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+          },
+          {
+            'name' => 'B', 'id' => '2',
+            'statusCategory' => { 'id' => '11', 'name' => 'Done' }
+          },
+          {
+            'name' => 'C', 'id' => '3',
+            'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+          }
+        ]
+      })
+    end
+  end
+
   context 'jira_search_by_jql' do
     it 'completes when no issues found' do
       url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'

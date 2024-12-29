@@ -15,12 +15,13 @@ class Status
       id: raw['id'].to_i,
       category_name: category_config['name'],
       category_id: category_config['id'].to_i,
+      category_key: category_config['key'],
       project_id: raw['scope']&.[]('project')&.[]('id'),
       artificial: false
     )
   end
 
-  def initialize name:, id:, category_name:, category_id:, project_id: nil, artificial: true
+  def initialize name:, id:, category_name:, category_id:, category_key: 'new', project_id: nil, artificial: true
     # These checks are needed because nils used to be possible and now they aren't.
     raise 'id cannot be nil' if id.nil?
     raise 'category_id cannot be nil' if category_id.nil?
@@ -29,8 +30,14 @@ class Status
     @id = id
     @category_name = category_name
     @category_id = category_id
+    @category_key = category_key
     @project_id = project_id
     @artificial = artificial
+
+    # TODO: This validation still needs to be in place but tests must change first.
+    # unless %w[new indeterminate done].include? @category_key
+    #   raise "Category key (#{@category_key}) must be one of new, indeterminate, done"
+    # end
   end
 
   def project_scoped?

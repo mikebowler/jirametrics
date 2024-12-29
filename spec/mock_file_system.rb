@@ -56,4 +56,15 @@ class MockFileSystem < FileSystem
     message = message.strip
     @log_messages << message unless message == ''
   end
+
+  def saved_json_expanded
+    saved_json.transform_values do |value|
+      JSON.parse(value)
+    end
+  end
+
+  def file_exist? filename
+    # If we've mocked it out then it exists. Otherwise not.
+    !!@data[filename]
+  end
 end

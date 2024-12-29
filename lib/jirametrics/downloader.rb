@@ -39,6 +39,7 @@ class Downloader
     # board_ids = @download_config.board_ids
 
     remove_old_files
+    update_status_history_file
     download_statuses
     find_board_ids.each do |id|
       board = download_board_configuration board_id: id
@@ -157,6 +158,32 @@ class Downloader
     )
   end
 
+  def update_status_history_file
+    status_filename = File.join(@target_path, "#{file_prefix}_statuses.json")
+    return unless file_system.file_exist? status_filename
+
+    status_json = file_system.load_json(status_filename)
+
+    history_filename = File.join(@target_path, "#{file_prefix}_status_history.json")
+    history_json = file_system.load_json(history_filename) if file_system.file_exist? history_filename
+
+    if history_json
+      file_system.log '  Updating status history file', also_write_to_stderr: true
+    else
+      file_system.log '  Creating status history file', also_write_to_stderr: true
+      history_json = []
+    end
+
+    status_json.each do |status_item|
+      id = status_item['id']
+      history_item = history_json.find { |s| s['id'] == id }
+      history_json.delete(history_item) if history_item
+      history_json << status_item
+    end
+
+    file_system.save_json(filename: history_filename, json: history_json)
+  end
+
   def download_board_configuration board_id:
     log "  Downloading board configuration for board #{board_id}", both: true
     json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
@@ -173,7 +200,8 @@ class Downloader
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
 
     download_sprints board_id: board_id if json['type'] == 'scrum'
-    Board.new raw: json
+    # TODO: Should be passing actual statuses, not empty list
+    Board.new raw: json, possible_statuses: StatusCollection.new
   end
 
   def download_sprints board_id:
@@ -247,6 +275,7 @@ class Downloader
   def remove_old_files
     Dir.foreach @target_path do |file|
       next unless file.match?(/^#{file_prefix}_\d+\.json$/)
+      next if file == "#{file_prefix}_status_history.json"
 
       File.unlink File.join(@target_path, file)
     end

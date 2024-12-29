@@ -111,21 +111,21 @@ describe ChartBase do
     end
 
     it 'returns correct columns when board id set' do
-      board1 = Board.new raw: raw_board
+      board1 = Board.new raw: raw_board, possible_statuses: StatusCollection.new
       aging_chart.board_id = 1
       aging_chart.all_boards = { 1 => board1 }
       expect(aging_chart.current_board).to be board1
     end
 
     it 'returns correct columns when board id not set but only one board in use' do
-      board1 = Board.new raw: raw_board
+      board1 = Board.new raw: raw_board, possible_statuses: StatusCollection.new
       aging_chart.all_boards = { 1 => board1 }
       expect(aging_chart.current_board).to be board1
     end
 
     it 'raises exception when board id not set and multiple boards in use' do
-      board1 = Board.new raw: raw_board
-      board2 = Board.new raw: raw_board
+      board1 = Board.new raw: raw_board, possible_statuses: StatusCollection.new
+      board2 = Board.new raw: raw_board, possible_statuses: StatusCollection.new
       aging_chart.all_boards = { 1 => board1, 2 => board2 }
       expect { aging_chart.current_board }.to raise_error(
         'Must set board_id so we know which to use. Multiple boards found: [1, 2]'
