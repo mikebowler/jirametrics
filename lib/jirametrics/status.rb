@@ -19,6 +19,10 @@ class Status
     def to_s
       "#{name.inspect}:#{id.inspect}"
     end
+
+    def new? = (@key == 'new')
+    def indeterminate? = (@key == 'indeterminate')
+    def done? = (@key == 'done')
   end
 
   def self.from_raw raw

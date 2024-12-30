@@ -203,52 +203,13 @@ class ProjectConfig
 
     unless status == existing_status
       raise "Redefining status category for status #{status}. " \
-        "original: #{existing_status.category.to_s}, " \
-        "new: #{status.category.to_s}"
+        "original: #{existing_status.category}, " \
+        "new: #{status.category}"
     end
 
     # We're registering one we already knew about. This may happen if someone specified a status_category_mapping
     # for something that was already returned from jira. This isn't  problem so just ignore it.
     existing_status
-  end
-
-  # Return the status, creating one if necessary
-  def find_status_by_id! id:, name:, issue:
-    status = @possible_statuses.find_by_id(id)
-    return status if status
-
-    guessed_category_name, guessed_category_id = guess_category_for_status_id(id)
-
-    # Fabricate a status for this purpose
-    status = Status.new(
-      name: name,
-      id: id,
-      category_name: guessed_category_name,
-      category_id: guessed_category_id
-    )
-    self << status
-
-    message = +'The history for issue '
-    message << issue.key
-    message << ' references a status ('
-    message << name.inspect << ':' if name
-    message << id.to_s
-    message << ') that can\'t be found in ['
-    message << collect(&:to_s).join(', ')
-    message << "]. We are guessing that this belongs to the #{status} status-category "
-    message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
-    board.project_config.file_system.warning message
-
-    status
-  end
-
-  def guess_category_for_status_id id
-    # file_system.
-    status = @possible_statuses.find { |s| s.category_key == 'indeterminate' }
-    raise "Unable to find any in-progress statuses in #{@possible_statuses.inspect}" unless status
-
-    [status.name, status.id]
-    # [guessed_category_name, guessed_category_id]
   end
 
   def load_all_boards

@@ -77,19 +77,6 @@ class StatusCollection
     category
   end
 
-  # TODO: Remove this
-  def find_category_id_by_name name
-    id = @list.find { |status| status.category.name == name }&.category_id
-    unless id
-      set = Set.new
-      @list.each do |status|
-        set << status.category.to_s
-      end
-      raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
-    end
-    id
-  end
-
   # This is used to create a status that was found in the history but has since been deleted.
   def fabricate_status_for id:, name:
     first_in_progress_status = @list.find { |s| s.category.key == 'indeterminate' }
