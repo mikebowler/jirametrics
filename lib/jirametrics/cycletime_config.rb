@@ -61,8 +61,9 @@ class CycleTimeConfig
     stopped = @stop_at.call(issue)
 
     # Obscure edge case where some of the start_at and stop_at blocks might return false in place of nil.
-    started = nil unless started
-    stopped = nil unless stopped
+    # If they are false then explicitly make them nil.
+    started ||= nil
+    stopped ||= nil
 
     # These are only here for backwards compatibility. Hopefully nobody will ever need them.
     started = fabricate_change_item(started) if !started.nil? && !started.is_a?(ChangeItem)

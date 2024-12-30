@@ -65,7 +65,9 @@ describe ChangeItem do
       end
 
       it 'matches on Status' do
-        status = Status.new name: 'In Progress', id: 2, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+        status = Status.new(
+          name: 'In Progress', id: 2, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+        )
         expect(change_item.current_status_matches status).to be_truthy
       end
     end
@@ -80,7 +82,9 @@ describe ChangeItem do
       end
 
       it 'matches on Status' do
-        status = Status.new name: 'In Progress', id: 1, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+        status = Status.new(
+          name: 'In Progress', id: 1, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+        )
         expect(change_item.old_status_matches status).to be_truthy
       end
     end

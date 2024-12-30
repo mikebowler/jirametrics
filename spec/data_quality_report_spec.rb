@@ -193,7 +193,9 @@ describe DataQualityReport do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
-      board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new')
+      board.backlog_statuses << Status.new(
+        name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new'
+      )
       report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
       )
@@ -211,7 +213,9 @@ describe DataQualityReport do
 
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'Backlog', time: '2021-09-06', value_id: 10_000)
-      board.backlog_statuses << Status.new(name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new')
+      board.backlog_statuses << Status.new(
+        name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new'
+      )
       report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
       )

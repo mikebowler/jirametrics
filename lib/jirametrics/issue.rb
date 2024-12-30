@@ -157,7 +157,7 @@ class Issue
     message << id.to_s
     message << ') that can\'t be found in ['
     message << board.possible_statuses.collect(&:to_s).join(', ')
-    message << "]. We are guessing that this belongs to the #{status.category.to_s} status category "
+    message << "]. We are guessing that this belongs to the #{status.category} status category "
     message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
     board.project_config.file_system.warning message
 

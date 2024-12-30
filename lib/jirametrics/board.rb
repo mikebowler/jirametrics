@@ -4,7 +4,7 @@ class Board
   attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :board_type
   attr_accessor :cycletime, :project_config
 
-  def initialize raw:, possible_statuses: # StatusCollection.new
+  def initialize raw:, possible_statuses:
     @raw = raw
     @board_type = raw['type']
     @possible_statuses = possible_statuses
