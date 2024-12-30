@@ -161,8 +161,11 @@ class ProjectConfig
     if status_id.nil?
       guesses = status_guesses[status]
       if guesses.nil?
-        raise 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
-          "name #{status.inspect}. If you need this mapping then you must specify the status_id."
+        file_system.warning "For status_category_mapping status: #{status.inspect}, category: #{category.inspect}\n" \
+          "Cannot guess status id for #{status.inspect} as no statuses found anywhere in the issues " \
+          "histories with that name. Since we can't find it, you probably don't need this mapping anymore so we're " \
+          "going to ignore it. If you really want it, then you'll need to specify a status id."
+        return
       end
 
       if guesses.size > 1

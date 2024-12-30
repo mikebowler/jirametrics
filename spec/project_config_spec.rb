@@ -331,10 +331,13 @@ describe ProjectConfig do
     end
 
     it 'raises error if status_id cannot be guessed because no names match' do
-      expect { project_config.status_category_mapping status: 'foo', category: 'To Do' }
-        .to raise_error 'Cannot guess status id as no statuses found anywhere in the issues histories with ' \
-          'name "foo". If you need this mapping then you must specify the status_id.'
-      expect(exporter.file_system.log_messages).to be_empty
+      project_config.status_category_mapping status: 'foo', category: 'To Do'
+      expect(exporter.file_system.log_messages).to eq([
+        "Warning: For status_category_mapping status: \"foo\", category: \"To Do\"\nCannot guess status id " \
+        'for "foo" as no statuses found anywhere in the issues histories with that name. Since we can\'t find ' \
+        'it, you probably don\'t need this mapping anymore so we\'re going to ignore it. If you really want it, ' \
+        'then you\'ll need to specify a status id.'
+      ])
     end
 
     it 'raises error if status_id cannot be guessed because too many names match' do
