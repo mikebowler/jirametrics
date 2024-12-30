@@ -20,7 +20,7 @@ describe Status do
       }
     })
     expect(status.inspect).to(
-      eq('Status(name: "InProgress", id: 3, category_name: "In Progress", category_id: 4)')
+      eq('Status(name: "InProgress", id: 3, category: {name:"In Progress", id: 4, key: "indeterminate"})')
     )
     expect(status).to be_global
   end
@@ -49,7 +49,8 @@ describe Status do
     })
 
     expect(status.inspect).to eq(
-      'Status(name: "FakeBacklog", id: 10017, category_name: "In Progress", category_id: 4, project_id: 10002)'
+      'Status(name: "FakeBacklog", id: 10017, project_id: 10002, ' \
+        'category: {name:"In Progress", id: 4, key: "indeterminate"})'
     )
     expect(status).to be_project_scoped
     expect(status).not_to be_artificial
