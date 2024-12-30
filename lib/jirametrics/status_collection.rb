@@ -79,7 +79,7 @@ class StatusCollection
 
   # This is used to create a status that was found in the history but has since been deleted.
   def fabricate_status_for id:, name:
-    first_in_progress_status = @list.find { |s| s.category.key == 'indeterminate' }
+    first_in_progress_status = @list.find { |s| s.category.indeterminate? }
     raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
 
     status = Status.new(
