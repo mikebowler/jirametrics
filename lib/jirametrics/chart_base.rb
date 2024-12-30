@@ -200,8 +200,8 @@ class ChartBase
         icon: ' 👀'
       )
     end
-    text = is_category ? status.category_name : status.name
-    "<span title='Category: #{status.category_name}'>#{color_block color.name} #{text}</span>#{visibility}"
+    text = is_category ? status.category.name : status.name
+    "<span title='Category: #{status.category.name}'>#{color_block color.name} #{text}</span>#{visibility}"
   end
 
   def icon_span title:, icon:
@@ -209,7 +209,7 @@ class ChartBase
   end
 
   def status_category_color status
-    case status.category_key
+    case status.category.key
     when 'new' then CssVariable['--status-category-todo-color']
     when 'indeterminate' then CssVariable['--status-category-inprogress-color']
     when 'done' then CssVariable['--status-category-done-color']

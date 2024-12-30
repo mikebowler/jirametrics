@@ -65,7 +65,7 @@ describe ProjectConfig do
       ]
 
       actual = project_config.possible_statuses.collect do |status|
-        [status.name, status.category_name]
+        [status.name, status.category.name]
       end
 
       expect(actual.sort).to eq expected.sort

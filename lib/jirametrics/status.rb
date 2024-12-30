@@ -4,28 +4,20 @@ require 'jirametrics/value_equality'
 
 class Status
   include ValueEquality
-  attr_reader :id, :category_name, :category_id, :category_key, :project_id
+  attr_reader :id, :project_id, :category
   attr_accessor :name
 
   class Category
-    def initialize status
-      @status = status
-    end
+    attr_reader :id, :name, :key
 
-    def name
-      @status.category_name
-    end
-
-    def id
-      @status.category_id
-    end
-
-    def key
-      @status.category_key
+    def initialize id:, name:, key:
+      @id = id
+      @name = name
+      @key = key
     end
 
     def to_s
-      @status.category_to_s
+      "#{name.inspect}:#{id.inspect}"
     end
   end
 
@@ -52,9 +44,7 @@ class Status
 
     @name = name
     @id = id
-    @category_name = category_name
-    @category_id = category_id
-    @category_key = category_key
+    @category = Category.new id: category_id, name: category_name, key: category_key
     @project_id = project_id
     @artificial = artificial
 
@@ -80,16 +70,12 @@ class Status
     "#{name.inspect}:#{id.inspect}"
   end
 
-  def category_to_s
-    "#{category_name.inspect}:#{category_id.inspect}"
-  end
-
   def artificial?
     @artificial
   end
 
   def == other
-    @id == other.id && @name == other.name && @category_id == other.category_id && @category_name == other.category_name
+    @id == other.id && @name == other.name && @category.id == other.category.id && @category.name == other.category.name
   end
 
   def inspect
@@ -105,9 +91,5 @@ class Status
 
   def value_equality_ignored_variables
     [:@raw]
-  end
-
-  def category
-    Category.new(self)
   end
 end

@@ -203,8 +203,8 @@ class ProjectConfig
 
     unless status == existing_status
       raise "Redefining status category for status #{status}. " \
-        "original: #{existing_status.category_to_s}, " \
-        "new: #{status.category_to_s}"
+        "original: #{existing_status.category.to_s}, " \
+        "new: #{status.category.to_s}"
     end
 
     # We're registering one we already knew about. This may happen if someone specified a status_category_mapping

@@ -13,7 +13,7 @@ class StatusCollection
     excluding = expand_statuses excluding
 
     @list.filter_map do |status|
-      keep = status.category_name == category_name ||
+      keep = status.category.name == category_name ||
         including.any? { |s| s.name == status.name }
       keep = false if excluding.any? { |s| s.name == status.name }
 
@@ -66,11 +66,11 @@ class StatusCollection
   end
 
   def find_category_by_name name
-    category = @list.find { |status| status.category_name == name }&.category
+    category = @list.find { |status| status.category.name == name }&.category
     unless category
       set = Set.new
       @list.each do |status|
-        set << status.category_to_s
+        set << status.category.to_s
       end
       raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
     end
@@ -79,11 +79,11 @@ class StatusCollection
 
   # TODO: Remove this
   def find_category_id_by_name name
-    id = @list.find { |status| status.category_name == name }&.category_id
+    id = @list.find { |status| status.category.name == name }&.category_id
     unless id
       set = Set.new
       @list.each do |status|
-        set << status.category_to_s
+        set << status.category.to_s
       end
       raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
     end
@@ -92,14 +92,15 @@ class StatusCollection
 
   # This is used to create a status that was found in the history but has since been deleted.
   def fabricate_status_for id:, name:
-    first_in_progress_status = @list.find { |s| s.category_key == 'indeterminate' }
+    first_in_progress_status = @list.find { |s| s.category.key == 'indeterminate' }
     raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
 
     status = Status.new(
       name: name,
       id: id,
-      category_name: first_in_progress_status.category_name,
-      category_id: first_in_progress_status.category_id
+      category_name: first_in_progress_status.category.name,
+      category_id: first_in_progress_status.category.id,
+      category_key: first_in_progress_status.category.key
     )
     self << status
     status

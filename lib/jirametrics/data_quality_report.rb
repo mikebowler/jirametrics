@@ -113,7 +113,7 @@ class DataQualityReport < ChartBase
   end
 
   def category_name_for status_id:, board:
-    board.possible_statuses.find_by_id(status_id)&.category_name
+    board.possible_statuses.find_by_id(status_id)&.category.name
   end
 
   def initialize_entries

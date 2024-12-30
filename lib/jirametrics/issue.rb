@@ -119,7 +119,7 @@ class Issue
   def still_in_status_category *category_names
     still_in do |change|
       status = find_status_by_id change.value_id, name: change.value
-      category_names.include?(status.category_name) || category_names.include?(status.category_id)
+      category_names.include?(status.category.name) || category_names.include?(status.category.id)
     end
   end
 
@@ -141,7 +141,7 @@ class Issue
     return false if change.nil?
 
     status = find_status_by_id change.value_id, name: change.value
-    change if status && category_names.include?(status.category_name)
+    change if status && category_names.include?(status.category.name)
   end
 
   def find_status_by_id id, name: nil
@@ -157,7 +157,7 @@ class Issue
     message << id.to_s
     message << ') that can\'t be found in ['
     message << board.possible_statuses.collect(&:to_s).join(', ')
-    message << "]. We are guessing that this belongs to the #{status.category_to_s} status category "
+    message << "]. We are guessing that this belongs to the #{status.category.to_s} status category "
     message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
     board.project_config.file_system.warning message
 
@@ -172,7 +172,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = find_status_by_id(change.value_id).category_name
+      category = find_status_by_id(change.value_id).category.name
       return change if category_names.include? category
     end
     nil
@@ -639,7 +639,7 @@ class Issue
       # This was probably loaded as a linked issue, which means we don't know what board it really
       # belonged to. The best we can do is look at the status category. This case should be rare but
       # it can happen.
-      status.category_name == 'Done'
+      status.category.name == 'Done'
     else
       board.cycletime.done? self
     end
