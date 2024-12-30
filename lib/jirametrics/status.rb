@@ -28,7 +28,11 @@ class Status
   def self.from_raw raw
     category_config = raw['statusCategory']
 
-    raise category_config.inspect unless category_config['key']
+    legal_keys = %w[new indeterminate done]
+    unless legal_keys.include? category_config['key']
+      puts "Category key #{category_config['key'].inspect} should be one of #{legal_keys.inspect}. Found:\n" \
+        "#{category_config}"
+    end
 
     Status.new(
       name: raw['name'],
@@ -51,15 +55,6 @@ class Status
     @category = Category.new id: category_id, name: category_name, key: category_key
     @project_id = project_id
     @artificial = artificial
-
-    # TODO: This validation still needs to be in place but tests must change first.
-    # unless %w[new indeterminate done].include? @category_key
-    #   text = "Status() Category key (#{@category_key.inspect}) must be one of new, indeterminate, done"
-    #   caller(1..4).each do |line|
-    #     text << "\n-> Called from #{line}"
-    #   end
-    #   puts text
-    # end
   end
 
   def project_scoped?

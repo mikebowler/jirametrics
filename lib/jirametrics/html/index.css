@@ -19,6 +19,7 @@
   --status-category-todo-color: gray;
   --status-category-inprogress-color: #2663ff;
   --status-category-done-color: #00ff00;
+  --status-category-unknown-color: black;
 
   --aging-work-bar-chart-percentage-line-color: red;
   --aging-work-bar-chart-separator-color: white;

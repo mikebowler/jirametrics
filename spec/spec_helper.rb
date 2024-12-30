@@ -101,11 +101,6 @@ def load_statuses input_file
   json = JSON.parse(File.read(input_file))
   json.each do |status_config|
     statuses << Status.from_raw(status_config)
-    # category_config = status_config['statusCategory']
-    # statuses << Status.new(
-    #   name: status_config['name'], id: status_config['id'].to_i,
-    #   category_name: category_config['name'], category_id: category_config['id'].to_i
-    # )
   end
   statuses
 end

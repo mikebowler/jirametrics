@@ -213,7 +213,7 @@ class ChartBase
     when 'new' then CssVariable['--status-category-todo-color']
     when 'indeterminate' then CssVariable['--status-category-inprogress-color']
     when 'done' then CssVariable['--status-category-done-color']
-    else 'black' # Theoretically impossible but seen in prod.
+    else CssVariable['--status-category-unknown-color'] # Theoretically impossible but seen in prod.
     end
   end
 
