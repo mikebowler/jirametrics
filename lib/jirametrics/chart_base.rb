@@ -209,10 +209,10 @@ class ChartBase
   end
 
   def status_category_color status
-    case status.category_name
-    when 'To Do' then CssVariable['--status-category-todo-color']
-    when 'In Progress' then CssVariable['--status-category-inprogress-color']
-    when 'Done' then CssVariable['--status-category-done-color']
+    case status.category_key
+    when 'new' then CssVariable['--status-category-todo-color']
+    when 'indeterminate' then CssVariable['--status-category-inprogress-color']
+    when 'done' then CssVariable['--status-category-done-color']
     else 'black' # Theoretically impossible but seen in prod.
     end
   end

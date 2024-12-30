@@ -257,7 +257,7 @@ describe ChartBase do
   end
 
   it 'returns black for an unknown status category' do
-    status = Status.new(name: 'unknown', id: 5, category_name: 'ToDo', category_id: 2)
+    status = Status.new(name: 'unknown', id: 5, category_name: 'ToDo', category_key: nil, category_id: 2)
     expect(chart_base.status_category_color(status)).to eq 'black'
   end
 

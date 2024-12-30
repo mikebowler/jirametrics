@@ -176,12 +176,18 @@ class ProjectConfig
         "If that's incorrect then specify the status_id."
     end
 
-    found_category_id = possible_statuses.find_category_id_by_name category
+    found_category = possible_statuses.find_category_by_name category
+    found_category_id = found_category&.id # possible_statuses.find_category_id_by_name category
     if category_id && category_id != found_category_id
       raise "ID is incorrect for status category #{category.inspect}. Did you mean #{found_category_id}?"
     end
 
-    add_possible_status Status.new(name: status, id: status_id, category_name: category, category_id: found_category_id)
+    add_possible_status(
+      Status.new(
+        name: status, id: status_id,
+        category_name: category, category_id: found_category_id, category_key: found_category.key
+      )
+    )
   end
 
   def add_possible_status status
@@ -197,8 +203,8 @@ class ProjectConfig
 
     unless status == existing_status
       raise "Redefining status category for status #{status}. " \
-        "original: #{existing_status.category_name.inspect}:#{existing_status.category_id}, " \
-        "new: #{status.category_name.inspect}:#{status.category_id}"
+        "original: #{existing_status.category_to_s}, " \
+        "new: #{status.category_to_s}"
     end
 
     # We're registering one we already knew about. This may happen if someone specified a status_category_mapping

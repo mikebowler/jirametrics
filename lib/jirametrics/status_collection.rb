@@ -65,16 +65,44 @@ class StatusCollection
     @list.select { |status| status.name == name }
   end
 
+  def find_category_by_name name
+    category = @list.find { |status| status.category_name == name }&.category
+    unless category
+      set = Set.new
+      @list.each do |status|
+        set << status.category_to_s
+      end
+      raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
+    end
+    category
+  end
+
+  # TODO: Remove this
   def find_category_id_by_name name
     id = @list.find { |status| status.category_name == name }&.category_id
     unless id
       set = Set.new
       @list.each do |status|
-        set << "#{status.category_name.inspect}:#{status.category_id}"
+        set << status.category_to_s
       end
       raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
     end
     id
+  end
+
+  # This is used to create a status that was found in the history but has since been deleted.
+  def fabricate_status_for id:, name:
+    first_in_progress_status = @list.find { |s| s.category_key == 'indeterminate' }
+    raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
+
+    status = Status.new(
+      name: name,
+      id: id,
+      category_name: first_in_progress_status.category_name,
+      category_id: first_in_progress_status.category_id
+    )
+    self << status
+    status
   end
 
   def collect(&block) = @list.collect(&block)

@@ -13,18 +13,18 @@ describe Issue do
     board.project_config = project_config
     statuses = board.possible_statuses
     statuses.clear
-    statuses << Status.new(name: 'Backlog', id: 1, category_name: 'ready', category_id: 2)
-    statuses << Status.new(name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4)
-    statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6)
-    statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8)
-    statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10)
+    statuses << Status.new(name: 'Backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new')
+    statuses << Status.new(name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4, category_key: 'new')
+    statuses << Status.new(name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate')
+    statuses << Status.new(name: 'Review', id: 7, category_name: 'in-flight', category_id: 8, category_key: 'indeterminate')
+    statuses << Status.new(name: 'Done', id: 9, category_name: 'finished', category_id: 10, category_key: 'indeterminate')
 
-    statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
-    statuses << Status.new(name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6)
-    statuses << Status.new(name: 'Doing', id: 12, category_name: 'finished', category_id: 10)
-    statuses << Status.new(name: 'Doing2', id: 13, category_name: 'finished', category_id: 10)
-    statuses << Status.new(name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6)
-    statuses << Status.new(name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6)
+    statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate')
+    statuses << Status.new(name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate')
+    statuses << Status.new(name: 'Doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done')
+    statuses << Status.new(name: 'Doing2', id: 13, category_name: 'finished', category_id: 10, category_key: 'done')
+    statuses << Status.new(name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate')
+    statuses << Status.new(name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate')
     board
   end
   let(:issue1) { load_issue 'SP-1', board: board }
@@ -821,7 +821,7 @@ describe Issue do
   context 'status' do
     it 'returns status' do
       expect(load_issue('SP-1').status).to eql(
-        Status.new(name: 'In Progress', id: 3, category_name: 'In Progress', category_id: 4)
+        Status.new(name: 'In Progress', id: 3, category_name: 'In Progress', category_id: 4, category_key: 'indeterminate')
       )
     end
   end

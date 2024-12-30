@@ -136,7 +136,8 @@ describe AgingWorkInProgressChart do
         'id' => '10012',
         'statusCategory' => {
           'name' => 'To Do',
-          'id' => '2'
+          'id' => '2',
+          'key' => 'new'
         }
       }
       board.cycletime = mock_cycletime_config stub_values: [

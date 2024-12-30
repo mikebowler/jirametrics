@@ -148,6 +148,8 @@ class Issue
     status = board.possible_statuses.find_by_id(id)
     return status if status
 
+    status = board.possible_statuses.fabricate_status_for id: id, name: name
+
     message = +'The history for issue '
     message << key
     message << ' references a status ('
@@ -155,19 +157,10 @@ class Issue
     message << id.to_s
     message << ') that can\'t be found in ['
     message << board.possible_statuses.collect(&:to_s).join(', ')
-    message << ']. We are going to pretend that this belongs to the "In Progress" status category '
+    message << "]. We are guessing that this belongs to the #{status.category_to_s} status category "
     message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
-
     board.project_config.file_system.warning message
 
-    # Fabricate a status for this purpose
-    status = Status.new(
-      name: name || 'unknown',
-      id: id,
-      category_name: 'In Progress',
-      category_id: board.possible_statuses.find_category_id_by_name('In Progress')
-    )
-    board.possible_statuses << status
     status
   end
 

@@ -152,7 +152,9 @@ describe AgingWorkBarChart do
     end
 
     it 'handles blocked by status' do
-      board.possible_statuses << Status.new(name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6)
+      board.possible_statuses << Status.new(
+        name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+      )
 
       chart.settings = board.project_config.settings
       chart.settings['blocked_statuses'] = ['Blocked']

@@ -4,11 +4,35 @@ require 'jirametrics/value_equality'
 
 class Status
   include ValueEquality
-  attr_reader :id, :category_name, :category_id, :project_id
+  attr_reader :id, :category_name, :category_id, :category_key, :project_id
   attr_accessor :name
+
+  class Category
+    def initialize status
+      @status = status
+    end
+
+    def name
+      @status.category_name
+    end
+
+    def id
+      @status.category_id
+    end
+
+    def key
+      @status.category_key
+    end
+
+    def to_s
+      @status.category_to_s
+    end
+  end
 
   def self.from_raw raw
     category_config = raw['statusCategory']
+
+    raise category_config.inspect unless category_config['key']
 
     Status.new(
       name: raw['name'],
@@ -21,7 +45,7 @@ class Status
     )
   end
 
-  def initialize name:, id:, category_name:, category_id:, category_key: 'new', project_id: nil, artificial: true
+  def initialize name:, id:, category_name:, category_id:, category_key:, project_id: nil, artificial: true
     # These checks are needed because nils used to be possible and now they aren't.
     raise 'id cannot be nil' if id.nil?
     raise 'category_id cannot be nil' if category_id.nil?
@@ -36,7 +60,11 @@ class Status
 
     # TODO: This validation still needs to be in place but tests must change first.
     # unless %w[new indeterminate done].include? @category_key
-    #   raise "Category key (#{@category_key}) must be one of new, indeterminate, done"
+    #   text = "Status() Category key (#{@category_key.inspect}) must be one of new, indeterminate, done"
+    #   caller(1..4).each do |line|
+    #     text << "\n-> Called from #{line}"
+    #   end
+    #   puts text
     # end
   end
 
@@ -52,6 +80,10 @@ class Status
     "#{name.inspect}:#{id.inspect}"
   end
 
+  def category_to_s
+    "#{category_name.inspect}:#{category_id.inspect}"
+  end
+
   def artificial?
     @artificial
   end
@@ -63,9 +95,9 @@ class Status
   def inspect
     result = []
     result << "Status(name: #{@name.inspect}"
-    result << "id: #{@id.inspect}" if @id
+    result << "id: #{@id.inspect}"
     result << "category_name: #{@category_name.inspect}"
-    result << "category_id: #{@category_id.inspect}" if @category_id
+    result << "category_id: #{@category_id.inspect}"
     result << "project_id: #{@project_id}" if @project_id
     result << 'artificial' if artificial?
     result.join(', ') << ')'
@@ -73,5 +105,9 @@ class Status
 
   def value_equality_ignored_variables
     [:@raw]
+  end
+
+  def category
+    Category.new(self)
   end
 end

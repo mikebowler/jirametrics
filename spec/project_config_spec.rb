@@ -16,8 +16,8 @@ describe ProjectConfig do
     board.project_config = project_config
     statuses = board.possible_statuses
     statuses.clear
-    statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2)
-    statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10)
+    statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new')
+    statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done')
     board
   end
   let(:issue1) { load_issue('SP-1', board: board) }
@@ -375,14 +375,14 @@ describe ProjectConfig do
       expect(project_config.possible_statuses).to be_empty
       project_config.id = 100
       project_config.add_possible_status(
-        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+        Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
       )
       expect(project_config.possible_statuses.collect(&:name)).to eq(['foo'])
     end
 
     it 'throws error if categories dont match' do
-      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
-      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo2', category_id: 3
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
+      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo2', category_id: 3, category_key: 'new'
       project_config.add_possible_status(status1)
 
       expect { project_config.add_possible_status(status2) }.to raise_error(
@@ -391,8 +391,8 @@ describe ProjectConfig do
     end
 
     it 'throws error if status names dont match' do
-      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
-      status2 = Status.new name: 'bar', id: 1, category_name: 'cfoo', category_id: 2
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
+      status2 = Status.new name: 'bar', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
       project_config.add_possible_status(status1)
 
       expect { project_config.add_possible_status(status2) }.to raise_error(
@@ -401,8 +401,8 @@ describe ProjectConfig do
     end
 
     it 'does nothing if we are just adding the same one again' do
-      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
-      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2
+      status1 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
+      status2 = Status.new name: 'foo', id: 1, category_name: 'cfoo', category_id: 2, category_key: 'new'
       project_config.add_possible_status(status1)
       project_config.add_possible_status(status2)
 
