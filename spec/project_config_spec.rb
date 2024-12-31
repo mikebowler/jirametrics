@@ -318,6 +318,10 @@ describe ProjectConfig do
         subject.file_prefix 'sample'
         subject.load_status_category_mappings
         issue = empty_issue created: '2024-01-01'
+
+        # Throw in one change that isn't a status to see if we blow up.
+        issue.changes << mock_change(field: 'Flagged', time: '2024-01-02', value: 'Flagged')
+
         issue.changes << mock_change(
           field: 'status', time: '2024-01-02',
           value: 'Walk', value_id: 99, old_value: 'Walk', old_value_id: 100

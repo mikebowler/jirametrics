@@ -138,17 +138,19 @@ class ProjectConfig
     @file_prefix
   end
 
-  def status_guesses
-    statuses = {}
+  # Walk across all the issues and find any status with that name. Return a list of ids that match.
+  def find_ids_by_status_name_across_all_issues name
+    ids = Set.new
+
     issues.each do |issue|
       issue.changes.each do |change|
         next unless change.status?
 
-        (statuses[change.value] ||= Set.new) << change.value_id
-        (statuses[change.old_value] ||= Set.new) << change.old_value_id if change.old_value
+        ids << change.value_id.to_i if change.value == name
+        ids << change.old_value_id.to_i if change.old_value == name
       end
     end
-    statuses
+    ids.to_a
   end
 
   def status_category_mapping status:, category:
@@ -159,8 +161,9 @@ class ProjectConfig
     category, category_id = parse_status.call category
 
     if status_id.nil?
-      guesses = status_guesses[status]
-      if guesses.nil?
+      # guesses = status_guesses[status]
+      guesses = find_ids_by_status_name_across_all_issues status
+      if guesses.empty?
         file_system.warning "For status_category_mapping status: #{status.inspect}, category: #{category.inspect}\n" \
           "Cannot guess status id for #{status.inspect} as no statuses found anywhere in the issues " \
           "histories with that name. Since we can't find it, you probably don't need this mapping anymore so we're " \
