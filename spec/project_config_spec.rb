@@ -353,7 +353,8 @@ describe ProjectConfig do
 
     it 'raises error if category name can\'t be found' do
       expect { project_config.status_category_mapping status: 'Run:101', category: 'unknown' }
-        .to raise_error 'Unable to find status category "unknown" in ["Done":3, "In Progress":4, "To Do":2]'
+        .to raise_error 'No status categories found for name "unknown" in ["To Do":2, "Done":3, "In Progress":4]. ' \
+          'Either fix the name or add an ID.'
       expect(exporter.file_system.log_messages).to be_empty
     end
 
@@ -368,6 +369,18 @@ describe ProjectConfig do
       expect(exporter.file_system.log_messages).to eq([
         'status_category_mapping for "Run" has been mapped to id 101. If that\'s incorrect then specify the status_id.'
       ])
+    end
+
+    # This is theoretically impossible and we haven't seen it in production yet, but this is Jira.
+    it 'raises error when category id missing and multiple names match' do
+      project_config.possible_statuses << Status.new(
+        name: 'Fake', id: 100, category_name: 'To Do', category_id: 101, category_key: 'new'
+      )
+      expect { project_config.status_category_mapping status: 'Run:101', category: 'To Do' }.to raise_error(
+        'More than one status category found with the name "To Do" in ["To Do":2, "To Do":101]. ' \
+          'Either fix the name or add an ID'
+      )
+      expect(exporter.file_system.log_messages).to be_empty
     end
   end
 

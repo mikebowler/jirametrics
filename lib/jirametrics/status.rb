@@ -20,6 +20,17 @@ class Status
       "#{name.inspect}:#{id.inspect}"
     end
 
+    def <=> other
+      id <=> other.id
+    end
+
+    def == other
+      id == other.id
+    end
+
+    def eql?(other) = id.eql?(other.id)
+    def hash = id.hash
+
     def new? = (@key == 'new')
     def indeterminate? = (@key == 'indeterminate')
     def done? = (@key == 'done')

@@ -65,16 +65,19 @@ class StatusCollection
     @list.select { |status| status.name == name }
   end
 
-  def find_category_by_name name
-    category = @list.find { |status| status.category.name == name }&.category
-    unless category
-      set = Set.new
-      @list.each do |status|
-        set << status.category.to_s
-      end
-      raise "Unable to find status category #{name.inspect} in [#{set.to_a.sort.join(', ')}]"
-    end
-    category
+  def find_all_categories
+    @list
+      .collect(&:category)
+      .uniq
+      .sort_by(&:id)
+  end
+
+  def find_all_categories_by_name name
+    @list
+      .select { |s| s.category.name == name }
+      .collect(&:category)
+      .uniq
+      .sort_by(&:id)
   end
 
   # This is used to create a status that was found in the history but has since been deleted.

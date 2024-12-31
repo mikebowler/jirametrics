@@ -161,7 +161,6 @@ class ProjectConfig
     category, category_id = parse_status.call category
 
     if status_id.nil?
-      # guesses = status_guesses[status]
       guesses = find_ids_by_status_name_across_all_issues status
       if guesses.empty?
         file_system.warning "For status_category_mapping status: #{status.inspect}, category: #{category.inspect}\n" \
@@ -182,16 +181,27 @@ class ProjectConfig
         "If that's incorrect then specify the status_id."
     end
 
-    found_category = possible_statuses.find_category_by_name category
-    found_category_id = found_category&.id # possible_statuses.find_category_id_by_name category
-    if category_id && category_id != found_category_id
-      raise "ID is incorrect for status category #{category.inspect}. Did you mean #{found_category_id}?"
+    possible_categories = possible_statuses.find_all_categories_by_name category
+    if possible_categories.empty?
+      all = possible_statuses.find_all_categories.join(', ')
+      raise "No status categories found for name #{category.inspect} in [#{all}]. " \
+        'Either fix the name or add an ID.'
+    elsif possible_categories.size > 1
+      # Theoretically impossible and yet we've seen wierder things out of Jira so we're prepared.
+      raise "More than one status category found with the name #{category.inspect} in " \
+        "[#{possible_categories.join(', ')}]. Either fix the name or add an ID"
+    end
+
+    found_category = possible_categories.first
+
+    if category_id && category_id != found_category.id
+      raise "ID is incorrect for status category #{category.inspect}. Did you mean #{found_category.id}?"
     end
 
     add_possible_status(
       Status.new(
         name: status, id: status_id,
-        category_name: category, category_id: found_category_id, category_key: found_category.key
+        category_name: category, category_id: found_category.id, category_key: found_category.key
       )
     )
   end
