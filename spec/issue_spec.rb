@@ -98,6 +98,14 @@ describe Issue do
         'Unable to initialize SP-1'
       )
     end
+
+    it 'raises wrapped error if no board passed in' do
+      described_class.new raw: { 'key' => 'ABC-1' }, board: nil
+      raise 'Should have failed because no board specified'
+    rescue StandardError => e
+      expect(e.message).to eq 'Unable to initialize ABC-1'
+      expect(e.cause.message).to eq 'No board for issue ABC-1'
+    end
   end
 
   context 'load_history_into_changes' do

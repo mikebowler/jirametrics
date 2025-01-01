@@ -13,7 +13,12 @@ class Issue
     @changes = []
     @board = board
 
+    # We only check for this here because if a board isn't passed in then things will fail much
+    # later and be hard to find. Let's find out early.
     raise "No board for issue #{key}" if board.nil?
+
+    # There are cases where we create an Issue of fragments like linked issues and those won't have
+    # changelogs.
     return unless @raw['changelog']
 
     load_history_into_changes
@@ -124,13 +129,13 @@ class Issue
   end
 
   def most_recent_status_change
+    # We artificially insert a status change to represent creation so by definition there will always be at least one.
     changes.reverse.find { |change| change.status? }
   end
 
   # Are we currently in this status? If yes, then return the most recent status change.
   def currently_in_status *status_names
     change = most_recent_status_change
-    return false if change.nil?
 
     change if change.current_status_matches(*status_names)
   end
@@ -138,7 +143,6 @@ class Issue
   # Are we currently in this status category? If yes, then return the most recent status change.
   def currently_in_status_category *category_names
     change = most_recent_status_change
-    return false if change.nil?
 
     status = find_or_create_status id: change.value_id, name: change.value
     change if status && category_names.include?(status.category.name)
