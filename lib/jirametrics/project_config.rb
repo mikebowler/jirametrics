@@ -224,7 +224,14 @@ class ProjectConfig
     end
 
     # We're registering one we already knew about. This may happen if someone specified a status_category_mapping
-    # for something that was already returned from jira. This isn't  problem so just ignore it.
+    # for something that was already returned from jira.
+    #
+    # You may be looking at this code and thinking of changing it to spit out a warning since obviously
+    # the user has made a mistake. Unfortunately, they may not have made any mistake. Due to inconsistency with the
+    # status API, it's possible for two different people to make a request to the same API at the same time and get
+    # back a different set of statuses. So that means that some people might need more status/categories mappings than
+    # other people for exactly the same instance. See this article for more on that API:
+    # https://agiletechnicalexcellence.com/2024/04/12/jira-api-statuses.html
     existing_status
   end
 
