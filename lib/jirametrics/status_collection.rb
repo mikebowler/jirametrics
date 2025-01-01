@@ -34,7 +34,7 @@ class StatusCollection
           yield name_or_id
           next
         else
-          all_status_names = @list.collect { |s| "#{s.name.inspect}:#{s.id.inspect}" }.uniq.sort.join(', ')
+          all_status_names = @list.collect(&:to_s).uniq.sort.join(', ')
           raise StatusNotFoundError, "Status not found: \"#{name_or_id}\". Possible statuses are: #{all_status_names}"
         end
       end
@@ -89,7 +89,11 @@ class StatusCollection
   def clear = @list.clear
   def delete(object) = @list.delete(object)
 
+  def to_s
+    "[#{@list.join(', ')}]"
+  end
+
   def inspect
-    "StatusCollection(#{@list.join(', ')})"
+    "StatusCollection#{self}"
   end
 end

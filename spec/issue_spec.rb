@@ -1276,5 +1276,12 @@ describe Issue do
         'https://jirametrics.org/faq/#q1 for more details'
       ])
     end
+
+    it 'raises error if no in-progress statuses can be found' do
+      issue1.board.possible_statuses.clear
+      expect { issue1.find_or_create_status id: 1, name: 'foo' }.to raise_error(
+        "Can't find even one in-progress status in []"
+      )
+    end
   end
 end

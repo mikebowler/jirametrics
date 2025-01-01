@@ -83,7 +83,14 @@ describe StatusCollection do
 
   it 'inspects as string' do
     expect(collection.inspect).to eq(
-      'StatusCollection("a":1, "b":2, "c":3, "d":4)'
+      'StatusCollection["a":1, "b":2, "c":3, "d":4]'
     )
   end
+
+  it 'converts to string' do
+    expect(collection.to_s).to eq(
+      '["a":1, "b":2, "c":3, "d":4]'
+    )
+  end
+
 end

@@ -151,7 +151,7 @@ class Issue
     # No status could be found with that ID so now we have to fabricate one.
 
     first_in_progress_status = board.possible_statuses.find { |s| s.category.indeterminate? }
-    raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
+    raise "Can't find even one in-progress status in #{board.possible_statuses}" unless first_in_progress_status
 
     status = Status.new(
       name: name,
@@ -166,11 +166,11 @@ class Issue
     message = +'The history for issue '
     message << key
     message << ' references a status ('
-    message << name.inspect << ':' if name
+    message << "#{name.inspect}:"
     message << id.to_s
-    message << ') that can\'t be found in ['
-    message << board.possible_statuses.collect(&:to_s).join(', ')
-    message << "]. We are guessing that this belongs to the #{status.category} status category "
+    message << ') that can\'t be found in '
+    message << board.possible_statuses.to_s
+    message << ". We are guessing that this belongs to the #{status.category} status category "
     message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
     board.project_config.file_system.warning message
 
