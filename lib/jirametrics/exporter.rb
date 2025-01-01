@@ -3,6 +3,8 @@
 require 'fileutils'
 
 class Object
+  # TODO: Right now this is duplicated here and also in FileSystem. Eventually this one will go away,
+  # since it's non-trivial to assert against deprecation that happens here.
   def deprecated message:, date:, depth: 2
     text = +''
     text << "Deprecated(#{date}): "

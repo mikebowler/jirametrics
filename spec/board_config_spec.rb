@@ -21,4 +21,14 @@ describe BoardConfig do
         'If so, remove it from there.'
     )
   end
+
+  it 'sets expedited priority names (deprecated)' do
+    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
+    board_config.expedited_priority_names 'super-high'
+
+    expect(project_config.settings['expedited_priority_names']).to eq ['super-high']
+    expect(exporter.file_system.log_messages).to include a_string_matching(
+      /^Deprecated\(2024-09-15\): Expedited priority names are now specified in settings/
+    )
+  end
 end
