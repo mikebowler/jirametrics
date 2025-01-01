@@ -131,6 +131,29 @@ describe Issue do
         Time.parse('2021-09-29T18:00:00+00:00')
       ]
     end
+
+    it 'continues even when changelog has no history' do
+      raw = {
+        'key' => 'SP-1',
+        'changelog' => {},
+        'fields' => {
+          'created' => '2021-08-29T18:00:00+00:00',
+          'updated' => '2021-09-29T18:00:00+00:00',
+          'status' => {
+            'name' => 'BrandNew!',
+            'id' => '999'
+          },
+          'creator' => {
+            'displayName' => 'Tolkien'
+          }
+        }
+      }
+      issue = described_class.new raw: raw, board: sample_board
+      expect([issue.created, issue.updated]).to eq [
+        Time.parse('2021-08-29T18:00:00+00:00'),
+        Time.parse('2021-09-29T18:00:00+00:00')
+      ]
+    end
   end
 
   context 'changes' do

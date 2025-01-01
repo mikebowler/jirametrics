@@ -98,9 +98,7 @@ class Issue
 
   def still_in
     result = nil
-    @changes.each do |change|
-      next unless change.status?
-
+    status_changes.each do |change|
       current_status_matched = yield change
 
       if current_status_matched && result.nil?
@@ -182,13 +180,11 @@ class Issue
   end
 
   def first_status_change_after_created
-    @changes.find { |change| change.status? && change.artificial? == false }
+    status_changes.find { |change| change.artificial? == false }
   end
 
   def first_time_in_status_category *category_names
-    @changes.each do |change|
-      next unless change.status?
-
+    status_changes.each do |change|
       category = find_or_create_status(id: change.value_id, name: change.value).category.name
       return change if category_names.include? category
     end
@@ -736,5 +732,9 @@ class Issue
       'to' => first_status_id,
       'toString' => first_status
     }
+  end
+
+  def status_changes
+    @changes.select { |change| change.status? }
   end
 end
