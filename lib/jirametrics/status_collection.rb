@@ -80,22 +80,6 @@ class StatusCollection
       .sort_by(&:id)
   end
 
-  # This is used to create a status that was found in the history but has since been deleted.
-  def fabricate_status_for id:, name:
-    first_in_progress_status = @list.find { |s| s.category.indeterminate? }
-    raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
-
-    status = Status.new(
-      name: name,
-      id: id,
-      category_name: first_in_progress_status.category.name,
-      category_id: first_in_progress_status.category.id,
-      category_key: first_in_progress_status.category.key
-    )
-    self << status
-    status
-  end
-
   def collect(&block) = @list.collect(&block)
   def find(&block) = @list.find(&block)
   def each(&block) = @list.each(&block)

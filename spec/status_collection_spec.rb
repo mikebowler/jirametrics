@@ -80,4 +80,10 @@ describe StatusCollection do
       expect(actual_unknown_statuses).to eq [2000]
     end
   end
+
+  it 'inspects as string' do
+    expect(collection.inspect).to eq(
+      'StatusCollection("a":1, "b":2, "c":3, "d":4)'
+    )
+  end
 end

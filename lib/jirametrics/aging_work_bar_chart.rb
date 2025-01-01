@@ -116,7 +116,7 @@ class AgingWorkBarChart < ChartBase
     issue.changes.each do |change|
       next unless change.status?
 
-      status = issue.find_status_by_id change.value_id, name: change.value
+      status = issue.find_or_create_status id: change.value_id, name: change.value
 
       unless previous_start.nil? || previous_start < issue_started_time
         hash = {

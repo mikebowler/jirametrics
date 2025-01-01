@@ -118,7 +118,7 @@ class Issue
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category *category_names
     still_in do |change|
-      status = find_status_by_id change.value_id, name: change.value
+      status = find_or_create_status id: change.value_id, name: change.value
       category_names.include?(status.category.name) || category_names.include?(status.category.id)
     end
   end
@@ -140,15 +140,28 @@ class Issue
     change = most_recent_status_change
     return false if change.nil?
 
-    status = find_status_by_id change.value_id, name: change.value
+    status = find_or_create_status id: change.value_id, name: change.value
     change if status && category_names.include?(status.category.name)
   end
 
-  def find_status_by_id id, name: nil
+  def find_or_create_status id:, name:
     status = board.possible_statuses.find_by_id(id)
     return status if status
 
-    status = board.possible_statuses.fabricate_status_for id: id, name: name
+    # No status could be found with that ID so now we have to fabricate one.
+
+    first_in_progress_status = board.possible_statuses.find { |s| s.category.indeterminate? }
+    raise "Can't find even one in-progress status in [#{set.to_a.sort.join(', ')}]" unless first_in_progress_status
+
+    status = Status.new(
+      name: name,
+      id: id,
+      category_name: first_in_progress_status.category.name,
+      category_id: first_in_progress_status.category.id,
+      category_key: first_in_progress_status.category.key
+    )
+    board.possible_statuses << status
+    # status = board.possible_statuses.fabricate_status_for id: id, name: name
 
     message = +'The history for issue '
     message << key
@@ -172,7 +185,7 @@ class Issue
     @changes.each do |change|
       next unless change.status?
 
-      category = find_status_by_id(change.value_id).category.name
+      category = find_or_create_status(id: change.value_id, name: change.value).category.name
       return change if category_names.include? category
     end
     nil

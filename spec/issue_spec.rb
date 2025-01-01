@@ -1256,4 +1256,25 @@ describe Issue do
         .to eq [seconds_per_day * 3, seconds_per_day * 6]
     end
   end
+
+  context 'find_or_create_status' do
+    it 'returns status when present' do
+      expect(issue1.find_or_create_status id: 1, name: 'foo').to eq(
+        Status.new name: 'Backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new'
+      )
+    end
+
+    it 'creates status' do
+      expect(issue1.find_or_create_status id: 1000, name: 'foo').to eq(
+        Status.new name: 'foo', id: 1000, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+      )
+      expect(exporter.file_system.log_messages).to eq([
+        'Warning: The history for issue SP-1 references a status ("foo":1000) that can\'t be found in ' \
+        '["Backlog":1, "Selected for Development":3, "In Progress":5, "Review":7, "Done":9, "Blocked":10, ' \
+        '"Stalled":11, "Doing":12, "Doing2":13, "Stalled2":14, "Blocked2":15, "foo":1000]. We are guessing ' \
+        'that this belongs to the "in-flight":6 status category and that may be wrong. See ' \
+        'https://jirametrics.org/faq/#q1 for more details'
+      ])
+    end
+  end
 end

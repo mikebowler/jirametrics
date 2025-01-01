@@ -85,6 +85,8 @@ class Status
   end
 
   def == other
+    return false unless other.is_a? Status
+
     @id == other.id && @name == other.name && @category.id == other.category.id && @category.name == other.category.name
   end
 
