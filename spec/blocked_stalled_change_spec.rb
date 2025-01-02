@@ -35,4 +35,16 @@ describe BlockedStalledChange do
       expect(change.reasons).to eq 'Blocked by flag'
     end
   end
+
+  context 'inspect' do
+    it 'is active' do
+      change = described_class.new(time: '2022-01-01')
+      expect(change.inspect).to eq "BlockedStalledChange(time: '2022-01-01', Active)"
+    end
+
+    it 'is blocked by flag' do
+      change = described_class.new(time: '2022-01-01', flagged: true)
+      expect(change.inspect).to eq "BlockedStalledChange(time: '2022-01-01', Blocked by flag)"
+    end
+  end
 end
