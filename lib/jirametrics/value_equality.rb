@@ -9,9 +9,9 @@ module ValueEquality
       names = object.instance_variables
       if object.respond_to? :value_equality_ignored_variables
         ignored_variables = object.value_equality_ignored_variables
-        names.reject! { |n| ignored_variables.include? n }
+        names.reject! { |n| ignored_variables.include? n.to_sym }
       end
-      names.map { |variable| instance_variable_get variable }
+      names.map { |variable| object.instance_variable_get variable }
     end
 
     code.call(self) == code.call(other)
