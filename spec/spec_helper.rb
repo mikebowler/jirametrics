@@ -17,6 +17,7 @@ end
 
 require 'require_all'
 require_all 'lib'
+require 'match_strings'
 
 def file_read filename
   File.read filename, encoding: 'UTF-8'
@@ -260,4 +261,10 @@ end
 
 def empty_config_block
   ->(_) {}
+end
+
+######
+
+def match_strings expected
+  MatchStrings.new(expected)
 end

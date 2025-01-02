@@ -162,8 +162,12 @@ class AgingWorkBarChart < ChartBase
   end
 
   def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:
-    deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['blocked_color']
-    deprecated message: 'blocked color should be set via css now', date: '2024-05-03' if settings['stalled_color']
+    if settings['blocked_color']
+      file_system.deprecated message: 'blocked color should be set via css now', date: '2024-05-03'
+    end
+    if settings['stalled_color']
+      file_system.deprecated message: 'stalled color should be set via css now', date: '2024-05-03'
+    end
 
     color = settings['blocked_color'] || '--blocked-color'
     color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?

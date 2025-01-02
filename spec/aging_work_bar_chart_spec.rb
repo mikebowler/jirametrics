@@ -4,7 +4,11 @@ require './spec/spec_helper'
 
 describe AgingWorkBarChart do
   let(:exporter) { Exporter.new(file_system: MockFileSystem.new) }
-  let(:chart) { described_class.new(empty_config_block) }
+  let(:chart) do
+    described_class.new(empty_config_block).tap do |chart|
+      chart.file_system = exporter.file_system
+    end
+  end
   let(:board) { sample_board }
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
@@ -342,4 +346,34 @@ describe AgingWorkBarChart do
       expect(chart.run).to eq '<h1>Aging Work Bar Chart</h1><p>There is no aging work</p>'
     end
   end
-end
+
+  context 'deprecated' do
+    it 'gives deprecated warning for blocked' do
+      chart.settings = { 'blocked_color' => 'black' }
+      chart.one_block_change_data_set(
+        starting_change: BlockedStalledChange.new(time: to_time('2024-08-01'), flagged: true),
+        ending_time: to_time('2024-12-31'),
+        issue_label: 'foo',
+        stack: 'blocked',
+        issue_start_time: to_time('2024-08-01')
+      )
+      expect(exporter.file_system.log_messages).to match_strings [
+        /^Deprecated\(2024-05-03\): blocked color should be set via css now/
+      ]
+    end
+
+    it 'gives deprecated warning for stalled' do
+      chart.settings = { 'stalled_color' => 'black' }
+      chart.one_block_change_data_set(
+        starting_change: BlockedStalledChange.new(time: to_time('2024-08-01'), stalled_days: 3),
+        ending_time: to_time('2024-12-31'),
+        issue_label: 'foo',
+        stack: 'blocked',
+        issue_start_time: to_time('2024-08-01')
+      )
+      expect(exporter.file_system.log_messages).to match_strings [
+        /^Deprecated\(2024-05-03\): stalled color should be set via css now/
+      ]
+    end
+  end
+ end
