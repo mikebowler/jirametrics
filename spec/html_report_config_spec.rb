@@ -5,6 +5,10 @@ require './spec/spec_helper'
 class TestableChart < ChartBase
   attr_accessor :issues, :cycletime, :board_columns, :time_range, :date_range
 
+  def initialize _block
+    super()
+  end
+
   def run
     'running'
   end
@@ -20,6 +24,7 @@ describe HtmlReportConfig do
       exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
     )
     project_config.file_prefix 'sample'
+    project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
     project_config.load_status_category_mappings
     project_config.load_all_boards
     project_config
@@ -28,7 +33,6 @@ describe HtmlReportConfig do
 
   context 'no injectable dependencies' do
     it 'still passes if no dependencies supported' do
-      project_config.time_range = Time.parse('2022-01-01')..Time.parse('2022-02-01')
       config = described_class.new file_config: file_config, block: nil
       config.board_id 1
 
@@ -112,6 +116,21 @@ describe HtmlReportConfig do
           with <a href="https://jirametrics.org">JiraMetrics</a> <b>vNext</b>
         </section>
       HTML
+    end
+  end
+
+  context 'define chart' do
+    it 'Tracks deprecated warnings' do
+      described_class.define_chart(
+        name: 'fake_chart', classname: 'TestableChart',
+        deprecated_warning: 'Please use another', deprecated_date: '2024-05-23'
+      )
+
+      config = described_class.new file_config: file_config, block: nil
+      config.fake_chart
+      expect(config.file_system.log_messages).to match_strings [
+        /^Deprecated\(2024-05-23\): Please use another/
+      ]
     end
   end
 end

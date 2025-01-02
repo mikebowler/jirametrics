@@ -14,7 +14,7 @@ class HtmlReportConfig
     lines << "def #{name} &block"
     lines << '  block = ->(_) {} unless block'
     if deprecated_warning
-      lines << "  deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}"
+      lines << "  file_system.deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}"
     end
     lines << "  execute_chart #{classname}.new(block)"
     lines << 'end'

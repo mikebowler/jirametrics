@@ -3,8 +3,6 @@
 require 'jirametrics/chart_base'
 
 class AgingWorkBarChart < ChartBase
-  @@next_id = 0
-
   def initialize block
     super()
 

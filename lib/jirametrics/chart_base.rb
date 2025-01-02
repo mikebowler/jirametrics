@@ -27,9 +27,6 @@ class ChartBase
 
   def html_directory
     pathname = Pathname.new(File.realpath(__FILE__))
-    # basename = pathname.basename.to_s
-    # raise "Unexpected filename #{basename.inspect}" unless basename.match?(/^(.+)\.rb$/)
-
     "#{pathname.dirname}/html"
   end
 
