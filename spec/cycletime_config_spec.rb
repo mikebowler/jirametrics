@@ -39,5 +39,19 @@ describe CycleTimeConfig do
         /Deprecated\(2024-10-16\): Use started_stopped_times\(\) instead/
       ]
     end
+
+    it 'deprecates methods that return a time' do
+      config = described_class.new(
+        parent_config: project_config, label: 'foo', file_system: exporter.file_system, block: lambda do |_|
+          start_at created
+          stop_at created
+        end
+      )
+      config.started_stopped_changes issue
+      expect(exporter.file_system.log_messages).to match_strings [
+        /Deprecated\(2024-12-16\): This method should now return a ChangeItem not a Time/,
+        /Deprecated\(2024-12-16\): This method should now return a ChangeItem not a Time/
+      ]
+    end
   end
 end

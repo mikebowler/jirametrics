@@ -49,7 +49,9 @@ class CycleTimeConfig
   end
 
   def fabricate_change_item time
-    @file_system.deprecated date: '2024-12-16', message: 'This method should now return a ChangeItem not a Time', depth: 4
+    @file_system.deprecated(
+      date: '2024-12-16', message: "This method should now return a ChangeItem not a #{time.class}", depth: 4
+    )
     raw = {
       'field' => 'Fabricated change',
       'to' => '0',
