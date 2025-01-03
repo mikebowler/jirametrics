@@ -21,7 +21,9 @@ class BoardConfig
         'If so, remove it from there.'
     end
 
-    @board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block)
+    @board.cycletime = CycleTimeConfig.new(
+      parent_config: self, label: label, block: block, file_system: project_config.file_system
+    )
   end
 
   def expedited_priority_names *priority_names

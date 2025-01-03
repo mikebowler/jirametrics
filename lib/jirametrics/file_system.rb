@@ -60,8 +60,6 @@ class FileSystem
     File.exist? filename
   end
 
-  # TODO: This is currently duplcated here and also in the file exporter.rb. Whenever possible,
-  # use this one as we can run assertions against it.
   def deprecated message:, date:, depth: 2
     text = +''
     text << "Deprecated(#{date}): "

@@ -8,10 +8,14 @@ class CycleTimeConfig
 
   attr_reader :label, :parent_config
 
-  def initialize parent_config:, label:, block:, today: Date.today
+  def initialize parent_config:, label:, block:, file_system: nil, today: Date.today
     @parent_config = parent_config
     @label = label
     @today = today
+
+    # If we hit something deprecated and this is nil then we'll blow up. Although it's ugly, this
+    # may make it easier to find problems in the test code ;-)
+    @file_system = file_system
     instance_eval(&block) unless block.nil?
   end
 
@@ -35,17 +39,17 @@ class CycleTimeConfig
   end
 
   def started_time issue
-    deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
+    @file_system.deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
     started_stopped_times(issue).first
   end
 
   def stopped_time issue
-    deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
+    @file_system.deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
     started_stopped_times(issue).last
   end
 
   def fabricate_change_item time
-    deprecated date: '2024-12-16', message: 'This method should now return a ChangeItem not a Time', depth: 4
+    @file_system.deprecated date: '2024-12-16', message: 'This method should now return a ChangeItem not a Time', depth: 4
     raw = {
       'field' => 'Fabricated change',
       'to' => '0',
