@@ -96,4 +96,20 @@ class StatusCollection
   def inspect
     "StatusCollection#{self}"
   end
+
+  def fabricate_status_for id:, name:
+    first_in_progress_status = find { |s| s.category.indeterminate? }
+    raise "Can't find even one in-progress status in #{self}" unless first_in_progress_status
+
+    status = Status.new(
+      name: name,
+      id: id,
+      category_name: first_in_progress_status.category.name,
+      category_id: first_in_progress_status.category.id,
+      category_key: first_in_progress_status.category.key,
+      artificial: true
+    )
+    @list << status
+    status
+  end
 end

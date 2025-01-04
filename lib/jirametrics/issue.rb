@@ -148,33 +148,20 @@ class Issue
 
   def find_or_create_status id:, name:
     status = board.possible_statuses.find_by_id(id)
-    return status if status
 
-    # No status could be found with that ID so now we have to fabricate one.
+    unless status
+      status = board.possible_statuses.fabricate_status_for id: id, name: name
 
-    first_in_progress_status = board.possible_statuses.find { |s| s.category.indeterminate? }
-    raise "Can't find even one in-progress status in #{board.possible_statuses}" unless first_in_progress_status
-
-    status = Status.new(
-      name: name,
-      id: id,
-      category_name: first_in_progress_status.category.name,
-      category_id: first_in_progress_status.category.id,
-      category_key: first_in_progress_status.category.key
-    )
-    board.possible_statuses << status
-    # status = board.possible_statuses.fabricate_status_for id: id, name: name
-
-    message = +'The history for issue '
-    message << key
-    message << ' references a status ('
-    message << "#{name.inspect}:"
-    message << id.to_s
-    message << ') that can\'t be found in '
-    message << board.possible_statuses.to_s
-    message << ". We are guessing that this belongs to the #{status.category} status category "
-    message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
-    board.project_config.file_system.warning message
+      message = +'The history for issue '
+      message << key
+      message << ' references a status ('
+      message << "#{name.inspect}:#{id.inspect}"
+      message << ') that can\'t be found in '
+      message << board.possible_statuses.to_s
+      message << ". We are guessing that this belongs to the #{status.category} status category "
+      message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
+      board.project_config.file_system.warning message
+    end
 
     status
   end
