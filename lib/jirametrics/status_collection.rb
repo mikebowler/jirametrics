@@ -4,8 +4,11 @@ class StatusNotFoundError < StandardError
 end
 
 class StatusCollection
+  attr_reader :historical_status_mappings
+
   def initialize
     @list = []
+    @historical_status_mappings = {} # 'name:id' => category
   end
 
   def filter_status_names category_name:, including: nil, excluding: nil
@@ -97,16 +100,24 @@ class StatusCollection
     "StatusCollection#{self}"
   end
 
-  def fabricate_status_for id:, name:
+  # Return the in-progress category or raise an error if we can't find one.
+  def in_progress_category
     first_in_progress_status = find { |s| s.category.indeterminate? }
     raise "Can't find even one in-progress status in #{self}" unless first_in_progress_status
+
+    first_in_progress_status.category
+  end
+
+  def fabricate_status_for id:, name:
+    category = @historical_status_mappings["#{name.inspect}:#{id.inspect}"]
+    category = in_progress_category if category.nil?
 
     status = Status.new(
       name: name,
       id: id,
-      category_name: first_in_progress_status.category.name,
-      category_id: first_in_progress_status.category.id,
-      category_key: first_in_progress_status.category.key,
+      category_name: category.name,
+      category_id: category.id,
+      category_key: category.key,
       artificial: true
     )
     @list << status

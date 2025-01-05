@@ -128,6 +128,7 @@ class ProjectConfig
     # is set but before anything inside the project block is run. If only we had made file_prefix an attribute
     # on project, we wouldn't have this ugliness. 🤷‍♂️
     load_status_category_mappings
+    load_status_history
 
     @file_prefix
   end
@@ -255,14 +256,28 @@ class ProjectConfig
 
   def load_status_category_mappings
     filename = File.join @target_path, "#{get_file_prefix}_statuses.json"
-
-    # We may not always have this file. Load it if we can.
-    return unless File.exist? filename
+    return unless file_system.file_exist? filename
 
     file_system
       .load_json(filename)
       .map { |snippet| Status.from_raw(snippet) }
       .each { |status| add_possible_status status }
+  end
+
+  def load_status_history
+    filename = File.join @target_path, "#{get_file_prefix}_status_history.json"
+    return unless file_system.file_exist? filename
+
+    file_system.log '  Loading historical statuses', also_write_to_stderr: true
+    file_system
+      .load_json(filename)
+      .map { |snippet| Status.from_raw(snippet) }
+      .each { |status| possible_statuses.historical_status_mappings[status.to_s] = status.category }
+
+    possible_statuses
+  rescue => e # rubocop:disable Style/RescueStandardError
+    file_system.warning "Unable to load status history due to #{e.message.inspect}. If this is because of a " \
+      'malformed file then it should be fixed on the next download.'
   end
 
   def load_sprints

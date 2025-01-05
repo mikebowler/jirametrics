@@ -334,7 +334,7 @@ describe ProjectConfig do
       end
     end
 
-    it 'raises error if status_id cannot be guessed because no names match' do
+    it 'raises error if status_id cannot be guessed because no names match anything in issue histories' do
       project_config.status_category_mapping status: 'foo', category: 'To Do'
       expect(exporter.file_system.log_messages).to eq([
         "Warning: For status_category_mapping status: \"foo\", category: \"To Do\"\nCannot guess status id " \
@@ -427,6 +427,50 @@ describe ProjectConfig do
       project_config.add_possible_status(status2)
 
       expect(project_config.possible_statuses.collect(&:name)).to eq ['foo']
+    end
+  end
+
+  describe 'load_status_history' do
+    it 'skips when file missing' do
+      project_config.file_prefix 'sample'
+      project_config.load_status_history
+      expect(exporter.file_system.log_messages).to be_empty
+      expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+    end
+
+    it 'continues even if load fails' do
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_status_history.json', json: 'xxx'
+
+      project_config.load_status_history
+      expect(exporter.file_system.log_messages).to match_strings [
+        'Loading historical statuses',
+        /^Warning: Unable to load status history/
+      ]
+      expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+    end
+
+    it 'loads successfully' do
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_status_history.json', json: [
+        {
+          'name' => 'Doing',
+          'id' => '100',
+          'statusCategory' => {
+            'id' => 4,
+            'key' => 'indeterminate',
+            'name' => 'In Progress'
+          }
+        }
+      ]
+
+      project_config.load_status_history
+      expect(exporter.file_system.log_messages).to match_strings [
+        'Loading historical statuses'
+      ]
+      expect(project_config.possible_statuses.historical_status_mappings).to eq({
+        '"Doing":100' => Status::Category.new(id: 4, name: 'In Progress', key: 'indeterminate')
+      })
     end
   end
 
