@@ -68,9 +68,12 @@ describe DataQualityReport do
     entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
     report.scan_for_completed_issues_without_a_start_time entry: entry
 
-    expect(entry.problems.size).to eq 1
-    problem_key, _detail = *entry.problems.first
-    expect(problem_key).to eq :completed_but_not_started
+    expect(entry.problems).to eq [
+      [
+        :completed_but_not_started,
+        'Status changes: ' # TODO: Clearly this description is incomplete
+      ]
+    ]
   end
 
   it 'detects status changes after done' do
@@ -97,9 +100,13 @@ describe DataQualityReport do
     )
     report.scan_for_status_change_after_done entry: entry
 
-    expect(entry.problems.size).to eq 1
-    problem_key, _detail = *entry.problems.first
-    expect(problem_key).to match :status_changes_after_done
+    expect(entry.problems).to eq [
+      [
+        :status_changes_after_done,
+        "Completed on 2021-09-06 with status #{report.format_status 'Done', board: board}. " \
+          "Changed to #{report.format_status 'In Progress', board: board} on 2021-09-07."
+      ]
+    ]
   end
 
   context 'backwards movement' do
@@ -119,9 +126,14 @@ describe DataQualityReport do
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
-      expect(entry.problems.size).to eq 1
-      problem_key, _detail = *entry.problems.first
-      expect(problem_key).to eq :backwords_through_statuses
+      expect(entry.problems).to eq [
+        [
+          :backwords_through_statuses,
+          "Moved from #{report.format_status 'In Progress', board: board}" \
+            " to #{report.format_status 'Selected for Development', board: board}" \
+            ' on 2021-09-06'
+        ]
+      ]
     end
 
     it 'detects backwards status category' do
@@ -143,9 +155,16 @@ describe DataQualityReport do
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
-      expect(entry.problems.size).to eq 1
-      problem_key, _detail = *entry.problems.first
-      expect(problem_key).to eq :backwards_through_status_categories
+      expect(entry.problems).to eq [
+        [
+          :backwards_through_status_categories,
+          "Moved from #{report.format_status 'Done', board: board} " \
+            "to #{report.format_status 'In Progress', board: board} on 2021-09-06, " \
+            "crossing from category #{report.format_status 'Done', board: board, is_category: true}" \
+            " to #{report.format_status 'In Progress', board: board, is_category: true}."
+
+        ]
+      ]
     end
 
     it "detects statuses that just aren't on the board" do
@@ -158,10 +177,11 @@ describe DataQualityReport do
       add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012)
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
-      expect(entry.problems.size).to eq 1
-      expect(entry.problems.first).to eq [
-        :status_not_on_board,
-        "Status #{report.format_status 'FakeBacklog', board: board} is not on the board"
+      expect(entry.problems).to eq [
+        [
+          :status_not_on_board,
+          "Status #{report.format_status 'FakeBacklog', board: board} is not on the board"
+        ]
       ]
     end
 
@@ -175,10 +195,11 @@ describe DataQualityReport do
       issue1.changes << mock_change(field: 'status', value: 'Foo', time: '2021-09-05', value_id: 100)
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
-      expect(entry.problems.size).to eq 1
-      expect(entry.problems.first).to eq [
-        :status_not_on_board,
-        "Status #{report.format_status 'Foo', board: board} cannot be found at all. Was it deleted?"
+      expect(entry.problems).to eq [
+        [
+          :status_not_on_board,
+          "Status #{report.format_status 'Foo', board: board} cannot be found at all. Was it deleted?"
+        ]
       ]
     end
 
@@ -219,9 +240,15 @@ describe DataQualityReport do
         entry: entry, backlog_statuses: board.backlog_statuses
       )
 
-      expect(entry.problems.size).to eq 1
-      problem_key, _detail = *entry.problems.first
-      expect(problem_key).to eq :created_in_wrong_status
+      expect(entry.problems).to eq [
+        [
+          :created_in_wrong_status,
+          "Created in #{report.format_status 'Done', board: entry.issue.board}, " \
+            'which is not one of the backlog statuses for this board: ' \
+            "#{report.format_status 'Backlog', board: entry.issue.board}, " \
+            "#{report.format_status 'foo', board: entry.issue.board}"
+        ]
+      ]
     end
 
     it 'is ok when issue created in a correct backlog status' do

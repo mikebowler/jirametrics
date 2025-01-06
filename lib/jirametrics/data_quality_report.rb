@@ -213,7 +213,7 @@ class DataQualityReport < ChartBase
             problem_key: :backwards_through_status_categories,
             detail: "Moved from #{format_status change.old_value, board: board}" \
               " to #{format_status change.value, board: board}" \
-              " on #{change.time.to_date}, " \
+              " on #{change.time.to_date}," \
               " crossing from category #{format_status old_category, board: board, is_category: true}" \
               " to #{format_status new_category, board: board, is_category: true}."
           )
