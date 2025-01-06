@@ -326,9 +326,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :issue_not_started_but_subtasks_have,
-          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
-          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
-          'SP-2</a> "Update existing event"'
+          report.subtask_label(subtask)
         ]
       ]
     end
@@ -347,9 +345,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :incomplete_subtasks_when_issue_done,
-          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
-          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
-          'SP-2</a> "Update existing event" (Not even started)'
+          "#{report.subtask_label(subtask)} (Not even started)"
         ]
       ]
     end
@@ -368,9 +364,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :incomplete_subtasks_when_issue_done,
-          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
-          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
-          'SP-2</a> "Update existing event" (Closed 9 days later)'
+          "#{report.subtask_label(subtask)} (Closed 9 days later)"
         ]
       ]
     end
@@ -389,9 +383,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :incomplete_subtasks_when_issue_done,
-          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&" \
-          "avatarType=issuetype' /> <a href='https://improvingflow.atlassian.net/browse/SP-2' class='issue_key'>" \
-          'SP-2</a> "Update existing event" (Still not done)'
+          "#{report.subtask_label(subtask)} (Still not done)"
         ]
       ]
     end
