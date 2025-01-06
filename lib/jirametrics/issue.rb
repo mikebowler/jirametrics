@@ -645,6 +645,10 @@ class Issue
     end
   end
 
+  def status_changes
+    @changes.select { |change| change.status? }
+  end
+
   private
 
   def assemble_author raw
@@ -719,9 +723,5 @@ class Issue
       'to' => first_status_id,
       'toString' => first_status
     }
-  end
-
-  def status_changes
-    @changes.select { |change| change.status? }
   end
 end

@@ -112,10 +112,6 @@ class DataQualityReport < ChartBase
     @entries.reject { |entry| entry.problems.empty? }
   end
 
-  def category_name_for status_id:, board:
-    board.possible_statuses.find_by_id(status_id)&.category&.name
-  end
-
   def initialize_entries
     @entries = @issues.filter_map do |issue|
       started, stopped = issue.board.cycletime.started_stopped_times(issue)
@@ -139,9 +135,7 @@ class DataQualityReport < ChartBase
   def scan_for_completed_issues_without_a_start_time entry:
     return unless entry.stopped && entry.started.nil?
 
-    status_names = entry.issue.changes.filter_map do |change|
-      next unless change.status?
-
+    status_names = entry.issue.status_changes.filter_map do |change|
       format_status change.value, board: entry.issue.board
     end
 
@@ -198,8 +192,8 @@ class DataQualityReport < ChartBase
       elsif change.old_value.nil?
         # Do nothing
       elsif index < last_index
-        new_category = category_name_for(status_id: change.value_id, board: board)
-        old_category = category_name_for(status_id: change.old_value_id, board: board)
+        new_category = board.possible_statuses.find_by_id(change.value_id).category.name
+        old_category = board.possible_statuses.find_by_id(change.old_value_id).category.name
 
         if new_category == old_category
           entry.report(

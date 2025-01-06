@@ -60,20 +60,32 @@ describe DataQualityReport do
     ]
   end
 
-  it 'identifies items with completed but not started' do
-    issue1.changes.clear
-    add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-    report.initialize_entries
+  context 'scan_for_completed_issues_without_a_start_time' do
+    it 'identifies items with completed but not started' do
+      issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
+      add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      report.initialize_entries
 
-    entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue1
-    report.scan_for_completed_issues_without_a_start_time entry: entry
+      entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue
+      report.scan_for_completed_issues_without_a_start_time entry: entry
 
-    expect(entry.problems).to eq [
-      [
-        :completed_but_not_started,
-        'Status changes: ' # TODO: Clearly this description is incomplete
+      expect(entry.problems).to eq [
+        [
+          :completed_but_not_started,
+          "Status changes: #{report.format_status 'Backlog', board: board}"
+        ]
       ]
-    ]
+    end
+
+    it 'skips items that are not done' do
+      issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
+      report.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
+      report.scan_for_completed_issues_without_a_start_time entry: entry
+
+      expect(entry.problems).to be_empty
+    end
   end
 
   it 'detects status changes after done' do
