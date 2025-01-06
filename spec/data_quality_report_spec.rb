@@ -159,8 +159,27 @@ describe DataQualityReport do
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems.size).to eq 1
-      problem_key, _detail = *entry.problems.first
-      expect(problem_key).to eq :status_not_on_board
+      expect(entry.problems.first).to eq [
+        :status_not_on_board,
+        "Status #{report.format_status 'FakeBacklog', board: board} is not on the board"
+      ]
+    end
+
+    it "detects statuses that just don't exist anymore" do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      issue1.changes << mock_change(field: 'status', value: 'Foo', time: '2021-09-05', value_id: 100)
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
+
+      expect(entry.problems.size).to eq 1
+      expect(entry.problems.first).to eq [
+        :status_not_on_board,
+        "Status #{report.format_status 'Foo', board: board} cannot be found at all. Was it deleted?"
+      ]
     end
 
     it 'detects skip past changes that are moving right' do

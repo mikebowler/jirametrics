@@ -187,7 +187,7 @@ class DataQualityReport < ChartBase
         next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find_by_id(change.value_id))
 
         detail = "Status #{format_status change.value, board: board} is not on the board"
-        if issue.board.possible_statuses.expand_statuses(change.value).empty?
+        if issue.board.possible_statuses.find_by_id(change.value_id).nil?
           detail = "Status #{format_status change.value, board: board} cannot be found at all. Was it deleted?"
         end
 
