@@ -102,9 +102,13 @@ class DataQualityReport < ChartBase
 
   # Return a format that's easier to assert against
   def testable_entries
-    format = '%Y-%m-%d %H:%M:%S %z'
+    formatter = ->(time) { time&.strftime('%Y-%m-%d %H:%M:%S %z') || '' }
     @entries.collect do |entry|
-      [entry.started&.strftime(format) || '', entry.stopped&.strftime(format) || '', entry.issue]
+      [
+        formatter.call(entry.started),
+        formatter.call(entry.stopped),
+        entry.issue
+      ]
     end
   end
 
