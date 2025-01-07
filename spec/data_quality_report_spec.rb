@@ -67,10 +67,24 @@ describe DataQualityReport do
     expect(report.file_system.log_messages).to be_empty
   end
 
-  it 'runs all the templates and verifies that they don\'t blow up' do
-    # This isn't a super useful test but there is value in ensuring that the templates do execute.
-    expect(report.run).to match(/SP-1/)
-    expect(report.file_system.log_messages).to be_empty
+  context 'templates' do
+    # These aren't incredibly useful tests but there is value in ensuring that the templates do execute
+    # without blowing up.
+
+    it 'runs all the templates and verifies that they don\'t blow up' do
+      expect(report.run).to match(/SP-1/)
+      expect(report.file_system.log_messages).to be_empty
+    end
+
+    excluded_methods = %i[render_top_text render_problem_type]
+    described_class.instance_methods.select { |m| m.to_s.start_with? 'render_' }.each do |method|
+      next if excluded_methods.include? method
+
+      it "can render #{method}" do
+        report.__send__ method, []
+        expect(report.file_system.log_messages).to be_empty
+      end
+    end
   end
 
   context 'scan_for_completed_issues_without_a_start_time' do

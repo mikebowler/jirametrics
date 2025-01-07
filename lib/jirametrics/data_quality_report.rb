@@ -218,8 +218,6 @@ class DataQualityReport < ChartBase
   end
 
   def scan_for_issues_not_created_in_a_backlog_status entry:, backlog_statuses:
-    return if backlog_statuses.empty?
-
     creation_change = entry.issue.changes.find { |issue| issue.status? }
 
     return if backlog_statuses.any? { |status| status.id == creation_change.value_id }
@@ -346,7 +344,7 @@ class DataQualityReport < ChartBase
     <<-HTML
       #{label_issues problems.size} have had information discarded. This configuration is set
       to "reset the clock" if an item is moved back to the backlog after it's been started. This hides important
-      information and makes the data less accurate. <b>Moving items back to the backlog is strongly discouraged.</b>      HTML
+      information and makes the data less accurate. <b>Moving items back to the backlog is strongly discouraged.</b>
     HTML
   end
 
