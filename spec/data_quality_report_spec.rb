@@ -20,6 +20,7 @@ describe DataQualityReport do
 
   let(:report) do
     subject = described_class.new({})
+    subject.file_system = MockFileSystem.new
     subject.issues = [issue10, issue1]
     subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
     subject
@@ -60,6 +61,18 @@ describe DataQualityReport do
     ]
   end
 
+  it 'scans and finds no matches for anything' do
+    report.issues = [empty_issue(created: '2024-01-01', board: board)]
+    expect(report.run).to eq ''
+    expect(report.file_system.log_messages).to be_empty
+  end
+
+  it 'runs all the templates and verifies that they don\'t blow up' do
+    # This isn't a super useful test but there is value in ensuring that the templates do execute.
+    expect(report.run).to match(/SP-1/)
+    expect(report.file_system.log_messages).to be_empty
+  end
+
   context 'scan_for_completed_issues_without_a_start_time' do
     it 'identifies items with completed but not started' do
       issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
@@ -88,37 +101,53 @@ describe DataQualityReport do
     end
   end
 
-  it 'detects status changes after done' do
-    # Issue 1 does have a resolution but no status after it.
-    # Issue 2 has no resolutions at all
-    # Issue 10 has a resolution with a status afterwards.
+  context 'scan_for_status_change_after_done' do
+    it 'detects status changes after done' do
+      # Issue 1 does have a resolution but no status after it.
+      # Issue 2 has no resolutions at all
+      # Issue 10 has a resolution with a status afterwards.
 
-    issue1.changes.clear
-    add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-    add_mock_change(issue: issue1, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      add_mock_change(
+        issue: issue1, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
+      )
 
-    report.issues << issue2
+      report.issues << issue2
 
-    issue10.changes.clear
-    add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-    add_mock_change(issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
-    add_mock_change(
-      issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
-    )
-    report.initialize_entries
+      issue10.changes.clear
+      add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      add_mock_change(
+        issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
+      )
+      add_mock_change(
+        issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
+      )
+      report.initialize_entries
 
-    entry = DataQualityReport::Entry.new(
-      started: nil, stopped: Time.parse('2021-09-06T04:34:26+00:00'), issue: issue10
-    )
-    report.scan_for_status_change_after_done entry: entry
+      entry = DataQualityReport::Entry.new(
+        started: nil, stopped: Time.parse('2021-09-06T04:34:26+00:00'), issue: issue10
+      )
+      report.scan_for_status_change_after_done entry: entry
 
-    expect(entry.problems).to eq [
-      [
-        :status_changes_after_done,
-        "Completed on 2021-09-06 with status #{report.format_status 'Done', board: board}. " \
-          "Changed to #{report.format_status 'In Progress', board: board} on 2021-09-07."
+      expect(entry.problems).to eq [
+        [
+          :status_changes_after_done,
+          "Completed on 2021-09-06 with status #{report.format_status 'Done', board: board}. " \
+            "Changed to #{report.format_status 'In Progress', board: board} on 2021-09-07."
+        ]
       ]
-    ]
+    end
+
+    it 'skips when not stopped' do
+      issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
+      report.initialize_entries
+
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
+      report.scan_for_status_change_after_done entry: entry
+
+      expect(entry.problems).to be_empty
+    end
   end
 
   context 'backwards movement' do
