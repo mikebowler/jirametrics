@@ -45,7 +45,8 @@ class StatusCollection
   def delete(object) = @list.delete(object)
 
   def to_s
-    "[#{@list.join(', ')}]"
+    sorted_statuses = @list.sort { |a, b| a.name.casecmp(b.name) }
+    "[#{sorted_statuses.join(', ')}]"
   end
 
   def inspect

@@ -150,6 +150,10 @@ class Issue
     status = board.possible_statuses.find_by_id(id)
 
     unless status
+      # Have to pull this list before the call to fabricate or else the warning will incorrectly
+      # list this status as one it actually found
+      found_statuses = board.possible_statuses.to_s
+
       status = board.possible_statuses.fabricate_status_for id: id, name: name
 
       message = +'The history for issue '
@@ -157,7 +161,7 @@ class Issue
       message << ' references a status ('
       message << "#{name.inspect}:#{id.inspect}"
       message << ') that can\'t be found in '
-      message << board.possible_statuses.to_s
+      message << found_statuses
       message << ". We are guessing that this belongs to the #{status.category} status category "
       message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
       board.project_config.file_system.warning message
