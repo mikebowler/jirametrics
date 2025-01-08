@@ -40,7 +40,7 @@
             </div>
           <% end %>
         </td>
-        <td><%= format_status issue.status.name, board: issue.board %></td>
+        <td><%= format_status issue.status, board: issue.board %></td>
         <td><%= fix_versions_text(issue) %></td>
         <% if any_scrum_boards %>
           <td><%= sprints_text(issue) %></td>
