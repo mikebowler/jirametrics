@@ -111,13 +111,15 @@ def load_complete_sample_date_range
 end
 
 def add_mock_change issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false
-  issue.changes << mock_change(
+  change = mock_change(
     issue: issue,
     field: field, time: time,
     value: value, value_id: value_id,
     old_value: old_value, old_value_id: old_value_id,
     artificial: artificial
   )
+  issue.changes << change
+  change
 end
 
 # If either value or old_value are statuses then the name and id will be pulled from that object

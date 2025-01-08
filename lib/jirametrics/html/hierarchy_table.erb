@@ -22,7 +22,7 @@
           </span>
         </td>
         <td><span style="color: <%= color %>; font-style: italic;"><%= issue.summary[0..80] %></span></td>
-        <td><%= format_status issue.status.name, board: issue.board %></td>
+        <td><%= format_status issue.status, board: issue.board %></td>
       </tr>
     <% end %>
   </tbody>

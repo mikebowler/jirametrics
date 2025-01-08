@@ -176,18 +176,30 @@ class ChartBase
     @description_text
   end
 
+  # Convert a number like 1234567 into the string "1,234,567"
   def format_integer number
     number.to_s.reverse.scan(/.{1,3}/).join(',').reverse
   end
 
-  def format_status name_or_id, board:, is_category: false
-    begin
-      statuses = board.possible_statuses.expand_statuses([name_or_id])
-    rescue StatusNotFoundError
-      return "<span style='color: red'>#{name_or_id}</span>"
+  def format_status object, board:, is_category: false
+    status = nil
+    error_message = nil
+
+    case object
+    when ChangeItem
+      status = board.possible_statuses.find_by_id(object.value_id)
+      error_message = object.value if status.nil?
+    when Status
+      status = object
+    when Integer # should go away
+      status = board.possible_statuses.find_by_id(object)
+      error_message = object if status.nil?
+    else
+      raise "Unexpected type: #{object.class}"
     end
 
-    status = statuses.first
+    return "<span style='color: red'>#{error_message}</span>" if error_message
+
     color = status_category_color status
 
     visibility = ''

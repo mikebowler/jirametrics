@@ -90,6 +90,7 @@ describe DataQualityReport do
   context 'scan_for_completed_issues_without_a_start_time' do
     it 'identifies items with completed but not started' do
       issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
+      # report.all_boards = { board.id => board }
       add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
       report.initialize_entries
 
@@ -99,7 +100,7 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :completed_but_not_started,
-          "Status changes: #{report.format_status 'Backlog', board: board}"
+          "Status changes: #{report.format_status issue.changes.first, board: board}"
         ]
       ]
     end
@@ -131,10 +132,10 @@ describe DataQualityReport do
 
       issue10.changes.clear
       add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-      add_mock_change(
+      done_change = add_mock_change(
         issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
       )
-      add_mock_change(
+      in_progress_change = add_mock_change(
         issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
       )
       report.initialize_entries
@@ -147,8 +148,8 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :status_changes_after_done,
-          "Completed on 2021-09-06 with status #{report.format_status 'Done', board: board}. " \
-            "Changed to #{report.format_status 'In Progress', board: board} on 2021-09-07."
+          "Completed on 2021-09-06 with status #{report.format_status done_change, board: board}. " \
+            "Changed to #{report.format_status in_progress_change, board: board} on 2021-09-07."
         ]
       ]
     end
@@ -172,11 +173,14 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', time: '2021-09-05', value_id: 3)
-      add_mock_change(
-        issue: issue1,
-        field: 'status', value: 'Selected for Development', old_value: 'In Progress',
-        time: '2021-09-06', value_id: 10_001, old_value_id: 3
+      change1 = add_mock_change(
+        issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05'
+      )
+      change2 = add_mock_change(
+        issue: issue1, field: 'status',
+        value: 'Selected for Development', value_id: 10_001,
+        old_value: 'In Progress', old_value_id: 3,
+        time: '2021-09-06'
       )
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
@@ -184,8 +188,8 @@ describe DataQualityReport do
       expect(entry.problems).to eq [
         [
           :backwords_through_statuses,
-          "Moved from #{report.format_status 'In Progress', board: board}" \
-            " to #{report.format_status 'Selected for Development', board: board}" \
+          "Moved from #{report.format_status change1, board: board}" \
+            " to #{report.format_status change2, board: board}" \
             ' on 2021-09-06'
         ]
       ]
@@ -210,13 +214,16 @@ describe DataQualityReport do
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
+      in_progress_status = entry.issue.board.possible_statuses.find_by_id 3
+      done_status = entry.issue.board.possible_statuses.find_by_id 10_002
+
       expect(entry.problems).to eq [
         [
           :backwards_through_status_categories,
-          "Moved from #{report.format_status 'Done', board: board} " \
-            "to #{report.format_status 'In Progress', board: board} on 2021-09-06, " \
-            "crossing from category #{report.format_status 'Done', board: board, is_category: true}" \
-            " to #{report.format_status 'In Progress', board: board, is_category: true}."
+          "Moved from #{report.format_status done_status, board: board} " \
+            "to #{report.format_status in_progress_status, board: board} on 2021-09-06, " \
+            "crossing from category #{report.format_status done_status, board: board, is_category: true}" \
+            " to #{report.format_status in_progress_status, board: board, is_category: true}."
 
         ]
       ]
@@ -229,13 +236,15 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012)
+      fake_backlog_status = add_mock_change(
+        issue: issue1, field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012
+      )
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
         [
           :status_not_on_board,
-          "Status #{report.format_status 'FakeBacklog', board: board} is not on the board"
+          "Status #{report.format_status fake_backlog_status, board: board} is not on the board"
         ]
       ]
     end
@@ -247,13 +256,13 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      issue1.changes << mock_change(field: 'status', value: 'Foo', time: '2021-09-05', value_id: 100)
+      issue1.changes << mock_change(field: 'status', value: 'Foo', value_id: 100, time: '2021-09-05')
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
         [
           :status_not_on_board,
-          "Status #{report.format_status 'Foo', board: board} cannot be found at all. Was it deleted?"
+          "Status #{report.format_status issue1.changes.first, board: board} cannot be found at all. Was it deleted?"
         ]
       ]
     end
@@ -286,22 +295,19 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
+      done_change = add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
-      board.backlog_statuses << Status.new(
-        name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new'
-      )
       report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
       )
 
+      backlog_status = board.possible_statuses.find { |s| s.name == 'Backlog' }
       expect(entry.problems).to eq [
         [
           :created_in_wrong_status,
-          "Created in #{report.format_status 'Done', board: entry.issue.board}, " \
+          "Created in #{report.format_status done_change, board: entry.issue.board}, " \
             'which is not one of the backlog statuses for this board: ' \
-            "#{report.format_status 'Backlog', board: entry.issue.board}, " \
-            "#{report.format_status 'foo', board: entry.issue.board}"
+            "#{report.format_status backlog_status, board: entry.issue.board}"
         ]
       ]
     end

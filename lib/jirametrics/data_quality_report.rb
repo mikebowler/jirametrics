@@ -140,7 +140,7 @@ class DataQualityReport < ChartBase
     return unless entry.stopped && entry.started.nil?
 
     status_names = entry.issue.status_changes.filter_map do |change|
-      format_status change.value, board: entry.issue.board
+      format_status change, board: entry.issue.board
     end
 
     entry.report(
@@ -155,14 +155,14 @@ class DataQualityReport < ChartBase
     changes_after_done = entry.issue.changes.select do |change|
       change.status? && change.time >= entry.stopped
     end
-    done_status = changes_after_done.shift.value
+    done_status = changes_after_done.shift.value_id
 
     return if changes_after_done.empty?
 
     board = entry.issue.board
     problem = "Completed on #{entry.stopped.to_date} with status #{format_status done_status, board: board}."
     changes_after_done.each do |change|
-      problem << " Changed to #{format_status change.value, board: board} on #{change.time.to_date}."
+      problem << " Changed to #{format_status change, board: board} on #{change.time.to_date}."
     end
     entry.report(
       problem_key: :status_changes_after_done,
@@ -184,9 +184,9 @@ class DataQualityReport < ChartBase
         # If it's a backlog status then ignore it. Not supposed to be visible.
         next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find_by_id(change.value_id))
 
-        detail = "Status #{format_status change.value, board: board} is not on the board"
+        detail = "Status #{format_status change, board: board} is not on the board"
         if issue.board.possible_statuses.find_by_id(change.value_id).nil?
-          detail = "Status #{format_status change.value, board: board} cannot be found at all. Was it deleted?"
+          detail = "Status #{format_status change, board: board} cannot be found at all. Was it deleted?"
         end
 
         # If it's been moved back to backlog then it's on a different report. Ignore it here.
@@ -202,18 +202,18 @@ class DataQualityReport < ChartBase
         if new_category == old_category
           entry.report(
             problem_key: :backwords_through_statuses,
-            detail: "Moved from #{format_status change.old_value, board: board}" \
-              " to #{format_status change.value, board: board}" \
+            detail: "Moved from #{format_status change.old_value_id, board: board}" \
+              " to #{format_status change, board: board}" \
               " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
-            detail: "Moved from #{format_status change.old_value, board: board}" \
-              " to #{format_status change.value, board: board}" \
+            detail: "Moved from #{format_status change.old_value_id, board: board}" \
+              " to #{format_status change, board: board}" \
               " on #{change.time.to_date}," \
-              " crossing from category #{format_status old_category, board: board, is_category: true}" \
-              " to #{format_status new_category, board: board, is_category: true}."
+              " crossing from category #{format_status change.old_value_id, board: board, is_category: true}" \
+              " to #{format_status change.value_id, board: board, is_category: true}."
           )
         end
       end
@@ -226,10 +226,10 @@ class DataQualityReport < ChartBase
 
     return if backlog_statuses.any? { |status| status.id == creation_change.value_id }
 
-    status_string = backlog_statuses.collect { |s| format_status s.name, board: entry.issue.board }.join(', ')
+    status_string = backlog_statuses.collect { |s| format_status s, board: entry.issue.board }.join(', ')
     entry.report(
       problem_key: :created_in_wrong_status,
-      detail: "Created in #{format_status creation_change.value, board: entry.issue.board}, " \
+      detail: "Created in #{format_status creation_change, board: entry.issue.board}, " \
         "which is not one of the backlog statuses for this board: #{status_string}"
     )
   end

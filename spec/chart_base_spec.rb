@@ -208,12 +208,9 @@ describe ChartBase do
       end
     end
 
-    it 'makes text red when status not found' do
-      expect(chart_base.format_status 'Digging', board: board).to eq "<span style='color: red'>Digging</span>"
-    end
-
     it 'handles todo statuses' do
-      expect(chart_base.format_status 'Backlog', board: board).to eq(
+      status = board.possible_statuses.find { |s| s.name == 'Backlog' }
+      expect(chart_base.format_status status, board: board).to eq(
         "<span title='Category: To Do'><div class='color_block' " \
           "style='background: var(--status-category-todo-color);'></div> Backlog</span>" \
           "<span title='Not visible: The status \"Backlog\" is not mapped to any column and " \
@@ -222,21 +219,19 @@ describe ChartBase do
     end
 
     it 'handles in progress statuses' do
-      expect(chart_base.format_status 'Review', board: board).to eq(
+      status = board.possible_statuses.find { |s| s.name == 'Review' }
+      expect(chart_base.format_status status, board: board).to eq(
         "<span title='Category: In Progress'><div class='color_block' " \
           "style='background: var(--status-category-inprogress-color);'></div> Review</span>"
       )
     end
 
     it 'handles done statuses' do
-      expect(chart_base.format_status 'Done', board: board).to eq(
+      status = board.possible_statuses.find { |s| s.name == 'Done' }
+      expect(chart_base.format_status status, board: board).to eq(
         "<span title='Category: Done'><div class='color_block' " \
           "style='background: var(--status-category-done-color);'></div> Done</span>"
       )
-    end
-
-    it 'handles unknown statuses' do
-      expect(chart_base.format_status 'unknown', board: board).to eq "<span style='color: red'>unknown</span>"
     end
   end
 
