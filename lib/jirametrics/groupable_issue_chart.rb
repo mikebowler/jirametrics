@@ -6,9 +6,7 @@ require 'jirametrics/grouping_rules'
 module GroupableIssueChart
   def init_configuration_block user_provided_block, &default_block
     instance_eval(&user_provided_block)
-    return if @group_by_block
-
-    instance_eval(&default_block)
+    instance_eval(&default_block) unless @group_by_block
   end
 
   def grouping_rules &block
