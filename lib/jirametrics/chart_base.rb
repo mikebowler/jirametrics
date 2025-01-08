@@ -181,19 +181,22 @@ class ChartBase
     number.to_s.reverse.scan(/.{1,3}/).join(',').reverse
   end
 
-  def format_status object, board:, is_category: false
+  # object will be either a Status or a ChangeItem
+  # if it's a ChangeItem then use_old_status will specify whether we're using the new or old
+  # Either way, is_category will format the category rather than the status
+  def format_status object, board:, is_category: false, use_old_status: false
     status = nil
     error_message = nil
 
     case object
     when ChangeItem
-      status = board.possible_statuses.find_by_id(object.value_id)
-      error_message = object.value if status.nil?
+      id = use_old_status ? object.old_value_id : object.value_id
+      status = board.possible_statuses.find_by_id(id)
+      if status.nil?
+        error_message = use_old_status ? object.old_value : object.value
+      end
     when Status
       status = object
-    when Integer # should go away
-      status = board.possible_statuses.find_by_id(object)
-      error_message = object if status.nil?
     else
       raise "Unexpected type: #{object.class}"
     end

@@ -155,7 +155,7 @@ class DataQualityReport < ChartBase
     changes_after_done = entry.issue.changes.select do |change|
       change.status? && change.time >= entry.stopped
     end
-    done_status = changes_after_done.shift.value_id
+    done_status = changes_after_done.shift
 
     return if changes_after_done.empty?
 
@@ -202,18 +202,18 @@ class DataQualityReport < ChartBase
         if new_category == old_category
           entry.report(
             problem_key: :backwords_through_statuses,
-            detail: "Moved from #{format_status change.old_value_id, board: board}" \
+            detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
               " to #{format_status change, board: board}" \
               " on #{change.time.to_date}"
           )
         else
           entry.report(
             problem_key: :backwards_through_status_categories,
-            detail: "Moved from #{format_status change.old_value_id, board: board}" \
+            detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
               " to #{format_status change, board: board}" \
               " on #{change.time.to_date}," \
-              " crossing from category #{format_status change.old_value_id, board: board, is_category: true}" \
-              " to #{format_status change.value_id, board: board, is_category: true}."
+              " crossing from category #{format_status change, use_old_status: true, board: board, is_category: true}" \
+              " to #{format_status change, board: board, is_category: true}."
           )
         end
       end
