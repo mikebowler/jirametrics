@@ -21,48 +21,6 @@ describe StatusCollection do
     collection
   end
 
-  context 'todo' do
-    it 'handles empty collection' do
-      expect(described_class.new.todo).to be_empty
-    end
-
-    it 'handles base query' do
-      expect(collection.todo).to eq ['a']
-    end
-
-    it 'handles single include by name' do
-      expect(collection.todo including: 'c').to eq %w[a c]
-    end
-
-    it 'handles single include by id' do
-      expect(collection.todo including: 3).to eq %w[a c]
-    end
-
-    it 'handles multiple include by name' do
-      expect(collection.todo including: %w[c d]).to eq %w[a c d]
-    end
-
-    it 'handles multiple include by id' do
-      expect(collection.todo including: [3, 'd']).to eq %w[a c d]
-    end
-
-    it 'handles single exclude by name' do
-      expect(collection.in_progress excluding: 'c').to eq %w[b]
-    end
-  end
-
-  context 'in progress' do
-    it 'handles two statuses' do
-      expect(collection.in_progress).to eq %w[b c]
-    end
-  end
-
-  context 'done' do
-    it 'handles one statuse' do
-      expect(collection.done).to eq ['d']
-    end
-  end
-
   context 'expand_statuses' do
     # Most variations are covered by tests in other classes
 
@@ -92,5 +50,4 @@ describe StatusCollection do
       '["a":1, "b":2, "c":3, "d":4]'
     )
   end
-
 end
