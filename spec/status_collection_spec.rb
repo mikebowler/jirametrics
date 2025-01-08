@@ -32,4 +32,21 @@ describe StatusCollection do
       '["a":1, "b":2, "c":3, "d":4]'
     )
   end
+
+  context 'fabricate_status_for' do
+    it 'pulls category from historical statuses' do
+      collection.historical_status_mappings['"walk":100'] = Status::Category.new name: 'movement', id: 101, key: 'new'
+      collection.fabricate_status_for name: 'walk', id: 100
+      expect(collection.find_by_id 100).to eq Status.new(
+        name: 'walk', id: 100, category_name: 'movement', category_id: 101, category_key: 'new'
+      )
+    end
+
+    it 'defaults to an in-progress status' do
+      collection.fabricate_status_for name: 'walk', id: 100
+      expect(collection.find_by_id 100).to eq Status.new(
+        name: 'walk', id: 100, category_name: 'In Progress', category_id: 1001, category_key: 'indeterminate'
+      )
+    end
+  end
 end

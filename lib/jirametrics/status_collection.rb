@@ -52,14 +52,6 @@ class StatusCollection
     "StatusCollection#{self}"
   end
 
-  # Return the in-progress category or raise an error if we can't find one.
-  def in_progress_category
-    first_in_progress_status = find { |s| s.category.indeterminate? }
-    raise "Can't find even one in-progress status in #{self}" unless first_in_progress_status
-
-    first_in_progress_status.category
-  end
-
   def fabricate_status_for id:, name:
     category = @historical_status_mappings["#{name.inspect}:#{id.inspect}"]
     category = in_progress_category if category.nil?
@@ -74,5 +66,15 @@ class StatusCollection
     )
     @list << status
     status
+  end
+
+  private
+
+  # Return the in-progress category or raise an error if we can't find one.
+  def in_progress_category
+    first_in_progress_status = find { |s| s.category.indeterminate? }
+    raise "Can't find even one in-progress status in #{self}" unless first_in_progress_status
+
+    first_in_progress_status.category
   end
 end
