@@ -11,31 +11,6 @@ class StatusCollection
     @historical_status_mappings = {} # 'name:id' => category
   end
 
-  def expand_statuses names_or_ids
-    result = []
-    return result if names_or_ids.nil?
-
-    names_or_ids = [names_or_ids] unless names_or_ids.is_a? Array
-
-    names_or_ids.each do |name_or_id|
-      raise "Baboom: #{name_or_id}" unless name_or_id.is_a? Integer
-
-      status = @list.find { |s| s.name == name_or_id || s.id == name_or_id }
-      if status.nil?
-        if block_given?
-          yield name_or_id
-          next
-        else
-          all_status_names = @list.collect(&:to_s).uniq.sort.join(', ')
-          raise StatusNotFoundError, "Status not found: \"#{name_or_id}\". Possible statuses are: #{all_status_names}"
-        end
-      end
-
-      result << status
-    end
-    result
-  end
-
   # Return the status matching this id or nil if it can't be found.
   def find_by_id id
     @list.find { |status| status.id == id }

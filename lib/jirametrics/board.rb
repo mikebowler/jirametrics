@@ -27,9 +27,8 @@ class Board
   def backlog_statuses
     if @backlog_statuses.empty? && kanban?
       status_ids = status_ids_from_column raw['columnConfig']['columns'].first
-      @backlog_statuses = @possible_statuses.expand_statuses(status_ids) do |unknown_status|
-        # If a status is returned here that is no longer in the system then there's nothing useful
-        # we can do about it. Ignore it.
+      @backlog_statuses = status_ids.filter_map do |id|
+        @possible_statuses.find_by_id id
       end
     end
     @backlog_statuses

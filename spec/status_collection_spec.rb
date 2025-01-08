@@ -21,24 +21,6 @@ describe StatusCollection do
     collection
   end
 
-  context 'expand_statuses' do
-    # Most variations are covered by tests in other classes
-
-    it 'raises error when status not found' do
-      expect { collection.expand_statuses [2000] }.to raise_error(
-        'Status not found: "2000". Possible statuses are: "a":1, "b":2, "c":3, "d":4'
-      )
-    end
-
-    it 'yields when block passed and status not found' do
-      actual_unknown_statuses = []
-      collection.expand_statuses([2000]) do |unknown_status|
-        actual_unknown_statuses << unknown_status
-      end
-      expect(actual_unknown_statuses).to eq [2000]
-    end
-  end
-
   it 'inspects as string' do
     expect(collection.inspect).to eq(
       'StatusCollection["a":1, "b":2, "c":3, "d":4]'
