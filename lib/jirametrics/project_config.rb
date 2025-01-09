@@ -4,12 +4,10 @@ require 'time'
 require 'jirametrics/status_collection'
 
 class ProjectConfig
-  include DiscardChangesBefore
-
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
     :settings, :aggregate_config
-  attr_accessor :time_range, :jira_url, :id
+  attr_accessor :time_range, :jira_url, :id, :discarded_changes_cutoff_times
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
     @exporter = exporter
@@ -529,5 +527,39 @@ class ProjectConfig
 
   def file_system
     @exporter.file_system
+  end
+
+  def discard_changes_before status_becomes: nil, &block
+    if status_becomes
+      status_becomes = [status_becomes] unless status_becomes.is_a? Array
+
+      block = lambda do |issue|
+        trigger_statuses = status_becomes.collect do |status_name|
+          if status_name == :backlog
+            issue.board.backlog_statuses.collect(&:name)
+          else
+            status_name
+          end
+        end.flatten
+
+        time = nil
+        issue.changes.each do |change|
+          time = change.time if change.status? && trigger_statuses.include?(change.value) && change.artificial? == false
+        end
+        time
+      end
+    end
+
+    issues_cutoff_times = []
+    issues.each do |issue|
+      cutoff_time = block.call(issue)
+      issues_cutoff_times << [issue, cutoff_time] if cutoff_time
+    end
+
+    @discarded_changes_cutoff_times = issues_cutoff_times
+
+    issues_cutoff_times.each do |issue, cutoff_time|
+      issue.discard_changes_before cutoff_time
+    end
   end
 end

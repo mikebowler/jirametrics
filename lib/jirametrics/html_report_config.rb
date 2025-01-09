@@ -5,7 +5,6 @@ require 'jirametrics/self_or_issue_dispatcher'
 
 class HtmlReportConfig
   include SelfOrIssueDispatcher
-  include DiscardChangesBefore
 
   attr_reader :file_config, :sections
 
@@ -64,7 +63,7 @@ class HtmlReportConfig
 
     # The quality report has to be generated last because otherwise cycletime won't have been
     # set. Then we have to rotate it to the first position so it's at the top of the report.
-    execute_chart DataQualityReport.new(@original_issue_times || {})
+    execute_chart DataQualityReport.new(original_issue_times || {})
     @sections.rotate!(-1)
 
     html create_footer
@@ -143,17 +142,20 @@ class HtmlReportConfig
     end
   end
 
-  def discard_changes_before_hook issues_cutoff_times
-    # raise 'Cycletime must be defined before using discard_changes_before' unless @cycletime
+  def original_issue_times
+    issue_times = {}
+    cutoff_times = file_config.project_config.discarded_changes_cutoff_times
+    return if cutoff_times.nil?
 
-    @original_issue_times = {}
-    issues_cutoff_times.each do |issue, cutoff_time|
+    cutoff_times.each do |issue, cutoff_time|
       started = issue.board.cycletime.started_stopped_times(issue).first
       if started && started <= cutoff_time
         # We only need to log this if data was discarded
-        @original_issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
+        issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
       end
     end
+
+    issue_times
   end
 
   def dependency_chart &block
@@ -215,5 +217,13 @@ class HtmlReportConfig
         with <a href="https://jirametrics.org">JiraMetrics</a> <b>v#{version}</b>
       </section>
     HTML
+  end
+
+  def discard_changes_before status_becomes: nil, &block
+    file_system.deprecated(
+      date: '2025-01-09',
+      message: 'discard_changes_before is now only supported at the project level'
+    )
+    file_config.project_config.discard_changes_before status_becomes: status_becomes, &block
   end
 end
