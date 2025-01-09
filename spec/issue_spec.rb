@@ -1299,13 +1299,15 @@ describe Issue do
       expect(issue1.find_or_create_status id: 1000, name: 'foo').to eq(
         Status.new name: 'foo', id: 1000, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
       )
-      puts exporter.file_system.log_messages
       expect(exporter.file_system.log_messages).to eq([
-        'Warning: The history for issue SP-1 references a status ("foo":1000) that can\'t be found in ' \
-        '["Backlog":1, "Blocked":10, "Blocked2":15, "Doing":12, "Doing2":13, "Done":9, "In Progress":5, ' \
-        '"Review":7, "Selected for Development":3, "Stalled":11, "Stalled2":14]. We are guessing ' \
-        'that this belongs to the "in-flight":6 status category and that may be wrong. See ' \
-        'https://jirametrics.org/faq/#q1 for more details'
+        [
+          'Warning: The history for issue SP-1 references the status ("foo":1000) that can\'t be found. We are ' \
+            'guessing that this belongs to the "in-flight":6 status category but that may be wrong. See ' \
+            'https://jirametrics.org/faq/#q1 for more details on defining statuses.',
+          'The statuses we did find are: ' \
+            '["Backlog":1, "Blocked":10, "Blocked2":15, "Doing":12, "Doing2":13, "Done":9, "In Progress":5, ' \
+            '"Review":7, "Selected for Development":3, "Stalled":11, "Stalled2":14]'
+        ]
       ])
     end
 

@@ -158,13 +158,13 @@ class Issue
 
       message = +'The history for issue '
       message << key
-      message << ' references a status ('
+      message << ' references the status ('
       message << "#{name.inspect}:#{id.inspect}"
-      message << ') that can\'t be found in '
-      message << found_statuses
-      message << ". We are guessing that this belongs to the #{status.category} status category "
-      message << 'and that may be wrong. See https://jirametrics.org/faq/#q1 for more details'
-      board.project_config.file_system.warning message
+      message << ') that can\'t be found. We are guessing that this belongs to the '
+      message << status.category.to_s
+      message << ' status category but that may be wrong. See https://jirametrics.org/faq/#q1 for more '
+      message << 'details on defining statuses.'
+      board.project_config.file_system.warning message, more: "The statuses we did find are: #{found_statuses}"
     end
 
     status

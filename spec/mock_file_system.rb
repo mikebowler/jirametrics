@@ -51,10 +51,12 @@ class MockFileSystem < FileSystem
     results.each { |file| yield file } # rubocop:disable Style/ExplicitBlockArgument
   end
 
-  def log message, also_write_to_stderr: false # rubocop:disable Lint/UnusedMethodArgument
+  def log message, more: nil, also_write_to_stderr: false # rubocop:disable Lint/UnusedMethodArgument
     # Ignore blank lines and whitespace on either end
     message = message.strip
-    @log_messages << message unless message == ''
+    return if message == ''
+
+    @log_messages << (more.nil? ? message : [message, more])
   end
 
   def saved_json_expanded

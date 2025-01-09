@@ -31,13 +31,18 @@ class FileSystem
     File.write(filename, content)
   end
 
-  def warning message
-    log "Warning: #{message}", also_write_to_stderr: true
+  def warning message, more: nil
+    log "Warning: #{message}", more: more, also_write_to_stderr: true
   end
 
-  def log message, also_write_to_stderr: false
+  def log message, more: nil, also_write_to_stderr: false
+    message += " See #{logfile_name} for more details about this message." if more
+
     logfile.puts message
-    $stderr.puts message if also_write_to_stderr # rubocop:disable Style/StderrPuts
+    logfile.puts more if more
+    return unless also_write_to_stderr
+
+    $stderr.puts message # rubocop:disable Style/StderrPuts
   end
 
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
