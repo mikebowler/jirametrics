@@ -49,4 +49,37 @@ describe StatusCollection do
       )
     end
   end
+
+  context 'find_all_by_name' do
+    it 'finds nothing' do
+      expect(collection.find_all_by_name 'e').to be_empty
+    end
+
+    it 'finds an exact match with only a name' do
+      expect(collection.find_all_by_name 'c').to eq [status_c]
+    end
+
+    it 'finds two with same name' do
+      status = Status.new(
+        name: 'c', id: 30, category_name: 'In Progress', category_id: 1001, category_key: 'indeterminate'
+      )
+      collection << status
+      expect(collection.find_all_by_name('c').sort).to eq [status_c, status]
+    end
+
+    it 'finds an exact match from a name:id pair' do
+      expect(collection.find_all_by_name 'c:3').to eq [status_c]
+    end
+
+    it "finds a mismatch where an id that doesn't match the name" do
+      expect { collection.find_all_by_name 'c:1' }.to raise_error(
+        'Specified status ID of 1 does not match specified name "c". You might have meant one of these: ' \
+          '["a":1, "b":2, "c":3, "d":4].'
+      )
+    end
+
+    it 'finds from just an id' do
+      expect(collection.find_all_by_name '3').to eq [status_c]
+    end
+  end
 end

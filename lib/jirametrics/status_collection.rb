@@ -17,7 +17,21 @@ class StatusCollection
   end
 
   def find_all_by_name name
-    @list.select { |status| status.name == name }
+    if name =~ /^(.*):(\d+)$/
+      name = $1
+      id = $2.to_i
+
+      status = find_by_id id
+      unless status.name == name
+        raise "Specified status ID of 1 does not match specified name #{name.inspect}. " \
+          "You might have meant one of these: #{self}."
+      end
+      [status]
+    elsif name =~ /^\d$/
+      [find_by_id(name.to_i)]
+    else
+      @list.select { |status| status.name == name }
+    end
   end
 
   def find_all_categories
@@ -45,8 +59,7 @@ class StatusCollection
   def delete(object) = @list.delete(object)
 
   def to_s
-    sorted_statuses = @list.sort { |a, b| a.name.casecmp(b.name) }
-    "[#{sorted_statuses.join(', ')}]"
+    "[#{@list.sort.join(', ')}]"
   end
 
   def inspect

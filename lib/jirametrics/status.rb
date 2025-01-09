@@ -3,7 +3,6 @@
 require 'jirametrics/value_equality'
 
 class Status
-  include ValueEquality
   attr_reader :id, :project_id, :category
   attr_accessor :name
 
@@ -88,6 +87,16 @@ class Status
     return false unless other.is_a? Status
 
     @id == other.id && @name == other.name && @category.id == other.category.id && @category.name == other.category.name
+  end
+
+  def eql?(other)
+    self == other
+  end
+
+  def <=> other
+    result = @name.casecmp(other.name)
+    result = @id <=> other.id if result.zero?
+    result
   end
 
   def inspect
