@@ -27,7 +27,7 @@ class StatusCollection
           "You might have meant one of these: #{self}."
       end
       [status]
-    elsif name =~ /^\d$/
+    elsif name.match?(/^\d$/)
       [find_by_id(name.to_i)]
     else
       @list.select { |status| status.name == name }
