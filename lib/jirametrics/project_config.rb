@@ -511,20 +511,6 @@ class ProjectConfig
     Anonymizer.new(project_config: self).run
   end
 
-  def discard_changes_before_hook issues_cutoff_times
-    issues_cutoff_times.each do |issue, cutoff_time|
-      days = (cutoff_time.to_date - issue.changes.first.time.to_date).to_i + 1
-      message = "#{issue.key}(#{issue.type}) discarding #{days} "
-      if days == 1
-        message << "day of data on #{cutoff_time.to_date}"
-      else
-        message << "days of data from #{issue.changes.first.time.to_date} to #{cutoff_time.to_date}"
-      end
-      exporter.file_system.log message
-    end
-    exporter.file_system.log "Discarded data from #{issues_cutoff_times.count} issues out of a total #{issues.size}"
-  end
-
   def file_system
     @exporter.file_system
   end
