@@ -71,7 +71,7 @@ describe StatusCollection do
       expect(collection.find_all_by_name 'c:3').to eq [status_c]
     end
 
-    it "finds a mismatch where an id that doesn't match the name" do
+    it "finds a mismatch where are given an id that doesn't match the name" do
       expect { collection.find_all_by_name 'c:1' }.to raise_error(
         'Specified status ID of 1 does not match specified name "c". You might have meant one of these: ' \
           '["a":1, "b":2, "c":3, "d":4].'
