@@ -19,7 +19,7 @@ describe DataQualityReport do
   let(:issue10) { load_issue('SP-10', board: board) }
 
   let(:report) do
-    subject = described_class.new({})
+    subject = described_class.new([])
     subject.file_system = MockFileSystem.new
     subject.issues = [issue10, issue1]
     subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
@@ -513,8 +513,9 @@ describe DataQualityReport do
 
     it 'handles discarded and restarted' do
       report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      report.original_issue_times[issue1] = {
-        started_time: to_time('2022-01-01'),
+      report.discarded_changes_data << {
+        issue: issue1,
+        original_start_time: to_time('2022-01-01'),
         cutoff_time: to_time('2022-01-03')
       }
       entry = DataQualityReport::Entry.new(
@@ -528,8 +529,9 @@ describe DataQualityReport do
 
     it 'handles discarded with no restart' do
       report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      report.original_issue_times[issue1] = {
-        started_time: to_time('2022-01-01'),
+      report.discarded_changes_data << {
+        issue: issue1,
+        original_start_time: to_time('2022-01-01'),
         cutoff_time: to_time('2022-01-03')
       }
       entry = DataQualityReport::Entry.new(
@@ -543,8 +545,9 @@ describe DataQualityReport do
 
     it 'handles discarded that results in no days ignored' do
       report.date_range = to_date('2022-01-01')..to_date('2022-01-20')
-      report.original_issue_times[issue1] = {
-        started_time: to_time('2022-01-01T01:00:00'),
+      report.discarded_changes_data << {
+        issue: issue1,
+        original_start_time: to_time('2022-01-01T01:00:00'),
         cutoff_time: to_time('2022-01-01T02:00:00')
       }
       entry = DataQualityReport::Entry.new(
@@ -552,6 +555,77 @@ describe DataQualityReport do
       )
       report.scan_for_discarded_data entry: entry
       expect(entry.problems).to be_empty
+    end
+
+    it 'works end-to-end' do
+      # There is a complex set of conditions that are required to get the 'moved back to backlog'
+      # functionality to work. This verifies that all the pieces talk to each other at the right times
+      # and that the right issues are identified. We've already had one case where this just stopped
+      # working and we didn't realize it.
+      exporter = Exporter.new file_system: MockFileSystem.new
+      target_path = 'spec/complete_sample/'
+
+      sp1_json = empty_issue(created: '2021-09-15', key: 'SP-1').raw
+      exporter.file_system.when_loading file: "#{target_path}sample_statuses.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_meta.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_board_1_configuration.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-1.json", json: sp1_json
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-2.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-5.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-7.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-8.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-11.json", json: :not_mocked
+      exporter.file_system.when_foreach root: target_path, result: :not_mocked
+
+      project_config = ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: lambda do |_|
+          file_prefix 'sample'
+          board id: 1 do
+            cycletime do
+              start_at first_time_in_status_category('In Progress')
+              stop_at still_in_status_category('Done')
+            end
+          end
+
+          # Force SP-1 back to the backlog
+          issues.find { |issue| issue.key == 'SP-1' }.tap do |issue|
+            add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16')
+            add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17')
+            add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-18')
+          end
+
+          discard_changes_before status_becomes: :backlog
+
+          file do
+            file_suffix '.html'
+            html_report do # Don't need to specify charts if all we need is the quality report
+              cycletime_scatterplot
+            end
+          end
+        end
+      )
+      project_config.evaluate_next_level
+      project_config.run
+
+      file_config = project_config.file_configs.first
+      html_report = file_config.children.first
+      data_quality_report = html_report.charts.find { |c| c.is_a? described_class }
+
+      expect(exporter.file_system.log_messages).to match_strings [
+        # 'Warning: No charts were specified for the report. This is almost certainly a mistake.',
+        /^Loaded CSS/
+      ]
+
+      actual = data_quality_report.problems_for(:discarded_changes).collect do |issue, message, key|
+        [issue.key, message, key]
+      end
+      expect(actual).to eq [
+        [
+          'SP-1',
+          'Started: 2021-09-16, Discarded: 2021-09-17, Ignored: 2 days',
+          :discarded_changes
+        ]
+      ]
     end
   end
 

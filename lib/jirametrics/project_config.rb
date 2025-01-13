@@ -6,8 +6,8 @@ require 'jirametrics/status_collection'
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings, :aggregate_config
-  attr_accessor :time_range, :jira_url, :id, :discarded_changes_cutoff_times
+    :settings, :aggregate_config, :discarded_changes_data
+  attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
     @exporter = exporter
@@ -30,14 +30,13 @@ class ProjectConfig
   end
 
   def data_downloaded?
-    File.exist? File.join(@target_path, "#{get_file_prefix}_meta.json")
+    file_system.file_exist? File.join(@target_path, "#{get_file_prefix}_meta.json")
   end
 
   def load_data
     return if @has_loaded_data
 
     @has_loaded_data = true
-    load_all_boards
     @id = guess_project_id
     load_project_metadata
     load_sprints
@@ -51,16 +50,13 @@ class ProjectConfig
 
     return if load_only
 
-    @board_configs.each do |board_config|
-      board_config.run
-    end
     @file_configs.each do |file_config|
       file_config.run
     end
   end
 
   def load_settings
-    # This is the wierd exception that we don't ever want mocked out so we skip FileSystem entirely.
+    # This is the weird exception that we don't ever want mocked out so we skip FileSystem entirely.
     JSON.parse(File.read(File.join(__dir__, 'settings.json'), encoding: 'UTF-8'))
   end
 
@@ -110,6 +106,7 @@ class ProjectConfig
 
   def board id:, &block
     config = BoardConfig.new(id: id, block: block, project_config: self)
+    config.run
     @board_configs << config
   end
 
@@ -127,6 +124,7 @@ class ProjectConfig
     # on project, we wouldn't have this ugliness. 🤷‍♂️
     load_status_category_mappings
     load_status_history
+    load_all_boards
 
     @file_prefix
   end
@@ -241,7 +239,6 @@ class ProjectConfig
       board_id = $1.to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
-    raise "No boards found for #{get_file_prefix.inspect} in #{@target_path.inspect}" if @all_boards.empty?
   end
 
   def load_board board_id:, filename:
@@ -522,30 +519,41 @@ class ProjectConfig
       block = lambda do |issue|
         trigger_statuses = status_becomes.collect do |status_name|
           if status_name == :backlog
-            issue.board.backlog_statuses.collect(&:name)
+            issue.board.backlog_statuses
           else
-            status_name
+            possible_statuses.find_all_by_name status_name
           end
         end.flatten
 
+        next if trigger_statuses.empty?
+
+        trigger_status_ids = trigger_statuses.collect(&:id)
+
         time = nil
-        issue.changes.each do |change|
-          time = change.time if change.status? && trigger_statuses.include?(change.value) && change.artificial? == false
+        issue.status_changes.each do |change|
+          time = change.time if trigger_status_ids.include?(change.value_id) # && change.artificial? == false
         end
         time
       end
     end
 
-    issues_cutoff_times = []
     issues.each do |issue|
       cutoff_time = block.call(issue)
-      issues_cutoff_times << [issue, cutoff_time] if cutoff_time
-    end
+      next if cutoff_time.nil?
 
-    @discarded_changes_cutoff_times = issues_cutoff_times
+      original_start_time = issue.board.cycletime.started_stopped_times(issue).first
+      next if original_start_time.nil?
 
-    issues_cutoff_times.each do |issue, cutoff_time|
       issue.discard_changes_before cutoff_time
+
+      next unless cutoff_time
+      next if original_start_time > cutoff_time # ie the cutoff would have made no difference.
+
+      (@discarded_changes_data ||= []) << {
+        cutoff_time: cutoff_time,
+        original_start_time: original_start_time,
+        issue: issue
+      }
     end
   end
 end

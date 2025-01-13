@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class DataQualityReport < ChartBase
-  attr_reader :original_issue_times # For testing purposes only
+  attr_reader :discarded_changes_data, :entries # Both for testing purposes only
   attr_accessor :board_id
 
   class Entry
@@ -19,10 +19,10 @@ class DataQualityReport < ChartBase
     end
   end
 
-  def initialize original_issue_times
+  def initialize discarded_changes_data
     super()
 
-    @original_issue_times = original_issue_times
+    @discarded_changes_data = discarded_changes_data
 
     header_text 'Data Quality Report'
     description_text <<-HTML
@@ -310,10 +310,10 @@ class DataQualityReport < ChartBase
   end
 
   def scan_for_discarded_data entry:
-    hash = @original_issue_times[entry.issue]
+    hash = @discarded_changes_data&.find { |a| a[:issue] == entry.issue }
     return if hash.nil?
 
-    old_start_time = hash[:started_time]
+    old_start_time = hash[:original_start_time]
     cutoff_time = hash[:cutoff_time]
 
     old_start_date = old_start_time.to_date

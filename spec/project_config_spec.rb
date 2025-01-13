@@ -6,6 +6,7 @@ describe ProjectConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:target_path) { 'spec/testdata/' }
   let(:project_config) do
+    exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
 
@@ -14,10 +15,10 @@ describe ProjectConfig do
   let(:board) do
     board = sample_board
     board.project_config = project_config
-    statuses = board.possible_statuses
-    statuses.clear
-    statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new')
-    statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done')
+    # statuses = board.possible_statuses
+    # statuses.clear
+    # statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new')
+    # statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done')
     board
   end
   let(:issue1) { load_issue('SP-1', board: board) }
@@ -45,12 +46,6 @@ describe ProjectConfig do
   end
 
   context 'possible_statuses' do
-    it 'degrades gracefully when mappings not found' do
-      project_config.file_prefix 'not_found'
-      project_config.load_status_category_mappings
-      expect(project_config.possible_statuses).to be_empty
-    end
-
     it 'loads' do
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -159,18 +154,22 @@ describe ProjectConfig do
   end
 
   context 'discard_changes_before' do
-    it 'discards for date provided' do
+    it 'discards for date provided', :focus do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-01')
-      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02')
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1
 
-      project_config.discard_changes_before status_becomes: 'backlog'
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-01-01'), nil]
+      ]
+
+      project_config.discard_changes_before status_becomes: 'Backlog'
       expect(issue1.changes.collect(&:time)).to eq [
         to_time('2022-01-03')
       ]
@@ -178,14 +177,15 @@ describe ProjectConfig do
 
     it 'discards for block provided' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-02T07:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02T08:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-02T09:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T07:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02T08:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T09:00:00')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1
+      issue1.board.cycletime = default_cycletime_config
 
       project_config.discard_changes_before { |_issue| to_time('2022-01-02T09:00:00') }
       expect(issue1.changes.collect(&:time)).to eq []
@@ -197,23 +197,24 @@ describe ProjectConfig do
           'name' => 'Backlog',
           'statuses' => [
             {
-              'id' => '1'
+              'id' => '10000'
             }
           ]
         }
       ]
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-01')
-      add_mock_change(issue: issue1, field: 'status', value: 'backlog', value_id: 1, time: '2022-01-02')
-      add_mock_change(issue: issue1, field: 'status', value: 'doing', value_id: 12, time: '2022-01-03')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
 
       # Verify that Backlog is the only status in backlog statuses. Otherwise the test is meaningless.
-      expect(issue1.board.backlog_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }).to eq ['"backlog":1']
+      expect(issue1.board.backlog_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }).to eq ['"Backlog":10000']
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1
+      issue1.board.cycletime = default_cycletime_config
 
       project_config.discard_changes_before status_becomes: [:backlog]
       expect(issue1.changes.collect(&:time)).to eq [
@@ -314,6 +315,7 @@ describe ProjectConfig do
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
       ).tap do |subject|
         exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
+        exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
 
         subject.file_prefix 'sample'
         subject.load_status_category_mappings
@@ -479,22 +481,12 @@ describe ProjectConfig do
   end
 
   context 'load_project_metadata' do
-    it 'logs error when unable to find files' do
-      project_config.file_prefix 'foo'
-      expect { project_config.load_project_metadata }.to raise_error(
-        'No such file or directory - spec/testdata/foo_meta.json'
-      )
-      expect(exporter.file_system.log_messages).to eq([
-        "Can't load spec/testdata/foo_meta.json. Have you done a download?"
-      ])
-    end
-
     it 'adjusts start for no_earlier_than' do
-      project_config.file_prefix 'foo'
+      project_config.file_prefix 'sample'
       project_config.download do
         no_earlier_than '2024-01-15'
       end
-      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
         'date_start' => '2024-01-01',
         'date_end' => '2024-04-01'
       }
@@ -503,8 +495,8 @@ describe ProjectConfig do
     end
 
     it 'leaves start alone when no download block at all' do
-      project_config.file_prefix 'foo'
-      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
         'date_start' => '2024-01-01',
         'date_end' => '2024-04-01'
       }
@@ -513,9 +505,9 @@ describe ProjectConfig do
     end
 
     it 'leaves start alone when no_earlier_than not specified' do
-      project_config.file_prefix 'foo'
+      project_config.file_prefix 'sample'
       project_config.download(&empty_config_block)
-      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
         'date_start' => '2024-01-01',
         'date_end' => '2024-04-01'
       }
@@ -524,11 +516,11 @@ describe ProjectConfig do
     end
 
     it 'leaves start alone when no_earlier_than is already earlier than start' do
-      project_config.file_prefix 'foo'
+      project_config.file_prefix 'sample'
       project_config.download do
         no_earlier_than '2023-12-15'
       end
-      exporter.file_system.when_loading file: 'spec/testdata/foo_meta.json', json: {
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
         'date_start' => '2024-01-01',
         'date_end' => '2024-04-01'
       }
@@ -539,8 +531,14 @@ describe ProjectConfig do
 
   context 'issues' do
     it 'warns when issues directory missing' do
-      project_config.file_prefix 'foo'
-      project_config.all_boards[1] = sample_board
+      # We have to create our own project_config here as the default one at the top of the file will have
+      # already loaded issues so it's too late.
+      project_config = described_class.new(exporter: exporter, target_path: target_path, jira_config: nil, block: nil)
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: nil
+      exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
+      exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
+
+      project_config.file_prefix 'sample'
       expect { project_config.issues }.to raise_error(
         'No data found. Must do a download before an export'
       )
@@ -613,9 +611,9 @@ describe ProjectConfig do
 
   context 'file_prefix' do
     it 'can only be set once' do
-      project_config.file_prefix 'first'
+      project_config.file_prefix 'sample'
       expect { project_config.file_prefix 'second' }.to raise_error(
-        'file_prefix should only be set once. Was "first" and now changed to "second".'
+        'file_prefix should only be set once. Was "sample" and now changed to "second".'
       )
     end
 

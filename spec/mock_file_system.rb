@@ -48,7 +48,11 @@ class MockFileSystem < FileSystem
     results = @foreach_data[root]
     raise "foreach called on directory #{root.inspect} but nothing set in the mock" unless results
 
-    results.each { |file| yield file } # rubocop:disable Style/ExplicitBlockArgument
+    if results == :not_mocked
+      super
+    else
+      results.each { |file| yield file } # rubocop:disable Style/ExplicitBlockArgument
+    end
   end
 
   def log message, more: nil, also_write_to_stderr: false # rubocop:disable Lint/UnusedMethodArgument

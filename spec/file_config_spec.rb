@@ -7,6 +7,7 @@ describe FileConfig do
   let(:project_config) do
     exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
+    exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
 
     project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
     project_config.file_prefix 'sample'

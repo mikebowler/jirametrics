@@ -6,7 +6,7 @@ require 'jirametrics/self_or_issue_dispatcher'
 class HtmlReportConfig
   include SelfOrIssueDispatcher
 
-  attr_reader :file_config, :sections
+  attr_reader :file_config, :sections, :charts
 
   def self.define_chart name:, classname:, deprecated_warning: nil, deprecated_date: nil
     lines = []
@@ -42,7 +42,8 @@ class HtmlReportConfig
   def initialize file_config:, block:
     @file_config = file_config
     @block = block
-    @sections = []
+    @sections = [] # Where we store the chunks of text that will be assembled into the HTML
+    @charts = [] # Where we store all the charts we executed so we can assert against them.
   end
 
   def cycletime label = nil, &block
@@ -63,7 +64,7 @@ class HtmlReportConfig
 
     # The quality report has to be generated last because otherwise cycletime won't have been
     # set. Then we have to rotate it to the first position so it's at the top of the report.
-    execute_chart DataQualityReport.new(original_issue_times || {})
+    execute_chart DataQualityReport.new(file_config.project_config.discarded_changes_data)
     @sections.rotate!(-1)
 
     html create_footer
@@ -142,21 +143,25 @@ class HtmlReportConfig
     end
   end
 
-  def original_issue_times
-    issue_times = {}
-    cutoff_times = file_config.project_config.discarded_changes_cutoff_times
-    return if cutoff_times.nil?
+#   def original_issue_times
+#     # TODO: This appears to be executed AFTER the history has been discarded so it's too late to be useful
 
-    cutoff_times.each do |issue, cutoff_time|
-      started = issue.board.cycletime.started_stopped_times(issue).first
-      if started && started <= cutoff_time
-        # We only need to log this if data was discarded
-        issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
-      end
-    end
+#     issue_times = {}
+#     cutoff_times = file_config.project_config.discarded_changes_cutoff_times
+#     puts "HtmlReport cutoff_times: #{cutoff_times.inspect}"
+#     return if cutoff_times.nil?
 
-    issue_times
-  end
+#     cutoff_times.each do |issue, cutoff_time|
+#       started = issue.board.cycletime.started_stopped_times(issue).first
+#       puts "#{issue.inspect} started: #{started}, cutoff_time: #{cutoff_time}"
+#       if started && started <= cutoff_time
+#         # We only need to log this if data was discarded
+#         issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
+#       end
+#     end
+# puts "HtmlReportConfig.orginal_issue_times:  #{issue_times.inspect}"
+#     issue_times
+#   end
 
   def dependency_chart &block
     execute_chart DependencyChart.new block
@@ -186,6 +191,7 @@ class HtmlReportConfig
 
     after_init_block&.call chart
 
+    @charts << chart
     html chart.run
   end
 

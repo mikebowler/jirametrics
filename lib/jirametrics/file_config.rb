@@ -85,6 +85,11 @@ class FileConfig
 
   def html_report &block
     assert_only_one_filetype_config_set
+    if block.nil?
+      project_config.file_system.warning 'No charts were specified for the report. This is almost certainly a mistake.'
+      block = ->(_) {}
+    end
+
     @html_report = HtmlReportConfig.new file_config: self, block: block
   end
 
@@ -119,5 +124,12 @@ class FileConfig
   def file_suffix suffix = nil
     @file_suffix = suffix unless suffix.nil?
     @file_suffix
+  end
+
+  def children
+    result = []
+    result << @columns if @columns
+    result << @html_report if @html_report
+    result
   end
 end

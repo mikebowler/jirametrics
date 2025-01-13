@@ -175,9 +175,17 @@ class Issue
   end
 
   def first_time_in_status_category *category_names
+    category_ids = category_names.filter_map do |name|
+      list = board.possible_statuses.find_all_categories_by_name name
+      raise "No status categories found for name: #{name}" if list.empty?
+
+      list
+    end.flatten.collect(&:id)
+
     status_changes.each do |change|
-      category = find_or_create_status(id: change.value_id, name: change.value).category.name
-      return change if category_names.include? category
+      to_status = find_or_create_status(id: change.value_id, name: change.value)
+      id = to_status.category.id
+      return change if category_ids.include? id
     end
     nil
   end
