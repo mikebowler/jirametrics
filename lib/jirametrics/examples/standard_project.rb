@@ -28,8 +28,8 @@ class Exporter
         block = boards[board_id]
         if block == :default
           block = lambda do |_|
-            start_at first_time_in_status_category('In Progress')
-            stop_at still_in_status_category('Done')
+            start_at first_time_in_status_category(:indeterminate)
+            stop_at still_in_status_category(:done)
           end
         end
         board id: board_id do

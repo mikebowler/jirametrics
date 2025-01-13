@@ -120,9 +120,11 @@ class Issue
 
   # If it ever entered one of these categories and it's still there then what was the last time it entered
   def still_in_status_category *category_names
+    category_ids = find_status_category_ids_by_names category_names
+
     still_in do |change|
       status = find_or_create_status id: change.value_id, name: change.value
-      category_names.include?(status.category.name) || category_names.include?(status.category.id)
+      category_ids.include? status.category.id
     end
   end
 
@@ -140,10 +142,12 @@ class Issue
 
   # Are we currently in this status category? If yes, then return the most recent status change.
   def currently_in_status_category *category_names
+    category_ids = find_status_category_ids_by_names category_names
+
     change = most_recent_status_change
 
     status = find_or_create_status id: change.value_id, name: change.value
-    change if status && category_names.include?(status.category.name)
+    change if status && category_ids.include?(status.category.id)
   end
 
   def find_or_create_status id:, name:
@@ -175,12 +179,7 @@ class Issue
   end
 
   def first_time_in_status_category *category_names
-    category_ids = category_names.filter_map do |name|
-      list = board.possible_statuses.find_all_categories_by_name name
-      raise "No status categories found for name: #{name}" if list.empty?
-
-      list
-    end.flatten.collect(&:id)
+    category_ids = find_status_category_ids_by_names category_names
 
     status_changes.each do |change|
       to_status = find_or_create_status(id: change.value_id, name: change.value)
@@ -735,5 +734,14 @@ class Issue
       'to' => first_status_id,
       'toString' => first_status
     }
+  end
+
+  def find_status_category_ids_by_names category_names
+    category_names.filter_map do |name|
+      list = board.possible_statuses.find_all_categories_by_name name
+      raise "No status categories found for name: #{name}" if list.empty?
+
+      list
+    end.flatten.collect(&:id)
   end
 end
