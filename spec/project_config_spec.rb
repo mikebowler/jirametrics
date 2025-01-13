@@ -154,7 +154,7 @@ describe ProjectConfig do
   end
 
   context 'discard_changes_before' do
-    it 'discards for date provided', :focus do
+    it 'discards for date provided' do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
       add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
