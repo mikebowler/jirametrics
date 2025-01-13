@@ -16,19 +16,18 @@ class StatusCollection
     @list.find { |status| status.id == id }
   end
 
-  def find_all_by_name name
-    if name =~ /^(.*):(\d+)$/
-      name = $1
-      id = $2.to_i
+  def find_all_by_name identifier
+    name, id = parse_name_id identifier
 
+    if id
       status = find_by_id id
-      unless status.name == name
-        raise "Specified status ID of 1 does not match specified name #{name.inspect}. " \
+      return [] if status.nil?
+
+      if name && status.name != name
+        raise "Specified status ID of #{id} does not match specified name #{name.inspect}. " \
           "You might have meant one of these: #{self}."
       end
       [status]
-    elsif name.match?(/^\d$/)
-      [find_by_id(name.to_i)]
     else
       @list.select { |status| status.name == name }
     end
@@ -41,12 +40,28 @@ class StatusCollection
       .sort_by(&:id)
   end
 
-  def find_all_categories_by_name name
-    @list
-      .select { |s| s.category.name == name }
-      .collect(&:category)
-      .uniq
-      .sort_by(&:id)
+  def parse_name_id name
+    # Names could arrive in one of the following formats: "Done:3", "3", "Done"
+    if name =~ /^(.*):(\d+)$/
+      [$1, $2.to_i]
+    elsif name.match?(/^\d+$/)
+      [nil, name.to_i]
+    else
+      [name, nil]
+    end
+  end
+
+  def find_all_categories_by_name identifier
+    key = nil
+    id = nil
+
+    if identifier.is_a? Symbol
+      key = identifier.to_s
+    else
+      name, id = parse_name_id identifier
+    end
+
+    find_all_categories.select { |c| c.id == id || c.name == name || c.key == key }
   end
 
   def collect(&block) = @list.collect(&block)

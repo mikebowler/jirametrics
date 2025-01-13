@@ -81,5 +81,15 @@ describe StatusCollection do
     it 'finds from just an id' do
       expect(collection.find_all_by_name '3').to eq [status_c]
     end
+
+    it 'fails to find an id that does not exist', :focus do
+      expect(collection.find_all_by_name '3333').to be_empty
+    end
+  end
+
+  context 'find_all_categories_by_name' do
+    it 'accepts symbol to search by key' do
+      expect(collection.find_all_categories_by_name :new).to eq [status_a.category]
+    end
   end
 end
