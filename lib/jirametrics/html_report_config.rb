@@ -101,9 +101,8 @@ class HtmlReportConfig
     base_css
   end
 
-  def board_id id = nil
-    @board_id = id unless id.nil?
-    @board_id
+  def board_id id
+    @board_id = id
   end
 
   def timezone_offset
@@ -182,7 +181,7 @@ class HtmlReportConfig
     chart.settings = settings
 
     chart.all_boards = project_config.all_boards
-    chart.board_id = find_board_id if chart.respond_to? :board_id=
+    chart.board_id = find_board_id
     chart.holiday_dates = project_config.exporter.holiday_dates
 
     time_range = @file_config.project_config.time_range
