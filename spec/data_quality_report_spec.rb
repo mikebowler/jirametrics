@@ -591,7 +591,6 @@ describe DataQualityReport do
           issues.find { |issue| issue.key == 'SP-1' }.tap do |issue|
             add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16')
             add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17')
-            add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-18')
           end
 
           discard_changes_before status_becomes: :backlog
