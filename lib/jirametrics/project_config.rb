@@ -170,7 +170,6 @@ class ProjectConfig
       end
 
       status_id = guesses.first
-      # TODO: This should be a deprecation instead but we can't currently assert against those
       file_system.log "status_category_mapping for #{status.inspect} has been mapped to id #{status_id}. " \
         "If that's incorrect then specify the status_id."
     end
