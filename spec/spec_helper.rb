@@ -212,7 +212,6 @@ def mock_cycletime_config stub_values: []
     line[2] = to_time(line[2]) if line[2].is_a? String
   end
 
-  # TODO: Remove duplication in each of start_at/stop_at
   config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
   config.start_at(extract_time_from_stub_values(stub_values, 1))
   config.stop_at(extract_time_from_stub_values(stub_values, 2))
