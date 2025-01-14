@@ -185,6 +185,21 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
   }
 end
 
+# Used ony by mock_cycletime_config
+def extract_time_from_stub_values stub_values, index
+  lambda do |issue|
+    change = stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](index)
+    case change
+    when nil
+      nil
+    when ChangeItem
+      change
+    else
+      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
+    end
+  end
+end
+
 def mock_cycletime_config stub_values: []
   raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
 
@@ -199,28 +214,8 @@ def mock_cycletime_config stub_values: []
 
   # TODO: Remove duplication in each of start_at/stop_at
   config = CycleTimeConfig.new parent_config: nil, label: nil, block: nil
-  config.start_at(lambda do |issue|
-    change = stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](1)
-    case change
-    when nil
-      nil
-    when ChangeItem
-      change
-    else
-      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
-    end
-  end)
-  config.stop_at(lambda do |issue|
-    change = stub_values.find { |stub_issue, _start, _stop| stub_issue == issue }&.[](2)
-    case change
-    when nil
-      nil
-    when ChangeItem
-      change
-    else
-      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
-    end
-  end)
+  config.start_at(extract_time_from_stub_values(stub_values, 1))
+  config.stop_at(extract_time_from_stub_values(stub_values, 2))
   config
 end
 
