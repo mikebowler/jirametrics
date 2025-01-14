@@ -142,26 +142,6 @@ class HtmlReportConfig
     end
   end
 
-#   def original_issue_times
-#     # TODO: This appears to be executed AFTER the history has been discarded so it's too late to be useful
-
-#     issue_times = {}
-#     cutoff_times = file_config.project_config.discarded_changes_cutoff_times
-#     puts "HtmlReport cutoff_times: #{cutoff_times.inspect}"
-#     return if cutoff_times.nil?
-
-#     cutoff_times.each do |issue, cutoff_time|
-#       started = issue.board.cycletime.started_stopped_times(issue).first
-#       puts "#{issue.inspect} started: #{started}, cutoff_time: #{cutoff_time}"
-#       if started && started <= cutoff_time
-#         # We only need to log this if data was discarded
-#         issue_times[issue] = { cutoff_time: cutoff_time, started_time: started }
-#       end
-#     end
-# puts "HtmlReportConfig.orginal_issue_times:  #{issue_times.inspect}"
-#     issue_times
-#   end
-
   def dependency_chart &block
     execute_chart DependencyChart.new block
   end
