@@ -151,11 +151,8 @@ class ProjectConfig
   end
 
   def status_category_mapping status:, category:
-    # Status might just be a name like "Review" or it might be a name:id pair like "Review:4"
-    parse_status = ->(line) { line =~ /^(.+):(\d+)$/ ? [$1, $2.to_i] : [line, nil] }
-
-    status, status_id = parse_status.call status
-    category, category_id = parse_status.call category
+    status, status_id = possible_statuses.parse_name_id status
+    category, category_id = possible_statuses.parse_name_id category
 
     if status_id.nil?
       guesses = find_ids_by_status_name_across_all_issues status
