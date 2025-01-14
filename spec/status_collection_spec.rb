@@ -82,7 +82,7 @@ describe StatusCollection do
       expect(collection.find_all_by_name '3').to eq [status_c]
     end
 
-    it 'fails to find an id that does not exist', :focus do
+    it 'fails to find an id that does not exist' do
       expect(collection.find_all_by_name '3333').to be_empty
     end
   end

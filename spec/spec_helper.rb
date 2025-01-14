@@ -218,8 +218,8 @@ def mock_cycletime_config stub_values: []
   config
 end
 
+# return a cycletime config that always uses creation and last_resolution
 def default_cycletime_config
-  # TODO: This has very unexpected behaviour. Why are we even using this rather than mock_cycletime_config?
   today = Date.parse('2021-12-17')
 
   block = lambda do |_|
