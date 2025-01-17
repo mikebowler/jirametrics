@@ -453,7 +453,7 @@ class DataQualityReport < ChartBase
   def render_items_blocked_on_closed_tickets problems
     <<-HTML
       For #{label_issues problems.size}, the issue is identified as being blocked by another issue. Yet,
-      that other issue is already completed so it can't be a blocker.
+      that other issue is already completed so, by definition, it can't still be blocking.
     HTML
   end
 end
