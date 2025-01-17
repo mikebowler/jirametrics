@@ -50,6 +50,7 @@ class DataQualityReport < ChartBase
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
       scan_for_incomplete_subtasks_when_issue_done entry: entry
       scan_for_discarded_data entry: entry
+      scan_for_items_blocked_on_closed_tickets entry: entry
     end
 
     scan_for_issues_on_multiple_boards entries: @entries
@@ -73,6 +74,7 @@ class DataQualityReport < ChartBase
     result << render_problem_type(:issue_not_started_but_subtasks_have)
     result << render_problem_type(:incomplete_subtasks_when_issue_done)
     result << render_problem_type(:issue_on_multiple_boards)
+    result << render_problem_type(:items_blocked_on_closed_tickets)
     result << '</ul>'
 
     result
@@ -262,6 +264,20 @@ class DataQualityReport < ChartBase
     )
   end
 
+  def scan_for_items_blocked_on_closed_tickets entry:
+    entry.issue.issue_links.each do |link|
+      this_active = !entry.stopped
+      other_active = !link.other_issue.board.cycletime.started_stopped_times(link.other_issue).last
+      next unless this_active && !other_active
+
+      entry.report(
+        problem_key: :items_blocked_on_closed_tickets,
+        detail: "#{entry.issue.key} thinks it's blocked on #{link.other_issue.key}, " \
+          "except #{link.other_issue.key} is closed."
+      )
+    end
+  end
+
   def subtask_label subtask
     "<img src='#{subtask.type_icon_url}' /> #{link_to_issue(subtask)} #{subtask.summary[..50].inspect}"
   end
@@ -431,6 +447,13 @@ class DataQualityReport < ChartBase
     <<-HTML
       For #{label_issues problems.size}, we have an issue that shows up on more than one board. This
       could result in more data points showing up on a chart then there really should be.
+    HTML
+  end
+
+  def render_items_blocked_on_closed_tickets problems
+    <<-HTML
+      For #{label_issues problems.size}, the issue is identified as being blocked by another issue. Yet,
+      that other issue is already completed so it can't be a blocker.
     HTML
   end
 end
