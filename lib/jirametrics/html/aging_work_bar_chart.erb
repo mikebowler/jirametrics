@@ -38,16 +38,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
     plugins: {
       annotation: {
         annotations: {
-          <% holidays.each_with_index do |range, index| %>
-          holiday<%= index %>: {
-            drawTime: 'beforeDraw',
-            type: 'box',
-            xMin: '<%= range.begin %>T00:00:00',
-            xMax: '<%= range.end %>T23:59:59',
-            backgroundColor: <%= CssVariable.new('--non-working-days-color').to_json %>,
-            borderColor: <%= CssVariable.new('--non-working-days-color').to_json %>
-          },
-          <% end %>
+          <%= working_days_annotation %>
 
           <% if percentage_line_x %>
           line: {

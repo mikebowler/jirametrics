@@ -723,7 +723,7 @@ describe DataQualityReport do
 
       report.scan_for_items_blocked_on_closed_tickets entry: entry1
       expect(entry1.problems).to eq [
-        [:items_blocked_on_closed_tickets, 'SP-1 thinks it\'s blocked by SP-2, except SP-2 is closed.']
+        [:items_blocked_on_closed_tickets, "SP-1 thinks it's blocked by SP-2, except SP-2 is closed."]
       ]
     end
   end

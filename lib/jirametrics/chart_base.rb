@@ -130,6 +130,21 @@ class ChartBase
     result
   end
 
+  def working_days_annotation
+    holidays.each_with_index.collect do |range, index|
+      <<~TEXT
+        holiday#{index}: {
+          drawTime: 'beforeDraw',
+          type: 'box',
+          xMin: '#{range.begin}T00:00:00',
+          xMax: '#{range.end}T23:59:59',
+          backgroundColor: #{CssVariable.new('--non-working-days-color').to_json},
+          borderColor: #{CssVariable.new('--non-working-days-color').to_json}
+        },
+      TEXT
+    end.join
+  end
+
   # Return only the board columns for the current board.
   def current_board
     if @board_id.nil?

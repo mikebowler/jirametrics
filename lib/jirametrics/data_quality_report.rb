@@ -272,7 +272,7 @@ class DataQualityReport < ChartBase
 
       entry.report(
         problem_key: :items_blocked_on_closed_tickets,
-        detail: "#{entry.issue.key} thinks it's blocked on #{link.other_issue.key}, " \
+        detail: "#{entry.issue.key} thinks it's blocked by #{link.other_issue.key}, " \
           "except #{link.other_issue.key} is closed."
       )
     end
