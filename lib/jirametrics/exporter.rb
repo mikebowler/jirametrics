@@ -127,13 +127,6 @@ class Exporter
     @timezone_offset
   end
 
-  def working_days &block
-    @working_days_block = block
-
-    # If this block is going to blow up, we'd rather it did that now so the error message is clearer. Test it once.
-    @working_days_block.call(Date.today)
-  end
-
   def holiday_dates *args
     unless args.empty?
       dates = []
