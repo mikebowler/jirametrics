@@ -106,7 +106,7 @@ class ProjectConfig
 
   def board id:, &block
     config = BoardConfig.new(id: id, block: block, project_config: self)
-    config.run
+    config.run if data_downloaded?
     @board_configs << config
   end
 
