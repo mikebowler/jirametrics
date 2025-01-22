@@ -116,7 +116,9 @@ class Exporter
 
   def jira_config filename = nil
     if filename
-      @jira_config = file_system.load_json(filename)
+      @jira_config = file_system.load_json(filename, fail_on_error: false)
+      raise "Unable to load Jira configuration file and cannot continue: #{filename.inspect}" if @jira_config.nil?
+
       @jira_config['url'] = $1 if @jira_config['url'] =~ /^(.+)\/+$/
     end
     @jira_config

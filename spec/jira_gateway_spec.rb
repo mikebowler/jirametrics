@@ -5,7 +5,7 @@ describe JiraGateway do
   let(:gateway) { described_class.new file_system: file_system }
 
   context 'make_curl_command' do
-    it 'handles empty config' do
+    it 'handles empty config', :focus do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
 
       expect(gateway.make_curl_command url: 'http://foo').to eq(
@@ -99,8 +99,36 @@ describe JiraGateway do
       end
       gateway.load_jira_config({ 'url' => 'https://example.com' })
       expect { gateway.call_url relative_url: 'foo' }.to raise_error(
-        "Error \"unexpected token at 'foo'\" when parsing result: \"foo\""
+        'Error when parsing result: "foo"'
       )
+    end
+  end
+
+  context 'json_successful' do
+    it 'succeeds for simple json' do
+      json = { 'a' => 'b' }
+      expect(gateway).to be_json_successful(json)
+    end
+
+    it 'fails for error' do
+      json = { 'error' => 'foo' }
+      expect(gateway).not_to be_json_successful(json)
+    end
+
+    it 'fails for errorMessage' do
+      json = { 'errorMessage' => 'foo' }
+      expect(gateway).not_to be_json_successful(json)
+    end
+
+    it 'fails for errorMessages' do
+      json = { 'errorMessage' => ['foo'] }
+      expect(gateway).not_to be_json_successful(json)
+    end
+
+    it 'fails for array of errorMessage' do
+      # Seen this one from the status api
+      json = ['errorMessage', 'Site temporarily unavailable']
+      expect(gateway).not_to be_json_successful(json)
     end
   end
 end

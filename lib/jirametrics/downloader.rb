@@ -103,8 +103,6 @@ class Downloader
       json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
-      exit_if_call_failed json
-
       json['issues'].each do |issue_json|
         issue_json['exporter'] = {
           'in_initial_query' => initial_query
@@ -137,15 +135,6 @@ class Downloader
     issue.raw['fields']['subtasks']&.each do |raw_subtask|
       @issue_keys_pending_download << raw_subtask['key']
     end
-  end
-
-  def exit_if_call_failed json
-    # Sometimes Jira returns the singular form of errorMessage and sometimes the plural. Consistency FTW.
-    return unless json['error'] || json['errorMessages'] || json['errorMessage']
-
-    log "Download failed. See #{@file_system.logfile_name} for details.", both: true
-    log "  #{JSON.pretty_generate(json)}"
-    exit 1
   end
 
   def download_statuses
@@ -188,8 +177,6 @@ class Downloader
     log "  Downloading board configuration for board #{board_id}", both: true
     json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
 
-    exit_if_call_failed json
-
     @file_system.save_json(
       json: json,
       filename: File.join(@target_path, "#{file_prefix}_board_#{board_id}_configuration.json")
@@ -213,7 +200,6 @@ class Downloader
     while is_last == false
       json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/sprint?" \
         "maxResults=#{max_results}&startAt=#{start_at}"
-      exit_if_call_failed json
 
       @file_system.save_json(
         json: json,

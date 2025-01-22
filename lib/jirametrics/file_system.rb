@@ -35,6 +35,10 @@ class FileSystem
     log "Warning: #{message}", more: more, also_write_to_stderr: true
   end
 
+  def error message, more: nil
+    log "Error: #{message}", more: more, also_write_to_stderr: true
+  end
+
   def log message, more: nil, also_write_to_stderr: false
     message += " See #{logfile_name} for more details about this message." if more
 

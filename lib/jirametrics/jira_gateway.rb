@@ -14,9 +14,15 @@ class JiraGateway
   def call_url relative_url:
     command = make_curl_command url: "#{@jira_url}#{relative_url}"
     result = call_command command
-    JSON.parse result
-  rescue => e # rubocop:disable Style/RescueStandardError
-    raise "Error #{e.message.inspect} when parsing result: #{result.inspect}"
+    begin
+      json = JSON.parse(result)
+    rescue # rubocop:disable Style/RescueStandardError
+      raise "Error when parsing result: #{result.inspect}"
+    end
+
+    raise "Download failed with: #{JSON.pretty_generate(json)}" unless json_successful?(json)
+
+    json
   end
 
   def call_command command
@@ -60,5 +66,12 @@ class JiraGateway
     command << ' --header "Accept: application/json"'
     command << " --url \"#{url}\""
     command
+  end
+
+  def json_successful? json
+    return false if json.is_a?(Hash) && (json['error'] || json['errorMessages'] || json['errorMessage'])
+    return false if json.is_a?(Array) && json.first == 'errorMessage'
+
+    true
   end
 end

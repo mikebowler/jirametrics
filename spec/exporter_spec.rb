@@ -5,7 +5,12 @@ require './spec/spec_helper'
 TARGET_PATH = 'spec/tmp/testdir'
 
 describe Exporter do
-  let(:exporter) { described_class.new }
+  let(:file_system) do
+    MockFileSystem.new.tap do |fs|
+      fs.when_loading file: 'spec/testdata/jira-config.json', json: :not_mocked
+    end
+  end
+  let(:exporter) { described_class.new file_system: file_system }
 
   context 'target_path' do
     it 'works with no file separator at end' do
@@ -25,7 +30,10 @@ describe Exporter do
 
   context 'jira_config' do
     it 'raises exception if file not found' do
-      expect { exporter.jira_config 'not-found.json' }.to raise_error Errno::ENOENT
+      expect { exporter.jira_config 'not-found.json' }.to raise_error(
+        'Unable to load Jira configuration file and cannot continue: "not-found.json"'
+      )
+      expect(exporter.file_system.log_messages).to be_empty
     end
 
     it 'loads config' do
