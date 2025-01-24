@@ -239,17 +239,36 @@ def chart_format object
   end
 end
 
-def to_time string
-  case string
-  when Date
-    Time.new string.year, string.month, string.day, 0, 0, 0, '+00:00'
-  when /^(\d{4})-(\d{2})-(\d{2})$/
-    Time.new $1.to_i, $2.to_i, $3.to_i, 0, 0, 0, '+00:00'
-  when /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/
-    Time.new $1.to_i, $2.to_i, $3.to_i, $4.to_i, $5.to_i, $6.to_i, '+00:00'
-  else
-    Time.parse string
-  end
+# Create a Time from the input string. Supported formats are below. When a timezone isn't specified,
+# it uses UTC rather than local so that all tests will continue to work, regardless of what timezone
+# they're run in.
+# 2024-01-01
+# 2024-01-01T12:34:56
+# 2024-01-01T12:34:56.789
+# 2024-01-01T12:34:56.789+00:00
+# 2024-01-01T12:34:56+00:00
+def to_time input
+  regex = %r{
+    ^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})
+    (?<remainder>T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?<fraction>\.\d+)?
+    \s*(?<offset>[+-]\d{2}:?\d{2})?)?$
+  }x
+  matches = input.match regex
+  raise "Can't parse string: #{input.inspect}" unless matches
+
+  adjusted = format(
+    '%<year>04d-%<month>02d-%<day>02dT-%<hour>02d:%<minute>02d:%<second>02d%<fraction>s%<offset>s',
+    year: matches[:year].to_i,
+    month: matches[:month].to_i,
+    day: matches[:day].to_i,
+    hour: (matches[:hour] || 0).to_i,
+    minute: (matches[:minute] || 0).to_i,
+    second: (matches[:second] || 0).to_i,
+    fraction: matches[:fraction] || '',
+    offset: matches[:offset] || '+0000'
+  )
+
+  Time.parse adjusted
 end
 
 def to_date string

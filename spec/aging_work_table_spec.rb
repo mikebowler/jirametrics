@@ -115,7 +115,7 @@ describe AgingWorkTable do
     it 'handles a mix of aging and completed' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2021-01-02', nil],
-        [issue2, '2021-01-02', '2021-010-04']
+        [issue2, '2021-01-02', '2021-10-04']
       ]
       table.issues = [issue1, issue2]
       expect(table.select_aging_issues).to eq [issue1]
