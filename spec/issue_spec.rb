@@ -160,14 +160,14 @@ describe Issue do
     it 'gets simple history with a single status' do
       expect(issue2.changes).to eq [
         mock_change(
-          issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804+0000'
+          issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804'
         ),
         mock_change(
-          issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804+0000'
+          issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804'
         ),
         mock_change(
           issue: issue2, field: 'status', value: 'Selected for Development', value_id: 3,
-          time: '2021-06-18T18:43:38+00:00'
+          time: '2021-06-18T18:43:38'
         )
       ]
     end
@@ -175,50 +175,25 @@ describe Issue do
     it 'gets complex history with a mix of field types' do
       issue10 = load_issue('SP-10', board: board)
       expect(issue10.changes).to eq [
+        mock_change(issue: issue10, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:42:52.754'),
+        mock_change(issue: issue10, field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52.754'),
         mock_change(
-          issue: issue10, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:42:52.754+0000'
+          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-08-29T18:06:28'
         ),
-        mock_change(
-          issue: issue10, field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52.754+0000'
-        ),
+        mock_change(issue: issue10, field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28'),
+        mock_change(issue: issue10, field: 'priority', value: 'Highest', time: '2021-08-29T18:06:43'),
+        mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-08-29T18:06:55'),
         mock_change(
           issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3,
-          time: '2021-08-29T18:06:28+0000'
+          time: '2021-09-06T04:33:11'
         ),
-        mock_change(
-          issue: issue10, field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'priority', value: 'Highest', time: '2021-08-29T18:06:43+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-08-29T18:06:55+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3,
-          time: '2021-09-06T04:33:11+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'priority', value: 'Medium', time: '2021-09-06T04:33:50+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'Flagged', value: '', time: '2021-09-06T04:33:55+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-09-06T04:34:02+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'status', value: 'Review', value_id: 7, time: '2021-09-06T04:34:21+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'status', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26+0000'
-        ),
-        mock_change(
-          issue: issue10, field: 'resolution', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26+0000'
-        )
+        mock_change(issue: issue10, field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30'),
+        mock_change(issue: issue10, field: 'priority', value: 'Medium', time: '2021-09-06T04:33:50'),
+        mock_change(issue: issue10, field: 'Flagged', value: '', time: '2021-09-06T04:33:55'),
+        mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-09-06T04:34:02'),
+        mock_change(issue: issue10, field: 'status', value: 'Review', value_id: 7, time: '2021-09-06T04:34:21'),
+        mock_change(issue: issue10, field: 'status', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26'),
+        mock_change(issue: issue10, field: 'resolution', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26')
        ]
     end
 
