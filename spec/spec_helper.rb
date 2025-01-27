@@ -23,10 +23,6 @@ def file_read filename
   File.read filename, encoding: 'UTF-8'
 end
 
-def make_test_filename basename
-  "spec/tmp/#{basename}"
-end
-
 def sample_board
   statuses = load_statuses './spec/testdata/sample_statuses.json'
   Board.new raw: JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
@@ -104,10 +100,6 @@ def load_statuses input_file
     statuses << Status.from_raw(status_config)
   end
   statuses
-end
-
-def load_complete_sample_date_range
-  to_time('2021-09-14T00:00:00+00:00')..to_time('2021-12-13T23:59:59+00:00')
 end
 
 def add_mock_change issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false

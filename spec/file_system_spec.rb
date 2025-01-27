@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe FileSystem do
   it 'loads json' do
-    filename = make_test_filename 'jsonfileloader'
+    filename = 'spec/tmp/jsonfileloader'
     begin
       File.write(filename, '{"a": "b"}')
 
