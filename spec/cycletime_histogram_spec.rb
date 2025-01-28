@@ -2,6 +2,7 @@
 
 require './spec/spec_helper'
 
+
 describe CycletimeHistogram do
   let(:board) { load_complete_sample_board }
   let(:issue1) { load_issue 'SP-1', board: board }
@@ -21,6 +22,37 @@ describe CycletimeHistogram do
         [issue10, '2022-01-01', '2022-01-01T01:00:00']
       ]
       expect(chart.histogram_data_for issues: [issue1, issue2, issue10]).to eq({ 4 => 2, 1 => 1 })
+    end
+  end
+
+  context 'stats_for' do
+    it 'handles no issues' do
+      expect(chart.stats_for histogram_data:{}).to eq({})
+    end
+
+    it 'calculates the average' do
+      expect_average({ 4 => 2, 5 => 3 }).to eq((4*2 + 5*3).to_f/(2 + 3))
+      expect_average({ 10 => 1 }).to eq(10)
+      expect_average({ 5 => 5 }).to eq(5)
+      
+      expect_average({ 1 => 0 }).to eq(0)
+      expect_average({ 0 => 0 }).to eq(0)
+    end
+
+    it 'calculates the mode' do
+      # expect_mode({ 1 => 2, 2 => 5, 3 => 1 }).to eq(2)
+      # expect_mode({ 5 => 15 }).to eq(5)
+      #expect_mode({ 1 => 5, 2 => 1, 3 => 5 }).to eq([1, 3]) 
+    end
+
+    def expect_mode(histogram_data)
+      stats = chart.stats_for histogram_data:histogram_data
+      expect(stats[:mode])
+    end
+
+    def expect_average(histogram_data)
+      stats = chart.stats_for histogram_data:histogram_data
+      expect(stats[:average])
     end
   end
 

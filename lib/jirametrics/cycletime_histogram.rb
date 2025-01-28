@@ -55,6 +55,18 @@ class CycletimeHistogram < ChartBase
     count_hash
   end
 
+  def stats_for histogram_data:
+    return {} if histogram_data.empty?
+
+    total_values = histogram_data.values.sum
+
+    # Calculate the average
+    weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
+    average = total_values != 0? weighted_sum.to_f / total_values : 0
+
+    { average: average } 
+  end
+
   def data_set_for histogram_data:, label:, color:
     keys = histogram_data.keys.sort
     {
