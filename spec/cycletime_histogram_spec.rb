@@ -31,18 +31,19 @@ describe CycletimeHistogram do
     end
 
     it 'calculates the average' do
-      expect_average({ 4 => 2, 5 => 3 }).to eq((4*2 + 5*3).to_f/(2 + 3))
+      expect_average({ 4 => 2, 5 => 3, 10 => 0 }).to eq((4*2 + 5*3).to_f/(2 + 3))
       expect_average({ 10 => 1 }).to eq(10)
       expect_average({ 5 => 5 }).to eq(5)
-      
+
       expect_average({ 1 => 0 }).to eq(0)
       expect_average({ 0 => 0 }).to eq(0)
     end
 
     it 'calculates the mode' do
-      # expect_mode({ 1 => 2, 2 => 5, 3 => 1 }).to eq(2)
-      # expect_mode({ 5 => 15 }).to eq(5)
-      #expect_mode({ 1 => 5, 2 => 1, 3 => 5 }).to eq([1, 3]) 
+      expect_mode({ 1 => 2, 2 => 5, 3 => 1 }).to eq(2)
+      expect_mode({ 5 => 1 }).to eq(5)
+      expect_mode({ 1 => 5, 2 => 1, 3 => 5 }).to eq([1, 3]) # multi-modal distribution case
+      expect_mode({ 5 => 1, 1 => 1 }).to eq([1, 5])
     end
 
     def expect_mode(histogram_data)

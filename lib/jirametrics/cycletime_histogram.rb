@@ -64,7 +64,15 @@ class CycletimeHistogram < ChartBase
     weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
     average = total_values != 0? weighted_sum.to_f / total_values : 0
 
-    { average: average } 
+     # Find the mode (or modes!)
+    sorted_histogram = histogram_data.sort_by{ |value, frequency| frequency }
+    max_freq = sorted_histogram[-1][1]
+    mode = sorted_histogram.select { |v,f| f == max_freq }
+
+    { 
+      average: average, 
+      mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort 
+    } 
   end
 
   def data_set_for histogram_data:, label:, color:
