@@ -55,7 +55,7 @@ class CycletimeHistogram < ChartBase
     result = <<~HTML
       <p>STATS</p>
       <div>
-       <table border=1>
+       <table class="standard">
         <tr>
           <th>Issue Type</th>
           <th>Avg</th>
@@ -69,12 +69,12 @@ class CycletimeHistogram < ChartBase
     stats.each do |k, v|
       result << <<~HTML
         <tr>
-          <th>#{k}</th>
-          <th>#{sprintf('%.2f', v[:average])}</th>
-          <th>#{v[:mode]}</th>
-          <th>#{v[:percentiles][50]}</th>
-          <th>#{v[:percentiles][85]}</th>
-          <th>#{v[:percentiles][95]}</th>
+          <td>#{k}</td>
+          <td>#{sprintf('%.2f', v[:average])}</td>
+          <td>#{v[:mode]}</td>
+          <td>#{v[:percentiles][50]}</td>
+          <td>#{v[:percentiles][85]}</td>
+          <td>#{v[:percentiles][95]}</td>
         </tr>
       HTML
     end
