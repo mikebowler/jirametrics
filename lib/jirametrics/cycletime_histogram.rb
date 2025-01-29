@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
 
@@ -48,43 +49,7 @@ class CycletimeHistogram < ChartBase
 
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
 
-    wrap_and_render(binding, __FILE__) << render_stats(the_stats)
-  end
-
-  def render_stats(stats)
-    result = <<~HTML
-      <p>STATS</p>
-      <div>
-       <table class="standard">
-        <tr>
-          <th>Issue Type</th>
-          <th>Avg</th>
-          <th>Mode</th>
-          <th>50th</th>
-          <th>85th</th>
-          <th>95th</th>
-        </tr>
-    HTML
-
-    stats.each do |k, v|
-      result << <<~HTML
-        <tr>
-          <td>#{k}</td>
-          <td>#{sprintf('%.2f', v[:average])}</td>
-          <td>#{v[:mode]}</td>
-          <td>#{v[:percentiles][50]}</td>
-          <td>#{v[:percentiles][85]}</td>
-          <td>#{v[:percentiles][95]}</td>
-        </tr>
-      HTML
-    end
-
-    result << <<~HTML
-      </table>
-      </div>
-    HTML
-
-    result
+    wrap_and_render(binding, __FILE__) 
   end
 
   def histogram_data_for issues:
