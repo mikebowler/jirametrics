@@ -13,18 +13,18 @@
         <th>Issue Type</th>
         <th>Avg</th>
         <th>Mode</th>
-        <th>50th</th>
-        <th>85th</th>
-        <th>95th</th>
+        <% percentiles.each do |p| %>
+           <th><%= p %>th</th>
+        <% end %>
       </tr>
       <% the_stats.each do |k, v| %>
           <tr>
             <td><%= k %></td>
             <td><%= sprintf('%.2f', v[:average]) %></td>
             <td><%= v[:mode] %></td>
-            <td><%= v[:percentiles][50] %></td>
-            <td><%= v[:percentiles][85] %></td>
-            <td><%= v[:percentiles][95] %></td>
+            <% percentiles.each do |p| %>
+               <td><%= v[:percentiles][p] %></td>
+            <% end %>
           </tr>
        <% end %>
      </table>
@@ -38,7 +38,7 @@
       <ul>
         <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
         <li><b>85%</b>: useful to establish service level expectations, accounting for rare events..</li>
-        <li><b>95% (or higher)</b>: useful to establish high certainty expectations.</li>
+        <li><b>98% (or higher)</b>: useful to gauge worst case expectations..</li>
       </ul>
     </ul>
   </div>
