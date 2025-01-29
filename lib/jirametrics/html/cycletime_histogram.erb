@@ -1,6 +1,29 @@
 <div class="chart">
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
+<p><b>STATS</b></p>
+<div>
+   <table class="standard">
+    <tr>
+      <th>Issue Type</th>
+      <th>Avg</th>
+      <th>Mode</th>
+      <th>50th</th>
+      <th>85th</th>
+      <th>95th</th>
+    </tr>
+    <% the_stats.each do |k, v| %>
+        <tr>
+          <td><%= k %></td>
+          <td><%= sprintf('%.2f', v[:average]) %></td>
+          <td><%= v[:mode] %></td>
+          <td><%= v[:percentiles][50] %></td>
+          <td><%= v[:percentiles][85] %></td>
+          <td><%= v[:percentiles][95] %></td>
+        </tr>
+     <% end %>
+   </table>
+</div>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {
