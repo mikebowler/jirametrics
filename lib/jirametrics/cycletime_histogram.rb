@@ -55,7 +55,7 @@ class CycletimeHistogram < ChartBase
     count_hash
   end
 
-  def stats_for histogram_data:
+  def stats_for histogram_data:, percentiles:[]
     return {} if histogram_data.empty?
 
     total_values = histogram_data.values.sum
@@ -69,9 +69,27 @@ class CycletimeHistogram < ChartBase
     max_freq = sorted_histogram[-1][1]
     mode = sorted_histogram.select { |v,f| f == max_freq }
 
+    # Calculate percentiles
+    sorted_values = histogram_data.keys.sort
+    cumulative_counts = {}
+    cumulative_sum = 0
+
+    sorted_values.each do |value|
+      cumulative_sum += histogram_data[value]
+      cumulative_counts[value] = cumulative_sum
+    end
+
+    percentile_results = {}
+    percentiles.each do |percentile|
+      rank = (percentile / 100.0) * total_values
+      percentile_value = sorted_values.find { |value| cumulative_counts[value] >= rank }
+      percentile_results[percentile] = percentile_value
+    end
+
     { 
       average: average, 
-      mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort 
+      mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort,
+      percentiles: percentile_results
     } 
   end
 
