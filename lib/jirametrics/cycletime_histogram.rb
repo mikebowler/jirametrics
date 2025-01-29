@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
 
@@ -33,17 +32,59 @@ class CycletimeHistogram < ChartBase
     histogram_issues = stopped_issues.select { |issue| issue.board.cycletime.started_stopped_times(issue).first }
     rules_to_issues = group_issues histogram_issues
 
+    the_stats = {}
+
     data_sets = rules_to_issues.keys.collect do |rules|
+      the_issue_type = rules.label
+      the_histogram = histogram_data_for(issues: rules_to_issues[rules])
+      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:[50, 85, 95]
+
       data_set_for(
-        histogram_data: histogram_data_for(issues: rules_to_issues[rules]),
-        label: rules.label,
+        histogram_data: the_histogram,
+        label: the_issue_type,
         color: rules.color
       )
     end
 
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
 
-    wrap_and_render(binding, __FILE__)
+    wrap_and_render(binding, __FILE__) << render_stats(the_stats)
+  end
+
+  def render_stats(stats)
+    result = <<~HTML
+      <p>STATS</p>
+      <div>
+       <table border=1>
+        <tr>
+          <th>Issue Type</th>
+          <th>Avg</th>
+          <th>Mode</th>
+          <th>50th</th>
+          <th>85th</th>
+          <th>95th</th>
+        </tr>
+    HTML
+
+    stats.each do |k, v|
+      result << <<~HTML
+        <tr>
+          <th>#{k}</th>
+          <th>#{sprintf('%.2f', v[:average])}</th>
+          <th>#{v[:mode]}</th>
+          <th>#{v[:percentiles][50]}</th>
+          <th>#{v[:percentiles][85]}</th>
+          <th>#{v[:percentiles][95]}</th>
+        </tr>
+      HTML
+    end
+
+    result << <<~HTML
+      </table>
+      </div>
+    HTML
+
+    result
   end
 
   def histogram_data_for issues:
@@ -53,6 +94,44 @@ class CycletimeHistogram < ChartBase
       count_hash[days] = (count_hash[days] || 0) + 1 if days.positive?
     end
     count_hash
+  end
+
+  def stats_for histogram_data:, percentiles:[]
+    return {} if histogram_data.empty?
+
+    total_values = histogram_data.values.sum
+
+    # Calculate the average
+    weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
+    average = total_values != 0? weighted_sum.to_f / total_values : 0
+
+     # Find the mode (or modes!)
+    sorted_histogram = histogram_data.sort_by{ |value, frequency| frequency }
+    max_freq = sorted_histogram[-1][1]
+    mode = sorted_histogram.select { |v,f| f == max_freq }
+
+    # Calculate percentiles
+    sorted_values = histogram_data.keys.sort
+    cumulative_counts = {}
+    cumulative_sum = 0
+
+    sorted_values.each do |value|
+      cumulative_sum += histogram_data[value]
+      cumulative_counts[value] = cumulative_sum
+    end
+
+    percentile_results = {}
+    percentiles.each do |percentile|
+      rank = (percentile / 100.0) * total_values
+      percentile_value = sorted_values.find { |value| cumulative_counts[value] >= rank }
+      percentile_results[percentile] = percentile_value
+    end
+
+    { 
+      average: average, 
+      mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort,
+      percentiles: percentile_results
+    } 
   end
 
   def data_set_for histogram_data:, label:, color:
