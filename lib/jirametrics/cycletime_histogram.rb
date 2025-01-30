@@ -51,7 +51,7 @@ class CycletimeHistogram < ChartBase
     data_sets = rules_to_issues.keys.collect do |rules|
       the_issue_type = rules.label
       the_histogram = histogram_data_for(issues: rules_to_issues[rules])
-      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:@percentiles if @show_stats
+      the_stats[the_issue_type] = stats_for histogram_data: the_histogram, percentiles: @percentiles if @show_stats
 
       data_set_for(
         histogram_data: the_histogram,
@@ -62,7 +62,7 @@ class CycletimeHistogram < ChartBase
 
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
 
-    wrap_and_render(binding, __FILE__) 
+    wrap_and_render(binding, __FILE__)
   end
 
   def histogram_data_for issues:
@@ -74,19 +74,19 @@ class CycletimeHistogram < ChartBase
     count_hash
   end
 
-  def stats_for histogram_data:, percentiles:[]
+  def stats_for histogram_data:, percentiles: []
     return {} if histogram_data.empty?
 
     total_values = histogram_data.values.sum
 
     # Calculate the average
-    weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
-    average = total_values != 0? weighted_sum.to_f / total_values : 0
+    weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + (value * frequency) }
+    average = total_values.zero? ? 0 : weighted_sum.to_f / total_values
 
-     # Find the mode (or modes!) and the spread of the distribution
-    sorted_histogram = histogram_data.sort_by{ |value, frequency| frequency }
+    # Find the mode (or modes!) and the spread of the distribution
+    sorted_histogram = histogram_data.sort_by { |_value, frequency| frequency }
     max_freq = sorted_histogram[-1][1]
-    mode = sorted_histogram.select { |v,f| f == max_freq }
+    mode = sorted_histogram.select { |_v, f| f == max_freq }
 
     minmax = histogram_data.keys.minmax
 
@@ -107,13 +107,13 @@ class CycletimeHistogram < ChartBase
       percentile_results[percentile] = percentile_value
     end
 
-    { 
-      average: average, 
-      mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort,
+    {
+      average: average,
+      mode: mode.collect(&:first).sort,
       min: minmax[0],
       max: minmax[1],
       percentiles: percentile_results
-    } 
+    }
   end
 
   def data_set_for histogram_data:, label:, color:

@@ -26,7 +26,7 @@ if show_stats
             <td><%= v[:min] %></td>
             <td><%= v[:max] %></td>
             <td><%= sprintf('%.2f', v[:average]) %></td>
-            <td><%= v[:mode] %></td>
+            <td><%= v[:mode].join(', ') %></td>
             <% percentiles.each do |p| %>
                <td><%= v[:percentiles][p] %></td>
             <% end %>
@@ -39,7 +39,7 @@ if show_stats
     <ul>
       <li><b>Min & Max:</b> the observed spread for the data set. Useful to judge how wide the variation is. </li>
       <li><b>Average:</b> the arithmetic mean of the data set. Useful as a <i>"typical representative"</i> of the complete set.</li>
-      <li><b>Mode:</b> the most repeated value in the data set. This is the value we're most likely to remember. </li>
+      <li><b>Mode:</b> the most repeated value(s) in the data set. This is the value we're most likely to remember. </li>
       <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of cycletime values are X or less. Typical percentiles of interest are:</li>
       <ul>
         <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
