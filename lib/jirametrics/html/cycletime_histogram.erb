@@ -2,6 +2,7 @@
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <%
+if show_stats 
   link_id = next_id
   issues_id = next_id
 %>
@@ -43,6 +44,9 @@
     </ul>
   </div>
 </div>
+<%
+end
+%>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {
