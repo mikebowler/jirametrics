@@ -5,9 +5,12 @@ require 'jirametrics/groupable_issue_chart'
 class CycletimeHistogram < ChartBase
   include GroupableIssueChart
   attr_accessor :possible_statuses
+  attr_accessor :percentiles
 
   def initialize block
     super()
+
+    @percentiles = [50, 85, 98]
 
     header_text 'Cycletime Histogram'
     description_text <<-HTML
@@ -26,6 +29,10 @@ class CycletimeHistogram < ChartBase
     end
   end
 
+  def use_percentiles percentiles
+    @percentiles = percentiles 
+  end
+
   def run
     stopped_issues = completed_issues_in_range include_unstarted: true
 
@@ -38,7 +45,7 @@ class CycletimeHistogram < ChartBase
     data_sets = rules_to_issues.keys.collect do |rules|
       the_issue_type = rules.label
       the_histogram = histogram_data_for(issues: rules_to_issues[rules])
-      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:[50, 85, 95]
+      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:@percentiles
 
       data_set_for(
         histogram_data: the_histogram,
