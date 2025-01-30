@@ -5,12 +5,13 @@ require 'jirametrics/groupable_issue_chart'
 class CycletimeHistogram < ChartBase
   include GroupableIssueChart
   attr_accessor :possible_statuses
-  attr_accessor :percentiles
+  attr_reader :show_stats
 
   def initialize block
     super()
 
-    @percentiles = [50, 85, 98]
+    percentiles [50, 85, 98]
+    @show_stats = true
 
     header_text 'Cycletime Histogram'
     description_text <<-HTML
@@ -29,8 +30,13 @@ class CycletimeHistogram < ChartBase
     end
   end
 
-  def use_percentiles percentiles
-    @percentiles = percentiles 
+  def percentiles percs = nil
+    @percentiles = percs unless percs.nil?
+    @percentiles
+  end
+
+  def disable_stats
+    @show_stats = false
   end
 
   def run
@@ -45,7 +51,7 @@ class CycletimeHistogram < ChartBase
     data_sets = rules_to_issues.keys.collect do |rules|
       the_issue_type = rules.label
       the_histogram = histogram_data_for(issues: rules_to_issues[rules])
-      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:@percentiles
+      the_stats[the_issue_type] = stats_for histogram_data:the_histogram, percentiles:@percentiles if @show_stats
 
       data_set_for(
         histogram_data: the_histogram,
@@ -77,10 +83,12 @@ class CycletimeHistogram < ChartBase
     weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
     average = total_values != 0? weighted_sum.to_f / total_values : 0
 
-     # Find the mode (or modes!)
+     # Find the mode (or modes!) and the spread of the distribution
     sorted_histogram = histogram_data.sort_by{ |value, frequency| frequency }
     max_freq = sorted_histogram[-1][1]
     mode = sorted_histogram.select { |v,f| f == max_freq }
+
+    minmax = histogram_data.keys.minmax
 
     # Calculate percentiles
     sorted_values = histogram_data.keys.sort
@@ -102,6 +110,8 @@ class CycletimeHistogram < ChartBase
     { 
       average: average, 
       mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort,
+      min: minmax[0],
+      max: minmax[1],
       percentiles: percentile_results
     } 
   end

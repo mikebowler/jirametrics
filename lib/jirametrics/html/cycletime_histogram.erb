@@ -2,6 +2,7 @@
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <%
+if show_stats 
   link_id = next_id
   issues_id = next_id
 %>
@@ -11,6 +12,8 @@
      <table class="standard">
       <tr>
         <th>Issue Type</th>
+        <th>Min</th>
+        <th>Max</th>
         <th>Avg</th>
         <th>Mode</th>
         <% percentiles.each do |p| %>
@@ -20,6 +23,8 @@
       <% the_stats.each do |k, v| %>
           <tr>
             <td><%= k %></td>
+            <td><%= v[:min] %></td>
+            <td><%= v[:max] %></td>
             <td><%= sprintf('%.2f', v[:average]) %></td>
             <td><%= v[:mode] %></td>
             <% percentiles.each do |p| %>
@@ -32,8 +37,9 @@
   <div>
     <p>These statistics help understand the <i>"shape"</i> of the cycletime histogram distribution, to help us with predictions.</p>
     <ul>
+      <li><b>Min & Max:</b> the observed spread for the data set. Useful to judge how wide the variation is. </li>
       <li><b>Average:</b> the arithmetic mean of the data set. Useful as a <i>"typical representative"</i> of the complete set.</li>
-      <li><b>Mode:</b> the most repeated value in the data set. This is the one we're most likely to remember. </li>
+      <li><b>Mode:</b> the most repeated value in the data set. This is the value we're most likely to remember. </li>
       <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of cycletime values are X or less. Typical percentiles of interest are:</li>
       <ul>
         <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
@@ -43,6 +49,9 @@
     </ul>
   </div>
 </div>
+<%
+end
+%>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {

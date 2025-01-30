@@ -48,6 +48,13 @@ describe CycletimeHistogram do
       expect_mode({ 5 => 1, 1 => 1 }).to eq([1, 5]) # make sure values come out sorted
     end
 
+    it 'calculates min/max' do
+      expect_minmax({ 4 => 2, 5 => 3, 10 => 0 }).to eq([4, 10])
+      expect_minmax({ 15 => 1, 9 => 1, 8 => 0 }).to eq([8, 15])
+      expect_minmax({ 5 => 1, 9 => 1, 1 => 0, 2 => 0 }).to eq([1, 9])
+      expect_minmax({ 7 => 2 }).to eq([7, 7])
+    end
+
     it 'ignores percentiles if not requested' do
       stats = chart.stats_for histogram_data: { 1 => 1, 2 => 1}
       expect(stats[:percentiles]).to eq({})
@@ -78,6 +85,11 @@ describe CycletimeHistogram do
     def expect_average(histogram_data)
       stats = chart.stats_for histogram_data:histogram_data
       expect(stats[:average])
+    end
+
+    def expect_minmax(histogram_data)
+      stats = chart.stats_for histogram_data:histogram_data
+      expect([stats[:min], stats[:max]])
     end
   end
 
