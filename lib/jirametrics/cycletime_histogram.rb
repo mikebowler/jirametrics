@@ -83,10 +83,12 @@ class CycletimeHistogram < ChartBase
     weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + value * frequency }
     average = total_values != 0? weighted_sum.to_f / total_values : 0
 
-     # Find the mode (or modes!)
+     # Find the mode (or modes!) and the spread of the distribution
     sorted_histogram = histogram_data.sort_by{ |value, frequency| frequency }
     max_freq = sorted_histogram[-1][1]
     mode = sorted_histogram.select { |v,f| f == max_freq }
+
+    minmax = histogram_data.keys.minmax
 
     # Calculate percentiles
     sorted_values = histogram_data.keys.sort
@@ -108,6 +110,8 @@ class CycletimeHistogram < ChartBase
     { 
       average: average, 
       mode: mode.length == 1? mode[0][0] : mode.collect{|x| x[0] }.sort,
+      min: minmax[0],
+      max: minmax[1],
       percentiles: percentile_results
     } 
   end
