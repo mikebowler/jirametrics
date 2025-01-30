@@ -51,6 +51,7 @@ describe CycletimeHistogram do
     it 'calculates min/max' do
       expect_minmax({ 4 => 2, 5 => 3, 10 => 0 }).to eq([4, 10])
       expect_minmax({ 15 => 1, 9 => 1, 8 => 0 }).to eq([8, 15])
+      expect_minmax({ 5 => 1, 9 => 1, 1 => 0, 2 => 0 }).to eq([1, 9])
       expect_minmax({ 7 => 2 }).to eq([7, 7])
     end
 
