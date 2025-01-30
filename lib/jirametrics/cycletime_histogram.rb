@@ -5,13 +5,12 @@ require 'jirametrics/groupable_issue_chart'
 class CycletimeHistogram < ChartBase
   include GroupableIssueChart
   attr_accessor :possible_statuses
-  attr_reader :percentiles
   attr_reader :show_stats
 
   def initialize block
     super()
 
-    @percentiles = [50, 85, 98]
+    percentiles [50, 85, 98]
     @show_stats = true
 
     header_text 'Cycletime Histogram'
@@ -31,8 +30,9 @@ class CycletimeHistogram < ChartBase
     end
   end
 
-  def use_percentiles percentiles
-    @percentiles = percentiles 
+  def percentiles percs = nil
+    @percentiles = percs unless percs.nil?
+    @percentiles
   end
 
   def disable_stats
