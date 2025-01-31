@@ -64,7 +64,7 @@ class AggregateConfig
     end
 
     if issues.nil?
-      log "No issues found for #{project_name}"
+      file_system.warning "No issues found for #{project_name}"
     else
       @project_config.add_issues issues
     end
