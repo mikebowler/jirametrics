@@ -64,12 +64,8 @@ class Exporter
     selected = []
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
-      # next if project.aggregated_project?
 
       project.run load_only: true
-      project.board_configs.each do |board_config|
-        board_config.run
-      end
       project.issues.each do |issue|
         selected << [project, issue] if keys.include? issue.key
       end
