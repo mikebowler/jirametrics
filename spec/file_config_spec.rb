@@ -40,6 +40,12 @@ describe FileConfig do
       expected = [[1, 2], [4, 4], [nil, 1], [nil, 3]]
       expect(file_config.sort_output(input)).to eq expected
     end
+
+    it 'sorts unsortables' do
+      input = [[nil, nil], [1, 2], [nil, 3], [4, 4]]
+      expected = [[1, 2], [4, 4], [nil, nil], [nil, 3]]
+      expect(file_config.sort_output(input)).to eq expected
+    end
   end
 
   context 'output_filename' do
