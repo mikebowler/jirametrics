@@ -75,9 +75,13 @@ class Exporter
       raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'
     end
 
-    selected.each do |project, issue|
-      puts "\nProject #{project.name}"
-      puts issue.dump
+    if selected.empty?
+      file_system.log "No issues found to match #{keys.collect(&:inspect).join(', ')}"
+    else
+      selected.each do |project, issue|
+        file_system.log "\nProject #{project.name}"
+        file_system.log issue.dump
+      end
     end
   end
 
