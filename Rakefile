@@ -27,6 +27,11 @@ end
 desc 'Same as calling download and then export'
 task go: %i[initialize_config download export]
 
+desc 'info'
+task info: [:initialize_config] do
+  JiraMetrics.start ['info', 'SP-38']
+end
+
 RSpec::Core::RakeTask.new(:spec)
 
 RSpec::Core::RakeTask.new(:focus) do |task, _args|
