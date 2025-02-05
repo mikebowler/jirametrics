@@ -26,7 +26,7 @@ describe CycletimeHistogram do
 
   context 'stats_for' do
     it 'handles no issues' do
-      expect(chart.stats_for histogram_data: {}).to eq({})
+      expect(chart.stats_for histogram_data: {}, percentiles: []).to eq({})
     end
 
     it 'calculates the average' do
@@ -55,7 +55,7 @@ describe CycletimeHistogram do
     end
 
     it 'ignores percentiles if not requested' do
-      stats = chart.stats_for histogram_data: { 1 => 1, 2 => 1 }
+      stats = chart.stats_for histogram_data: { 1 => 1, 2 => 1 }, percentiles: []
       expect(stats[:percentiles]).to eq({})
     end
 
@@ -90,17 +90,17 @@ describe CycletimeHistogram do
     end
 
     def expect_mode(histogram_data)
-      stats = chart.stats_for histogram_data: histogram_data
+      stats = chart.stats_for histogram_data: histogram_data, percentiles: []
       expect(stats[:mode])
     end
 
     def expect_average(histogram_data)
-      stats = chart.stats_for histogram_data: histogram_data
+      stats = chart.stats_for histogram_data: histogram_data, percentiles: []
       expect(stats[:average])
     end
 
     def expect_minmax(histogram_data)
-      stats = chart.stats_for histogram_data: histogram_data
+      stats = chart.stats_for histogram_data: histogram_data, percentiles: []
       expect([stats[:min], stats[:max]])
     end
   end

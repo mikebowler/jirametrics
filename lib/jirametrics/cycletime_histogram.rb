@@ -48,6 +48,8 @@ class CycletimeHistogram < ChartBase
 
     the_stats = {}
 
+    overall_stats = stats_for histogram_data: histogram_data_for(issues: histogram_issues), percentiles: @percentiles
+    the_stats[:all] = overall_stats
     data_sets = rules_to_issues.keys.collect do |rules|
       the_issue_type = rules.label
       the_histogram = histogram_data_for(issues: rules_to_issues[rules])
@@ -74,7 +76,7 @@ class CycletimeHistogram < ChartBase
     count_hash
   end
 
-  def stats_for histogram_data:, percentiles: []
+  def stats_for histogram_data:, percentiles:
     return {} if histogram_data.empty?
 
     total_values = histogram_data.values.sum

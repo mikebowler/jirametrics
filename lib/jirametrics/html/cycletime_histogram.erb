@@ -85,6 +85,28 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       }
     },
     plugins: {
+      annotation: {
+        annotations: {
+          <%
+            results = the_stats[:all][:percentiles]
+            results.each do |percentile, value|
+          %>
+          <%= percentile.to_s %>: {
+            type: 'line',
+            scaleID: 'x',
+            value: <%= value %>,
+            borderWidth: 1,
+            drawTime: 'beforeDatasetsDraw',
+            label: {
+              enabled: true,
+              content: '<%= "#{percentile}%" %>',
+              rotation: 270,
+              position: 'start',
+            }
+          },
+          <% end %>
+        },
+      },
       tooltip: {
         callbacks: {
           label: function(context) {
