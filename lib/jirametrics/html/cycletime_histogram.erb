@@ -23,12 +23,12 @@ if show_stats
       <% the_stats.each do |k, v| %>
           <tr>
             <td><%= k %></td>
-            <td><%= v[:min] %></td>
-            <td><%= v[:max] %></td>
-            <td><%= sprintf('%.2f', v[:average]) %></td>
+            <td style="text-align: right;"><%= v[:min] %></td>
+            <td style="text-align: right;"><%= v[:max] %></td>
+            <td style="text-align: right;"><%= sprintf('%.2f', v[:average]) %></td>
             <td><%= v[:mode].join(', ') %></td>
             <% percentiles.each do |p| %>
-               <td><%= v[:percentiles][p] %></td>
+               <td style="text-align: right;"><%= v[:percentiles][p] %></td>
             <% end %>
           </tr>
        <% end %>
@@ -100,7 +100,6 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
             label: {
               enabled: true,
               content: '<%= "#{percentile}%" %>',
-              rotation: 270,
               position: 'start',
             }
           },
