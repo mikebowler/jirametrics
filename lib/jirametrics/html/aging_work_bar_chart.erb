@@ -43,8 +43,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           <% if percentage_line_x %>
           line: {
             type: 'line',
-            xMin: '<%= percentage_line_x %>',
-            xMax: '<%= percentage_line_x %>',
+            scaleID: 'x',
+            value: '<%= percentage_line_x %>',
             borderColor: <%= CssVariable.new('--aging-work-bar-chart-percentage-line-color').to_json %>,
             borderWidth: 1,
             drawTime: 'afterDraw'
