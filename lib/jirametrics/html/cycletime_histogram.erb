@@ -72,6 +72,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
+        min: 0,
+        offset: false, // Gets rid of the ugly padding on left.
       },
       y: {
         stacked: true,
@@ -91,7 +93,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
             results = the_stats[:all][:percentiles]
             results.each do |percentile, value|
           %>
-          <%= percentile.to_s %>: {
+          percentile<%= percentile.to_s %>: {
             type: 'line',
             scaleID: 'x',
             value: <%= value %>,
