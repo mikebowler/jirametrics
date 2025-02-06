@@ -38,12 +38,6 @@ class Status
   def self.from_raw raw
     category_config = raw['statusCategory']
 
-    legal_keys = %w[new indeterminate done]
-    unless legal_keys.include? category_config['key']
-      puts "Category key #{category_config['key'].inspect} should be one of #{legal_keys.inspect}. Found:\n" \
-        "#{category_config}"
-    end
-
     Status.new(
       name: raw['name'],
       id: raw['id'].to_i,
