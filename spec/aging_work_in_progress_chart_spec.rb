@@ -71,7 +71,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [180, 180, 81],
+       'data' => [180, 180, 180],
        'label' => '85%',
        'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
        'type' => 'bar'
