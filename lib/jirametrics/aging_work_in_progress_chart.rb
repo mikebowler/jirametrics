@@ -24,6 +24,8 @@ class AgingWorkInProgressChart < ChartBase
         the shading are outliers and they are the items that you should pay special attention to.
       </div>
     HTML
+    percentiles 85 => 'gray', 50 => 'yellow', 98 => 'red'
+
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
         rule.label = issue.type
@@ -63,7 +65,6 @@ class AgingWorkInProgressChart < ChartBase
       board.id == @board_id && board.cycletime.in_progress?(issue)
     end
 
-    # percentage = 85
     rules_to_issues = group_issues aging_issues
     data_sets = rules_to_issues.keys.collect do |rules|
       {
@@ -74,7 +75,8 @@ class AgingWorkInProgressChart < ChartBase
             column = column_for issue: issue
             next if column.nil?
 
-            { 'y' => age,
+            {
+              'y' => age,
               'x' => column.name,
               'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
@@ -86,12 +88,8 @@ class AgingWorkInProgressChart < ChartBase
     end
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues
-    calculator.stacked_age_data_for(percentages: [85]).each do |percentage, data|
-      color = case percentage
-      when 50 then 'blue'
-      when 85 then CssVariable['--aging-work-in-progress-chart-shading-color']
-      else 'red'
-      end
+    calculator.stacked_age_data_for(percentages: @percentiles.keys).each do |percentage, data|
+      color = @percentiles[percentage]
 
       data_sets << {
         'type' => 'bar',
@@ -127,5 +125,9 @@ class AgingWorkInProgressChart < ChartBase
       column_headings.pop
       @board_columns.pop
     end
+  end
+
+  def percentiles percentile_color_hash
+    @percentiles = percentile_color_hash.transform_values { |value| CssVariable[value] }
   end
 end

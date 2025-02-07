@@ -17,6 +17,7 @@ describe AgingWorkInProgressChart do
     board.cycletime = default_cycletime_config
     chart.issues = load_complete_sample_issues board: board
     chart.date_range = Date.parse('2021-06-18')..Date.parse('2021-06-28')
+    chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
     chart
   end
 
