@@ -56,4 +56,29 @@ describe Board do
       expect(board.project_id).to eq 2
     end
   end
+
+  context 'accumulated_status_ids_per_column' do
+    it 'accumulates properly no columns' do
+      raw = {
+        'id' => 3,
+        'self' => 'https://improvingflow.atlassian.net/rest/agile/1.0/board/3/configuration',
+        'columnConfig' => {
+          'columns' => []
+        }
+      }
+
+      board = Board.new raw: raw, possible_statuses: StatusCollection.new
+      expect(board.accumulated_status_ids_per_column).to be_empty
+    end
+
+    it 'handles actual columns' do
+      board = load_complete_sample_board
+      expect(board.accumulated_status_ids_per_column).to eq [
+        ['Ready', [10_002, 10_011, 3, 10_001]],
+        ['In Progress', [10_002, 10_011, 3]],
+        ['Review', [10_002, 10_011]],
+        ['Done', [10_002]]
+      ]
+    end
+  end
 end

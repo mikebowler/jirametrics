@@ -88,4 +88,14 @@ class Board
   def name
     @raw['name']
   end
+
+  def accumulated_status_ids_per_column
+    accumulated_status_ids = []
+    visible_columns.reverse.filter_map do |column|
+      next if column == @fake_column
+
+      accumulated_status_ids += column.status_ids
+      [column.name, accumulated_status_ids.dup]
+    end.reverse
+  end
 end

@@ -24,6 +24,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
+        stacked: true
       },
       y: {
         scaleLabel: {
@@ -37,6 +38,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
+        stacked: false
       }
     },
     plugins: {

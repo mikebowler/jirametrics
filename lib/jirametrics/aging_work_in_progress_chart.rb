@@ -2,6 +2,7 @@
 
 require 'jirametrics/chart_base'
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/board_movement_calculator'
 
 class AgingWorkInProgressChart < ChartBase
   include GroupableIssueChart
@@ -62,7 +63,7 @@ class AgingWorkInProgressChart < ChartBase
       board.id == @board_id && board.cycletime.in_progress?(issue)
     end
 
-    percentage = 85
+    # percentage = 85
     rules_to_issues = group_issues aging_issues
     data_sets = rules_to_issues.keys.collect do |rules|
       {
@@ -83,45 +84,25 @@ class AgingWorkInProgressChart < ChartBase
         'backgroundColor' => rules.color
       }
     end
-    data_sets << {
-      'type' => 'bar',
-      'label' => "#{percentage}%",
-      'barPercentage' => 1.0,
-      'categoryPercentage' => 1.0,
-      'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
-      'data' => days_at_percentage_threshold_for_all_columns(percentage: percentage, issues: @issues).drop(1)
-    }
-  end
 
-  def days_at_percentage_threshold_for_all_columns percentage:, issues:
-    accumulated_status_ids_per_column.collect do |_column, status_ids|
-      ages = ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: status_ids
-      index = ages.size * percentage / 100
-      ages.sort[index.to_i] || 0
+    calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues
+    calculator.stacked_age_data_for(percentages: [85]).each do |percentage, data|
+      color = case percentage
+      when 50 then 'blue'
+      when 85 then CssVariable['--aging-work-in-progress-chart-shading-color']
+      else 'red'
+      end
+
+      data_sets << {
+        'type' => 'bar',
+        'label' => "#{percentage}%",
+        'barPercentage' => 1.0,
+        'categoryPercentage' => 1.0,
+        'backgroundColor' => color,
+        'data' => data
+      }
     end
-  end
-
-  def accumulated_status_ids_per_column
-    accumulated_status_ids = []
-    @board_columns.reverse.filter_map do |column|
-      next if column == @fake_column
-
-      accumulated_status_ids += column.status_ids
-      [column.name, accumulated_status_ids.dup]
-    end.reverse
-  end
-
-  def ages_of_issues_that_crossed_column_boundary issues:, status_ids:
-    issues.filter_map do |issue|
-      stop = issue.first_time_in_status(*status_ids)&.to_time
-      start, = issue.board.cycletime.started_stopped_times(issue)
-
-      # Skip if either it hasn't crossed the boundary or we can't tell when it started.
-      next if stop.nil? || start.nil?
-      next if stop < start
-
-      (stop.to_date - start.to_date).to_i + 1
-    end
+    data_sets
   end
 
   def column_for issue:

@@ -13,60 +13,11 @@ describe AgingWorkInProgressChart do
     chart = described_class.new(empty_config_block)
     chart.file_system = MockFileSystem.new
     chart.board_id = 1
-    chart.all_boards = { 1 => load_complete_sample_board }
+    chart.all_boards = { 1 => board }
     board.cycletime = default_cycletime_config
     chart.issues = load_complete_sample_issues board: board
     chart.date_range = Date.parse('2021-06-18')..Date.parse('2021-06-28')
     chart
-  end
-
-  context 'accumulated_status_ids_per_column' do
-    it 'accumulates properly' do
-      chart.issues = load_complete_sample_issues(board: board).select { |issue| board.cycletime.in_progress? issue }
-      chart.run
-
-      actual = chart.accumulated_status_ids_per_column
-      expect(actual).to eq [
-        ['Ready',       [10_002, 10_011, 3, 10_001]],
-        ['In Progress', [10_002, 10_011, 3]],
-        ['Review',      [10_002, 10_011]],
-        ['Done',        [10_002]]
-      ]
-    end
-  end
-
-  context 'ages_of_issues_that_crossed_column_boundary' do
-    it 'handles no issues' do
-      issues = []
-
-      actual = chart.ages_of_issues_that_crossed_column_boundary issues: issues, status_ids: [10_002, 10_011]
-      expect(actual).to eq []
-    end
-
-    it 'handles no status ids' do
-      actual = chart.ages_of_issues_that_crossed_column_boundary issues: chart.issues, status_ids: []
-      expect(actual).to eq []
-    end
-
-    it 'handles happy path' do
-      actual = chart.ages_of_issues_that_crossed_column_boundary issues: chart.issues, status_ids: [10_002, 10_011, 3]
-      expect(actual).to eq [180, 73, 1]
-    end
-  end
-
-  context 'days_at_percentage_threshold_for_all_columns' do
-    it 'at 100%' do
-      chart.run
-
-      actual = chart.days_at_percentage_threshold_for_all_columns percentage: 100, issues: chart.issues
-      expect(actual).to eq [0, 0, 0, 0]
-    end
-
-    it 'at 0%' do
-      chart.run
-      actual = chart.days_at_percentage_threshold_for_all_columns percentage: 0, issues: chart.issues
-      expect(actual).to eq [1, 1, 81, 81]
-    end
   end
 
   context 'column_for' do
