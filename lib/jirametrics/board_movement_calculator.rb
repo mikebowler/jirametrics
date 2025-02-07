@@ -11,7 +11,7 @@ class BoardMovementCalculator
 
   def stacked_age_data_for percentages:
     remainder = nil
-    percentages.collect do |percentage|
+    percentages.sort.collect do |percentage|
       data = age_data_for(percentage: percentage).drop(1)
 
       unless remainder.nil?
@@ -36,7 +36,7 @@ class BoardMovementCalculator
   end
 
   def age_data_for percentage:
-    board.accumulated_status_ids_per_column.collect do |_column, status_ids|
+    @accumulated_status_ids_per_column.collect do |_column, status_ids|
       ages = ages_of_issues_that_crossed_column_boundary status_ids: status_ids
       index = ages.size * percentage / 100
       ages.sort[index.to_i] || 0
