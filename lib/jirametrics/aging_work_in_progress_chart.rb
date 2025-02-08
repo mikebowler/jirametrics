@@ -28,7 +28,7 @@ class AgingWorkInProgressChart < ChartBase
         Any work items above the shading are extreme outliers and they are the items that you should pay special attention to.
       </div>
     HTML
-    percentiles 85 => '--non-working-days-color', 50 => 'yellow', 98 => 'red'
+    percentiles 85 => 'yellow', 50 => 'green', 98 => 'orange', 100 => 'red'
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
