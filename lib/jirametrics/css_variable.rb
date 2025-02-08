@@ -4,7 +4,7 @@ class CssVariable
   attr_reader :name
 
   def self.[](name)
-    if name.start_with? '--'
+    if name.is_a?(String) && name.start_with?('--')
       CssVariable.new name
     else
       name
