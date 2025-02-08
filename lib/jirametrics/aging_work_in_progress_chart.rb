@@ -18,17 +18,14 @@ class AgingWorkInProgressChart < ChartBase
         they're currently in. Hovering over a dot will show you the ID of that work item.
       </p>
       <div>
-        The shaded areas indicate percentiles.
+        The shaded areas indicate what percentage of the work has left that column within that time.
         <ul>
-          <% @percentiles.keys.sort.each do |percent| %>
-            <li><%= color_block @percentiles[percent] %> <%= percent %>% of the work left while within this area or below.</li>
+          <% @percentiles.keys.sort.reverse.each do |percent| %>
+            <li><%= color_block @percentiles[percent] %> <%= percent %>%</li>
           <% end %>
         </ul>
 
-        The #{color_block '--non-working-days-color'} shaded area indicates the 85%
-        mark for work items that have passed through here; 85% of
-        previous work items left this column while still inside the shaded area. Any work items above
-        the shading are outliers and they are the items that you should pay special attention to.
+        Any work items above the shading are extreme outliers and they are the items that you should pay special attention to.
       </div>
     HTML
     percentiles 85 => '--non-working-days-color', 50 => 'yellow', 98 => 'red'
