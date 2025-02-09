@@ -11,6 +11,7 @@ class Board
     @sprints = []
 
     columns = raw['columnConfig']['columns']
+    ensure_uniqueness_of_column_names! columns
 
     # For a Kanban board, the first column here will always be called 'Backlog' and will NOT be
     # visible on the board. If the board is configured to have a kanban backlog then it will have
@@ -97,5 +98,23 @@ class Board
       accumulated_status_ids += column.status_ids
       [column.name, accumulated_status_ids.dup]
     end.reverse
+  end
+
+  def ensure_uniqueness_of_column_names! json
+    all_names = []
+    json.each do |column_json|
+      name = column_json['name']
+      if all_names.include? name
+        (2..).each do |i|
+          new_name = "#{name}-#{i}"
+          next if all_names.include?(new_name)
+
+          name = new_name
+          column_json['name'] = new_name
+          break
+        end
+      end
+      all_names << name
+    end
   end
 end

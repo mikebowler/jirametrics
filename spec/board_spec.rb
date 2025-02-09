@@ -81,4 +81,43 @@ describe Board do
       ]
     end
   end
+
+  context 'ensure_uniqueness_of_column_names' do
+    let(:find_names) do
+      lambda do |json|
+        json.collect { |status| status['name'] }
+      end
+    end
+
+    it 'ignores columns with no duplicates' do
+      board = load_complete_sample_board
+      raw = [
+        { 'name' => 'Backlog' },
+        { 'name' => 'Doing' }
+      ]
+      board.ensure_uniqueness_of_column_names! raw
+      expect(find_names.call(raw)).to eq %w[Backlog Doing]
+    end
+
+    it 'Adjusts one duplicate' do
+      board = load_complete_sample_board
+      raw = [
+        { 'name' => 'Backlog' },
+        { 'name' => 'Backlog' }
+      ]
+      board.ensure_uniqueness_of_column_names! raw
+      expect(find_names.call(raw)).to eq %w[Backlog Backlog-2]
+    end
+
+    it 'Handles name collisions' do
+      board = load_complete_sample_board
+      raw = [
+        { 'name' => 'Backlog' },
+        { 'name' => 'Backlog-2' },
+        { 'name' => 'Backlog' }
+      ]
+      board.ensure_uniqueness_of_column_names! raw
+      expect(find_names.call(raw)).to eq %w[Backlog Backlog-2 Backlog-3]
+    end
+  end
 end
