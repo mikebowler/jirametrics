@@ -28,7 +28,12 @@ class AgingWorkInProgressChart < ChartBase
         Any work items above the shading are extreme outliers and they are the items that you should pay special attention to.
       </div>
     HTML
-    percentiles 85 => 'yellow', 50 => 'green', 98 => 'orange', 100 => 'red'
+    percentiles(
+      50 => '--aging-work-in-progress-chart-shading-50-color',
+      85 => '--aging-work-in-progress-chart-shading-85-color',
+      98 => '--aging-work-in-progress-chart-shading-98-color',
+      100 => '--aging-work-in-progress-chart-shading-100-color'
+    )
     show_all_columns false
 
     init_configuration_block(block) do
@@ -50,7 +55,7 @@ class AgingWorkInProgressChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
-  def show_all_columns show = true
+  def show_all_columns show = true # rubocop:disable Style/OptionalBooleanParameter
     @show_all_columns = show
   end
 
@@ -112,7 +117,7 @@ class AgingWorkInProgressChart < ChartBase
 
       data_sets << {
         'type' => 'bar',
-        'label' => "#{percentage}%",
+        'label' => "#{percentage}% percentile",
         'barPercentage' => 1.0,
         'categoryPercentage' => 1.0,
         'backgroundColor' => color,

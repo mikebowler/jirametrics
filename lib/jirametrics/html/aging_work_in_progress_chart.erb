@@ -55,7 +55,16 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
             }
           }
         }
+      },
+      legend: {
+        labels: {
+          filter: function(item, chart) {
+            // Logic to remove a particular legend item goes here
+            return !item.text.includes('percentile');
+          }
+        }
       }
+
     }
   }
 });

@@ -27,6 +27,10 @@
   --throughput_chart_total_line_color: gray;
   
   --aging-work-in-progress-chart-shading-color: lightgray;
+  --aging-work-in-progress-chart-shading-50-color: green;
+  --aging-work-in-progress-chart-shading-85-color: yellow;
+  --aging-work-in-progress-chart-shading-98-color: orange;
+  --aging-work-in-progress-chart-shading-100-color: red;
   --aging-work-in-progress-by-age-trend-line-color: gray;
   
   --hierarchy-table-inactive-item-text-color: gray;
