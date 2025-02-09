@@ -22,7 +22,8 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
           labelString: 'Date Completed'
         },
         grid: {
-          color: <%= CssVariable['--grid-line-color'].to_json %>
+          color: <%= CssVariable['--grid-line-color'].to_json %>,
+          z: 1 // draw the grid lines on top of the bars
         },
         stacked: true
       },
@@ -36,7 +37,8 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
           text: 'Age in days'
         },
         grid: {
-          color: <%= CssVariable['--grid-line-color'].to_json %>
+          color: <%= CssVariable['--grid-line-color'].to_json %>,
+          z: 1 // draw the grid lines on top of the bars
         },
         stacked: true
       }
