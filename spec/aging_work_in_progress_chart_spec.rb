@@ -126,4 +126,26 @@ describe AgingWorkInProgressChart do
       ]
     end
   end
+
+  context 'indexes_of_leading_and_trailing_zeros' do
+    it 'handles empty' do
+      expect(chart.indexes_of_leading_and_trailing_zeros []).to be_empty
+    end
+
+    it 'handles all zeros' do
+      expect(chart.indexes_of_leading_and_trailing_zeros [0, 0]).to eq [0, 1]
+    end
+
+    it 'handles leading and trailing zeros' do
+      expect(chart.indexes_of_leading_and_trailing_zeros [0, 0, 5, 0]).to eq [0, 1, 3]
+    end
+
+    it 'handles no zeros' do
+      expect(chart.indexes_of_leading_and_trailing_zeros [5, 5, 5]).to be_empty
+    end
+
+    it 'ignore zero in the middle' do
+      expect(chart.indexes_of_leading_and_trailing_zeros [2, 0, 5, 0]).to eq [3]
+    end
+  end
 end

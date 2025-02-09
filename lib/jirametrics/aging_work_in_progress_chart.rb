@@ -99,9 +99,7 @@ class AgingWorkInProgressChart < ChartBase
 
     column_indexes_to_remove = []
     unless @show_all_columns
-      calculator.age_data_for(percentage: 100).each_with_index do |number, index|
-        column_indexes_to_remove << index if number.zero?
-      end
+      column_indexes_to_remove = indexes_of_leading_and_trailing_zeros(calculator.age_data_for(percentage: 100))
 
       column_indexes_to_remove.reverse_each do |index|
         @board_columns.delete_at index
@@ -122,8 +120,24 @@ class AgingWorkInProgressChart < ChartBase
       }
     end
 
-
     data_sets
+  end
+
+  def indexes_of_leading_and_trailing_zeros list
+    result = []
+    0.upto(list.size - 1) do |index|
+      break unless list[index].zero?
+
+      result << index
+    end
+
+    stop_at = result.empty? ? 0 : (result.last + 1)
+    (list.size - 1).downto(stop_at).each do |index|
+      break unless list[index].zero?
+
+      result << index if list[index].zero?
+    end
+    result
   end
 
   def column_for issue:
