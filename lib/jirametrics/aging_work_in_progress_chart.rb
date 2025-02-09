@@ -29,6 +29,7 @@ class AgingWorkInProgressChart < ChartBase
       </div>
     HTML
     percentiles 85 => 'yellow', 50 => 'green', 98 => 'orange', 100 => 'red'
+    show_all_columns false
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
@@ -43,11 +44,14 @@ class AgingWorkInProgressChart < ChartBase
 
     @header_text += " on board: #{@all_boards[@board_id].name}"
     data_sets = make_data_sets
-    column_headings = @board_columns.collect(&:name)
 
-    adjust_visibility_of_unmapped_status_column data_sets: data_sets, column_headings: column_headings
+    adjust_visibility_of_unmapped_status_column data_sets: data_sets
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def show_all_columns show = true
+    @show_all_columns = show
   end
 
   def determine_board_columns
@@ -92,7 +96,20 @@ class AgingWorkInProgressChart < ChartBase
     end
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues
+
+    column_indexes_to_remove = []
+    unless @show_all_columns
+      calculator.age_data_for(percentage: 100).each_with_index do |number, index|
+        column_indexes_to_remove << index if number.zero?
+      end
+
+      column_indexes_to_remove.reverse_each do |index|
+        @board_columns.delete_at index
+      end
+    end
+
     calculator.stacked_age_data_for(percentages: @percentiles.keys).each do |percentage, data|
+      column_indexes_to_remove.reverse_each { |index| data.delete_at index }
       color = @percentiles[percentage]
 
       data_sets << {
@@ -104,6 +121,8 @@ class AgingWorkInProgressChart < ChartBase
         'data' => data
       }
     end
+
+
     data_sets
   end
 
@@ -113,7 +132,7 @@ class AgingWorkInProgressChart < ChartBase
     end
   end
 
-  def adjust_visibility_of_unmapped_status_column data_sets:, column_headings:
+  def adjust_visibility_of_unmapped_status_column data_sets:
     column_name = @fake_column.name
 
     has_unmapped = data_sets.any? do |set|
@@ -126,7 +145,7 @@ class AgingWorkInProgressChart < ChartBase
       @description_text += "<p>The items shown in #{column_name.inspect} are not visible on the " \
         'board but are still active. Most likely everyone has forgotten about them.</p>'
     else
-      column_headings.pop
+      # @column_headings.pop
       @board_columns.pop
     end
   end

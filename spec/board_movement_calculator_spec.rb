@@ -13,12 +13,12 @@ describe BoardMovementCalculator do
   context 'age_data_for' do
     it 'at 100%' do
       actual = calculator.age_data_for percentage: 100
-      expect(actual).to eq [180, 180, 180, 180]
+      expect(actual).to eq [180, 180, 180, 0]
     end
 
     it 'at 0%' do
       actual = calculator.age_data_for percentage: 0
-      expect(actual).to eq [1, 1, 81, 81]
+      expect(actual).to eq [1, 81, 81, 0]
     end
   end
 

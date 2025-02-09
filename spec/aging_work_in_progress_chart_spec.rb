@@ -18,6 +18,7 @@ describe AgingWorkInProgressChart do
     chart.issues = load_complete_sample_issues board: board
     chart.date_range = Date.parse('2021-06-18')..Date.parse('2021-06-28')
     chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
+    chart.show_all_columns
     chart
   end
 
@@ -71,7 +72,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [180, 180, 180],
+       'data' => [73, 81, 81, 0],
        'label' => '85%',
        'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
        'type' => 'bar'

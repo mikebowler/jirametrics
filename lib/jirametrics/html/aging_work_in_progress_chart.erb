@@ -6,7 +6,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
 {
   type: 'bar',
   data: {
-    labels: [<%= column_headings.collect(&:inspect).join(',') %>],
+    labels: [<%= @board_columns.collect { |c| c.name.inspect }.join(',') %>],
     datasets: <%= JSON.generate(data_sets) %>
   },
   options: {

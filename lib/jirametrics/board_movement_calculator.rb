@@ -11,8 +11,7 @@ class BoardMovementCalculator
 
   def stacked_age_data_for percentages:
     data_list = percentages.sort.collect do |percentage|
-      # TODO: Why are we ignoring the first?
-      [percentage, age_data_for(percentage: percentage).drop(1)]
+      [percentage, age_data_for(percentage: percentage)]
     end
 
     stack_data data_list
@@ -44,6 +43,12 @@ class BoardMovementCalculator
       end
       result
     end
+
+    # TODO: This stupidity of dropping the first is because we're always calculating after the fact and
+    # so the first entry is meaningless. Adding the zero at the end is because there's no way to calculate
+    # any actual numbers for the last column. This whole logic needs to be rewritten.
+    data = data.drop(1)
+    data << 0
 
     ensure_numbers_always_goes_up(data)
   end
