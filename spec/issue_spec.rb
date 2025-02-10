@@ -1293,4 +1293,15 @@ describe Issue do
       )
     end
   end
+
+  context 'due_date' do
+    it 'handles none' do
+      expect(issue1.due_date).to be_nil
+    end
+
+    it 'parses correctly' do
+      issue1.raw['fields']['duedate'] = '2024-01-01'
+      expect(issue1.due_date).to eq Date.parse('2024-01-01')
+    end
+  end
 end

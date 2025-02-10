@@ -57,6 +57,11 @@ class Issue
 
   def resolution = @raw['fields']['resolution']&.[]('name')
 
+  def due_date
+    text = @raw['fields']['duedate']
+    text.nil? ? nil : Date.parse(text)
+  end
+
   def url
     # Strangely, the URL isn't anywhere in the returned data so we have to fabricate it.
     "#{@board.server_url_prefix}/browse/#{key}"
