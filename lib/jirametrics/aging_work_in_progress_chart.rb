@@ -78,6 +78,7 @@ class AgingWorkInProgressChart < ChartBase
       board.id == @board_id && board.cycletime.in_progress?(issue)
     end
 
+    @max_age = 20
     rules_to_issues = group_issues aging_issues
     data_sets = rules_to_issues.keys.collect do |rules|
       {
@@ -87,6 +88,8 @@ class AgingWorkInProgressChart < ChartBase
             age = issue.board.cycletime.age(issue, today: date_range.end)
             column = column_for issue: issue
             next if column.nil?
+
+            @max_age = age if  age > @max_age
 
             {
               'y' => age,
