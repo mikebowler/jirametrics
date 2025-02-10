@@ -89,7 +89,7 @@ class AgingWorkInProgressChart < ChartBase
             column = column_for issue: issue
             next if column.nil?
 
-            @max_age = age if  age > @max_age
+            @max_age = age if age > @max_age
 
             {
               'y' => age,
@@ -120,7 +120,7 @@ class AgingWorkInProgressChart < ChartBase
 
       data_sets << {
         'type' => 'bar',
-        'label' => "#{percentage}% percentile",
+        'label' => "#{percentage}%",
         'barPercentage' => 1.0,
         'categoryPercentage' => 1.0,
         'backgroundColor' => color,
