@@ -6,6 +6,7 @@
       <th>B</th>
       <th>Issue</th>
       <th>Status</th>
+      <th>Dates</th>
       <th>Fix versions</th>
       <% if any_scrum_boards %>
         <th>Sprints</th>
@@ -41,6 +42,7 @@
           <% end %>
         </td>
         <td><%= format_status issue.status, board: issue.board %></td>
+        <td><%= dates_text(issue) %></td>
         <td><%= fix_versions_text(issue) %></td>
         <% if any_scrum_boards %>
           <td><%= sprints_text(issue) %></td>

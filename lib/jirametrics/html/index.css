@@ -35,6 +35,9 @@
   
   --aging-work-in-progress-by-age-trend-line-color: gray;
   
+  --aging-work-table-date-in-jeopardy: yellow;
+  --aging-work-table-date-overdue: red;
+
   --hierarchy-table-inactive-item-text-color: gray;
 
   --wip-chart-completed-color: #00ff00;

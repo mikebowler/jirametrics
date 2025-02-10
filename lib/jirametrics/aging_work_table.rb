@@ -114,6 +114,27 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
+  def dates_text issue
+    color = 'var(--default-text-color)'
+    title = nil
+
+    date = date_range.end
+    due = issue.due_date
+    return '' unless due
+
+    if date == due
+      color = 'var(--aging-work-table-date-in-jeopardy)'
+      title = 'Item is due today and is still in progress'
+    elsif date > due
+      color = 'var(--aging-work-table-date-overdue)'
+      title = 'Item is already overdue.'
+    end
+
+    return due.to_s if title.nil?
+
+    "<span style='background: #{color}; padding: 0.2em;' title='#{title}'>#{due}</span>"
+  end
+
   def age_cutoff age = nil
     @age_cutoff = age.to_i if age
     @age_cutoff
