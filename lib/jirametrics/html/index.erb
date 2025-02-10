@@ -23,11 +23,13 @@
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         location.reload()
       })
-
     </script>
     <style>
 <%= css %>
-    </style>
+    </style>style>
+    <script type="text/javascript">
+      Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--default-text-color');
+    </script>
   </head>
   <body>
     <%= "\n" + @sections.collect { |text, type| text if type == :header }.compact.join("\n\n") %>

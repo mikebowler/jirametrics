@@ -27,7 +27,7 @@ class FlowEfficiencyScatterplot < ChartBase
           </mfrac>
         </math>
       </div>
-      <div style="background: yellow">Note that for this calculation to be accurate, we must be moving items into a
+      <div style="background: var(--warning-banner)">Note that for this calculation to be accurate, we must be moving items into a
         blocked or stalled state the moment we stop working on it, and most teams don't do that.
         So be aware that your team may have to change their behaviours if you want this chart to be useful.
       </div>

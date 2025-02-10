@@ -2,6 +2,7 @@
   --body-background: white;
   --default-text-color: black;
   --grid-line-color: lightgray;
+  --warning-banner: yellow;
 
   --cycletime-scatterplot-overall-trendline-color: gray;
 
@@ -26,12 +27,11 @@
 
   --throughput_chart_total_line_color: gray;
   
-  // TODO: These colours are horrible - fix them;
   --aging-work-in-progress-chart-shading-color: lightgray;
-  --aging-work-in-progress-chart-shading-50-color: #98FB98; // green;
-  --aging-work-in-progress-chart-shading-85-color: #FFFFBF; // yellow;
-  --aging-work-in-progress-chart-shading-98-color: #FFD580; // orange;
-  --aging-work-in-progress-chart-shading-100-color: #F5C2C1; // red;
+  --aging-work-in-progress-chart-shading-50-color: #2E8BC0; // green;
+  --aging-work-in-progress-chart-shading-85-color: #ADD8E6; // yellow;
+  --aging-work-in-progress-chart-shading-98-color: #FF8A8A; // orange;
+  --aging-work-in-progress-chart-shading-100-color: #FF2E2E; // red;
   
   --aging-work-in-progress-by-age-trend-line-color: gray;
   
@@ -141,6 +141,8 @@ ul.quality_report {
 
 @media screen and (prefers-color-scheme: dark) {
   :root {
+    --warning-banner: #9F2B00;
+
     --non-working-days-color: #2f2f2f;
     --type-story-color: #6fb86f;
     --type-task-color: #0021b3;
@@ -155,12 +157,6 @@ ul.quality_report {
     --stalled-color: #ae7202;
     --dead-color: black;
     --wip-chart-active-color: #2551c1;
-
-    // TODO: These colours are horrible - fix them;
-    --aging-work-in-progress-chart-shading-50-color: green;
-    --aging-work-in-progress-chart-shading-85-color: yellow;
-    --aging-work-in-progress-chart-shading-98-color: orange;
-    --aging-work-in-progress-chart-shading-100-color: red;
 
     --status-category-inprogress-color: #1c49bb;
 
