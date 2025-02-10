@@ -51,6 +51,7 @@ class AgingWorkInProgressChart < ChartBase
     data_sets = make_data_sets
 
     adjust_visibility_of_unmapped_status_column data_sets: data_sets
+    adjust_chart_height
 
     wrap_and_render(binding, __FILE__)
   end
@@ -174,5 +175,12 @@ class AgingWorkInProgressChart < ChartBase
 
   def percentiles percentile_color_hash
     @percentiles = percentile_color_hash.transform_values { |value| CssVariable[value] }
+  end
+
+  def adjust_chart_height
+    min_height = @max_age * 5
+
+    @canvas_height = min_height if min_height > @canvas_height
+    @canvas_height = 400 if min_height > 400
   end
 end
