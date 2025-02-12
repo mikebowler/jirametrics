@@ -3,7 +3,7 @@
 require 'jirametrics/chart_base'
 
 class AgingWorkTable < ChartBase
-  attr_accessor :today, :board_id
+  attr_accessor :today # , :board_id
   attr_reader :any_scrum_boards
 
   def initialize block
@@ -114,8 +114,21 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
+  def forecasted_days_remaining_and_message issue
+    calculator = BoardMovementCalculator.new board: current_board, issues: issues
+    column_name, entry_time = calculator.find_column_and_entry_time_in_column issue
+    if column_name.nil?
+      return [nil, 'This issue is not even visible on the board. No way to predict when it will be done.']
+    end
+
+    @likely_age_data = calculator.age_data_for percentage: 85
+
+    age_in_column = (date_range.end - entry_time.to_date).to_i + 1
+    [likely_completion_date(column: column_name, age_in_column: age_in_column), '']
+  end
+
   def dates_text issue
-    color = 'var(--default-text-color)'
+    color = nil
     title = nil
 
     date = date_range.end
@@ -123,16 +136,37 @@ class AgingWorkTable < ChartBase
     return '' unless due
 
     if date == due
-      color = 'var(--aging-work-table-date-in-jeopardy)'
+      color = '--aging-work-table-date-in-jeopardy'
       title = 'Item is due today and is still in progress'
     elsif date > due
-      color = 'var(--aging-work-table-date-overdue)'
+      color = '--aging-work-table-date-overdue'
       title = 'Item is already overdue.'
+    else
+      # Try to forecast the end date
+      days_remaining, message = forecasted_days_remaining_and_message issue
+      if days_remaining.nil?
+        color = '--aging-work-table-date-in-jeopardy'
+        title = message
+      elsif date_range.end + days_remaining > due
+        color = '--aging-work-table-date-in-jeopardy'
+        due_days_label = label_days (due - date_range.end).to_i
+        title = "Likely to need another #{days_remaining} days and it's due in #{due_days_label}"
+      end
     end
 
-    return due.to_s if title.nil?
+    result = +''
+    result << color_block(color)
+    result << ' '
+    result << due.to_s
+    result << "<br /><span style='font-size: 0.8em'>#{title}</span>" if title
+    result
+  end
 
-    "<span style='background: #{color}; padding: 0.2em;' title='#{title}'>#{due}</span>"
+  def likely_completion_date column:, age_in_column:
+    column_index = current_board.visible_columns.index { |c| c.name == column }
+    days = @likely_age_data[column_index] - age_in_column
+    @likely_age_data[(column_index + 1)..].each { |a| days += a }
+    days
   end
 
   def age_cutoff age = nil

@@ -260,7 +260,10 @@ class ChartBase
 
   def color_block color, title: nil
     result = +''
-    result << "<div class='color_block' style='background: #{CssVariable[color]};'"
+    result << "<div class='color_block' style='"
+    result << "background: #{CssVariable[color]};" if color
+    result << 'visibility: hidden;' unless color
+    result << "'"
     result << " title=#{title.inspect}" if title
     result << '></div>'
     result

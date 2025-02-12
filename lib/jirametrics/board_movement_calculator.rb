@@ -82,4 +82,15 @@ class BoardMovementCalculator
     end
     data
   end
+
+  def find_column_and_entry_time_in_column issue
+    column = board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
+    return [] if column.nil? # This issue isn't visible on the board
+
+    status_ids = column.status_ids
+
+    entered_at = issue.changes.reverse.find { |change| change.status? && status_ids.include?(change.value_id) }&.time
+    puts "issue: #{issue.key}, status: #{issue.status}, entered_at: #{entered_at}" if entered_at.nil?
+    [column.name, entered_at]
+  end
 end

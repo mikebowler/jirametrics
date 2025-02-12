@@ -51,7 +51,12 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
         'created' => to_time(created).to_s,
         'status' => {
           'name' => creation_status[0],
-          'id' => creation_status[1].to_s
+          'id' => creation_status[1].to_s,
+          'statusCategory' => {
+            'name' => 'To Do',
+            'id' => 100,
+            'key' => 'new'
+          }
         },
         'issuetype' => {
           'name' => 'Bug'

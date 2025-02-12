@@ -74,7 +74,12 @@ describe Issue do
         'updated' => '2021-09-29T18:00:00+00:00',
         'status' => {
           'name' => 'BrandNew!',
-          'id' => '999'
+          'id' => '999',
+          'statusCategory' => {
+            'name' => 'To Do',
+            'id' => 100,
+            'key' => 'new'
+          }
         },
         'creator' => {
           'displayName' => 'Tolkien'
@@ -118,7 +123,12 @@ describe Issue do
           'updated' => '2021-09-29T18:00:00+00:00',
           'status' => {
             'name' => 'BrandNew!',
-            'id' => '999'
+            'id' => '999',
+            'statusCategory' => {
+              'name' => 'To Do',
+              'id' => 100,
+              'key' => 'new'
+            }
           },
           'creator' => {
             'displayName' => 'Tolkien'
@@ -141,7 +151,13 @@ describe Issue do
           'updated' => '2021-09-29T18:00:00+00:00',
           'status' => {
             'name' => 'BrandNew!',
-            'id' => '999'
+            'id' => '999',
+            'statusCategory' => {
+              'name' => 'To Do',
+              'id' => 100,
+              'key' => 'new'
+            }
+
           },
           'creator' => {
             'displayName' => 'Tolkien'
@@ -237,7 +253,12 @@ describe Issue do
           'created' => '2021-08-29T18:00:00+00:00',
           'status' => {
             'name' => 'BrandNew!',
-            'id' => '999'
+            'id' => '999',
+            'statusCategory' => {
+              'name' => 'To Do',
+              'id' => 100,
+              'key' => 'new'
+            }
           },
           'creator' => {
             'displayName' => 'Tolkien'
@@ -318,7 +339,12 @@ describe Issue do
           'created' => '2021-08-29T18:00:00+00:00',
           'status' => {
             'name' => 'BrandNew!',
-            'id' => '999'
+            'id' => '999',
+            'statusCategory' => {
+              'name' => 'To Do',
+              'id' => 100,
+              'key' => 'new'
+            }
           },
           'creator' => {
             'displayName' => 'Tolkien'

@@ -3,17 +3,20 @@
 require './spec/spec_helper'
 
 describe AgingWorkTable do
+  let(:board) do
+    load_complete_sample_board.tap { |board| board.cycletime = default_cycletime_config }
+  end
+  let(:issue1) { empty_issue(created: '2021-01-01', board: board, key: 'SP-1') }
+  let(:issue2) { empty_issue(created: '2021-01-01', board: board, key: 'SP-2') }
   let(:table) do
     described_class.new(empty_config_block).tap do |table|
       table.date_range = to_date('2021-01-01')..to_date('2021-01-31')
       table.time_range = to_time('2021-01-01')..to_time('2021-01-31T23:59:59')
       table.today = table.date_range.end + 1
+      table.all_boards = { board.id => board }
+      table.issues = [issue1, issue2]
     end
   end
-
-  let(:board) { load_complete_sample_board }
-  let(:issue1) { empty_issue(created: '2021-01-01', board: board, key: 'SP-1') }
-  let(:issue2) { empty_issue(created: '2021-01-01', board: board, key: 'SP-2') }
 
   context 'icon_span' do
     it 'creates span' do
@@ -212,5 +215,46 @@ describe AgingWorkTable do
     table.issues = [issue1, issue2, issue3]
 
     expect(table.expedited_but_not_started).to eq [issue3]
+  end
+
+  context 'dates_text' do
+    it 'handles no due date' do
+      expect(table.dates_text issue1).to eq ''
+    end
+
+    it 'handles due date in future' do
+      # We only care that the current status is visible on the board
+      issue1.status = board.possible_statuses.find_by_id(board.visible_columns.first.status_ids.first)
+
+      # Ensure we have a status change showing that we moved into this status
+      add_mock_change(
+        issue: issue1, field: 'status', value: issue1.status.name, value_id: issue1.status.id,
+        time: (table.date_range.end - 3).to_s
+      )
+
+      issue1.raw['fields']['duedate'] = (table.date_range.end + 1).to_s
+      expect(table.dates_text issue1).to eq(
+        "#{table.color_block nil} 2021-02-01"
+      )
+    end
+
+    it 'handles due date today' do
+      # We only care that the current status is visible on the board
+      issue1.status = board.possible_statuses.find_by_id(board.visible_columns.first.status_ids.first)
+
+      issue1.raw['fields']['duedate'] = table.date_range.end.to_s
+      expect(table.dates_text issue1).to eq(
+        "#{table.color_block '--aging-work-table-date-in-jeopardy'} 2021-01-31<br />" \
+          "<span style='font-size: 0.8em'>Item is due today and is still in progress</span>"
+      )
+    end
+
+    it 'handles overdue date' do
+      issue1.raw['fields']['duedate'] = (table.date_range.end - 1).to_s
+      expect(table.dates_text issue1).to eq(
+        "#{table.color_block '--aging-work-table-date-overdue'} 2021-01-30<br />" \
+          "<span style='font-size: 0.8em'>Item is already overdue.</span>"
+      )
+    end
   end
 end

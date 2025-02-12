@@ -58,7 +58,7 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'stack_data', :focus do
+  context 'stack_data' do
     it 'stacks' do
       inputs = [
         [50, [0, 0, 2, 3, 3]],
@@ -70,6 +70,12 @@ describe BoardMovementCalculator do
         [85, [0, 0, 9, 9, 11]],
         [98, [0, 0, 25, 27, 25]]
       ]
+    end
+  end
+
+  context 'find_column_and_age_in_column' do
+    it "isn't started" do
+      issue = empty_issue created: '2024-01-01'
     end
   end
 end

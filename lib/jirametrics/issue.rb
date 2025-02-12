@@ -49,13 +49,20 @@ class Issue
 
   def summary = @raw['fields']['summary']
 
-  def status = Status.from_raw(@raw['fields']['status'])
-
   def labels = @raw['fields']['labels'] || []
 
   def author = @raw['fields']['creator']&.[]('displayName') || ''
 
   def resolution = @raw['fields']['resolution']&.[]('name')
+
+  def status
+    @status = Status.from_raw(@raw['fields']['status']) unless @status
+    @status
+  end
+
+  def status= status
+    @status = status
+  end
 
   def due_date
     text = @raw['fields']['duedate']
