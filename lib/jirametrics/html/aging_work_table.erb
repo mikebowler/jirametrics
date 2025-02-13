@@ -2,9 +2,9 @@
   <thead>
     <tr>
       <th title="Age in days">Age</th>
-      <th title="Forecasted days remaining">DR</th>
+      <th title="Forecasted days remaining">FD</th>
       <th title="Expedited">E</th>
-      <th title="Blocked / Stalled">B</th>
+      <th title="Blocked / Stalled">B/S</th>
       <th>Issue</th>
       <th>Status</th>
       <th>Due</th>
@@ -29,7 +29,7 @@
       <tr>
         <td style="text-align: right;"><%= issue_age || 'Not started' %></td>
         <% forecasted_age, message = forecasted_days_remaining_and_message(issue) %>
-        <td style="text-align: right;" title="<%= message %>"><%= forecasted_age %></td>
+        <td style="text-align: right;" title="<%= message %>"><%= 'ⓘ' if message %> <%= forecasted_age %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>
         <td>

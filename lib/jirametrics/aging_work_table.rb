@@ -22,6 +22,13 @@ class AgingWorkTable < ChartBase
         If there are expedited items that haven't yet started then they're at the bottom of the table.
         By the very definition of expedited, if we haven't started them already, we'd better get on that.
       </p>
+      <p>
+        Legend:
+        <ul><li><b>FD:</b> <b>F</b>orecasted <b>D</b>ays remaining. A hint of how long it will likely take to complete.</li>
+        <li><b>E:</b> Whether this item is <b>E</b>xpedited.</li>
+        <li><b>B/S:</b> Whether this item is either <b>B</b>locked or <b>S</b>talled.</li>
+        </ul>
+      </p>
     TEXT
 
     instance_eval(&block)
@@ -116,15 +123,29 @@ class AgingWorkTable < ChartBase
 
   def forecasted_days_remaining_and_message issue
     calculator = BoardMovementCalculator.new board: current_board, issues: issues
-    column_name, entry_time = calculator.find_column_and_entry_time_in_column issue
-    if column_name.nil?
-      return [nil, 'This issue is not even visible on the board. No way to predict when it will be done.']
-    end
+    column_name, entry_time = calculator.find_current_column_and_entry_time_in_column issue
+    return [nil, 'This issue is not visible on the board. No way to predict when it will be done.'] if column_name.nil?
 
     @likely_age_data = calculator.age_data_for percentage: 85
 
+    # TODO: This calculation is wrong. See birch samples
     age_in_column = (date_range.end - entry_time.to_date).to_i + 1
-    [likely_completion_date(column: column_name, age_in_column: age_in_column), '']
+
+    message = nil
+    column_index = current_board.visible_columns.index { |c| c.name == column_name }
+
+    last_non_zero_datapoint = @likely_age_data.reverse.find { |d| !d.zero? }
+    remaining_in_current_column = @likely_age_data[column_index] - age_in_column
+    if remaining_in_current_column.negative?
+      message = 'This item is an outlier. The actual time will likely be much greater than the forecast.'
+      remaining_in_current_column = 0
+    end
+
+    forecasted_days = last_non_zero_datapoint - @likely_age_data[column_index] + remaining_in_current_column
+    # puts "#{issue.key} data: #{@likely_age_data}, last: #{last_non_zero_datapoint}, column_index: #{column_index}, " \
+    #   "age_in_column: #{age_in_column}, forecast: #{forecasted_days}"
+
+    [forecasted_days, message]
   end
 
   def dates_text issue
@@ -144,7 +165,7 @@ class AgingWorkTable < ChartBase
     else
       # Try to forecast the end date
       days_remaining, message = forecasted_days_remaining_and_message issue
-      if days_remaining.nil?
+      if message
         color = '--aging-work-table-date-in-jeopardy'
         title = message
       elsif date_range.end + days_remaining > due
@@ -160,13 +181,6 @@ class AgingWorkTable < ChartBase
     result << due.to_s
     result << "<br /><span style='font-size: 0.8em'>#{title}</span>" if title
     result
-  end
-
-  def likely_completion_date column:, age_in_column:
-    column_index = current_board.visible_columns.index { |c| c.name == column }
-    days = @likely_age_data[column_index] - age_in_column
-    @likely_age_data[(column_index + 1)..].each { |a| days += a }
-    days
   end
 
   def age_cutoff age = nil
