@@ -24,7 +24,8 @@ class AgingWorkTable < ChartBase
       </p>
       <p>
         Legend:
-        <ul><li><b>FD:</b> <b>F</b>orecasted <b>D</b>ays remaining. A hint of how long it will likely take to complete.</li>
+        <ul><li><b>FD:</b> <b>F</b>orecasted <b>D</b>ays remaining. A hint of how long it will likely take
+        to complete, based on historical data for this same board.</li>
         <li><b>E:</b> Whether this item is <b>E</b>xpedited.</li>
         <li><b>B/S:</b> Whether this item is either <b>B</b>locked or <b>S</b>talled.</li>
         </ul>
