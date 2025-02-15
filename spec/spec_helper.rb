@@ -277,6 +277,39 @@ def empty_config_block
   ->(_) {}
 end
 
+def create_issue_from_aging_data board:, ages_by_column:, today:
+  today = to_date(today)
+
+  # The ages_by_column may not contain data for all columns so we only look at the ones we do know something about
+  columns = board.visible_columns[0..(ages_by_column.size - 1)]
+
+  status_changes = []
+  date = today
+  (ages_by_column.size - 1).downto(0) do |index|
+    next if ages_by_column[index].zero?
+
+    date -= (ages_by_column[index] - 1)
+    status_changes << [columns[index], date]
+  end
+
+  issue = empty_issue created: date.to_s, board: board
+
+  # The incrementing hour is required because we can otherwise generate multiple changes with exactly the same
+  # timestamp which becomes ambiguous. Which one was actually first?
+  hour = 0
+  status_changes.reverse_each do |column, change_date|
+    status = board.possible_statuses.find_by_id column.status_ids.min
+    add_mock_change(
+      issue: issue, field: 'status',
+      value: status.name, value_id: status.id,
+      time: to_time("#{change_date}T0#{hour}:00:00")
+    )
+    hour += 1
+  end
+
+  issue
+end
+
 ######
 
 def match_strings expected
