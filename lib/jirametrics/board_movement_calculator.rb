@@ -6,8 +6,6 @@ class BoardMovementCalculator
   def initialize board:, issues:, today:
     @board = board
     @issues = issues.select { |issue| issue.board == board }
-    # TODO: Remove me
-    @accumulated_status_ids_per_column = board.accumulated_status_ids_per_column
     @today = today
   end
 
