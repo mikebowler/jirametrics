@@ -62,21 +62,6 @@ class Exporter
               rules.label = issue.raw['fields']['priority']['name']
             end
           end
-          cycletime_scatterplot do
-            grouping_rules do |issue, rules|
-              expedited = issue.changes.any? do |change|
-                change.priority? &&
-                  issue.board.project_config.settings['expedited_priority_names'].include?(change.value)
-              end
-              if expedited
-                rules.label = 'Expedited'
-                rules.color = 'red'
-              else
-                rules.label = 'Standard'
-                rules.color = 'gray'
-              end
-            end
-          end
 
           cycletime_scatterplot do
             show_trend_lines
