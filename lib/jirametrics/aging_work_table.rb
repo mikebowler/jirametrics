@@ -37,6 +37,8 @@ class AgingWorkTable < ChartBase
 
   def run
     @today = date_range.end
+    @calculator = BoardMovementCalculator.new board: current_board, issues: issues, today: @today
+
     aging_issues = select_aging_issues + expedited_but_not_started
 
     wrap_and_render(binding, __FILE__)
@@ -122,33 +124,6 @@ class AgingWorkTable < ChartBase
     end.join('<br />')
   end
 
-  def forecasted_days_remaining_and_message issue
-    calculator = BoardMovementCalculator.new board: current_board, issues: issues
-    column_name, entry_time = calculator.find_current_column_and_entry_time_in_column issue
-    return [nil, 'This issue is not visible on the board. No way to predict when it will be done.'] if column_name.nil?
-
-    @likely_age_data = calculator.age_data_for percentage: 85
-
-    # TODO: This calculation is wrong. See birch samples
-    age_in_column = (date_range.end - entry_time.to_date).to_i + 1
-
-    message = nil
-    column_index = current_board.visible_columns.index { |c| c.name == column_name }
-
-    last_non_zero_datapoint = @likely_age_data.reverse.find { |d| !d.zero? }
-    remaining_in_current_column = @likely_age_data[column_index] - age_in_column
-    if remaining_in_current_column.negative?
-      message = 'This item is an outlier. The actual time will likely be much greater than the forecast.'
-      remaining_in_current_column = 0
-    end
-
-    forecasted_days = last_non_zero_datapoint - @likely_age_data[column_index] + remaining_in_current_column
-    # puts "#{issue.key} data: #{@likely_age_data}, last: #{last_non_zero_datapoint}, column_index: #{column_index}, " \
-    #   "age_in_column: #{age_in_column}, forecast: #{forecasted_days}"
-
-    [forecasted_days, message]
-  end
-
   def dates_text issue
     color = nil
     title = nil
@@ -165,7 +140,7 @@ class AgingWorkTable < ChartBase
       title = 'Item is already overdue.'
     else
       # Try to forecast the end date
-      days_remaining, message = forecasted_days_remaining_and_message issue
+      days_remaining, message = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
       if message
         color = '--aging-work-table-date-in-jeopardy'
         title = message

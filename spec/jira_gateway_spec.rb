@@ -5,7 +5,7 @@ describe JiraGateway do
   let(:gateway) { described_class.new file_system: file_system }
 
   context 'make_curl_command' do
-    it 'handles empty config', :focus do
+    it 'handles empty config' do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
 
       expect(gateway.make_curl_command url: 'http://foo').to eq(

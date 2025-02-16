@@ -277,13 +277,14 @@ def empty_config_block
   ->(_) {}
 end
 
-def create_issue_from_aging_data board:, ages_by_column:, today:
+def create_issue_from_aging_data board:, ages_by_column:, today:, key: 'SP-1'
   today = to_date(today)
 
   # The ages_by_column may not contain data for all columns so we only look at the ones we do know something about
   columns = board.visible_columns[0..(ages_by_column.size - 1)]
 
   status_changes = []
+
   date = today
   (ages_by_column.size - 1).downto(0) do |index|
     next if ages_by_column[index].zero?
@@ -292,7 +293,7 @@ def create_issue_from_aging_data board:, ages_by_column:, today:
     status_changes << [columns[index], date]
   end
 
-  issue = empty_issue created: date.to_s, board: board
+  issue = empty_issue created: date.to_s, board: board, key: key
 
   # The incrementing hour is required because we can otherwise generate multiple changes with exactly the same
   # timestamp which becomes ambiguous. Which one was actually first?

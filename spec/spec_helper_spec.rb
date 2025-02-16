@@ -42,10 +42,11 @@ describe 'spec_helper' do
       ]
     end
 
-    it 'handles simple data' do
+    it 'handles simple data with gaps' do
       issue = create_issue_from_aging_data board: board, ages_by_column: [0, 1, 2], today: '2024-10-30'
       expect(issue.status_changes.collect { |c| [c.value, c.time] }).to eq [
         ['Backlog', to_time('2024-10-29')],
+        # Selected for Development is skipped because of the zero.
         ['In Progress', to_time('2024-10-29')],
         ['Review', to_time('2024-10-29T01:00:00')]
       ]

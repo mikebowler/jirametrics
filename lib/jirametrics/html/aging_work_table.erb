@@ -28,7 +28,7 @@
       <% end %>
       <tr>
         <td style="text-align: right;"><%= issue_age || 'Not started' %></td>
-        <% forecasted_age, message = forecasted_days_remaining_and_message(issue) %>
+        <% forecasted_age, message = @calculator.forecasted_days_remaining_and_message(issue: issue, today: today) %>
         <td style="text-align: right;" title="<%= message %>"><%= 'ⓘ' if message %> <%= forecasted_age %></td>
         <td><%= expedited_text(issue) %></td>
         <td><%= blocked_text(issue) %></td>

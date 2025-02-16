@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 class BoardMovementCalculator
-  attr_reader :board, :issues
+  attr_reader :board, :issues, :today
 
-  def initialize board:, issues:
+  def initialize board:, issues:, today:
     @board = board
     @issues = issues.select { |issue| issue.board == board }
+    # TODO: Remove me
     @accumulated_status_ids_per_column = board.accumulated_status_ids_per_column
+    @today = today
   end
 
   def stacked_age_data_for percentages:
@@ -33,33 +35,31 @@ class BoardMovementCalculator
   end
 
   def age_data_for percentage:
-    data = @accumulated_status_ids_per_column.collect do |_column, status_ids|
-      ages = ages_of_issues_that_crossed_column_boundary status_ids: status_ids
+    data = []
+    board.visible_columns.each_with_index do |_column, column_index|
+      ages = ages_of_issues_when_leaving_column column_index: column_index, today: today
       if ages.empty?
-        result = 0
+        data << 0
       else
         index = ((ages.size - 1) * percentage / 100).to_i
-        result = ages[index]
+        data << ages[index]
       end
-      result
     end
-
-    # TODO: This stupidity of dropping the first is because we're always calculating after the fact and
-    # so the first entry is meaningless. Adding the zero at the end is because there's no way to calculate
-    # any actual numbers for the last column. This whole logic needs to be rewritten.
-    data = data.drop(1)
-    data << 0
-
     ensure_numbers_always_goes_up(data)
   end
 
-  def ages_of_issues_that_crossed_column_boundary status_ids:
+  def ages_of_issues_when_leaving_column column_index:, today:
+    next_column = board.visible_columns[column_index + 1]
+
     @issues.filter_map do |issue|
-      stop = issue.first_time_in_status(*status_ids)&.to_time
+      stop = next_column.nil? ? nil : issue.first_time_in_or_right_of_column(next_column.name)&.time
       start, = issue.board.cycletime.started_stopped_times(issue)
 
-      # Skip if either it hasn't crossed the boundary or we can't tell when it started.
-      next if stop.nil? || start.nil?
+      # Skip if we can't tell when it started.
+      next if start.nil?
+
+      # If we haven't left this column yet, use current age
+      next (today - start.to_date).to_i + 1 if stop.nil?
 
       # Skip if it left this column before the item is considered started.
       next if stop <= start
@@ -83,6 +83,8 @@ class BoardMovementCalculator
     data
   end
 
+  # Figure out what column this is issue is currently in and what time it entered that column. We need this for
+  # aging and forecasting purposes
   def find_current_column_and_entry_time_in_column issue
     column = board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
     return [] if column.nil? # This issue isn't visible on the board
@@ -91,7 +93,31 @@ class BoardMovementCalculator
 
     entry_at = issue.changes.reverse.find { |change| change.status? && status_ids.include?(change.value_id) }&.time
 
-    puts "issue: #{issue.key}, status: #{issue.status}, entry_at: #{entry_at}" if entry_at.nil?
     [column.name, entry_at]
+  end
+
+  def forecasted_days_remaining_and_message issue:, today:
+    likely_age_data = age_data_for percentage: 85
+
+    column_name, entry_time = find_current_column_and_entry_time_in_column issue
+    return [nil, 'This issue is not visible on the board. No way to predict when it will be done.'] if column_name.nil?
+
+    age_in_column = (today - entry_time.to_date).to_i + 1
+
+    message = nil
+    column_index = board.visible_columns.index { |c| c.name == column_name }
+
+    last_non_zero_datapoint = likely_age_data.reverse.find { |d| !d.zero? }
+    remaining_in_current_column = likely_age_data[column_index] - age_in_column
+    if remaining_in_current_column.negative?
+      message = 'This item is an outlier. The actual time will likely be much greater than the forecast.'
+      remaining_in_current_column = 0
+    end
+
+    return [nil, 'There is no historical data for this board. No forecast can be made.'] if last_non_zero_datapoint.nil?
+
+    forecasted_days = last_non_zero_datapoint - likely_age_data[column_index] + remaining_in_current_column
+
+    [forecasted_days, message]
   end
 end

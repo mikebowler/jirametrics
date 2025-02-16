@@ -15,6 +15,7 @@ describe AgingWorkTable do
       table.today = table.date_range.end + 1
       table.all_boards = { board.id => board }
       table.issues = [issue1, issue2]
+      table.file_system = MockFileSystem.new
     end
   end
 
@@ -233,8 +234,11 @@ describe AgingWorkTable do
       )
 
       issue1.raw['fields']['duedate'] = (table.date_range.end + 1).to_s
+      table.run
+      puts table.dates_text issue1
       expect(table.dates_text issue1).to eq(
-        "#{table.color_block nil} 2021-02-01"
+        "#{table.color_block '--aging-work-table-date-in-jeopardy'} 2021-02-01<br />" \
+          "<span style='font-size: 0.8em'>Likely to need another 27 days and it's due in 1 day</span>"
       )
     end
 

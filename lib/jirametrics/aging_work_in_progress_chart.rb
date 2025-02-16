@@ -104,7 +104,7 @@ class AgingWorkInProgressChart < ChartBase
       }
     end
 
-    calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues
+    calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues, today: date_range.end
 
     column_indexes_to_remove = []
     unless @show_all_columns

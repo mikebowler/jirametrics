@@ -3,44 +3,61 @@
 require './spec/spec_helper'
 
 describe BoardMovementCalculator do
+  let(:today) { '2024-10-31' }
   let(:board) do
     sample_board.tap do |board|
       board.cycletime = default_cycletime_config
     end
   end
-  let(:calculator) { described_class.new board: board, issues: load_complete_sample_issues(board: board) }
+  let(:issue1) { create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3], today: today, key: 'SP-1' }
+  let(:issue2) { create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6], today: today, key: 'SP-2' }
 
   context 'age_data_for' do
+    it 'has no issues' do
+      calculator = described_class.new board: board, issues: [], today: to_date(today)
+      expect(calculator.age_data_for percentage: 100).to eq [0, 0, 0, 0]
+    end
+
     it 'at 100%' do
-      actual = calculator.age_data_for percentage: 100
-      expect(actual).to eq [180, 180, 180, 0]
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      expect(calculator.age_data_for percentage: 100).to eq [4, 8, 13, 13]
     end
 
     it 'at 0%' do
-      actual = calculator.age_data_for percentage: 0
-      expect(actual).to eq [1, 81, 81, 0]
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      expect(calculator.age_data_for percentage: 0).to eq [1, 2, 4, 4]
     end
   end
 
-  context 'ages_of_issues_that_crossed_column_boundary' do
+  context 'ages_of_issues_when_leaving_column' do
     it 'handles no issues' do
-      calculator = described_class.new board: board, issues: []
-      actual = calculator.ages_of_issues_that_crossed_column_boundary status_ids: [10_002, 10_011]
+      calculator = described_class.new board: board, issues: [], today: to_date(today)
+      actual = calculator.ages_of_issues_when_leaving_column column_index: 1, today: to_date(today)
       expect(actual).to eq []
     end
 
-    it 'handles no status ids' do
-      actual = calculator.ages_of_issues_that_crossed_column_boundary status_ids: []
-      expect(actual).to eq []
+    it 'has absolute values for first column' do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      actual = calculator.ages_of_issues_when_leaving_column column_index: 0, today: to_date(today)
+      expect(actual).to eq [1, 4]
     end
 
-    it 'handles happy path' do
-      actual = calculator.ages_of_issues_that_crossed_column_boundary status_ids: [10_002, 10_011, 3]
-      expect(actual).to eq [1, 73, 180]
+    it 'accumulates for second column' do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      actual = calculator.ages_of_issues_when_leaving_column column_index: 1, today: to_date(today)
+      expect(actual).to eq [2, 8]
+    end
+
+    it 'picks up current age if the issue is still in the specified column' do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      actual = calculator.ages_of_issues_when_leaving_column column_index: 2, today: to_date(today)
+      expect(actual).to eq [4, 13]
     end
   end
 
   context 'ensure_numbers_always_goes_up' do
+    let(:calculator) { described_class.new board: board, issues: [], today: to_date(today) }
+
     it 'retains order of already correct data' do
       expect(calculator.ensure_numbers_always_goes_up [1, 2, 3]).to eql [1, 2, 3]
     end
@@ -60,6 +77,7 @@ describe BoardMovementCalculator do
 
   context 'stack_data' do
     it 'stacks' do
+      calculator = described_class.new board: board, issues: [], today: to_date(today)
       inputs = [
         [50, [0, 0, 2, 3, 3]],
         [85, [0, 0, 11, 12, 14]],
@@ -73,9 +91,9 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'find_column_and_age_in_column' do
-    it "isn't started" do
-      issue = empty_issue created: '2024-01-01'
-    end
-  end
+  # context 'find_column_and_age_in_column' do
+  #   it "isn't started" do
+  #     issue = empty_issue created: '2024-01-01'
+  #   end
+  # end
 end
