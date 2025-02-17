@@ -57,11 +57,6 @@ class Exporter
             html "<div><a href='#{board.url}'>#{id} #{board.name}</a> (#{board.board_type})</div>",
                  type: :header
           end
-          cycletime_scatterplot do
-            grouping_rules do |issue, rules|
-              rules.label = issue.raw['fields']['priority']['name']
-            end
-          end
 
           cycletime_scatterplot do
             show_trend_lines
