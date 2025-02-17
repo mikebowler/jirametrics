@@ -300,6 +300,10 @@ def create_issue_from_aging_data board:, ages_by_column:, today:, key: 'SP-1'
   hour = 0
   status_changes.reverse_each do |column, change_date|
     status = board.possible_statuses.find_by_id column.status_ids.min
+
+    # We only care about the last one but if we keep overwriting it, the one that sticks will be the last.
+    issue.status = status
+
     add_mock_change(
       issue: issue, field: 'status',
       value: status.name, value_id: status.id,
