@@ -3,7 +3,7 @@
 require 'jirametrics/chart_base'
 
 class AgingWorkTable < ChartBase
-  attr_accessor :today # , :board_id
+  attr_accessor :today
   attr_reader :any_scrum_boards
 
   def initialize block
@@ -36,12 +36,16 @@ class AgingWorkTable < ChartBase
   end
 
   def run
-    @today = date_range.end
-    @calculator = BoardMovementCalculator.new board: current_board, issues: issues, today: @today
-
+    initialize_calculator
     aging_issues = select_aging_issues + expedited_but_not_started
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  # This is its own method simply so the tests can initialize the calculator without doing a full run.
+  def initialize_calculator
+    @today = date_range.end
+    @calculator = BoardMovementCalculator.new board: current_board, issues: issues, today: @today
   end
 
   def expedited_but_not_started
@@ -125,38 +129,24 @@ class AgingWorkTable < ChartBase
   end
 
   def dates_text issue
-    color = nil
-    title = nil
-
     date = date_range.end
     due = issue.due_date
-    return '' unless due
 
-    if date == due
-      color = '--aging-work-table-date-in-jeopardy'
-      title = 'Item is due today and is still in progress'
-    elsif date > due
-      color = '--aging-work-table-date-overdue'
-      title = 'Item is already overdue.'
+    days_remaining, message = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
+
+    return message if message
+    return "Likely #{label_days days_remaining} remaining." unless due
+
+
+    if due < date
+      "<b>Already overdue</b>. It was supposed to be complete on #{due}"
+    elsif due == date
+      '<b>Due today</b> and will likely be finished on time'
+    elsif date_range.end + days_remaining > due
+      "<b>Due in #{label_days (due - date_range.end).to_i}</b> but is likley to still need #{label_days days_remaining}."
     else
-      # Try to forecast the end date
-      days_remaining, message = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
-      if message
-        color = '--aging-work-table-date-in-jeopardy'
-        title = message
-      elsif date_range.end + days_remaining > due
-        color = '--aging-work-table-date-in-jeopardy'
-        due_days_label = label_days (due - date_range.end).to_i
-        title = "Likely to need another #{days_remaining} days and it's due in #{due_days_label}"
-      end
+      "<b>Due in #{label_days (due - date_range.end).to_i}</b> and is likely to complete on time."
     end
-
-    result = +''
-    result << color_block(color)
-    result << ' '
-    result << due.to_s
-    result << "<br /><span style='font-size: 0.8em'>#{title}</span>" if title
-    result
   end
 
   def age_cutoff age = nil

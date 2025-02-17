@@ -85,6 +85,21 @@ class BoardMovementCalculator
   # aging and forecasting purposes
   def find_current_column_and_entry_time_in_column issue
     column = board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
+    if column.nil?
+      message = "Issue #{issue.key} is in status #{issue.status}. Can't find that status on the board with columns: "
+      board.visible_columns.each do |column|
+        message << column.name << '('
+        message << column.status_ids.collect do |id|
+          board.possible_statuses.find_by_id(id)
+        end.join(', ')
+        message << '), '
+      end
+      message << "\nIssue has changes"
+      issue.changes.each do |change|
+        message << "\n  " << change.to_s
+      end
+      puts message
+    end
     return [] if column.nil? # This issue isn't visible on the board
 
     status_ids = column.status_ids
@@ -92,6 +107,10 @@ class BoardMovementCalculator
     entry_at = issue.changes.reverse.find { |change| change.status? && status_ids.include?(change.value_id) }&.time
 
     [column.name, entry_at]
+  end
+
+  def label_days days
+    "#{days} day#{'s' unless days == 1}"
   end
 
   def forecasted_days_remaining_and_message issue:, today:
@@ -108,7 +127,8 @@ class BoardMovementCalculator
     last_non_zero_datapoint = likely_age_data.reverse.find { |d| !d.zero? }
     remaining_in_current_column = likely_age_data[column_index] - age_in_column
     if remaining_in_current_column.negative?
-      message = 'This item is an outlier. The actual time will likely be much greater than the forecast.'
+      message = "This item is an outlier; at #{label_days issue.board.cycletime.age(issue)}, " \
+        "it's already taking longer than most items so we cannot forecast when it will be done."
       remaining_in_current_column = 0
     end
 

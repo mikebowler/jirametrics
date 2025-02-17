@@ -91,9 +91,10 @@ describe BoardMovementCalculator do
     end
   end
 
-  # context 'find_column_and_age_in_column' do
-  #   it "isn't started" do
-  #     issue = empty_issue created: '2024-01-01'
-  #   end
-  # end
+  xcontext 'forecasted_days_remaining_and_message' do
+    it "isn't started" do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: to_date(today)
+      expect(calculator.forecasted_days_remaining_and_message issue: issue1, today: to_date(today)).to eq [0, '']
+    end
+  end
 end
