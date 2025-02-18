@@ -47,22 +47,38 @@ class BoardMovementCalculator
   end
 
   def ages_of_issues_when_leaving_column column_index:, today:
+    this_column = board.visible_columns[column_index]
     next_column = board.visible_columns[column_index + 1]
 
     @issues.filter_map do |issue|
-      stop = next_column.nil? ? nil : issue.first_time_in_or_right_of_column(next_column.name)&.time
-      start, = issue.board.cycletime.started_stopped_times(issue)
+      this_column_start = issue.first_time_in_status(*this_column.status_ids)&.time
+      next_column_start = next_column.nil? ? nil : issue.first_time_in_status(*next_column.status_ids)&.time
+      issue_start, issue_done = issue.board.cycletime.started_stopped_times(issue)
 
       # Skip if we can't tell when it started.
-      next if start.nil?
+      next if issue_start.nil?
 
-      # If we haven't left this column yet, use current age
-      next (today - start.to_date).to_i + 1 if stop.nil?
+      # Skip if it never entered this column
+      next if this_column_start.nil?
 
       # Skip if it left this column before the item is considered started.
-      next if stop <= start
+      next if next_column_start && next_column_start <= issue_start
 
-      (stop.to_date - start.to_date).to_i + 1
+      # Skip if it was already done by the time it got to this column or it became done when it got to this column
+      next if issue_done && issue_done <= this_column_start
+
+      end_date = case # rubocop:disable Style/EmptyCaseCondition
+      when next_column_start.nil?
+        # If this is the last column then base age against today
+        today
+      when issue_done && issue_done < next_column_start
+        # it completed while in this column
+        issue_done.to_date
+      else
+        # It passed through this whole column
+        next_column_start.to_date
+      end
+      (end_date - issue_start.to_date).to_i + 1
     end.sort
   end
 
@@ -85,21 +101,6 @@ class BoardMovementCalculator
   # aging and forecasting purposes
   def find_current_column_and_entry_time_in_column issue
     column = board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
-    if column.nil?
-      message = "Issue #{issue.key} is in status #{issue.status}. Can't find that status on the board with columns: "
-      board.visible_columns.each do |column|
-        message << column.name << '('
-        message << column.status_ids.collect do |id|
-          board.possible_statuses.find_by_id(id)
-        end.join(', ')
-        message << '), '
-      end
-      message << "\nIssue has changes"
-      issue.changes.each do |change|
-        message << "\n  " << change.to_s
-      end
-      puts message
-    end
     return [] if column.nil? # This issue isn't visible on the board
 
     status_ids = column.status_ids

@@ -9,8 +9,12 @@ describe BoardMovementCalculator do
       board.cycletime = default_cycletime_config
     end
   end
-  let(:issue1) { create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3], today: today.to_s, key: 'SP-1' }
-  let(:issue2) { create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6], today: today.to_s, key: 'SP-2' }
+  let(:issue1) do
+    create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-1'
+  end
+  let(:issue2) do
+    create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6, 8], today: today.to_s, key: 'SP-2'
+  end
 
   context 'age_data_for' do
     it 'has no issues' do
@@ -20,12 +24,12 @@ describe BoardMovementCalculator do
 
     it 'at 100%' do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
-      expect(calculator.age_data_for percentage: 100).to eq [4, 8, 13, 13]
+      expect(calculator.age_data_for percentage: 100).to eq [4, 8, 13, 20]
     end
 
     it 'at 0%' do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
-      expect(calculator.age_data_for percentage: 0).to eq [1, 2, 4, 4]
+      expect(calculator.age_data_for percentage: 0).to eq [1, 2, 4, 10]
     end
   end
 
@@ -52,6 +56,21 @@ describe BoardMovementCalculator do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       actual = calculator.ages_of_issues_when_leaving_column column_index: 2, today: today
       expect(actual).to eq [4, 13]
+    end
+
+    it 'handles the case where the issue completes on column transition', :focus do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, issue1.created, issue1.first_time_in_status('Done')],  # should age out normally from review
+        [issue2, issue2.created, issue2.first_time_in_status('Review')] # should complete in Review
+      ]
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: today
+      # puts "column 1"
+      # actual = calculator.ages_of_issues_when_leaving_column column_index: 1, today: today
+      # expect(actual).to eq [2, 8]
+
+      puts "column 2"
+      actual = calculator.ages_of_issues_when_leaving_column column_index: 2, today: today
+      expect(actual).to eq [4]
     end
   end
 
