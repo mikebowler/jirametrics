@@ -135,17 +135,23 @@ class AgingWorkTable < ChartBase
     days_remaining, message = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
 
     return message if message
-    return "Likely #{label_days days_remaining} remaining." unless due
 
-
-    if due < date
-      "<b>Already overdue</b>. It was supposed to be complete on #{due}"
-    elsif due == date
-      '<b>Due today</b> and will likely be finished on time'
-    elsif date_range.end + days_remaining > due
-      "<b>Due in #{label_days (due - date_range.end).to_i}</b> but is likley to still need #{label_days days_remaining}."
+    if due
+      if due < date
+        "<b>Already overdue</b>. It was supposed to be complete on #{due}"
+      elsif due == date
+        '<b>Due today</b> and will likely be finished on time'
+      elsif date_range.end + days_remaining > due
+        "<b>Due in #{label_days (due - date_range.end).to_i}</b> but is likley to still need #{label_days days_remaining}."
+      else
+        "<b>Due in #{label_days (due - date_range.end).to_i}</b> and is likely to complete on time."
+      end
     else
-      "<b>Due in #{label_days (due - date_range.end).to_i}</b> and is likely to complete on time."
+      if days_remaining.zero?
+        'Likely to be done today'
+      else
+        "Likely #{label_days days_remaining} remaining."
+      end
     end
   end
 

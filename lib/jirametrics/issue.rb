@@ -141,13 +141,16 @@ class Issue
   end
 
   def most_recent_status_change
-    # We artificially insert a status change to represent creation so by definition there will always be at least one.
-    changes.reverse.find { |change| change.status? }
+    # Any issue that we loaded from its own file will always have a status as we artificially insert a status
+    # change to represent creation. Issues that were just fragments referenced from a main issue (ie a linked issue)
+    # may not have any status changes as we have no idea when it was created. This will be nil in that case
+    status_changes.last
   end
 
   # Are we currently in this status? If yes, then return the most recent status change.
   def currently_in_status *status_names
     change = most_recent_status_change
+    return false if change.nil?
 
     change if change.current_status_matches(*status_names)
   end
@@ -157,6 +160,7 @@ class Issue
     category_ids = find_status_category_ids_by_names category_names
 
     change = most_recent_status_change
+    return false if change.nil?
 
     status = find_or_create_status id: change.value_id, name: change.value
     change if status && category_ids.include?(status.category.id)
