@@ -17,15 +17,13 @@ class AgingWorkInProgressChart < ChartBase
         This chart shows only work items that have started but not completed, grouped by the column
         they're currently in. Hovering over a dot will show you the ID of that work item.
       </p>
-      <div>
-        The shaded areas indicate what percentage of the work has left that column within that time.
-        <ul>
-          <% @percentiles.keys.sort.reverse.each do |percent| %>
-            <li><%= color_block @percentiles[percent] %> <%= percent %>%</li>
-          <% end %>
-        </ul>
-
-        Any work items above the shading are extreme outliers and they are the items that you should pay special attention to.
+      <p>
+        The shaded areas indicate what percentage of the work has passed that column within that time.
+      </p>
+      <div style="border: 1px solid gray; padding: 0.2em">
+        <% @percentiles.keys.sort.reverse.each do |percent| %>
+          <span style="padding-left: 0.5em; padding-right: 0.5em; vertical-align: middle;"><%= color_block @percentiles[percent] %> <%= percent %>%</span>
+        <% end %>
       </div>
     HTML
     percentiles(

@@ -53,7 +53,8 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
                 return "The most extreme outliers are in this area"
               }
               else {
-                return "" + context.dataset.label + " of the issues leave this column in this area or below";
+                <%# return "" + context.dataset.label + " of the issues leave this column in this area or below"; %>
+                return "" + context.dataset.label + " of the issues, leave this column in "+context.dataset.data[context.dataIndex]+" days";
               }
             }
             else {

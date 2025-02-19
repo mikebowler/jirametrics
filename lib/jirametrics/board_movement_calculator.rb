@@ -43,7 +43,9 @@ class BoardMovementCalculator
         data << ages[index]
       end
     end
-    ensure_numbers_always_goes_up(data)
+    # puts "percentage: #{percentage.inspect}, data: #{data.inspect}"
+    data
+    # ensure_numbers_always_goes_up(data)
   end
 
   def ages_of_issues_when_leaving_column column_index:, today:
@@ -115,6 +117,7 @@ class BoardMovementCalculator
   end
 
   def forecasted_days_remaining_and_message issue:, today:
+    debug = false #issue.key == 'ANON-122237'
     likely_age_data = age_data_for percentage: 85
 
     column_name, entry_time = find_current_column_and_entry_time_in_column issue
@@ -136,7 +139,7 @@ class BoardMovementCalculator
     return [nil, 'There is no historical data for this board. No forecast can be made.'] if last_non_zero_datapoint.nil?
 
     forecasted_days = last_non_zero_datapoint - likely_age_data[column_index] + remaining_in_current_column
-
+    puts "age_data: #{likely_age_data.inspect}, remaining_in_column: #{remaining_in_current_column}, age_in_column: #{age_in_column}, forecasted_days: #{forecasted_days}" if debug
     [forecasted_days, message]
   end
 end
