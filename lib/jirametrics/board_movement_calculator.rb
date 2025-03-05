@@ -5,8 +5,19 @@ class BoardMovementCalculator
 
   def initialize board:, issues:, today:
     @board = board
-    @issues = issues.select { |issue| issue.board == board }
+    @issues = issues.select { |issue| issue.board == board && issue.done? && !moves_backwards?(issue) }
     @today = today
+  end
+
+  def moves_backwards? issue
+    previous_column = nil
+    issue.status_changes.each do |change|
+      column = board.visible_columns.index { |c| c.status_ids.include?(change.value_id) }
+      return true if previous_column && column && column < previous_column
+
+      previous_column = column
+    end
+    false
   end
 
   def stacked_age_data_for percentages:
@@ -43,7 +54,6 @@ class BoardMovementCalculator
         data << ages[index]
       end
     end
-    # puts "percentage: #{percentage.inspect}, data: #{data.inspect}"
     data
     # ensure_numbers_always_goes_up(data)
   end
@@ -53,8 +63,8 @@ class BoardMovementCalculator
     next_column = board.visible_columns[column_index + 1]
 
     @issues.filter_map do |issue|
-      this_column_start = issue.first_time_in_status(*this_column.status_ids)&.time
-      next_column_start = next_column.nil? ? nil : issue.first_time_in_status(*next_column.status_ids)&.time
+      this_column_start = issue.first_time_in_or_right_of_column(this_column.name)&.time
+      next_column_start = next_column.nil? ? nil : issue.first_time_in_or_right_of_column(next_column.name)&.time
       issue_start, issue_done = issue.board.cycletime.started_stopped_times(issue)
 
       # Skip if we can't tell when it started.
@@ -117,7 +127,8 @@ class BoardMovementCalculator
   end
 
   def forecasted_days_remaining_and_message issue:, today:
-    debug = false #issue.key == 'ANON-122237'
+    return [nil, 'Already done'] if issue.done?
+
     likely_age_data = age_data_for percentage: 85
 
     column_name, entry_time = find_current_column_and_entry_time_in_column issue
@@ -129,17 +140,17 @@ class BoardMovementCalculator
     column_index = board.visible_columns.index { |c| c.name == column_name }
 
     last_non_zero_datapoint = likely_age_data.reverse.find { |d| !d.zero? }
+    return [nil, 'There is no historical data for this board. No forecast can be made.'] if last_non_zero_datapoint.nil?
+
     remaining_in_current_column = likely_age_data[column_index] - age_in_column
     if remaining_in_current_column.negative?
-      message = "This item is an outlier; at #{label_days issue.board.cycletime.age(issue)}, " \
-        "it's already taking longer than most items so we cannot forecast when it will be done."
+      message = "This item is an outlier at #{label_days issue.board.cycletime.age(issue, today: today)} " \
+        "in the #{column_name.inspect} column. Most items on this board have left this column in " \
+        "#{label_days likely_age_data[column_index]} or less, so we cannot forecast when it will be done."
       remaining_in_current_column = 0
     end
 
-    return [nil, 'There is no historical data for this board. No forecast can be made.'] if last_non_zero_datapoint.nil?
-
     forecasted_days = last_non_zero_datapoint - likely_age_data[column_index] + remaining_in_current_column
-    puts "age_data: #{likely_age_data.inspect}, remaining_in_column: #{remaining_in_current_column}, age_in_column: #{age_in_column}, forecasted_days: #{forecasted_days}" if debug
     [forecasted_days, message]
   end
 end

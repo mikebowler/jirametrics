@@ -8,15 +8,35 @@ def complete_sample_board_columns
 end
 
 describe AgingWorkInProgressChart do
-  let(:board) { load_complete_sample_board }
+  let(:today) { to_date('2021-06-28') }
+
+  let(:board) do
+    load_complete_sample_board.tap do |board|
+      # block = lambda do |_|
+      #   start_at first_time_in_status_category :indeterminate
+      #   stop_at first_time_in_status_category :done
+      # end
+      # board.cycletime = CycleTimeConfig.new(
+      #   parent_config: nil, label: 'test', file_system: nil, today: today, block: block
+      # )
+      board.cycletime = default_cycletime_config
+    end
+  end
+
   let :chart do
     chart = described_class.new(empty_config_block)
     chart.file_system = MockFileSystem.new
     chart.board_id = 1
     chart.all_boards = { 1 => board }
-    board.cycletime = default_cycletime_config
     chart.issues = load_complete_sample_issues board: board
-    chart.date_range = Date.parse('2021-06-18')..Date.parse('2021-06-28')
+
+    # None of the sample issues are complete so we need to add one complete item in order for the 85% line to work.
+    chart.issues << create_issue_from_aging_data(
+      board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-100'
+    )
+    chart.issues.last.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
+
+    chart.date_range = to_date('2021-06-18')..today
     chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
     chart.show_all_columns
     chart
@@ -26,12 +46,13 @@ describe AgingWorkInProgressChart do
     it 'returns name' do
       chart.run
 
-      actual = chart.column_for(issue: chart.issues[-1]).name
+      # The last issue is the fake 'done' that we inserted so look at the one before that.
+      actual = chart.column_for(issue: chart.issues[-2]).name
       expect(actual).to eq 'Review'
     end
   end
 
-  it 'make _data_sets' do
+  it 'make_data_sets', :focus do
     chart.run
 
     expect(chart.make_data_sets).to eq([
@@ -72,7 +93,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [73, 81, 81, 81],
+       'data' => [1, 2, 4, 10],
        'label' => '85%',
        'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
        'type' => 'bar'

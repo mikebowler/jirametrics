@@ -3,12 +3,24 @@
 require './spec/spec_helper'
 
 describe AgingWorkTable do
-  let(:board) do
-    load_complete_sample_board.tap { |board| board.cycletime = default_cycletime_config }
-  end
   let(:today) { to_date('2021-01-31') }
-  let(:issue1) { create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3], today: today.to_s, key: 'SP-1' }
-  let(:issue2) { create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6], today: today.to_s, key: 'SP-2' }
+  let(:board) do
+    load_complete_sample_board.tap do |board|
+      block = lambda do |_|
+        start_at first_time_in_status 10_001
+        stop_at first_time_in_status 10_002
+      end
+      board.cycletime = CycleTimeConfig.new(
+        parent_config: nil, label: 'test', file_system: nil, today: today, block: block
+      )
+    end
+  end
+  let(:issue1) do
+    create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-1'
+  end
+  let(:issue2) do
+    create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6, 8], today: today.to_s, key: 'SP-2'
+  end
 
   let(:table) do
     described_class.new(empty_config_block).tap do |table|
@@ -221,32 +233,38 @@ describe AgingWorkTable do
   end
 
   context 'dates_text' do
+    # The 85% ages across this table with issue1 and issue2 is 1, 2, 4
+
     it 'handles no due date' do
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
       table.initialize_calculator
-      expect(table.dates_text issue1).to eq 'Likely 1 day remaining.'
+      expect(table.dates_text issue).to eq 'Likely 3 days remaining.'
     end
 
-    it 'handles due date in future' do
-      issue1.raw['fields']['duedate'] = (today + 1).to_s
+    it 'handles due date earlier than forecast' do
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      issue.raw['fields']['duedate'] = (today + 1).to_s
       table.initialize_calculator
-      expect(table.dates_text issue1).to eq(
-        '<b>Due in 1 day</b> and is likely to complete on time.'
+      expect(table.dates_text issue).to eq(
+        '<b>Due in 1 day</b> but is likely to still need 3 days.'
       )
     end
 
     it 'handles due date today' do
-      issue1.raw['fields']['duedate'] = today.to_s
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1, 2, 3], today: today.to_s, key: 'SP-100'
+      issue.raw['fields']['duedate'] = today.to_s
       table.initialize_calculator
-      expect(table.dates_text issue1).to eq(
+      expect(table.dates_text issue).to eq(
         '<b>Due today</b> and will likely be finished on time'
       )
     end
 
     it 'handles overdue date' do
-      issue1.raw['fields']['duedate'] = (today - 1).to_s
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      issue.raw['fields']['duedate'] = (today - 1).to_s
       table.initialize_calculator
 
-      expect(table.dates_text issue1).to eq(
+      expect(table.dates_text issue).to eq(
         '<b>Already overdue</b>. It was supposed to be complete on 2021-01-30'
       )
     end
