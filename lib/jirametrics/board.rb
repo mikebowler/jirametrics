@@ -16,7 +16,7 @@ class Board
     # For a Kanban board, the first column here will always be called 'Backlog' and will NOT be
     # visible on the board. If the board is configured to have a kanban backlog then it will have
     # statuses matched to it and otherwise, there will be no statuses.
-    columns = columns[1..] if kanban?
+    columns = columns.drop(1) if kanban?
 
     @backlog_statuses = []
     @visible_columns = columns.filter_map do |column|
