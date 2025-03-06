@@ -620,12 +620,17 @@ class Issue
     end
 
     (changes + (@discarded_changes || [])).each do |change|
-      value = change.value
-      old_value = change.old_value
+      if change.status?
+        value = "#{change.value.inspect}:#{change.value_id.inspect}"
+        old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
+      else
+        value = compact_text(change.value).inspect
+        old_value = change.old_value ? compact_text(change.old_value).inspect : nil
+      end
 
       message = +''
-      message << "#{compact_text(old_value).inspect} -> " unless old_value.nil? || old_value.empty?
-      message << compact_text(value).inspect
+      message << "#{old_value} -> " unless old_value.nil? || old_value.empty?
+      message << value
       if change.artificial?
         message << ' (Artificial entry)' if change.artificial?
       else
