@@ -10,11 +10,18 @@ class BoardMovementCalculator
   end
 
   def moves_backwards? issue
+    started, stopped = issue.board.cycletime.started_stopped_times(issue)
+    return false unless started
+    # if stopped
+
     previous_column = nil
     issue.status_changes.each do |change|
       column = board.visible_columns.index { |c| c.status_ids.include?(change.value_id) }
+      next if change.time < started
+      next if column.nil? # It disappeared from the board for a bit
       return true if previous_column && column && column < previous_column
 
+      # puts board.visible_columns[column].name
       previous_column = column
     end
     false
@@ -62,6 +69,8 @@ class BoardMovementCalculator
     this_column = board.visible_columns[column_index]
     next_column = board.visible_columns[column_index + 1]
 
+    debug = this_column.name == 'Prioritized Backlog'
+
     @issues.filter_map do |issue|
       this_column_start = issue.first_time_in_or_right_of_column(this_column.name)&.time
       next_column_start = next_column.nil? ? nil : issue.first_time_in_or_right_of_column(next_column.name)&.time
@@ -76,6 +85,8 @@ class BoardMovementCalculator
       # Skip if it left this column before the item is considered started.
       next if next_column_start && next_column_start <= issue_start
 
+      puts "didn't skip next_column_start=#{next_column_start.inspect}, issue_start: #{issue_start.inspect}, key: #{issue.key}" if debug
+      puts issue.dump if debug
       # Skip if it was already done by the time it got to this column or it became done when it got to this column
       next if issue_done && issue_done <= this_column_start
 

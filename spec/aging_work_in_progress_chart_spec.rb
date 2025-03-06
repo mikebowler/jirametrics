@@ -52,7 +52,7 @@ describe AgingWorkInProgressChart do
     end
   end
 
-  it 'make_data_sets', :focus do
+  it 'make_data_sets' do
     chart.run
 
     expect(chart.make_data_sets).to eq([

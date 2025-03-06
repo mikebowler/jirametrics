@@ -27,10 +27,10 @@ class AgingWorkInProgressChart < ChartBase
       </div>
     HTML
     percentiles(
-      50 => '--aging-work-in-progress-chart-shading-50-color',
+      # 50 => '--aging-work-in-progress-chart-shading-50-color',
       85 => '--aging-work-in-progress-chart-shading-85-color',
-      98 => '--aging-work-in-progress-chart-shading-98-color',
-      100 => '--aging-work-in-progress-chart-shading-100-color'
+      # 98 => '--aging-work-in-progress-chart-shading-98-color',
+      # 100 => '--aging-work-in-progress-chart-shading-100-color'
     )
     show_all_columns false
 
@@ -66,7 +66,7 @@ class AgingWorkInProgressChart < ChartBase
 
     @fake_column = BoardColumn.new({
       'name' => '[Unmapped Statuses]',
-      'statuses' => unmapped_statuses.collect { |id| { 'id' => id.to_s } }.uniq
+      'statuses' => unmapped_statuses.collect { |id| { 'id' => id.to_s } }.uniq # rubocop:disable Performance/ChainArrayAllocation
     })
     @board_columns = columns + [@fake_column]
   end
