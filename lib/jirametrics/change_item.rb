@@ -42,7 +42,14 @@ class ChangeItem
 
   def to_s
     message = +''
-    message << "ChangeItem(field: #{field.inspect}, value: #{value.inspect}, time: #{time_to_s(@time).inspect}"
+    message << "ChangeItem(field: #{field.inspect}"
+    message << ", value: #{value.inspect}"
+    message << ':' << value_id.inspect if status?
+    if old_value
+      message << ", old_value: #{old_value.inspect}"
+      message << ':' << old_value_id.inspect if status?
+    end
+    message << ", time: #{time_to_s(@time).inspect}"
     message << ', artificial' if artificial?
     message << ')'
     message
