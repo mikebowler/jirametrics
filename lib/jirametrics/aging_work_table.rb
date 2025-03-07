@@ -16,7 +16,7 @@ class AgingWorkTable < ChartBase
     description_text <<-TEXT
       <p>
         This chart shows all active (started but not completed) work, ordered from oldest at the top to
-        newest at the bottom. Note that it only shows columns that are considered "in progress".
+        newest at the bottom.
       </p>
       <p>
         If there are expedited items that haven't yet started then they're at the bottom of the table.
