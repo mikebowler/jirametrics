@@ -101,7 +101,7 @@ class AgingWorkInProgressChart < ChartBase
             {
               'y' => age,
               'x' => column.name,
-              'label' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
+              'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
           end,
         'fill' => false,
