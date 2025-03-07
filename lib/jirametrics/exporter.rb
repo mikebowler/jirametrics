@@ -79,8 +79,8 @@ class Exporter
       file_system.log "No issues found to match #{keys.collect(&:inspect).join(', ')}"
     else
       selected.each do |project, issue|
-        file_system.log "\nProject #{project.name}"
-        file_system.log issue.dump
+        file_system.log "\nProject #{project.name}", also_write_to_stderr: true
+        file_system.log issue.dump, also_write_to_stderr: true
       end
     end
   end
