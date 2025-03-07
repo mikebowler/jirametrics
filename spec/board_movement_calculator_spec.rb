@@ -87,26 +87,6 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'ensure_numbers_always_goes_up' do
-    let(:calculator) { described_class.new board: board, issues: [], today: today }
-
-    it 'retains order of already correct data' do
-      expect(calculator.ensure_numbers_always_goes_up [1, 2, 3]).to eql [1, 2, 3]
-    end
-
-    it 'retains numbers that go down' do
-      expect(calculator.ensure_numbers_always_goes_up [1, 2, 1]).to eql [1, 2, 2]
-    end
-
-    it 'allows zeros at the end' do
-      expect(calculator.ensure_numbers_always_goes_up [1, 2, 0]).to eql [1, 2, 0]
-    end
-
-    it 'handles all zeros' do
-      expect(calculator.ensure_numbers_always_goes_up [0, 0, 0]).to eql [0, 0, 0]
-    end
-  end
-
   context 'stack_data' do
     it 'stacks' do
       calculator = described_class.new board: board, issues: [], today: today

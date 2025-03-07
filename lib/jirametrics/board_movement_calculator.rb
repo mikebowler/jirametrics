@@ -61,7 +61,6 @@ class BoardMovementCalculator
       end
     end
     data
-    # ensure_numbers_always_goes_up(data)
   end
 
   def ages_of_issues_when_leaving_column column_index:, today:
@@ -98,21 +97,6 @@ class BoardMovementCalculator
       end
       (end_date - issue_start.to_date).to_i + 1
     end.sort
-  end
-
-  def ensure_numbers_always_goes_up data
-    # There's an odd exception where we want to leave zeros at the end of the line alone.
-    reversed_index = data.reverse.index { |number| !number.zero? }
-    return data if reversed_index.nil?
-
-    last_non_zero = data.length - reversed_index
-
-    # It's possible for a column to the right to have a lower number if the ticket skipped columns. Adjust for that
-    # so that numbers are always increasing.
-    (1...last_non_zero).each do |i|
-      data[i] = [data[i], data[i - 1]].max
-    end
-    data
   end
 
   # Figure out what column this is issue is currently in and what time it entered that column. We need this for
