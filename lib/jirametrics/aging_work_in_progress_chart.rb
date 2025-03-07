@@ -19,7 +19,14 @@ class AgingWorkInProgressChart < ChartBase
       </p>
       <p>
         The shaded areas indicate what percentage of the work has passed that column within that time.
-        Note that it only shows columns that are considered "in progress".
+        Notes:
+        <ul>
+          <li>It only shows columns that are considered "in progress".</li>
+          <li>If you see a colour group that drops as it moves to the right, that generally indicates that
+            a different number of data points is being included in each column. Probably because tickets moved
+             backwards athough it could also indicate that a ticket jumped over columns as it moved to the right.
+           </li>
+        </ul>
       </p>
       <div style="border: 1px solid gray; padding: 0.2em">
         <% @percentiles.keys.sort.reverse.each do |percent| %>
@@ -94,7 +101,7 @@ class AgingWorkInProgressChart < ChartBase
             {
               'y' => age,
               'x' => column.name,
-              'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
+              'label' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
             }
           end,
         'fill' => false,
