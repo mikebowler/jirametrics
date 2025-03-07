@@ -19,6 +19,7 @@ class AgingWorkInProgressChart < ChartBase
       </p>
       <p>
         The shaded areas indicate what percentage of the work has passed that column within that time.
+        Note that it only shows columns that are considered "in progress".
       </p>
       <div style="border: 1px solid gray; padding: 0.2em">
         <% @percentiles.keys.sort.reverse.each do |percent| %>
