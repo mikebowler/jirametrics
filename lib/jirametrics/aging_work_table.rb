@@ -130,25 +130,35 @@ class AgingWorkTable < ChartBase
   def dates_text issue
     date = date_range.end
     due = issue.due_date
+    message = nil
 
-    days_remaining, message = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
-    return message if message
+    days_remaining, error = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
 
-    if due
-      if due < date
-        "<b>Already overdue</b>. It was supposed to be complete on #{due}"
-      elsif due == date
-        '<b>Due today</b> and will likely be finished on time'
-      elsif date_range.end + days_remaining > due
-        "<b>Due in #{label_days (due - @today).to_i}</b> but is likely to still need #{label_days days_remaining}."
+    unless error
+      if due
+        if due < date
+          message = "Due: #{due} (#{label_days (@today - due).to_i} ago)"
+          error = 'Overdue'
+        elsif due == date
+          message = 'Due: <b>today</b>'
+        else
+          error = 'Due date at risk' if date_range.end + days_remaining > due
+          message = "Due: #{due} (#{label_days (due - @today).to_i})"
+        end
       else
-        "<b>Due in #{label_days (due - @today).to_i}</b> and is likely to complete on time."
+        "#{label_days days_remaining} left."
       end
-    elsif days_remaining.zero?
-      'Likely to be done today'
-    else
-      "Likely #{label_days days_remaining} remaining."
     end
+
+    text = +''
+    text << "<span title='#{error}' style='color: red'>ⓘ </span>" if error
+    if days_remaining
+      text << "#{label_days days_remaining} left"
+    else
+      text << 'Unable to forecast'
+    end
+    text << ' | ' << message if message
+    text
   end
 
   def age_cutoff age = nil

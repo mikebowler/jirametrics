@@ -238,7 +238,7 @@ describe AgingWorkTable do
     it 'handles no due date' do
       issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
       table.initialize_calculator
-      expect(table.dates_text issue).to eq 'Likely 3 days remaining.'
+      expect(table.dates_text issue).to eq '3 days left'
     end
 
     it 'handles due date earlier than forecast' do
@@ -246,7 +246,7 @@ describe AgingWorkTable do
       issue.raw['fields']['duedate'] = (today + 1).to_s
       table.initialize_calculator
       expect(table.dates_text issue).to eq(
-        '<b>Due in 1 day</b> but is likely to still need 3 days.'
+        "<span title='Due date at risk' style='color: red'>ⓘ </span>3 days left | Due: 2021-02-01 (1 day)"
       )
     end
 
@@ -255,7 +255,7 @@ describe AgingWorkTable do
       issue.raw['fields']['duedate'] = today.to_s
       table.initialize_calculator
       expect(table.dates_text issue).to eq(
-        '<b>Due today</b> and will likely be finished on time'
+        '1 day left | Due: <b>today</b>'
       )
     end
 
@@ -265,7 +265,7 @@ describe AgingWorkTable do
       table.initialize_calculator
 
       expect(table.dates_text issue).to eq(
-        '<b>Already overdue</b>. It was supposed to be complete on 2021-01-30'
+        "<span title='Overdue' style='color: red'>ⓘ </span>3 days left | Due: 2021-01-30 (1 day ago)"
       )
     end
   end

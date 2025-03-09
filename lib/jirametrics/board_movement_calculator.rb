@@ -138,6 +138,7 @@ class BoardMovementCalculator
         "in the #{column_name.inspect} column. Most items on this board have left this column in " \
         "#{label_days likely_age_data[column_index]} or less, so we cannot forecast when it will be done."
       remaining_in_current_column = 0
+      return [nil, message]
     end
 
     forecasted_days = last_non_zero_datapoint - likely_age_data[column_index] + remaining_in_current_column
