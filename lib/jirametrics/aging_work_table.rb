@@ -27,6 +27,7 @@ class AgingWorkTable < ChartBase
         <ul>
         <li><b>E:</b> Whether this item is <b>E</b>xpedited.</li>
         <li><b>B/S:</b> Whether this item is either <b>B</b>locked or <b>S</b>talled.</li>
+        <li><b>Forecast:</b> A forecast of how long it is likely to take to finish this work item.</li>
         </ul>
       </p>
     TEXT
