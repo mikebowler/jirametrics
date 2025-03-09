@@ -21,7 +21,9 @@ class AgingWorkInProgressChart < ChartBase
         The shaded areas indicate what percentage of the work has passed that column within that time.
         Notes:
         <ul>
-          <li>It only shows columns that are considered "in progress".</li>
+          <li>It only shows columns that are considered "in progress". If you see a column that wouldn't normally
+          be thought of that way, then likely issues were moving backwards or continued to progress after hitting
+          that column.</li>
           <li>If you see a colour group that drops as it moves to the right, that generally indicates that
             a different number of data points is being included in each column. Probably because tickets moved
              backwards athough it could also indicate that a ticket jumped over columns as it moved to the right.
