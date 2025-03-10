@@ -169,4 +169,26 @@ describe AgingWorkInProgressChart do
       expect(chart.indexes_of_leading_and_trailing_zeros [2, 0, 5, 0]).to eq [3]
     end
   end
+
+  context 'adjust_bar_data', :focus do
+    it 'returns empty for empty' do
+      expect(chart.adjust_bar_data []).to be_empty
+    end
+
+    it 'accumulates' do
+      input = [
+        [2, 4, 2, 0],
+        [4, 3, 5, 0],
+        [8, 7, 8, 0],
+        [6, 8, 6, 0]
+      ]
+
+      expect(chart.adjust_bar_data input).to eq [
+        [ 2,  4,  2, 0], # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets
+        [ 6,  7,  7, 0], # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets
+        [14, 14, 15, 0],
+        [20, 22, 21, 0]
+      ]
+    end
+  end
 end

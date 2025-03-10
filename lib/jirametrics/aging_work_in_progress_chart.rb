@@ -37,10 +37,10 @@ class AgingWorkInProgressChart < ChartBase
       </div>
     HTML
     percentiles(
-      # 50 => '--aging-work-in-progress-chart-shading-50-color',
+      50 => '--aging-work-in-progress-chart-shading-50-color',
       85 => '--aging-work-in-progress-chart-shading-85-color',
-      # 98 => '--aging-work-in-progress-chart-shading-98-color',
-      # 100 => '--aging-work-in-progress-chart-shading-100-color'
+      98 => '--aging-work-in-progress-chart-shading-98-color',
+      100 => '--aging-work-in-progress-chart-shading-100-color'
     )
     show_all_columns false
 
@@ -123,6 +123,9 @@ class AgingWorkInProgressChart < ChartBase
       end
     end
 
+    @row_index_offset = data_sets.size
+
+    bar_data = []
     calculator.stacked_age_data_for(percentages: @percentiles.keys).each do |percentage, data|
       column_indexes_to_remove.reverse_each { |index| data.delete_at index }
       color = @percentiles[percentage]
@@ -135,9 +138,26 @@ class AgingWorkInProgressChart < ChartBase
         'backgroundColor' => color,
         'data' => data
       }
+      bar_data << data
     end
+    @bar_data = adjust_bar_data bar_data
 
     data_sets
+  end
+
+  def adjust_bar_data input
+    return [] if input.empty?
+
+    row_size = input.first.size
+
+    output = []
+    output << input.first
+    input.drop(1).each do |row|
+      previous_row = output.last
+      output << 0.upto(row_size - 1).collect { |i| row[i] + previous_row[i] }
+    end
+
+    output
   end
 
   def indexes_of_leading_and_trailing_zeros list
