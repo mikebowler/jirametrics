@@ -52,7 +52,6 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
               let full_data = <%= @bar_data.inspect %>;
               let columnIndex = context.dataIndex;
               let rowIndex = context.datasetIndex - <%= @row_index_offset %>;
-              console.log("column="+columnIndex+", row="+rowIndex);
               return context.dataset.label + " of completed work items left this column in " +full_data[rowIndex][columnIndex] + " days or less";
             }
             else {
