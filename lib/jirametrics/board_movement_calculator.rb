@@ -79,7 +79,7 @@ class BoardMovementCalculator
       next if this_column_start.nil?
 
       # Skip if it left this column before the item is considered started.
-      next if next_column_start && next_column_start <= issue_start
+      next 0 if next_column_start && next_column_start <= issue_start
 
       # Skip if it was already done by the time it got to this column or it became done when it got to this column
       next if issue_done && issue_done <= this_column_start
