@@ -246,7 +246,7 @@ describe AgingWorkTable do
       issue.raw['fields']['duedate'] = (today + 1).to_s
       table.initialize_calculator
       expect(table.dates_text issue).to eq(
-        "<span title='Due date at risk' style='color: red'>ⓘ </span>3 days left | Due: 2021-02-01 (1 day)"
+        "<span title='Due date at risk' style='color: red'>ⓘ </span>3 days left | Due: <b>2021-02-01</b> (1 day)"
       )
     end
 
@@ -265,7 +265,7 @@ describe AgingWorkTable do
       table.initialize_calculator
 
       expect(table.dates_text issue).to eq(
-        "<span title='Overdue' style='color: red'>ⓘ </span>3 days left | Due: 2021-01-30 (1 day ago)"
+        "<span title='Overdue' style='color: red'>ⓘ </span>3 days left | Due: <b>2021-01-30</b> (1 day ago)"
       )
     end
   end

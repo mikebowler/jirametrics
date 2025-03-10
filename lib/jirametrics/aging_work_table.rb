@@ -138,13 +138,13 @@ class AgingWorkTable < ChartBase
     unless error
       if due
         if due < date
-          message = "Due: #{due} (#{label_days (@today - due).to_i} ago)"
+          message = "Due: <b>#{due}</b> (#{label_days (@today - due).to_i} ago)"
           error = 'Overdue'
         elsif due == date
           message = 'Due: <b>today</b>'
         else
           error = 'Due date at risk' if date_range.end + days_remaining > due
-          message = "Due: #{due} (#{label_days (due - @today).to_i})"
+          message = "Due: <b>#{due}</b> (#{label_days (due - @today).to_i})"
         end
       else
         "#{label_days days_remaining} left."
