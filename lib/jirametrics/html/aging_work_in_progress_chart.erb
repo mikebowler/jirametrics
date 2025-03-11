@@ -55,7 +55,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
               return context.dataset.label + " of completed work items left this column in " +full_data[rowIndex][columnIndex] + " days or less";
             }
             else {
-              return "";
+              return context.dataset.data[context.dataIndex].title;
             }
           }
         }
