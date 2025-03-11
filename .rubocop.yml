@@ -115,3 +115,5 @@ RSpec/ContextWording:
 RSpec/MultipleMemoizedHelpers:
   Enabled: false
   
+Performance/ChainArrayAllocation:
+  Enabled: false
