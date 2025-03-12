@@ -120,4 +120,58 @@ describe Board do
       expect(find_names.call(raw)).to eq %w[Backlog Backlog-2 Backlog-3]
     end
   end
+
+  context 'estimation fields', :focus do
+    let(:board) { load_complete_sample_board }
+
+    it 'returns default values' do
+      expect(board.estimation).to eq({
+        display_name: 'Story Points',
+        units: :story_points
+      })
+    end
+
+    it 'returns for field type estimation' do
+      board.raw['estimation'] = {
+        'type' => 'field',
+        'field' => {
+          'fieldId' => 'customfield_123',
+          'displayName' => 'Story-Punkte'
+        }
+      }
+
+      expect(board.estimation).to eq({
+        display_name: 'Story-Punkte',
+        field_id: 'customfield_123',
+        units: :story_points
+      })
+    end
+
+    it 'returns seconds' do
+      board.raw['estimation'] = {
+        'type' => 'field',
+        'field' => {
+          'fieldId' => 'timeoriginalestimate',
+          'displayName' => 'Original estimate'
+        }
+      }
+
+      expect(board.estimation).to eq({
+        display_name: 'Original estimate',
+        field_id: 'timeoriginalestimate',
+        units: :seconds
+      })
+    end
+
+    it 'returns seconds' do
+      board.raw['estimation'] = {
+        'type' => 'issueCount'
+      }
+
+      expect(board.estimation).to eq({
+        display_name: 'Issue Count',
+        units: :issue_count
+      })
+    end
+  end
 end
