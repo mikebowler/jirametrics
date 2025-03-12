@@ -170,7 +170,7 @@ describe AgingWorkInProgressChart do
     end
   end
 
-  context 'adjust_bar_data', :focus do
+  context 'adjust_bar_data' do
     it 'returns empty for empty' do
       expect(chart.adjust_bar_data []).to be_empty
     end
