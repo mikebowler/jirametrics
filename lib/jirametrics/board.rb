@@ -118,22 +118,7 @@ class Board
     end
   end
 
-  def estimation
-    result = {}
-    result[:units] = :story_points
-    result[:display_name] = 'Story Points'
-
-    return result if raw['estimation'].nil?
-
-    if raw['estimation']['type'] == 'field'
-      result[:field_id] = raw['estimation']['field']['fieldId']
-      result[:display_name] = raw['estimation']['field']['displayName']
-      result[:units] = :seconds if result[:field_id] == 'timeoriginalestimate'
-    elsif raw['estimation']['type'] == 'issueCount'
-      result[:display_name] = 'Issue Count'
-      result[:units] = :issue_count
-    end
-
-    result
+  def estimation_configuration
+    EstimationConfiguration.new raw: raw['estimation']
   end
 end

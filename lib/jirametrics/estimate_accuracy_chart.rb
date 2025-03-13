@@ -128,10 +128,12 @@ class EstimateAccuracyChart < ChartBase
 
   def story_points_at issue:, start_time:
     story_points = nil
+    estimate_display_name = current_board.estimation_configuration.display_name
+
     issue.changes.each do |change|
       return story_points if change.time >= start_time
 
-      story_points = change.value if change.story_points?
+      story_points = change.value if change.field == estimate_display_name
     end
     story_points
   end

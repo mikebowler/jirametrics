@@ -31,8 +31,6 @@ class ChangeItem
 
   def sprint? = (field == 'Sprint')
 
-  def story_points? = (field == 'Story Points')
-
   def link? = (field == 'Link')
 
   def labels? = (field == 'labels')

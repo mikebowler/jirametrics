@@ -3,11 +3,13 @@
 require './spec/spec_helper'
 
 describe SprintBurndown do
+  let(:board) { load_complete_sample_board }
   let(:sprint_burndown) do
     described_class.new.tap do |chart|
       # Larger than the sprint
       chart.time_range = to_time('2022-03-01')..to_time('2022-04-11T23:59:59 +00:00')
       chart.date_range = chart.time_range.begin.to_date..chart.time_range.end.to_date
+      chart.all_boards = { board.id => board }
     end
   end
 
@@ -46,7 +48,6 @@ describe SprintBurndown do
   end
 
   context 'changes_for_one_issue' do
-    let(:board) { load_complete_sample_board }
     let(:issue) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
 
     it 'returns empty list for no changes' do

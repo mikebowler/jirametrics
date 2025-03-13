@@ -3,7 +3,12 @@
 require './spec/spec_helper'
 
 describe EstimateAccuracyChart do
-  let(:chart) { described_class.new empty_config_block }
+  let(:board) { sample_board }
+  let(:chart) do
+    described_class.new(empty_config_block).tap do |chart|
+      chart.all_boards = { board.id => board }
+    end
+  end
 
   context 'story_points_at' do
     it 'handles no story points' do
@@ -59,6 +64,7 @@ describe EstimateAccuracyChart do
     it 'works for one of each' do
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       board = sample_board
+      chart.all_boards = { board.id => board }
       issue1 = load_issue 'SP-1', board: board
       add_mock_change(issue: issue1, field: 'Story Points', value: 5, time: '2024-01-01')
 

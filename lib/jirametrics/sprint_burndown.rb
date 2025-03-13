@@ -126,6 +126,8 @@ class SprintBurndown < ChartBase
     currently_in_sprint = false
     change_data = []
 
+    estimate_display_name = current_board.estimation_configuration.display_name
+
     issue_completed_time = issue.board.cycletime.started_stopped_times(issue).last
     completed_has_been_tracked = false
 
@@ -146,7 +148,7 @@ class SprintBurndown < ChartBase
           value = -story_points
         end
         currently_in_sprint = in_change_item
-      elsif change.story_points? && (issue_completed_time.nil? || change.time < issue_completed_time)
+      elsif change.field == estimate_display_name && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
         story_points = change.value.to_f
         value = story_points - change.old_value.to_f

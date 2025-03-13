@@ -112,6 +112,7 @@ class JiraMetrics < Thor
     require 'jirametrics/download_config'
     require 'jirametrics/columns_config'
     require 'jirametrics/hierarchy_table'
+    require 'jirametrics/estimation_configuration'
     require 'jirametrics/board'
     load config_file
   end
