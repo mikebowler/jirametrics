@@ -121,7 +121,7 @@ class SprintBurndown < ChartBase
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
   def changes_for_one_issue issue:, sprint:
-    story_points = 0.0
+    estimate = 0.0
     ever_in_sprint = false
     currently_in_sprint = false
     change_data = []
@@ -142,26 +142,26 @@ class SprintBurndown < ChartBase
         if currently_in_sprint == false && in_change_item
           action = :enter_sprint
           ever_in_sprint = true
-          value = story_points
+          value = estimate
         elsif currently_in_sprint && in_change_item == false
           action = :leave_sprint
-          value = -story_points
+          value = -estimate
         end
         currently_in_sprint = in_change_item
       elsif change.field == estimate_display_name && (issue_completed_time.nil? || change.time < issue_completed_time)
         action = :story_points
-        story_points = change.value.to_f
-        value = story_points - change.old_value.to_f
+        estimate = change.value.to_f
+        value = estimate - change.old_value.to_f
       elsif completed_has_been_tracked == false && change.time == issue_completed_time
         completed_has_been_tracked = true
         action = :issue_stopped
-        value = -story_points
+        value = -estimate
       end
 
       next unless action
 
       change_data << SprintIssueChangeData.new(
-        time: change.time, issue: issue, action: action, value: value, story_points: story_points
+        time: change.time, issue: issue, action: action, value: value, story_points: estimate
       )
     end
 
