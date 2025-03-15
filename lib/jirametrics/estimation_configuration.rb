@@ -20,8 +20,6 @@ class EstimationConfiguration
     elsif raw['type'] == 'issueCount'
       @display_name = 'Issue Count'
       @units = :issue_count
-    else
-      raise 'baboom'
     end
   end
 end

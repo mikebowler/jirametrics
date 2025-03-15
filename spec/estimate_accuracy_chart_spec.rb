@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
+require './spec/mock_estimation_configuration'
 
 describe EstimateAccuracyChart do
   let(:board) { sample_board }
@@ -10,10 +11,10 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'story_points_at' do
+  context 'estimate_at' do
     it 'handles no story points' do
       issue = empty_issue created: '2023-01-02'
-      estimate = chart.story_points_at issue: issue, start_time: to_time('2023-01-03')
+      estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-03')
       expect(estimate).to be_nil
     end
 
@@ -21,7 +22,7 @@ describe EstimateAccuracyChart do
       issue = empty_issue created: '2023-01-02'
       add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
 
-      estimate = chart.story_points_at issue: issue, start_time: to_time('2023-01-04')
+      estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
     end
 
@@ -30,8 +31,40 @@ describe EstimateAccuracyChart do
       add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
       add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2023-01-05')
 
-      estimate = chart.story_points_at issue: issue, start_time: to_time('2023-01-04')
+      estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
+    end
+
+    it 'handles estimates in time' do
+      issue = empty_issue created: '2023-01-02'
+      two_days = (60 * 60 * 24 * 2).to_s
+      add_mock_change(issue: issue, field: 'timeoriginalestimate', value: two_days, time: '2023-01-03')
+
+      estimate = chart.estimate_at(
+        issue: issue,
+        start_time: to_time('2023-01-04'),
+        estimation_configuration: MockEstimationConfiguration.new(units: :seconds, field_id: 'timeoriginalestimate')
+      )
+      expect(estimate).to eq 2.0
+    end
+  end
+
+  context 'estimate_label' do
+    it 'renders story points' do
+      expect(chart.estimate_label estimate: '2.0', estimation_units: :story_points).to eq '2.0pts'
+    end
+
+    it 'renders time' do
+      expect(chart.estimate_label estimate: '2.0', estimation_units: :seconds).to eq '2.0 days'
+    end
+
+    it 'renders a category response' do
+      chart.y_axis label: 'foo', sort_order: %w[one two]
+      expect(chart.estimate_label estimate: '2.0', estimation_units: :story_points).to eq '2.0'
+    end
+
+    it 'renders a default response' do
+      expect(chart.estimate_label estimate: '2.0', estimation_units: :unknown).to eq '2.0'
     end
   end
 

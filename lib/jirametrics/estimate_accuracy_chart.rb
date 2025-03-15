@@ -22,15 +22,18 @@ class EstimateAccuracyChart < ChartBase
       </div>
     HTML
 
-    @y_axis_label = 'Story Point Estimates'
     @y_axis_type = 'linear'
-    @y_axis_block = ->(issue, start_time) { story_points_at(issue: issue, start_time: start_time)&.to_f }
+    @y_axis_block = ->(issue, start_time) { estimate_at(issue: issue, start_time: start_time)&.to_f }
     @y_axis_sort_order = nil
 
     instance_eval(&configuration_block)
   end
 
   def run
+    if @y_axis_label.nil?
+      text = current_board.estimation_configuration.units == :story_points ? 'Story Points' : 'Days'
+      @y_axis_label = "Estimated #{text}"
+    end
     data_sets = scan_issues
 
     return '' if data_sets.empty?
@@ -41,6 +44,7 @@ class EstimateAccuracyChart < ChartBase
   def scan_issues
     completed_hash, aging_hash = split_into_completed_and_aging issues: issues
 
+    estimation_units = current_board.estimation_configuration.units
     @has_aging_data = !aging_hash.empty?
 
     [
@@ -53,9 +57,13 @@ class EstimateAccuracyChart < ChartBase
       # We sort so that the smaller circles are in front of the bigger circles.
       data = hash.sort(&hash_sorter).collect do |key, values|
         estimate, cycle_time = *key
-        estimate_label = "#{estimate}#{'pts' if @y_axis_type == 'linear'}"
-        title = ["Estimate: #{estimate_label}, Cycletime: #{label_days(cycle_time)}, #{values.size} issues"] +
-          values.collect { |issue| "#{issue.key}: #{issue.summary}" }
+
+        title = [
+          "Estimate: #{estimate_label(estimate: estimate, estimation_units: estimation_units)}, " \
+            "Cycletime: #{label_days(cycle_time)}, " \
+            "#{values.size} issues"
+        ] + values.collect { |issue| "#{issue.key}: #{issue.summary}" }
+
         {
           'x' => cycle_time,
           'y' => estimate,
@@ -75,6 +83,18 @@ class EstimateAccuracyChart < ChartBase
         'hidden' => starts_hidden
       }
     end
+  end
+
+  def estimate_label estimate:, estimation_units:
+    if @y_axis_type == 'linear'
+      if estimation_units == :story_points
+        estimate_label = "#{estimate}pts"
+      elsif estimation_units == :seconds
+        estimate_label = label_days estimate
+      end
+    end
+    estimate_label = estimate.to_s if estimate_label.nil?
+    estimate_label
   end
 
   def split_into_completed_and_aging issues:
@@ -126,16 +146,18 @@ class EstimateAccuracyChart < ChartBase
     end
   end
 
-  def story_points_at issue:, start_time:
-    story_points = nil
-    estimate_display_name = current_board.estimation_configuration.display_name
+  def estimate_at issue:, start_time:, estimation_configuration: current_board.estimation_configuration
+    estimate = nil
 
     issue.changes.each do |change|
-      return story_points if change.time >= start_time
+      return estimate if change.time >= start_time
 
-      story_points = change.value if change.field == estimate_display_name
+      if change.field == estimation_configuration.display_name || change.field == estimation_configuration.field_id
+        estimate = change.value
+        estimate = estimate.to_f / (24 * 60 * 60) if estimation_configuration.units == :seconds
+      end
     end
-    story_points
+    estimate
   end
 
   def y_axis label:, sort_order: nil, &block
