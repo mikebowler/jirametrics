@@ -161,7 +161,7 @@ class SprintBurndown < ChartBase
       next unless action
 
       change_data << SprintIssueChangeData.new(
-        time: change.time, issue: issue, action: action, value: value, story_points: estimate
+        time: change.time, issue: issue, action: action, value: value, estimate: estimate
       )
     end
 
@@ -178,7 +178,7 @@ class SprintBurndown < ChartBase
     summary_stats = SprintSummaryStats.new
     summary_stats.completed = 0.0
 
-    story_points = 0.0
+    estimate = 0.0
     start_data_written = false
     data_set = []
 
@@ -187,11 +187,11 @@ class SprintBurndown < ChartBase
     change_data_for_sprint.each do |change_data|
       if start_data_written == false && change_data.time >= sprint.start_time
         data_set << {
-          y: story_points,
+          y: estimate,
           x: chart_format(sprint.start_time),
-          title: "Sprint started with #{story_points} points"
+          title: "Sprint started with #{estimate} points"
         }
-        summary_stats.started = story_points
+        summary_stats.started = estimate
         start_data_written = true
       end
 
@@ -200,12 +200,12 @@ class SprintBurndown < ChartBase
       case change_data.action
       when :enter_sprint
         issues_currently_in_sprint << change_data.issue.key
-        story_points += change_data.story_points
+        estimate += change_data.estimate
       when :leave_sprint
         issues_currently_in_sprint.delete change_data.issue.key
-        story_points -= change_data.story_points
+        estimate -= change_data.estimate
       when :story_points
-        story_points += change_data.value if issues_currently_in_sprint.include? change_data.issue.key
+        estimate += change_data.value if issues_currently_in_sprint.include? change_data.issue.key
       end
 
       next unless change_data.time >= sprint.start_time
@@ -215,26 +215,26 @@ class SprintBurndown < ChartBase
       when :story_points
         next unless issues_currently_in_sprint.include? change_data.issue.key
 
-        old_story_points = change_data.story_points - change_data.value
-        message = "Story points changed from #{old_story_points} points to #{change_data.story_points} points"
+        old_estimate = change_data.estimate - change_data.value
+        message = "Story points changed from #{old_estimate} points to #{change_data.estimate} points"
         summary_stats.points_values_changed = true
       when :enter_sprint
-        message = "Added to sprint with #{change_data.story_points || 'no'} points"
-        summary_stats.added += change_data.story_points
+        message = "Added to sprint with #{change_data.estimate || 'no'} points"
+        summary_stats.added += change_data.estimate
       when :issue_stopped
-        story_points -= change_data.story_points
-        message = "Completed with #{change_data.story_points || 'no'} points"
+        estimate -= change_data.estimate
+        message = "Completed with #{change_data.estimate || 'no'} points"
         issues_currently_in_sprint.delete change_data.issue.key
-        summary_stats.completed += change_data.story_points
+        summary_stats.completed += change_data.estimate
       when :leave_sprint
-        message = "Removed from sprint with #{change_data.story_points || 'no'} points"
-        summary_stats.removed += change_data.story_points
+        message = "Removed from sprint with #{change_data.estimate || 'no'} points"
+        summary_stats.removed += change_data.estimate
       else
         raise "Unexpected action: #{change_data.action}"
       end
 
       data_set << {
-        y: story_points,
+        y: estimate,
         x: chart_format(change_data.time),
         title: "#{change_data.issue.key} #{message}"
       }
@@ -243,27 +243,27 @@ class SprintBurndown < ChartBase
     unless start_data_written
       # There was nothing that triggered us to write the sprint started block so do it now.
       data_set << {
-        y: story_points,
+        y: estimate,
         x: chart_format(sprint.start_time),
-        title: "Sprint started with #{story_points} points"
+        title: "Sprint started with #{estimate} points"
       }
-      summary_stats.started = story_points
+      summary_stats.started = estimate
     end
 
     if sprint.completed_time
       data_set << {
-        y: story_points,
+        y: estimate,
         x: chart_format(sprint.completed_time),
-        title: "Sprint ended with #{story_points} points unfinished"
+        title: "Sprint ended with #{estimate} points unfinished"
       }
-      summary_stats.remaining = story_points
+      summary_stats.remaining = estimate
     end
 
     unless sprint.completed_at?(time_range.end)
       data_set << {
-        y: story_points,
+        y: estimate,
         x: chart_format(time_range.end),
-        title: "Sprint still active. #{story_points} points still in progress."
+        title: "Sprint still active. #{estimate} points still in progress."
       }
     end
 

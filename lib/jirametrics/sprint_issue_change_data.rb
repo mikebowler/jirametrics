@@ -4,14 +4,14 @@ require 'jirametrics/value_equality'
 
 class SprintIssueChangeData
   include ValueEquality
-  attr_reader :time, :action, :value, :issue, :story_points
+  attr_reader :time, :action, :value, :issue, :estimate
 
-  def initialize time:, action:, value:, issue:, story_points:
+  def initialize time:, action:, value:, issue:, estimate:
     @time = time
     @action = action
     @value = value
     @issue = issue
-    @story_points = story_points
+    @estimate = estimate
   end
 
   def inspect

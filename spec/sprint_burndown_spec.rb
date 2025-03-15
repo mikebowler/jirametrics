@@ -63,10 +63,10 @@ describe SprintBurndown do
       add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
-          action: :enter_sprint, time: to_time('2022-01-03'), value: 0.0, issue: issue, story_points: 0.0
+          action: :enter_sprint, time: to_time('2022-01-03'), value: 0.0, issue: issue, estimate: 0.0
         ),
         SprintIssueChangeData.new(
-          action: :leave_sprint, time: to_time('2022-01-04'), value: 0.0, issue: issue, story_points: 0.0
+          action: :leave_sprint, time: to_time('2022-01-04'), value: 0.0, issue: issue, estimate: 0.0
         )
       ]
     end
@@ -85,16 +85,16 @@ describe SprintBurndown do
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
-          action: :enter_sprint, time: to_time('2022-01-01'), value: 0.0, issue: issue, story_points: 0.0
+          action: :enter_sprint, time: to_time('2022-01-01'), value: 0.0, issue: issue, estimate: 0.0
         ),
         SprintIssueChangeData.new(
-          action: :story_points, time: to_time('2022-01-02'), value: 2.0, issue: issue, story_points: 2.0
+          action: :story_points, time: to_time('2022-01-02'), value: 2.0, issue: issue, estimate: 2.0
         ),
         SprintIssueChangeData.new(
-          action: :story_points, time: to_time('2022-01-04'), value: 2.0, issue: issue, story_points: 4.0
+          action: :story_points, time: to_time('2022-01-04'), value: 2.0, issue: issue, estimate: 4.0
         ),
         SprintIssueChangeData.new(
-          action: :issue_stopped, time: to_time('2022-01-05'), value: -4.0, issue: issue, story_points: 4.0
+          action: :issue_stopped, time: to_time('2022-01-05'), value: -4.0, issue: issue, estimate: 4.0
         )
       ]
     end
@@ -126,29 +126,29 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26
 
         SprintIssueChangeData.new( # Has points assigned but not in sprint at start
-          time: to_time('2022-03-23'), action: :story_points, value: 2.0, issue: issue2, story_points: 2.0
+          time: to_time('2022-03-23'), action: :story_points, value: 2.0, issue: issue2, estimate: 2.0
         ),
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :story_points, value: 7.0, issue: issue1, story_points: 12.0
+          time: to_time('2022-03-24'), action: :story_points, value: 7.0, issue: issue1, estimate: 12.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 12.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 12.0
         ),
 
         # sprint starts here
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-27'), action: :story_points, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new( # Should be ignored because it's in sprint yet
-          time: to_time('2022-03-27'), action: :story_points, value: 2.0, issue: issue2, story_points: 4.0
+          time: to_time('2022-03-27'), action: :story_points, value: 2.0, issue: issue2, estimate: 4.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 4.0
+          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, estimate: 4.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -165,16 +165,16 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-23'), action: :story_points, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
         ),
 
         # sprint starts and then ends here
 
         SprintIssueChangeData.new(
-          time: to_time('2022-04-11'), action: :story_points, value: -2.0, issue: issue1, story_points: 3.0
+          time: to_time('2022-04-11'), action: :story_points, value: -2.0, issue: issue1, estimate: 3.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -189,16 +189,16 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, estimate: 7.0
         ),
 
         # sprint starts
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, estimate: 5.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -214,16 +214,16 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, estimate: 7.0
         ),
 
         # sprint starts
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, estimate: 5.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -239,16 +239,16 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :enter_sprint, value: 0.0, issue: issue1, story_points: 0.0
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 0.0, issue: issue1, estimate: 0.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, estimate: 7.0
         ),
 
         # sprint starts
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :issue_stopped, value: 0.0, issue: issue1, story_points: 0.0
+          time: to_time('2022-03-27'), action: :issue_stopped, value: 0.0, issue: issue1, estimate: 0.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -262,7 +262,7 @@ describe SprintBurndown do
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
       change_data = [
         SprintIssueChangeData.new(
-          time: to_time('2022-03-28'), action: :illegal_action, value: 0.0, issue: issue1, story_points: 0.0
+          time: to_time('2022-03-28'), action: :illegal_action, value: 0.0, issue: issue1, estimate: 0.0
         )
       ]
       expect { sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint) }.to(
@@ -297,13 +297,13 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 12.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 12.0
         ),
 
         # sprint starts here
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, story_points: 4.0
+          time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, estimate: 4.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -319,16 +319,16 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :enter_sprint, value: nil, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-24'), action: :enter_sprint, value: nil, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: nil, issue: issue2, story_points: 7.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: nil, issue: issue2, estimate: 7.0
         ),
 
         # sprint starts
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-27'), action: :leave_sprint, value: nil, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-27'), action: :leave_sprint, value: nil, issue: issue1, estimate: 5.0
         )
       ]
       expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
@@ -344,25 +344,25 @@ describe SprintBurndown do
         # Sprint start is 2022-03-26, end is 2022-04-10
 
         SprintIssueChangeData.new(
-          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, story_points: 7.0
+          time: to_time('2022-03-25'), action: :enter_sprint, value: 7.0, issue: issue2, estimate: 7.0
         ),
 
         # sprint starts
 
         SprintIssueChangeData.new( # This should be ignored
-          time: to_time('2022-03-27'), action: :story_points, value: 4.0, issue: issue1, story_points: 9.0
+          time: to_time('2022-03-27'), action: :story_points, value: 4.0, issue: issue1, estimate: 9.0
         ),
         SprintIssueChangeData.new(
-          time: to_time('2022-03-28'), action: :issue_stopped, value: -5.0, issue: issue1, story_points: 5.0
+          time: to_time('2022-03-28'), action: :issue_stopped, value: -5.0, issue: issue1, estimate: 5.0
         ),
 
         # sprint ends
 
         SprintIssueChangeData.new(
-          time: to_time('2022-04-11'), action: :issue_stopped, value: -7.0, issue: issue1, story_points: 7.0
+          time: to_time('2022-04-11'), action: :issue_stopped, value: -7.0, issue: issue1, estimate: 7.0
         )
 
       ]
