@@ -151,6 +151,8 @@ class ProjectConfig
   end
 
   def status_category_mapping status:, category:
+    return if @exporter.downloading?
+
     status, status_id = possible_statuses.parse_name_id status
     category, category_id = possible_statuses.parse_name_id category
 
