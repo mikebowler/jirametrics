@@ -124,6 +124,14 @@ class BoardMovementCalculator
     column_name, entry_time = find_current_column_and_entry_time_in_column issue
     return [nil, 'This issue is not visible on the board. No way to predict when it will be done.'] if column_name.nil?
 
+    # This condition has been reported in production so we have a check for it. Having said that, we have no
+    # idea what conditions might make this possible and so there is no test for it.
+    if entry_time.nil?
+      message = "Unable to determine the time this issue entered column #{column_name.inspect} so no way to " \
+        'predict when it will be done'
+      return [nil, message]
+    end
+
     age_in_column = (today - entry_time.to_date).to_i + 1
 
     message = nil
