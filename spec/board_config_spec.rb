@@ -10,15 +10,32 @@ describe BoardConfig do
   end
 
   it 'raises error if cycletime set twice' do
+    block = lambda do |_|
+      cycletime do
+        start_at first_time_in_status_category(:indeterminate)
+        start_at first_time_in_status_category(:done)
+      end
+      cycletime do
+        start_at first_time_in_status_category(:indeterminate)
+        start_at first_time_in_status_category(:done)
+      end
+    end
+
     project_config.all_boards[1] = sample_board
-    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
-    board_config.run
+    board_config = described_class.new project_config: project_config, id: 1, block: block
 
-    board_config.cycletime default_cycletime_config
-
-    expect { board_config.cycletime default_cycletime_config }.to raise_error(
+    expect { board_config.run }.to raise_error(
       'Cycletime has already been set for board 1. Did you also set it inside the html_report? ' \
         'If so, remove it from there.'
+    )
+  end
+
+  it 'raises error if no cycletime is set' do
+    project_config.all_boards[1] = sample_board
+    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
+
+    expect { board_config.run }.to raise_error(
+      'Must specify a cycletime for board 1'
     )
   end
 

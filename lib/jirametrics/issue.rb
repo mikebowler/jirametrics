@@ -611,9 +611,13 @@ class Issue
     end
     history = [] # time, type, detail
 
-    started_at, stopped_at = board.cycletime.started_stopped_times(self)
-    history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
-    history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
+    if board.cycletime
+      started_at, stopped_at = board.cycletime.started_stopped_times(self)
+      history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
+      history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
+    else
+      result << "  Unable to determine start/end times as board #{board.id} has no cycletime specified\n"
+    end
 
     @discarded_change_times&.each do |time|
       history << [time, nil, '↑↑↑↑ Changes discarded ↑↑↑↑', true]

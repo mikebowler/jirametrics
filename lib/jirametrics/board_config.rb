@@ -13,6 +13,7 @@ class BoardConfig
     @board = @project_config.all_boards[id]
 
     instance_eval(&@block)
+    raise "Must specify a cycletime for board #{@id}" if @board.cycletime.nil?
   end
 
   def cycletime label = nil, &block
