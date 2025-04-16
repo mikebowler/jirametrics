@@ -9,6 +9,8 @@ describe ProjectConfig do
     exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
+    exporter.file_system.when_foreach root: 'spec/tmp', result: :not_mocked
+    exporter.file_system.when_foreach root: 'spec/testdata/sample_issues', result: :not_mocked
 
     described_class.new(exporter: exporter, target_path: target_path, jira_config: nil, block: nil)
   end
@@ -541,6 +543,23 @@ describe ProjectConfig do
       project_config.file_prefix 'sample'
       expect { project_config.issues }.to raise_error(
         'No data found. Must do a download before an export'
+      )
+    end
+
+    it 'raises error when issues used before boards configured', :focus do
+      # We have to create our own project_config here as the default one at the top of the file will have
+      # already loaded issues so it's too late.
+      path = 'spec/complete_sample/'
+      project_config = described_class.new(exporter: exporter, target_path: path, jira_config: nil, block: nil)
+      exporter.file_system.when_loading file: "#{path}sample_meta.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{path}sample_statuses.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{path}sample_board_1_configuration.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{path}sample_issues/SP-7.json", json: :not_mocked
+      exporter.file_system.when_foreach root: "#{path}sample_issues", result: :not_mocked
+
+      project_config.file_prefix 'sample'
+      expect { project_config.issues }.to raise_error(
+        "The board declaration for board 1 must come before the first usage of 'issues' in the configuration"
       )
     end
   end

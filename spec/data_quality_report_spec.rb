@@ -576,6 +576,7 @@ describe DataQualityReport do
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-8.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-11.json", json: :not_mocked
       exporter.file_system.when_foreach root: target_path, result: :not_mocked
+      exporter.file_system.when_foreach root: "#{target_path}sample_issues", result: :not_mocked
 
       project_config = ProjectConfig.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: lambda do |_|

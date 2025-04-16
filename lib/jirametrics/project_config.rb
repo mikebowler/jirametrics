@@ -452,6 +452,9 @@ class ProjectConfig
       end
 
       boards.each do |board|
+        if board.cycletime.nil?
+          raise "The board declaration for board #{board.id} must come before the first usage of 'issues' in the configuration"
+        end
         issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
       end
     end
@@ -464,7 +467,7 @@ class ProjectConfig
   # board ids appropriately.
   def group_filenames_and_board_ids path:
     hash = {}
-    Dir.foreach(path) do |filename|
+    file_system.foreach(path) do |filename|
       # Matches either FAKE-123.json or FAKE-123-456.json
       if /^(?<key>[^-]+-\d+)(?<_>-(?<board_id>\d+))?\.json$/ =~ filename
         (hash[key] ||= []) << [filename, board_id&.to_i || :unknown]

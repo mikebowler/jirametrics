@@ -18,6 +18,7 @@ describe Anonymizer do
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_meta.json', json: :not_mocked
+    exporter.file_system.when_foreach root: 'spec/complete_sample/sample_issues', result: :not_mocked
     [1, 2, 5, 7, 8, 11].each do |issue_num|
       exporter.file_system.when_loading(
         file: "spec/complete_sample/sample_issues/SP-#{issue_num}.json",
@@ -31,6 +32,12 @@ describe Anonymizer do
     project_config.file_prefix 'sample'
     project_config.load_status_category_mappings
     project_config.load_all_boards
+    project_config.board id: 1 do
+      cycletime do
+        start_at first_time_in_status_category(:indeterminate)
+        stop_at first_time_in_status_category(:done)
+      end
+    end
 
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
   end

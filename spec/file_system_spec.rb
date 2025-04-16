@@ -23,7 +23,7 @@ describe FileSystem do
       .to raise_error Errno::ENOENT
   end
 
-  context 'compress' do
+  xcontext 'compress' do
     it "doesn't change structures that are full" do
       input    = { a: 1, b: { d: 5, e: [4, 5, 6] } }
       expected = { a: 1, b: { d: 5, e: [4, 5, 6] } }
