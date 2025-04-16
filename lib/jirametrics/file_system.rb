@@ -52,6 +52,8 @@ class FileSystem
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
   # cases where this simple compression will drop the filesize by half.
   def compress node
+    return node
+
     if node.is_a? Hash
       node.reject! { |_key, value| value.nil? || (value.is_a?(Array) && value.empty?) }
       node.each_value { |value| compress value }
