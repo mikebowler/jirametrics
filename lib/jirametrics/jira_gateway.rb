@@ -26,7 +26,10 @@ class JiraGateway
   end
 
   def call_command command
-    @file_system.log "  #{command.gsub(/\s+/, ' ')}"
+    log_entry = "  #{command.gsub(/\s+/, ' ')}"
+    log_entry = log_entry.gsub(@jira_api_token, '[API_TOKEN]') if @jira_api_token
+    @file_system.log log_entry
+
     result = `#{command}`
     @file_system.log result unless $CHILD_STATUS.success?
     return result if $CHILD_STATUS.success?
