@@ -142,6 +142,34 @@ ul.quality_report {
   border-top: 1px solid gray;
 }
 
+div.daily_issue:hover {
+  background: lightgray;
+}
+
+div.daily_issue {
+  border: 1px solid green;
+  padding: 0.5em;
+  .heading {
+    vertical-align: middle;
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+
+    div {
+      // background: white;
+    }
+  }
+  margin-bottom: 0.5em;
+}
+div.child_issue:hover {
+  background: var(--body-background);
+}
+div.child_issue {
+  border: 1px dashed green;
+  margin-left: 1.5em;
+  padding-left: 0.2em;
+}
+
 @media screen and (prefers-color-scheme: dark) {
   :root {
     --warning-banner: #9F2B00;

@@ -44,8 +44,10 @@ class Issue
   def key = @raw['key']
 
   def type = @raw['fields']['issuetype']['name']
-
   def type_icon_url = @raw['fields']['issuetype']['iconUrl']
+
+  def priority_name = @raw['fields']['priority']['name']
+  def priority_url = @raw['fields']['priority']['iconUrl']
 
   def summary = @raw['fields']['summary']
 
@@ -228,6 +230,10 @@ class Issue
 
   def assigned_to
     @raw['fields']&.[]('assignee')&.[]('displayName')
+  end
+
+  def assigned_to_icon_url
+    @raw['fields']&.[]('assignee')&.[]('avatarUrls')&.[]('16x16')
   end
 
   # Many test failures are simply unreadable because the default inspect on this class goes
