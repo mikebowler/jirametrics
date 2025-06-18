@@ -166,8 +166,9 @@ div.child_issue:hover {
 }
 div.child_issue {
   border: 1px dashed green;
-  margin-left: 1.5em;
   padding-left: 0.2em;
+  margin: 0.2em;
+  margin-left: 1.5em;
 }
 
 @media screen and (prefers-color-scheme: dark) {
