@@ -40,39 +40,36 @@ class DailyView < ChartBase
       result << render_issue(issue)
     end
     result
-    # wrap_and_render(binding, __FILE__)
   end
 
-  def make_blocked_stalled_header issue
+  def make_blocked_stalled_lines issue
     today = date_range.end
 
     blocked_stalled = issue.blocked_stalled_by_date(
       date_range: today..today, chart_end_time: time_range.end, settings: settings
     )[today]
 
-    result = []
+    lines = []
     if blocked_stalled.blocked?
       marker = color_block '--blocked-color'
-      result << ["#{marker} Blocked by flag"] if blocked_stalled.flag
-      result << ["#{marker} Blocked by status: #{blocked_stalled.status}"] if blocked_stalled.blocked_by_status?
+      lines << ["#{marker} Blocked by flag"] if blocked_stalled.flag
+      lines << ["#{marker} Blocked by status: #{blocked_stalled.status}"] if blocked_stalled.blocked_by_status?
       blocked_stalled.blocking_issue_keys&.each do |key|
-        result << ["#{marker} Blocked by issue: #{key}"]
+        lines << ["#{marker} Blocked by issue: #{key}"]
         blocking_issue = issues.find { |i| i.key == key }
-        result << blocking_issue if blocking_issue
+        lines << blocking_issue if blocking_issue
       end
     elsif blocked_stalled.stalled_by_status?
-      result << ["#{color_block '--stalled-color'} Stalled by status: #{blocked_stalled.status}"]
+      lines << ["#{color_block '--stalled-color'} Stalled by status: #{blocked_stalled.status}"]
     elsif blocked_stalled.stalled_days
-      result << ["#{color_block '--stalled-color'} Stalled by inactivity: #{blocked_stalled.stalled_days} days"]
+      lines << ["#{color_block '--stalled-color'} Stalled by inactivity: #{blocked_stalled.stalled_days} days"]
     end
-    result
+    lines
   end
 
-  def make_issue_header issue
-    rows = []
-    chunks = []
-    chunks << "<b><a href='#{issue.url}'>#{issue.key}</a></b> #{issue.summary}"
-    rows << chunks
+  def make_stats_lines issue
+    lines = []
+    lines << ["<b><a href='#{issue.url}'>#{issue.key}</a></b> #{issue.summary}"]
 
     chunks = []
     chunks << "<img src='#{issue.type_icon_url}' /> <b>#{issue.type}</b>"
@@ -92,19 +89,24 @@ class DailyView < ChartBase
     end
 
     chunks << "Due: <b>#{issue.due_date}</b>" if issue.due_date
+    lines << chunks
 
-    rows << chunks
+    lines
+  end
 
-    blocked_stalled_header = make_blocked_stalled_header(issue)
-    rows += blocked_stalled_header unless blocked_stalled_header.empty?
+  def assemble_issue_lines issue
+    lines = []
 
-    rows
+    lines += make_stats_lines(issue)
+    lines += make_blocked_stalled_lines(issue)
+
+    lines
   end
 
   def render_issue issue, css_class: 'daily_issue'
     result = +''
     result << "<div class='#{css_class}'>"
-    make_issue_header(issue).each do |row|
+    assemble_issue_lines(issue).each do |row|
       if row.is_a? Issue
         result << render_issue(row, css_class: 'child_issue')
       else

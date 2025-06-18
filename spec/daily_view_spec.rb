@@ -12,13 +12,13 @@ describe DailyView do
   end
   let(:board) { sample_board }
 
-  context 'make_issue_header' do
+  context 'assemble_issue_lines' do
     it 'creates for aging item' do
       issue = load_issue('SP-1', board: board)
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      expect(view.make_issue_header issue).to eq [
+      expect(view.assemble_issue_lines issue).to eq [
         ["<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"],
         [
           "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
@@ -36,7 +36,7 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, nil, nil]
       ]
-      expect(view.make_issue_header issue).to eq [
+      expect(view.assemble_issue_lines issue).to eq [
         [
           "<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"
         ],
@@ -55,7 +55,7 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-02', '2024-01-02']
       ]
-      expect(view.make_issue_header issue).to eq [
+      expect(view.assemble_issue_lines issue).to eq [
         ["<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"],
         [
           "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
