@@ -69,7 +69,7 @@ class DailyView < ChartBase
 
   def make_stats_lines issue
     lines = []
-    lines << ["<b><a href='#{issue.url}'>#{issue.key}</a></b> #{issue.summary}"]
+    lines << ["<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"]
 
     chunks = []
     chunks << "<img src='#{issue.type_icon_url}' /> <b>#{issue.type}</b>"
@@ -94,12 +94,23 @@ class DailyView < ChartBase
     lines
   end
 
+  def make_child_lines issue
+    lines = []
+    subtasks = issue.subtasks.reject { |i| i.done? }
+
+    unless subtasks.empty?
+      icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' />" }
+      lines << (icon_urls << 'Incomplete child issues')
+      lines += subtasks
+    end
+    lines
+  end
+
   def assemble_issue_lines issue
     lines = []
-
     lines += make_stats_lines(issue)
     lines += make_blocked_stalled_lines(issue)
-
+    lines += make_child_lines(issue)
     lines
   end
 

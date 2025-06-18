@@ -12,6 +12,14 @@ describe DailyView do
   end
   let(:board) { sample_board }
 
+  xcontext 'select_aging_issues' do
+    it 'selects only aging issues' do
+    end
+
+    xit 'sorts issues by priority and then by age' do
+    end
+  end
+
   context 'assemble_issue_lines' do
     it 'creates for aging item' do
       issue = load_issue('SP-1', board: board)
@@ -19,7 +27,7 @@ describe DailyView do
         [issue, '2024-01-01', nil]
       ]
       expect(view.assemble_issue_lines issue).to eq [
-        ["<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"],
+        ["<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
         [
           "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
           "<img src='#{issue.priority_url}' /> <b>Medium</b>",
@@ -38,7 +46,7 @@ describe DailyView do
       ]
       expect(view.assemble_issue_lines issue).to eq [
         [
-          "<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"
+          "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
         ],
         [
           "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
@@ -56,7 +64,7 @@ describe DailyView do
         [issue, '2024-01-02', '2024-01-02']
       ]
       expect(view.assemble_issue_lines issue).to eq [
-        ["<b><a href='#{issue.url}'>SP-1</a></b> Create new draft event"],
+        ["<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
         [
           "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
           "<img src='#{issue.priority_url}' /> <b>Medium</b>",
