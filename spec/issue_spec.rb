@@ -1330,4 +1330,27 @@ describe Issue do
       expect(issue1.due_date).to eq Date.parse('2024-01-01')
     end
   end
+
+  context '<=>' do
+    it 'compares numerically when projects are the same' do
+      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
+      issue2 = empty_issue created: '2024-01-01', key: 'SP-2'
+
+      expect(issue1 <=> issue2).to be_negative
+    end
+
+    it 'compares alphametically by project name when projects are different' do
+      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
+      issue2 = empty_issue created: '2024-01-01', key: 'ABC-2'
+
+      expect(issue1 <=> issue2).to be_positive
+    end
+
+    it 'compares equal' do
+      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
+      issue2 = empty_issue created: '2024-01-01', key: 'SP-1'
+
+      expect(issue1 <=> issue2).to be_zero
+    end
+  end
 end

@@ -27,10 +27,7 @@ class DailyView < ChartBase
   end
 
   def run
-    aging_issues = issues.select do |issue|
-      started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)
-      started_at && !stopped_at
-    end
+    aging_issues = select_aging_issues
 
     return "<h1>#{@header_text}</h1>There are no items currently in progress" if aging_issues.empty?
 
@@ -40,6 +37,43 @@ class DailyView < ChartBase
       result << render_issue(issue)
     end
     result
+  end
+
+  def select_aging_issues
+    aging_issues = issues.select do |issue|
+      started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)
+      started_at && !stopped_at
+    end
+
+    today = date_range.end
+    aging_issues.collect do |issue|
+      [issue, issue.priority_name, issue.board.cycletime.age(issue, today: today)]
+    end.sort(&issue_sorter).collect(&:first)
+  end
+
+  def issue_sorter
+    priority_names = settings['priority_order']
+    lambda do |a, b|
+      a_issue, a_priority, a_age = *a
+      b_issue, b_priority, b_age = *b
+
+      a_priority_index = priority_names.index(a_priority)
+      b_priority_index = priority_names.index(b_priority)
+
+      if a_priority_index.nil? && b_priority_index.nil?
+        result = a_priority <=> b_priority
+      elsif a_priority_index.nil?
+        result = 1
+      elsif b_priority_index.nil?
+        result = -1
+      else
+        result = b_priority_index <=> a_priority_index
+      end
+
+      result = b_age <=> a_age if result.zero?
+      result = a_issue <=> b_issue if result.zero?
+      result
+    end
   end
 
   def make_blocked_stalled_lines issue

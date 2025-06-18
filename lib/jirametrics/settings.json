@@ -6,5 +6,6 @@
   "blocked_statuses": [],
   "flagged_means_blocked": true,
 
-  "expedited_priority_names": ["Critical", "Highest"]
+  "expedited_priority_names": ["Critical", "Highest"],
+  "priority_order": ["Lowest", "Low", "Medium", "High", "Highest"]
 }

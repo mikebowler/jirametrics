@@ -11,13 +11,71 @@ describe DailyView do
     end
   end
   let(:board) { sample_board }
+  let(:issue1) { load_issue('SP-1', board: board) }
+  let(:issue2) { load_issue('SP-2', board: board) }
+  let(:issue10) { load_issue('SP-10', board: board) }
 
-  xcontext 'select_aging_issues' do
+  context 'select_aging_issues' do
     it 'selects only aging issues' do
+      view.issues = [issue1, issue2, issue10]
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, '2024-01-01'],
+        [issue2, nil, nil],
+        [issue10, '2024-01-01', nil]
+      ]
+      expect(view.select_aging_issues).to eq [issue10]
+    end
+  end
+
+  context 'issue_sorter' do
+    it 'sorts by priority name first' do
+      input = [
+        [issue1, 'Lowest', 50],
+        [issue2, 'Highest', 5]
+      ]
+      expect(input.sort(&view.issue_sorter)).to eq [
+        [issue2, 'Highest', 5],
+        [issue1, 'Lowest', 50]
+      ]
     end
 
-    xit 'sorts issues by priority and then by age' do
+    it 'sorts by age when priorities match' do
+      input = [
+        [issue1, 'Lowest', 5],
+        [issue2, 'Lowest', 50]
+      ]
+      expect(input.sort(&view.issue_sorter)).to eq [
+        [issue2, 'Lowest', 50],
+        [issue1, 'Lowest', 5]
+      ]
     end
+
+    it 'sorts unknown priorities after known' do
+      input = [
+        [issue1, 'Foo', 5],
+        [issue2, 'Lowest', 50],
+        [issue10, 'Bar', 1]
+      ]
+      expect(input.sort(&view.issue_sorter)).to eq [
+        [issue2, 'Lowest', 50],
+        [issue10, 'Bar', 1],
+        [issue1, 'Foo', 5]
+      ]
+    end
+
+    it 'sorts by key if all else fails' do
+      input = [
+        [issue1, 'Lowest', 1],
+        [issue10, 'Lowest', 1],
+        [issue2, 'Lowest', 1]
+      ]
+      expect(input.sort(&view.issue_sorter)).to eq [
+        [issue1, 'Lowest', 1],
+        [issue2, 'Lowest', 1],
+        [issue10, 'Lowest', 1]
+      ]
+    end
+
   end
 
   context 'assemble_issue_lines' do

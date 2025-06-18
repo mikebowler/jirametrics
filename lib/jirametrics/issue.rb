@@ -586,7 +586,7 @@ class Issue
     /(?<project_code1>[^-]+)-(?<id1>.+)/ =~ key
     /(?<project_code2>[^-]+)-(?<id2>.+)/ =~ other.key
     comparison = project_code1 <=> project_code2
-    comparison = id1 <=> id2 if comparison.zero?
+    comparison = id1.to_i <=> id2.to_i if comparison.zero?
     comparison
   end
 
