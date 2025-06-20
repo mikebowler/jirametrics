@@ -35,6 +35,8 @@ class ChangeItem
 
   def labels? = (field == 'labels')
 
+  def comment? = (field == 'comment')
+
   # An alias for time so that logic accepting a Time, Date, or ChangeItem can all respond to :to_time
   def to_time = @time
 
