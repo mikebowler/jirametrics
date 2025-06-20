@@ -17,13 +17,6 @@ class DailyView < ChartBase
         By default, we sort by priority first and then by age within each of those priorities.
       </div>
     HTML
-
-    # init_configuration_block block do
-    #   grouping_rules do |issue, rule|
-    #     rule.label = issue.type
-    #     rule.color = color_for type: issue.type
-    #   end
-    # end
   end
 
   def run
