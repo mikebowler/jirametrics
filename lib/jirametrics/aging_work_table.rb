@@ -181,4 +181,8 @@ class AgingWorkTable < ChartBase
 
     result.reverse
   end
+
+  def priority_text issue
+    "<img src='#{issue.priority_url}' title='Priority: #{issue.priority_name}' />"
+  end
 end
