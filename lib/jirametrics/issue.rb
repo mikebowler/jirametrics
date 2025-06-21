@@ -321,7 +321,7 @@ class Issue
 
     # This mock change is to force the writing of one last entry at the end of the time range.
     # By doing this, we're able to eliminate a lot of duplicated code in charts.
-    mock_change = ChangeItem.new time: end_time, author: '', artificial: true, raw: { 'field' => '' }
+    mock_change = ChangeItem.new time: end_time, artificial: true, raw: { 'field' => '' }, author_raw: nil
 
     (changes + [mock_change]).each do |change|
       previous_was_active = false if check_for_stalled(
@@ -693,32 +693,25 @@ class Issue
 
   private
 
-  def assemble_author raw
-    raw['author']&.[]('displayName') || raw['author']&.[]('name') || 'Unknown author'
-  end
-
   def load_history_into_changes
     @raw['changelog']['histories']&.each do |history|
       created = parse_time(history['created'])
 
-      # It should be impossible to not have an author but we've seen it in production
-      author = assemble_author history
       history['items']&.each do |item|
-        @changes << ChangeItem.new(raw: item, time: created, author: author)
+        @changes << ChangeItem.new(raw: item, time: created, author_raw: history['author'])
       end
     end
   end
 
   def load_comments_into_changes
     @raw['fields']['comment']['comments']&.each do |comment|
-      raw = {
+      raw = comment.merge({
         'field' => 'comment',
         'to' => comment['id'],
         'toString' =>  comment['body']
-      }
-      author = assemble_author comment
+      })
       created = parse_time(comment['created'])
-      @changes << ChangeItem.new(raw: raw, time: created, author: author, artificial: true)
+      @changes << ChangeItem.new(raw: raw, time: created, artificial: true, author_raw: comment['author'])
     end
   end
 
@@ -760,7 +753,9 @@ class Issue
       first_status = first_change.old_value
       first_status_id = first_change.old_value_id
     end
-    ChangeItem.new time: created_time, artificial: true, author: author, raw: {
+
+    creator = raw['fields']['creator']
+    ChangeItem.new time: created_time, artificial: true, author_raw: creator, raw: {
       'field' => field_name,
       'to' => first_status_id,
       'toString' => first_status

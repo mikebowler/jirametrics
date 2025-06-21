@@ -6,7 +6,7 @@ describe ChangeItem do
   let(:time) { Time.parse('2021-09-06T04:33:55.539+0000') }
 
   it 'creates change' do
-    change = described_class.new time: time, author: 'Tolkien', raw: {
+    change = described_class.new time: time, author_raw: nil, raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
       'fieldId' => 'customfield_10021',
@@ -28,7 +28,7 @@ describe ChangeItem do
   end
 
   it 'supports artificial' do
-    change = described_class.new time: time, artificial: true, author: 'Asimov', raw: {
+    change = described_class.new time: time, artificial: true, author_raw: nil, raw: {
       'field' => 'Flagged',
       'fieldtype' => 'custom',
       'fieldId' => 'customfield_10021',
@@ -46,7 +46,7 @@ describe ChangeItem do
 
   context 'status_matches' do
     let(:change_item) do
-      described_class.new time: time, author: 'Asimov', raw: {
+      described_class.new time: time, author_raw: nil, raw: {
         'field' => 'status',
         'from' => 1,
         'fromString' => 'To Do',

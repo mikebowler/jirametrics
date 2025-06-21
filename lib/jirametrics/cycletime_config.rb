@@ -59,7 +59,7 @@ class CycleTimeConfig
       'from' => '0',
       'fromString' => ''
     }
-    ChangeItem.new raw: raw, time: time, author: 'unknown', artificial: true
+    ChangeItem.new raw: raw, time: time, artificial: true, author_raw: nil
   end
 
   def started_stopped_changes issue

@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :field, :value_id, :old_value_id, :raw, :author, :time
+  attr_reader :field, :value_id, :old_value_id, :raw, :time
   attr_accessor :value, :old_value
 
-  def initialize raw:, time:, author:, artificial: false
+  def initialize raw:, author_raw:, time:, artificial: false
     @raw = raw
+    @author_raw = author_raw
     @time = time
     raise 'ChangeItem.new() time cannot be nil' if time.nil?
     raise "Time must be an object of type Time in the correct timezone: #{@time.inspect}" unless @time.is_a? Time
@@ -16,7 +17,14 @@ class ChangeItem
     @old_value = @raw['fromString']
     @old_value_id = @raw['from']&.to_i
     @artificial = artificial
-    @author = author
+  end
+
+  def author
+    @author_raw&.[]('displayName') || @author_raw&.[]('name') || 'Unknown author'
+  end
+
+  def author_icon_url
+    @author_raw&.[]('avatarUrls')&.[]('16x16')
   end
 
   def status? = (field == 'status')

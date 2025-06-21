@@ -173,7 +173,7 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
   end
 
   time = to_time(time) if time.is_a? String
-  ChangeItem.new time: time, author: 'Tolkien', artificial: artificial, raw: {
+  ChangeItem.new time: time, artificial: artificial, author_raw: nil, raw: {
     'field' => field,
     'to' => value_id,
     'toString' => value,
