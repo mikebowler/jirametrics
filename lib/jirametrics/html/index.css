@@ -159,6 +159,9 @@ div.daily_issue {
       // background: white;
     }
   }
+  .comment {
+    margin-left: 1em;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {

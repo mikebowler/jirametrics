@@ -133,6 +133,10 @@ class DailyView < ChartBase
     lines
   end
 
+  def jira_rich_text_to_html text
+    text.gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
+  end
+
   def make_comment_lines issue
     comments = issue.changes.select { |i| i.comment? }.reverse
     lines = []
@@ -140,10 +144,12 @@ class DailyView < ChartBase
 
     lines << ['Comments']
     comments.each do |c|
-      text = c.value.gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
+      text = jira_rich_text_to_html c.value
       time = c.time.strftime '%Y-%b-%d %I:%M%P'
       lines << [
-        "&nbsp;[#{time} <img src='#{c.author_icon_url}' width=16 height=16 /> #{c.author} &rarr; #{text}"
+        "<span class='comment'>#{time} " \
+        "<img src='#{c.author_icon_url}' width=16 height=16 /> " \
+        "#{c.author} &rarr; #{text}</span>"
       ]
     end
     lines

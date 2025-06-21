@@ -133,4 +133,21 @@ describe DailyView do
       ]
     end
   end
+
+  context 'jira_rich_text_to_html' do
+    it 'ignores plain text' do
+      expect(view.jira_rich_text_to_html 'foobar').to eq 'foobar'
+    end
+
+    it 'converts color declarations' do
+      input = 'one {color:#bf2600}bold Red{color} two ' \
+        '{color:#403294}Bold purple{color} ' \
+        'three {color:#b3f5ff}Subtle teal{color}'
+      expect(view.jira_rich_text_to_html input).to eq(
+        'one <span style="color: #bf2600">bold Red</span> ' \
+        'two <span style="color: #403294">Bold purple</span> ' \
+        'three <span style="color: #b3f5ff">Subtle teal</span>'
+      )
+    end
+  end
 end
