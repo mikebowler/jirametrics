@@ -133,11 +133,28 @@ class DailyView < ChartBase
     lines
   end
 
+  def make_comment_lines issue
+    comments = issue.changes.select { |i| i.comment? }.reverse
+    lines = []
+    return lines if comments.empty?
+
+    lines << ['Comments']
+    comments.each do |c|
+      text = c.value.gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
+      time = c.time.strftime '%Y-%b-%d %I:%M%P'
+      lines << [
+        "&nbsp;[#{time} <img src='#{c.author_icon_url}' width=16 height=16 /> #{c.author} &rarr; #{text}"
+      ]
+    end
+    lines
+  end
+
   def assemble_issue_lines issue
     lines = []
     lines += make_stats_lines(issue)
     lines += make_blocked_stalled_lines(issue)
     lines += make_child_lines(issue)
+    lines += make_comment_lines(issue)
     lines
   end
 
