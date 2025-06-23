@@ -67,6 +67,9 @@
   --sprint-burndown-sprint-color-4: red;
   --sprint-burndown-sprint-color-5: brown;
 
+  --daily-view-selected-issue-background: lightgray;
+  --daily-view-issue-border: green;
+  --daily-view-selected-issue-border: red;
 
 }
 
@@ -143,21 +146,18 @@ ul.quality_report {
 }
 
 div.daily_issue:hover {
-  background: lightgray;
+  background: var(--daily-view-selected-issue-background);
+  border-color: var(--daily-view-selected-issue-border);
 }
 
 div.daily_issue {
-  border: 1px solid green;
+  border: 1px solid var(--daily-view-issue-border);
   padding: 0.5em;
   .heading {
     vertical-align: middle;
     display: flex;
     gap: 0.5em;
     align-items: center;
-
-    div {
-      // background: white;
-    }
   }
   .comment {
     margin-left: 1em;
@@ -206,6 +206,8 @@ div.child_issue {
     --wip-chart-duration-two-weeks-or-less-color: #cf9400;
     --wip-chart-duration-four-weeks-or-less-color: #c25e00;
     --wip-chart-duration-more-than-four-weeks-color: #8e0000;
+
+    --daily-view-selected-issue-background: #474747;
   }
 
   h1 {
