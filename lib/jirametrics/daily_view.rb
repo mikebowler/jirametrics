@@ -97,11 +97,14 @@ class DailyView < ChartBase
 
   def make_stats_lines issue
     lines = []
-    lines << ["<img src='#{issue.type_icon_url}' title='#{issue.type}' />" \
-      " <b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"]
+
+    title_line = +''
+    title_line << color_block('--expedited-color', title: 'Expedited') if issue.expedited?
+    title_line << "<img src='#{issue.type_icon_url}' title='#{issue.type}' /> "
+    title_line << "<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"
+    lines << [title_line]
 
     chunks = []
-    # chunks << "<img src='#{issue.type_icon_url}' title='#{issue.type}' /> <b>#{issue.type}</b>"
 
     chunks << "<img src='#{issue.priority_url}' /> <b>#{issue.priority_name}</b>"
 
