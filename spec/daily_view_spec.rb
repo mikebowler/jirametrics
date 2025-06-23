@@ -75,7 +75,6 @@ describe DailyView do
         [issue10, 'Lowest', 1]
       ]
     end
-
   end
 
   context 'assemble_issue_lines' do
@@ -85,9 +84,11 @@ describe DailyView do
         [issue, '2024-01-01', nil]
       ]
       expect(view.assemble_issue_lines issue).to eq [
-        ["<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
         [
-          "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
+          "<img src='#{issue.type_icon_url}' title='Story' /> " \
+            "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
+        ],
+        [
           "<img src='#{issue.priority_url}' /> <b>Medium</b>",
           'Age: <b>20 days</b>',
           'Status: <b>In Progress</b>',
@@ -104,10 +105,10 @@ describe DailyView do
       ]
       expect(view.assemble_issue_lines issue).to eq [
         [
+          "<img src='#{issue.type_icon_url}' title='Story' /> " \
           "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
         ],
         [
-          "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
           "<img src='#{issue.priority_url}' /> <b>Medium</b>",
           'Status: <b>In Progress</b>',
           'Column: <b>In Progress</b>'
@@ -122,9 +123,9 @@ describe DailyView do
         [issue, '2024-01-02', '2024-01-02']
       ]
       expect(view.assemble_issue_lines issue).to eq [
-        ["<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
+        ["<img src='#{issue.type_icon_url}' title='Story' /> " \
+          "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
         [
-          "<img src='#{issue.type_icon_url}' /> <b>Story</b>",
           "<img src='#{issue.priority_url}' /> <b>Medium</b>",
           'Status: <b>In Progress</b>',
           'Column: <b>In Progress</b>'

@@ -3,7 +3,7 @@
 class DailyView < ChartBase
   attr_accessor :possible_statuses
 
-  def initialize block
+  def initialize _block
     super()
 
     header_text 'Daily View'
@@ -15,6 +15,7 @@ class DailyView < ChartBase
       </div>
       <div class="p">
         By default, we sort by priority first and then by age within each of those priorities.
+        Hover over the issue to make it stand out more.
       </div>
     HTML
   end
@@ -96,10 +97,11 @@ class DailyView < ChartBase
 
   def make_stats_lines issue
     lines = []
-    lines << ["<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"]
+    lines << ["<img src='#{issue.type_icon_url}' title='#{issue.type}' />" \
+      " <b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"]
 
     chunks = []
-    chunks << "<img src='#{issue.type_icon_url}' /> <b>#{issue.type}</b>"
+    # chunks << "<img src='#{issue.type_icon_url}' title='#{issue.type}' /> <b>#{issue.type}</b>"
 
     chunks << "<img src='#{issue.priority_url}' /> <b>#{issue.priority_name}</b>"
 
