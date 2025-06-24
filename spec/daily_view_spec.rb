@@ -151,4 +151,68 @@ describe DailyView do
       )
     end
   end
+
+  context 'make_blocked_stalled_lines' do
+    it 'renders stalled by inactivity' do
+      issue = empty_issue created: '2024-01-01'
+      expect(view.make_blocked_stalled_lines issue).to eq [
+        [
+          "#{view.color_block '--stalled-color'} Stalled by inactivity: 19 days"
+        ]
+      ]
+    end
+
+    it 'renders stalled by status' do
+      view.settings['stalled_statuses'] = ['Review']
+      issue = empty_issue created: '2024-01-01'
+      add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
+
+      expect(view.make_blocked_stalled_lines issue).to eq [
+        [
+          "#{view.color_block '--stalled-color'} Stalled by status: Review"
+        ]
+      ]
+    end
+
+    it 'renders blocked by status' do
+      view.settings['blocked_statuses'] = ['Review']
+      issue = empty_issue created: '2024-01-01'
+      add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
+
+      expect(view.make_blocked_stalled_lines issue).to eq [
+        [
+          "#{view.color_block '--blocked-color'} Blocked by status: Review"
+        ]
+      ]
+    end
+
+    it 'renders blocked by issue' do
+      view.settings['blocked_link_text'] = ['is blocked by']
+      issue = empty_issue created: '2024-01-01'
+      view.issues = [issue, issue2]
+      add_mock_change(
+        issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
+      )
+
+      expect(view.make_blocked_stalled_lines issue).to eq [
+        ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2"],
+        issue2
+      ]
+    end
+
+    it 'renders blocked by issue when blocker cannot be found' do
+      view.settings['blocked_link_text'] = ['is blocked by']
+      issue = empty_issue created: '2024-01-01'
+      view.issues = [issue]
+      add_mock_change(
+        issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
+      )
+
+      expect(view.make_blocked_stalled_lines issue).to eq [
+        [
+          "#{view.color_block '--blocked-color'} Blocked by issue: SP-2"
+        ]
+      ]
+    end
+  end
 end

@@ -89,7 +89,7 @@ class DailyView < ChartBase
       end
     elsif blocked_stalled.stalled_by_status?
       lines << ["#{color_block '--stalled-color'} Stalled by status: #{blocked_stalled.status}"]
-    elsif blocked_stalled.stalled_days
+    else
       lines << ["#{color_block '--stalled-color'} Stalled by inactivity: #{blocked_stalled.stalled_days} days"]
     end
     lines
