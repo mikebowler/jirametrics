@@ -162,6 +162,10 @@ div.daily_issue {
   .comment {
     margin-left: 1em;
   }
+  .icon {
+    width: 1em;
+    height: 1em;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {

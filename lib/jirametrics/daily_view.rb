@@ -100,13 +100,13 @@ class DailyView < ChartBase
 
     title_line = +''
     title_line << color_block('--expedited-color', title: 'Expedited') if issue.expedited?
-    title_line << "<img src='#{issue.type_icon_url}' title='#{issue.type}' /> "
+    title_line << "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> "
     title_line << "<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"
     lines << [title_line]
 
     chunks = []
 
-    chunks << "<img src='#{issue.priority_url}' /> <b>#{issue.priority_name}</b>"
+    chunks << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
 
     age = issue.board.cycletime.age(issue, today: date_range.end)
     chunks << "Age: <b>#{label_days age}</b>" if age
@@ -117,7 +117,7 @@ class DailyView < ChartBase
     chunks << "Column: <b>#{column&.name || '(not visible on board)'}</b>"
 
     if issue.assigned_to
-      chunks << "Who: <img src='#{issue.assigned_to_icon_url}' width=16 height=16 /> <b>#{issue.assigned_to}</b>"
+      chunks << "Who: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
     end
 
     chunks << "Due: <b>#{issue.due_date}</b>" if issue.due_date
@@ -131,7 +131,7 @@ class DailyView < ChartBase
     subtasks = issue.subtasks.reject { |i| i.done? }
 
     unless subtasks.empty?
-      icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' />" }
+      icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' class='icon' />" }
       lines << (icon_urls << 'Incomplete child issues')
       lines += subtasks
     end
@@ -153,7 +153,7 @@ class DailyView < ChartBase
       time = c.time.strftime '%Y-%b-%d %I:%M%P'
       lines << [
         "<span class='comment'>#{time} " \
-        "<img src='#{c.author_icon_url}' width=16 height=16 /> " \
+        "<img src='#{c.author_icon_url}' class='icon' /> " \
         "#{c.author} &rarr; #{text}</span>"
       ]
     end
