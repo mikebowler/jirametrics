@@ -161,6 +161,11 @@ div.daily_issue {
   }
   .comment {
     margin-left: 1em;
+    padding-left: 2em;
+    text-indent: -2em;
+    .time {
+      font-size: 0.8em;
+    }
   }
   .icon {
     width: 1em;

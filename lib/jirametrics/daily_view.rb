@@ -150,11 +150,13 @@ class DailyView < ChartBase
     lines << ['Comments']
     comments.each do |c|
       text = jira_rich_text_to_html c.value
-      time = c.time.strftime '%Y-%b-%d %I:%M%P'
+      time = c.time.strftime '%b %d, %I:%M%P'
+
       lines << [
-        "<span class='comment'>#{time} " \
-        "<img src='#{c.author_icon_url}' class='icon' /> " \
-        "#{c.author} &rarr; #{text}</span>"
+        "<div class='comment'>" \
+        "<img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /> " \
+        "<span class='header' title='Timestamp: #{c.time}'>#{time}</span> " \
+        " &rarr; #{text}</div>"
       ]
     end
     lines
