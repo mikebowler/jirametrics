@@ -207,6 +207,10 @@ class Issue
     nil
   end
 
+  def first_time_visible_on_board
+    first_time_in_status(*board.visible_columns.collect(&:status_ids).flatten)
+  end
+
   def parse_time text
     Time.parse(text).getlocal(@timezone_offset)
   end

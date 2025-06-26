@@ -470,6 +470,19 @@ describe Issue do
     end
   end
 
+  context 'first_time_visible_on_board' do
+    let(:issue) { empty_issue created: '2021-10-01', board: sample_board }
+
+    it 'does not match when not visible' do
+      expect(issue.first_time_visible_on_board).to be_nil
+    end
+
+    it 'does not match when wrong labels' do
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-10-03')
+      expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-03')
+    end
+  end
+
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do
