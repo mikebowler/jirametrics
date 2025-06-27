@@ -159,11 +159,13 @@ div.daily_issue {
     gap: 0.5em;
     align-items: center;
   }
-  .comment {
+  table {
     margin-left: 1em;
-    padding-left: 2em;
-    text-indent: -2em;
+    td {
+      vertical-align: top;
+    }
     .time {
+      white-space: nowrap;
       font-size: 0.8em;
     }
   }

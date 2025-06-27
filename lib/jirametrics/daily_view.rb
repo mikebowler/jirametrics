@@ -148,17 +148,26 @@ class DailyView < ChartBase
     return lines if comments.empty?
 
     lines << ['Comments']
+    table = +''
+    table << '<table>'
     comments.each do |c|
-      text = jira_rich_text_to_html c.value
+      # text = jira_rich_text_to_html c.value
       time = c.time.strftime '%b %d, %I:%M%P'
 
-      lines << [
-        "<div class='comment'>" \
-        "<img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /> " \
-        "<span class='header' title='Timestamp: #{c.time}'>#{time}</span> " \
-        " &rarr; #{text}</div>"
-      ]
+      table << '<tr>'
+      table << "<td><span class='time' title='Timestamp: #{c.time}'>#{time}</span></td>"
+      table << "<td><img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /></td>"
+      table << "<td>#{jira_rich_text_to_html c.value}</td>"
+      table << '</tr>'
+      # lines << [
+      #   "<div class='comment'>" \
+      #   "<img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /> " \
+      #   "<span class='header' title='Timestamp: #{c.time}'>#{time}</span> " \
+      #   " &rarr; #{text}</div>"
+      # ]
     end
+    table << '</table>'
+    lines << [table]
     lines
   end
 
