@@ -222,6 +222,16 @@ describe DailyView do
       expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
     end
 
+    it 'handles an issue with no author id' do
+      issue = load_issue 'SP-1'
+      add_mock_change(
+        issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
+      )
+
+      view.issues = [issue]
+      expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
+    end
+
     it 'finds a match in status changes' do
       issue = load_issue 'SP-15'
       view.issues = [issue]

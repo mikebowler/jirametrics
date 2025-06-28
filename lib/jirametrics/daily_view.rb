@@ -149,7 +149,7 @@ class DailyView < ChartBase
       hash = {}
       issues.each do |issue|
         issue.changes.each do |change|
-          id = change.author_raw['accountId']
+          id = change.author_raw&.[]('accountId')
           hash[id] ||= change.author_raw if id
         end
       end
