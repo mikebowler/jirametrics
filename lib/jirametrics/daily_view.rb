@@ -139,7 +139,30 @@ class DailyView < ChartBase
   end
 
   def jira_rich_text_to_html text
-    text.gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
+    text
+      .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
+      .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 }
+  end
+
+  def expand_account_id account_id
+    unless @account_elements
+      hash = {}
+      issues.each do |issue|
+        issue.changes.each do |change|
+          id = change.author_raw['accountId']
+          hash[id] ||= change.author_raw if id
+        end
+      end
+      @account_elements = hash
+    end
+
+    element = @account_elements[account_id]
+    text = account_id
+    if element
+      image_src = element['avatarUrls']['16x16']
+      text = "<img src='#{image_src}' class='icon' /> @#{element['displayName']}"
+    end
+    "<span class='account_id'>#{text}</span>"
   end
 
   def make_comment_lines issue
@@ -151,7 +174,6 @@ class DailyView < ChartBase
     table = +''
     table << '<table>'
     comments.each do |c|
-      # text = jira_rich_text_to_html c.value
       time = c.time.strftime '%b %d, %I:%M%P'
 
       table << '<tr>'
@@ -159,12 +181,6 @@ class DailyView < ChartBase
       table << "<td><img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /></td>"
       table << "<td>#{jira_rich_text_to_html c.value}</td>"
       table << '</tr>'
-      # lines << [
-      #   "<div class='comment'>" \
-      #   "<img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /> " \
-      #   "<span class='header' title='Timestamp: #{c.time}'>#{time}</span> " \
-      #   " &rarr; #{text}</div>"
-      # ]
     end
     table << '</table>'
     lines << [table]

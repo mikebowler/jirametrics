@@ -173,6 +173,9 @@ div.daily_issue {
     width: 1em;
     height: 1em;
   }
+  .account_id {
+    font-weight: bold;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {

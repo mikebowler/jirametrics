@@ -215,4 +215,19 @@ describe DailyView do
       ]
     end
   end
+
+  context 'expand_account_id' do
+    it 'handles no matches' do
+      view.issues = []
+      expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
+    end
+
+    it 'finds a match in status changes' do
+      issue = load_issue 'SP-15'
+      view.issues = [issue]
+      expect(view.expand_account_id '557058:aaccdddd-0be8-432f-959a-13d34c55315f').to eq(
+        "<span class='account_id'><img src='https://example.com/fred.png' class='icon' /> @Fred Flintstone</span>"
+      )
+    end
+  end
 end

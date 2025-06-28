@@ -12,15 +12,15 @@
         "id": "10150",
         "author": {
           "self": "https://improvingflow.atlassian.net/rest/api/2/user?accountId=557058%3A13cc9354-0be8-432f-959a-13d34c55315f",
-          "accountId": "557058:13cc9354-0be8-432f-959a-13d34c55315f",
+          "accountId": "557058:aaccdddd-0be8-432f-959a-13d34c55315f",
           "emailAddress": "mbowler@gargoylesoftware.com",
           "avatarUrls": {
             "48x48": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
             "24x24": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
-            "16x16": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png",
+            "16x16": "https://example.com/fred.png",
             "32x32": "https://secure.gravatar.com/avatar/a966b9ce0a0393c01096bfdc00dd9b0f?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-0.png"
           },
-          "displayName": "Mike Bowler",
+          "displayName": "Fred Flintstone",
           "active": true,
           "timeZone": "Etc/GMT",
           "accountType": "atlassian"
