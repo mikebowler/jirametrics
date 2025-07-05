@@ -115,6 +115,7 @@ class JiraMetrics < Thor
     require 'jirametrics/estimation_configuration'
     require 'jirametrics/board'
     require 'jirametrics/daily_view'
+    require 'jirametrics/user'
     load config_file
   end
 end

@@ -315,6 +315,23 @@ def create_issue_from_aging_data board:, ages_by_column:, today:, key: 'SP-1'
   issue
 end
 
+def mock_user display_name:, account_id:, avatar_url:, active: true
+  User.new(raw: {
+      'self' => "https://improvingflow.atlassian.net/rest/api/2/user?accountId=#{account_id}",
+      'accountId' => account_id,
+      'accountType' => 'atlassian',
+      'avatarUrls' => {
+        '48x48' => avatar_url,
+        '24x24' => avatar_url,
+        '16x16' => avatar_url,
+        '32x32' => avatar_url
+      },
+      'displayName' => display_name,
+      'active' => active,
+      'locale' => 'en_US'
+    })
+end
+
 ######
 
 def match_strings expected

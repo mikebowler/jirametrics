@@ -45,6 +45,7 @@ class Downloader
       board = download_board_configuration board_id: id
       download_issues board: board
     end
+    download_users
 
     save_metadata
   end
@@ -144,6 +145,16 @@ class Downloader
     @file_system.save_json(
       json: json,
       filename: File.join(@target_path, "#{file_prefix}_statuses.json")
+    )
+  end
+
+  def download_users
+    log '  Downloading all users', both: true
+    json = @jira_gateway.call_url relative_url: '/rest/api/2/users'
+
+    @file_system.save_json(
+      json: json,
+      filename: File.join(@target_path, "#{file_prefix}_users.json")
     )
   end
 

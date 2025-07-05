@@ -145,23 +145,9 @@ class DailyView < ChartBase
   end
 
   def expand_account_id account_id
-    unless @account_elements
-      hash = {}
-      issues.each do |issue|
-        issue.changes.each do |change|
-          id = change.author_raw&.[]('accountId')
-          hash[id] ||= change.author_raw if id
-        end
-      end
-      @account_elements = hash
-    end
-
-    element = @account_elements[account_id]
+    user = @users.find { |u| u.account_id == account_id }
     text = account_id
-    if element
-      image_src = element['avatarUrls']['16x16']
-      text = "<img src='#{image_src}' class='icon' /> @#{element['displayName']}"
-    end
+    text = "<img src='#{user.avatar_url}' class='icon' /> @#{user.display_name}" if user
     "<span class='account_id'>#{text}</span>"
   end
 

@@ -8,6 +8,7 @@ describe DailyView do
       view.date_range = to_date('2024-01-01')..to_date('2024-01-20')
       view.time_range = to_time('2024-01-01')..to_time('2024-01-20T23:59:59')
       view.settings = JSON.parse(File.read(File.join(['lib', 'jirametrics', 'settings.json']), encoding: 'UTF-8'))
+      view.users = []
     end
   end
   let(:board) { sample_board }
@@ -232,7 +233,12 @@ describe DailyView do
       expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
     end
 
-    it 'finds a match in status changes' do
+    it 'finds a match in users' do
+      view.users << mock_user(
+        display_name: 'Fred Flintstone',
+        account_id: '557058:aaccdddd-0be8-432f-959a-13d34c55315f',
+        avatar_url: 'https://example.com/fred.png'
+      )
       issue = load_issue 'SP-15'
       view.issues = [issue]
       expect(view.expand_account_id '557058:aaccdddd-0be8-432f-959a-13d34c55315f').to eq(

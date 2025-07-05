@@ -6,7 +6,7 @@ require 'jirametrics/status_collection'
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings, :aggregate_config, :discarded_changes_data
+    :settings, :aggregate_config, :discarded_changes_data, :users
   attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
@@ -40,6 +40,7 @@ class ProjectConfig
     @id = guess_project_id
     load_project_metadata
     load_sprints
+    load_users
   end
 
   def run load_only: false
@@ -323,6 +324,15 @@ class ProjectConfig
   rescue Errno::ENOENT
     file_system.log "Can't load #{filename}. Have you done a download?", also_write_to_stderr: true
     raise
+  end
+
+  def load_users
+    @users = []
+    filename = File.join @target_path, "#{get_file_prefix}_users.json"
+    return unless File.exist? filename
+
+    json = file_system.load_json(filename)
+    json.each { |user_data| @users << User.new(raw: user_data) }
   end
 
   def to_time string, end_of_day: false
