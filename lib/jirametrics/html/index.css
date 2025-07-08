@@ -176,6 +176,14 @@ div.daily_issue {
   .account_id {
     font-weight: bold;
   }
+  .field {
+    border: 1px solid black;
+    color: white;
+    background: black;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+    border-radius: 0.2em;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {
@@ -254,4 +262,12 @@ div.child_issue {
   div.color_block {
     border: 1px solid lightgray;
   }
+
+  div.daily_issue {
+    .field {
+      color: var(--default-text-color);
+    }
+  }
+}
+
 }

@@ -78,13 +78,13 @@ describe DailyView do
     end
   end
 
-  context 'assemble_issue_lines' do
+  context 'make_stats_lines' do
     it 'creates for aging item' do
       issue = load_issue('SP-1', board: board)
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      expect(view.assemble_issue_lines issue).to eq [
+      expect(view.make_stats_lines issue).to eq [
         [
           "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
             "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
@@ -94,8 +94,7 @@ describe DailyView do
           'Age: <b>20 days</b>',
           'Status: <b>In Progress</b>',
           'Column: <b>In Progress</b>'
-        ],
-        ["#{view.color_block '--blocked-color'} Blocked by flag"]
+        ]
       ]
     end
 
@@ -104,7 +103,8 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, nil, nil]
       ]
-      expect(view.assemble_issue_lines issue).to eq [
+
+      expect(view.make_stats_lines issue).to eq [
         [
           "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
           "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
@@ -113,8 +113,7 @@ describe DailyView do
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
           'Status: <b>In Progress</b>',
           'Column: <b>In Progress</b>'
-        ],
-        ["#{view.color_block '--blocked-color'} Blocked by flag"]
+        ]
       ]
     end
 
@@ -123,15 +122,14 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-02', '2024-01-02']
       ]
-      expect(view.assemble_issue_lines issue).to eq [
+      expect(view.make_stats_lines issue).to eq [
         ["<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
           "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
         [
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
           'Status: <b>In Progress</b>',
           'Column: <b>In Progress</b>'
-        ],
-        ["#{view.color_block '--blocked-color'} Blocked by flag"]
+        ]
       ]
     end
   end
@@ -242,7 +240,7 @@ describe DailyView do
       issue = load_issue 'SP-15'
       view.issues = [issue]
       expect(view.expand_account_id '557058:aaccdddd-0be8-432f-959a-13d34c55315f').to eq(
-        "<span class='account_id'><img src='https://example.com/fred.png' class='icon' /> @Fred Flintstone</span>"
+        "<span class='account_id'>@Fred Flintstone</span>"
       )
     end
   end

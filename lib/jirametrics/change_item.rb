@@ -27,23 +27,18 @@ class ChangeItem
     @author_raw&.[]('avatarUrls')&.[]('16x16')
   end
 
-  def status? = (field == 'status')
-
-  def flagged? = (field == 'Flagged')
-
-  def priority? = (field == 'priority')
-
-  def resolution? = (field == 'resolution')
-
   def artificial? = @artificial
-
-  def sprint? = (field == 'Sprint')
-
-  def link? = (field == 'Link')
-
-  def labels? = (field == 'labels')
-
+  def assignee? = (field == 'assignee')
   def comment? = (field == 'comment')
+  def due_date? = (field == 'duedate')
+  def flagged? = (field == 'Flagged')
+  def issue_type? = field == 'issuetype'
+  def labels? = (field == 'labels')
+  def link? = (field == 'Link')
+  def priority? = (field == 'priority')
+  def resolution? = (field == 'resolution')
+  def sprint? = (field == 'Sprint')
+  def status? = (field == 'status')
 
   # An alias for time so that logic accepting a Time, Date, or ChangeItem can all respond to :to_time
   def to_time = @time
@@ -96,6 +91,17 @@ class ChangeItem
       else
         name_or_id == @old_value_id
       end
+    end
+  end
+
+  def field_as_human_readable
+    case @field
+    when 'duedate' then 'Due date'
+    when 'timeestimate' then 'Time estimate'
+    when 'timeoriginalestimate' then 'Time original estimate'
+    when 'issuetype' then 'Issue type'
+    when 'IssueParentAssociation' then 'Issue parent association'
+    else @field.capitalize
     end
   end
 

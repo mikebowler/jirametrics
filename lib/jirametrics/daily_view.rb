@@ -147,25 +147,53 @@ class DailyView < ChartBase
   def expand_account_id account_id
     user = @users.find { |u| u.account_id == account_id }
     text = account_id
-    text = "<img src='#{user.avatar_url}' class='icon' /> @#{user.display_name}" if user
+    text = "@#{user.display_name}" if user
     "<span class='account_id'>#{text}</span>"
   end
 
-  def make_comment_lines issue
-    comments = issue.changes.select { |i| i.comment? }.reverse
+  def make_history_lines issue
+    history = issue.changes.reverse
     lines = []
-    return lines if comments.empty?
 
-    lines << ['Comments']
+    return lines if history.empty?
+
+    id = next_id
+    lines << [
+      "<a href=\"javascript:toggle_visibility('open#{id}', 'close#{id}', 'table#{id}');\">" \
+      "<span id='open#{id}'>▶ Issue History</span>" \
+      "<span id='close#{id}' style='display: none'>▼ Issue History</span></a>"
+    ]
     table = +''
-    table << '<table>'
-    comments.each do |c|
+    table << "<table id='table#{id}' style='display: none'>"
+    history.each do |c|
       time = c.time.strftime '%b %d, %I:%M%P'
 
       table << '<tr>'
       table << "<td><span class='time' title='Timestamp: #{c.time}'>#{time}</span></td>"
       table << "<td><img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /></td>"
-      table << "<td>#{jira_rich_text_to_html c.value}</td>"
+      text = case # rubocop:disable Style/EmptyCaseCondition
+      when c.comment?
+        jira_rich_text_to_html(c.value)
+      when c.status?
+        board = issue.board
+        to = format_status(board.possible_statuses.find_by_id(c.value_id), board: board)
+        if c.old_value
+          from = format_status(board.possible_statuses.find_by_id(c.old_value_id), board: board) if c.old_value
+          "Status changed from #{from} to #{to}"
+        else
+          "Status set to #{to}"
+        end
+      when c.priority?, c.assignee?, c.due_date?, c.field == 'issuetype'
+        if c.old_value
+          "Changed from #{c.old_value} to #{c.value}"
+        else
+          "Set to #{c.value}"
+        end
+      when c.flagged?
+        c.value == '' ? 'Off' : 'On'
+      else c.value
+      end
+      table << "<td><span class='field'>#{c.field_as_human_readable}</span> #{text}</td>"
       table << '</tr>'
     end
     table << '</table>'
@@ -178,7 +206,7 @@ class DailyView < ChartBase
     lines += make_stats_lines(issue)
     lines += make_blocked_stalled_lines(issue)
     lines += make_child_lines(issue)
-    lines += make_comment_lines(issue)
+    lines += make_history_lines(issue)
     lines
   end
 
