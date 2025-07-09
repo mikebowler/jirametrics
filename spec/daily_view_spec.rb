@@ -87,7 +87,7 @@ describe DailyView do
       expect(view.make_stats_lines issue).to eq [
         [
           "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-            "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
+            "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
         ],
         [
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
@@ -107,7 +107,7 @@ describe DailyView do
       expect(view.make_stats_lines issue).to eq [
         [
           "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-          "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"
+          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
         ],
         [
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
@@ -124,7 +124,7 @@ describe DailyView do
       ]
       expect(view.make_stats_lines issue).to eq [
         ["<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-          "<b><a href='#{issue.url}'>SP-1</a></b> <i>Create new draft event</i>"],
+          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"],
         [
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
           'Status: <b>In Progress</b>',
