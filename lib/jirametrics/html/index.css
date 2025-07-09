@@ -184,6 +184,12 @@ div.daily_issue {
     padding-right: 0.2em;
     border-radius: 0.2em;
   }
+  .label {
+    border: 1px solid black;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+    border-radius: 0.2em;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {

@@ -95,14 +95,25 @@ class DailyView < ChartBase
     lines
   end
 
+  def make_issue_label issue
+    "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> " \
+      "<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"
+  end
+
   def make_stats_lines issue
     lines = []
 
     title_line = +''
     title_line << color_block('--expedited-color', title: 'Expedited') if issue.expedited?
-    title_line << "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> "
-    title_line << "<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"
+    title_line << make_issue_label(issue)
     lines << [title_line]
+
+    parent_key = issue.parent_key
+    if parent_key
+      parent = issues.find_by_key key: parent_key, include_hidden: true
+      text = parent ? make_issue_label(parent) : parent_key
+      lines << ["Parent: #{text}"]
+    end
 
     chunks = []
 
@@ -117,12 +128,22 @@ class DailyView < ChartBase
     chunks << "Column: <b>#{column&.name || '(not visible on board)'}</b>"
 
     if issue.assigned_to
-      chunks << "Who: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
+      chunks << "Assignee: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
     end
 
     chunks << "Due: <b>#{issue.due_date}</b>" if issue.due_date
-    lines << chunks
 
+    unless issue.labels.empty?
+      labels = issue.labels.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
+      chunks << "Labels: #{labels}"
+    end
+
+    unless issue.component_names.empty?
+      labels = issue.component_names.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
+      chunks << "Components: #{labels}"
+    end
+
+    lines << chunks
     lines
   end
 
@@ -184,10 +205,12 @@ class DailyView < ChartBase
           "Status set to #{to}"
         end
       when c.priority?, c.assignee?, c.due_date?, c.field == 'issuetype'
-        if c.old_value
+        if c.old_value && c.value
           "Changed from #{c.old_value} to #{c.value}"
-        else
+        elsif c.value
           "Set to #{c.value}"
+        else
+          "Cleared from #{c.old_value}"
         end
       when c.flagged?
         c.value == '' ? 'Off' : 'On'

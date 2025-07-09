@@ -368,7 +368,7 @@ class ProjectConfig
 
   # To be used by the aggregate_config only. Not intended to be part of the public API
   def add_issues issues_list
-    @issues = [] if @issues.nil?
+    @issues = IssueCollection.new if @issues.nil?
     @all_boards = {}
 
     issues_list.each do |issue|
@@ -385,7 +385,7 @@ class ProjectConfig
           'declaration but none are here. Check your config.'
       end
 
-      return @issues = [] if @exporter.downloading?
+      return @issues = IssueCollection.new if @exporter.downloading?
       raise 'No data found. Must do a download before an export' unless data_downloaded?
 
       load_data if all_boards.empty?
@@ -397,7 +397,7 @@ class ProjectConfig
         issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
       else
         file_system.log "Can't find directory #{issues_path}. Has a download been done?", also_write_to_stderr: true
-        return []
+        return IssueCollection.new
       end
 
       # Attach related issues
@@ -409,7 +409,8 @@ class ProjectConfig
 
       # We'll have some issues that are in the list that weren't part of the initial query. Once we've
       # attached them in the appropriate places, remove any that aren't part of that initial set.
-      @issues = issues.select { |i| i.in_initial_query? }
+      issues.reject! { |i| !i.in_initial_query? } # rubocop:disable Style/InverseMethods
+      @issues = issues
     end
 
     @issues
@@ -450,7 +451,7 @@ class ProjectConfig
   end
 
   def load_issues_from_issues_directory path:, timezone_offset:
-    issues = []
+    issues = IssueCollection.new
     default_board = nil
 
     group_filenames_and_board_ids(path: path).each do |filename, board_ids|
@@ -463,7 +464,8 @@ class ProjectConfig
 
       boards.each do |board|
         if board.cycletime.nil?
-          raise "The board declaration for board #{board.id} must come before the first usage of 'issues' in the configuration"
+          raise "The board declaration for board #{board.id} must come before the " \
+            "first usage of 'issues' in the configuration"
         end
         issues << Issue.new(raw: content, timezone_offset: timezone_offset, board: board)
       end

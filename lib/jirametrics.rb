@@ -69,6 +69,7 @@ class JiraMetrics < Thor
     require 'jirametrics/daily_wip_chart'
     require 'jirametrics/groupable_issue_chart'
     require 'jirametrics/css_variable'
+    require 'jirametrics/issue_collection'
 
     require 'jirametrics/aggregate_config'
     require 'jirametrics/expedited_chart'

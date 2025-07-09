@@ -13,7 +13,7 @@ class FileConfig
   end
 
   def run
-    @issues = project_config.issues.dup
+    @issues = project_config.issues
     instance_eval(&@block)
 
     if @columns
