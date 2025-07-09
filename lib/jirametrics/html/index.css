@@ -152,16 +152,11 @@ div.daily_issue:hover {
 
 div.daily_issue {
   border: 1px solid var(--daily-view-issue-border);
-  div {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
   padding: 0.5em;
   .heading {
     vertical-align: middle;
     display: flex;
+    flex-wrap: wrap;
     column-gap: 0.5em;
     align-items: center;
   }

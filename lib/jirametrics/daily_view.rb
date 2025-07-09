@@ -97,7 +97,7 @@ class DailyView < ChartBase
 
   def make_issue_label issue
     "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> " \
-      "<b><a href='#{issue.url}'>#{issue.key}</a></b> <i>#{issue.summary}</i>"
+      "<b><a href='#{issue.url}'>#{issue.key}</a></b> &nbsp;<i>#{issue.summary}</i>"
   end
 
   def make_stats_lines issue
