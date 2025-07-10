@@ -164,8 +164,10 @@ class DailyView < ChartBase
 
   def jira_rich_text_to_html text
     text
-      .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>')
-      .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 }
+      .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
+      .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
+      .gsub(/\[([^\|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
+      .gsub("\n", '<br />')
   end
 
   def expand_account_id account_id

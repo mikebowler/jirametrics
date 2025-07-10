@@ -149,11 +149,28 @@ describe DailyView do
         'three <span style="color: #b3f5ff">Subtle teal</span>'
       )
     end
+
+    it 'converts urls' do
+      input = 'a [link|http://example.com] embedded'
+      expect(view.jira_rich_text_to_html input).to eq(
+        'a <a href="http://example.com">link</a> embedded'
+      )
+    end
+
+    it 'converts comment with only a list' do
+      input = "* one\n* two"
+      expect(view.jira_rich_text_to_html input).to eq(
+        '* one<br />* two'
+      )
+    end
   end
 
   context 'make_blocked_stalled_lines' do
     it 'renders stalled by inactivity' do
       issue = empty_issue created: '2024-01-01'
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-01', nil]
+      ]
       expect(view.make_blocked_stalled_lines issue).to eq [
         [
           "#{view.color_block '--stalled-color'} Stalled by inactivity: 19 days"
@@ -164,6 +181,9 @@ describe DailyView do
     it 'renders stalled by status' do
       view.settings['stalled_statuses'] = ['Review']
       issue = empty_issue created: '2024-01-01'
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-01', nil]
+      ]
       add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
@@ -176,6 +196,9 @@ describe DailyView do
     it 'renders blocked by status' do
       view.settings['blocked_statuses'] = ['Review']
       issue = empty_issue created: '2024-01-01'
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-01', nil]
+      ]
       add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
@@ -188,6 +211,9 @@ describe DailyView do
     it 'renders blocked by issue' do
       view.settings['blocked_link_text'] = ['is blocked by']
       issue = empty_issue created: '2024-01-01'
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-01', nil]
+      ]
       view.issues = [issue, issue2]
       add_mock_change(
         issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
@@ -202,6 +228,9 @@ describe DailyView do
     it 'renders blocked by issue when blocker cannot be found' do
       view.settings['blocked_link_text'] = ['is blocked by']
       issue = empty_issue created: '2024-01-01'
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-01', nil]
+      ]
       view.issues = [issue]
       add_mock_change(
         issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
