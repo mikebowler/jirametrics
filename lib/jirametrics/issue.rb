@@ -472,8 +472,6 @@ class Issue
   end
 
   def expedited?
-    return false unless @board&.project_config
-
     names = @board.project_config.settings['expedited_priority_names']
     return false unless names
 
