@@ -164,7 +164,7 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2024-01-02', nil]
       ]
-      pp view.make_stats_lines issue1
+
       status = board.possible_statuses.find_all_by_name('In Progress').first
       expect(view.make_stats_lines issue1).to eq [
         [
@@ -192,6 +192,89 @@ describe DailyView do
       ]
     end
 
+    it 'has labels' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+      issue1.raw['fields']['labels'] = ['foo']
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue1).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>',
+          "Labels: <span class='label'>foo</span>"
+        ]
+      ]
+    end
+
+    it 'has an assignee' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+      issue1.raw['fields']['assignee'] = {
+        'displayName' => 'Fred Flintstone',
+        'avatarUrls' => {
+          '16x16' => 'http://example.com/fred.png'
+        }
+      }
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue1).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>',
+          "Assignee: <img src='http://example.com/fred.png' class='icon' /> <b>Fred Flintstone</b>"
+        ]
+      ]
+    end
+
+    it 'is in a status that is not on the board' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', nil]
+      ]
+      status = board.possible_statuses.find_all_by_name('Backlog').first
+      issue1.raw['fields']['status'] = {
+        'name' => status.name,
+        'id' => status.id,
+        'statusCategory' => {
+          'id' => status.category.id,
+          'key' => status.category.key,
+          'name' => status.category.name
+        }
+      }
+
+      expect(view.make_stats_lines issue1).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>20 days</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>(not visible on board)</b>'
+        ]
+      ]
+    end
+
+    it 'has a due date' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+      issue1.raw['fields']['duedate'] = '2024-01-10'
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue1).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>',
+          'Due: <b>2024-01-10</b>'
+        ]
+      ]
+    end
   end
 
   context 'jira_rich_text_to_html' do

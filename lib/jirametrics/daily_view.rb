@@ -122,38 +122,34 @@ class DailyView < ChartBase
   end
 
   def make_stats_lines issue
-    lines = []
+    line = []
 
-    chunks = []
-
-    chunks << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
+    line << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
 
     age = issue.board.cycletime.age(issue, today: date_range.end)
-    chunks << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
+    line << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
 
-    chunks << "Status: <b>#{format_status issue.status, board: issue.board}</b>"
+    line << "Status: <b>#{format_status issue.status, board: issue.board}</b>"
 
     column = issue.board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
-    chunks << "Column: <b>#{column&.name || '(not visible on board)'}</b>"
+    line << "Column: <b>#{column&.name || '(not visible on board)'}</b>"
 
     if issue.assigned_to
-      chunks << "Assignee: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
+      line << "Assignee: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
     end
 
-    chunks << "Due: <b>#{issue.due_date}</b>" if issue.due_date
+    line << "Due: <b>#{issue.due_date}</b>" if issue.due_date
 
-    unless issue.labels.empty?
-      labels = issue.labels.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
-      chunks << "Labels: #{labels}"
+    block = lambda do |collection, label|
+      unless collection.empty?
+        text = collection.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
+        line << "#{label} #{text}"
+      end
     end
+    block.call issue.labels, 'Labels:'
+    block.call issue.component_names, 'Components:'
 
-    unless issue.component_names.empty?
-      labels = issue.component_names.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
-      chunks << "Components: #{labels}"
-    end
-
-    lines << chunks
-    lines
+    [line]
   end
 
   def make_child_lines issue
