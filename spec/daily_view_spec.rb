@@ -132,6 +132,30 @@ describe DailyView do
         ]
       ]
     end
+
+    it 'shows the expedited marker and the correct priority' do
+      issue = load_issue('SP-1', board: board)
+      issue.raw['fields']['priority'] = {
+        'iconUrl' => 'https://improvingflow.atlassian.net/images/icons/priorities/highest_new.svg',
+        'name' => 'Highest',
+        'id' => '1'
+      }
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2024-01-02', '2024-01-02']
+      ]
+      expect(view.make_stats_lines issue).to eq [
+        [
+          "#{view.color_block('--expedited-color', title: 'Expedited')}" \
+          "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
+          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
+        ],
+        [
+          "<img src='#{issue.priority_url}' class='icon' /> <b>Highest</b>",
+          'Status: <b>In Progress</b>',
+          'Column: <b>In Progress</b>'
+        ]
+      ]
+    end
   end
 
   context 'jira_rich_text_to_html' do
