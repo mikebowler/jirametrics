@@ -3,6 +3,12 @@
 class IssueCollection < Array
   attr_reader :hidden
 
+  def self.[] *issues
+    collection = new
+    issues.each { |i| collection << i }
+    collection
+  end
+
   def initialize
     super
     @hidden = []

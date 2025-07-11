@@ -28,7 +28,7 @@ class DailyView < ChartBase
     result = +''
     result << render_top_text(binding)
     aging_issues.each do |issue|
-      result << render_issue(issue)
+      result << render_issue(issue, child: false)
     end
     result
   end
@@ -103,29 +103,35 @@ class DailyView < ChartBase
       "<b><a href='#{issue.url}'>#{issue.key}</a></b> &nbsp;<i>#{issue.summary}</i>"
   end
 
-  def make_stats_lines issue
-    lines = []
-
+  def make_title_line issue
     title_line = +''
     title_line << color_block('--expedited-color', title: 'Expedited') if issue.expedited?
     title_line << make_issue_label(issue)
-    lines << [title_line]
+    title_line
+  end
 
+  def make_parent_lines issue
+    lines = []
     parent_key = issue.parent_key
     if parent_key
       parent = issues.find_by_key key: parent_key, include_hidden: true
       text = parent ? make_issue_label(parent) : parent_key
       lines << ["Parent: #{text}"]
     end
+    lines
+  end
+
+  def make_stats_lines issue
+    lines = []
 
     chunks = []
 
     chunks << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
 
     age = issue.board.cycletime.age(issue, today: date_range.end)
-    chunks << "Age: <b>#{label_days age}</b>" if age
+    chunks << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
 
-    chunks << "Status: <b>#{issue.status.name}</b>"
+    chunks << "Status: <b>#{format_status issue.status, board: issue.board}</b>"
 
     column = issue.board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
     chunks << "Column: <b>#{column&.name || '(not visible on board)'}</b>"
@@ -229,8 +235,10 @@ class DailyView < ChartBase
     lines
   end
 
-  def assemble_issue_lines issue
+  def assemble_issue_lines issue, child:
     lines = []
+    lines << [make_title_line(issue)]
+    lines += make_parent_lines(issue) unless child
     lines += make_stats_lines(issue)
     lines += make_blocked_stalled_lines(issue)
     lines += make_child_lines(issue)
@@ -238,12 +246,13 @@ class DailyView < ChartBase
     lines
   end
 
-  def render_issue issue, css_class: 'daily_issue'
+  def render_issue issue, child:
+    css_class = child ? 'child_issue' : 'daily_issue'
     result = +''
     result << "<div class='#{css_class}'>"
-    assemble_issue_lines(issue).each do |row|
+    assemble_issue_lines(issue, child: child).each do |row|
       if row.is_a? Issue
-        result << render_issue(row, css_class: 'child_issue')
+        result << render_issue(row, child: true)
       else
         result << '<div class="heading">'
         row.each do |chunk|

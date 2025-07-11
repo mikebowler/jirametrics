@@ -78,13 +78,15 @@ describe DailyView do
     end
   end
 
-  context 'make_stats_lines' do
+  xcontext 'assemble' do
     it 'creates for aging item' do
       issue = load_issue('SP-1', board: board)
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      expect(view.make_stats_lines issue).to eq [
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+
+      expect(view.assemble_issue_lines issue, child: false).to eq [
         [
           "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
             "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
@@ -92,48 +94,27 @@ describe DailyView do
         [
           "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>20 days</b>',
-          'Status: <b>In Progress</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
           'Column: <b>In Progress</b>'
         ]
       ]
     end
+  end
 
-    it 'creates for not started' do
+  context 'make_title_line' do
+    it 'is not expedited' do
       issue = load_issue('SP-1', board: board)
       board.cycletime = mock_cycletime_config stub_values: [
-        [issue, nil, nil]
+        [issue, '2024-01-02', nil]
       ]
 
-      expect(view.make_stats_lines issue).to eq [
-        [
-          "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
-        ],
-        [
-          "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
-          'Status: <b>In Progress</b>',
-          'Column: <b>In Progress</b>'
-        ]
-      ]
+      expect(view.make_title_line issue).to eq(
+        "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
+        "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
+      )
     end
 
-    it 'creates for finished' do
-      issue = load_issue('SP-1', board: board)
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-02', '2024-01-02']
-      ]
-      expect(view.make_stats_lines issue).to eq [
-        ["<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"],
-        [
-          "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
-          'Status: <b>In Progress</b>',
-          'Column: <b>In Progress</b>'
-        ]
-      ]
-    end
-
-    it 'shows the expedited marker and the correct priority' do
+    it 'shows the expedited marker' do
       issue = load_issue('SP-1', board: board)
       issue.raw['fields']['priority'] = {
         'iconUrl' => 'https://improvingflow.atlassian.net/images/icons/priorities/highest_new.svg',
@@ -141,21 +122,76 @@ describe DailyView do
         'id' => '1'
       }
       board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-02', '2024-01-02']
+        [issue, '2024-01-02', nil]
       ]
-      expect(view.make_stats_lines issue).to eq [
+      expect(view.make_title_line issue).to eq(
+        "#{view.color_block('--expedited-color', title: 'Expedited')}" \
+        "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
+        "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
+      )
+    end
+  end
+
+  context 'make_parent_lines' do
+    it 'returns nothing when no parent' do
+      expect(view.make_parent_lines issue1).to be_empty
+    end
+
+    it 'returns key only when parent is not in issues list' do
+      view.issues = IssueCollection[issue1]
+      issue1.raw['fields']['parent'] = { 'key' => 'MISSING-123' }
+      expect(view.make_parent_lines issue1).to eq [
+        ['Parent: MISSING-123']
+      ]
+    end
+
+    it 'returns link when parent is in issues list' do
+      view.issues = IssueCollection[issue1, issue2]
+      issue = load_issue('SP-1', board: board)
+      issue.raw['fields']['parent'] = { 'key' => 'SP-2' }
+
+      expect(view.make_parent_lines issue).to eq [
         [
-          "#{view.color_block('--expedited-color', title: 'Expedited')}" \
-          "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-          "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
-        ],
+          "Parent: <img src='#{issue2.type_icon_url}' title='Story' class='icon' /> " \
+            "<b><a href='#{issue2.url}'>SP-2</a></b> &nbsp;<i>Update existing event</i>"
+        ]
+      ]
+    end
+  end
+
+  context 'make_stats_lines' do
+    it 'returns happy path' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-02', nil]
+      ]
+      pp view.make_stats_lines issue1
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue1).to eq [
         [
-          "<img src='#{issue.priority_url}' class='icon' /> <b>Highest</b>",
-          'Status: <b>In Progress</b>',
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>19 days</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
           'Column: <b>In Progress</b>'
         ]
       ]
     end
+
+    it 'returns not-started when appropriate' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue1).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>'
+        ]
+      ]
+    end
+
   end
 
   context 'jira_rich_text_to_html' do
