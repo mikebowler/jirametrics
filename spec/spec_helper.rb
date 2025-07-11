@@ -25,7 +25,14 @@ end
 
 def sample_board
   statuses = load_statuses './spec/testdata/sample_statuses.json'
-  Board.new raw: JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json')), possible_statuses: statuses
+  board = Board.new(
+    raw: JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json')),
+    possible_statuses: statuses
+  )
+  board.project_config = ProjectConfig.new(
+    exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
+  )
+  board
 end
 
 def load_issue key, board: nil
