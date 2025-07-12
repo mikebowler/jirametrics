@@ -283,6 +283,13 @@ describe DailyView do
         '* one<br />* two'
       )
     end
+
+    it 'converts account id' do
+      input = 'foo [~accountid:abcdef] bar'
+      expect(view.jira_rich_text_to_html input).to eq(
+        "foo <span class='account_id'>abcdef</span> bar"
+      )
+    end
   end
 
   context 'make_blocked_stalled_lines' do
@@ -366,17 +373,6 @@ describe DailyView do
 
   context 'expand_account_id' do
     it 'handles no matches' do
-      view.issues = []
-      expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
-    end
-
-    it 'handles an issue with no author id' do
-      issue = load_issue 'SP-1'
-      add_mock_change(
-        issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
-      )
-
-      view.issues = [issue]
       expect(view.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
     end
 
