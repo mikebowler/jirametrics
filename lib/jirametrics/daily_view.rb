@@ -207,29 +207,23 @@ class DailyView < ChartBase
   end
 
   def history_text change:, board:
-    case
-    when change.comment?
+    if change.comment?
       jira_rich_text_to_html(change.value)
-    when change.status?
+    elsif change.status?
       convertor = ->(id) { format_status(board.possible_statuses.find_by_id(id), board: board) }
       to = convertor.call(change.value_id)
       if change.old_value
         from = convertor.call(change.old_value_id)
-        "Status changed from #{from} to #{to}"
+        "Changed from #{from} to #{to}"
       else
-        "Status set to #{to}"
+        "Set to #{to}"
       end
-    when change.priority?, change.assignee?, change.due_date?, change.field == 'issuetype'
-      if change.old_value && change.value
-        "Changed from #{change.old_value} to #{change.value}"
-      elsif change.value
-        "Set to #{change.value}"
-      else
-        "Cleared from #{change.old_value}"
-      end
-    when change.flagged?
+    elsif %w[priority assignee duedate issuetype].include?(change.field)
+      "Changed from \"#{change.old_value}\" to \"#{change.value}\""
+    elsif change.flagged?
       change.value == '' ? 'Off' : 'On'
-    else change.value
+    else
+      change.value
     end
   end
 

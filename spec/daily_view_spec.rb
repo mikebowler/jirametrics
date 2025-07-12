@@ -78,29 +78,6 @@ describe DailyView do
     end
   end
 
-  xcontext 'assemble' do
-    it 'creates for aging item' do
-      issue = load_issue('SP-1', board: board)
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
-      status = board.possible_statuses.find_all_by_name('In Progress').first
-
-      expect(view.assemble_issue_lines issue, child: false).to eq [
-        [
-          "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
-            "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
-        ],
-        [
-          "<img src='#{issue.priority_url}' class='icon' /> <b>Medium</b>",
-          'Age: <b>20 days</b>',
-          "Status: <b>#{view.format_status status, board: board}</b>",
-          'Column: <b>In Progress</b>'
-        ]
-      ]
-    end
-  end
-
   context 'make_title_line' do
     it 'is not expedited' do
       issue = load_issue('SP-1', board: board)
@@ -429,14 +406,14 @@ describe DailyView do
     it 'changes from no status to status' do
       change = mock_change field: 'status', value: review_status, time: '2024-01-01'
       expect(view.history_text change: change, board: board).to eq(
-        "Status set to #{view.format_status review_status, board: board}"
+        "Set to #{view.format_status review_status, board: board}"
       )
     end
 
     it 'changes from one status to another' do
       change = mock_change field: 'status', value: done_status, old_value: review_status, time: '2024-01-01'
       expect(view.history_text change: change, board: board).to eq(
-        "Status changed from #{view.format_status review_status, board: board} " \
+        "Changed from #{view.format_status review_status, board: board} " \
           "to #{view.format_status done_status, board: board}"
       )
     end
@@ -444,7 +421,28 @@ describe DailyView do
     it 'sets priority' do
       change = mock_change field: 'priority', value: 'Medium', value_id: 3, time: '2024-01-01'
       expect(view.history_text change: change, board: board).to eq(
-        'Set to Medium'
+        'Changed from "" to "Medium"'
+      )
+    end
+
+    it 'sets flag on' do
+      change = mock_change field: 'Flagged', value: 'Flagged', value_id: 3, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        'On'
+      )
+    end
+
+    it 'sets flag off' do
+      change = mock_change field: 'Flagged', value: '', value_id: 3, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        'Off'
+      )
+    end
+
+    it 'sets some generic field' do
+      change = mock_change field: 'estimatedtime', value: 'foo', value_id: 3, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        'foo'
       )
     end
   end
