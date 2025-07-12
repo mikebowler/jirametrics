@@ -442,4 +442,29 @@ describe DailyView do
       )
     end
   end
+
+  context 'make_child_lines' do
+    it 'returns empty for no children' do
+      parent = empty_issue created: '2024-01-01', board: board
+      expect(view.make_child_lines parent).to be_empty
+    end
+
+    it 'makes child lines' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', nil],
+        [issue2, '2024-01-01', '2024-01-02']
+      ]
+      parent = empty_issue created: '2024-01-01', board: board
+      parent.subtasks << issue1
+      parent.subtasks << issue2
+
+      expect(view.make_child_lines parent).to eq [
+        [
+          "<img src='#{issue1.type_icon_url}' class='icon' />",
+          'Incomplete child issues'
+        ],
+        issue1
+      ]
+    end
+  end
 end
