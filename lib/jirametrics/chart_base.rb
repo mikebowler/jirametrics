@@ -38,7 +38,6 @@ class ChartBase
     # Insert a incrementing chart_id so that all the chart names on the page are unique
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
-    # @html_directory = "#{pathname.dirname}/html"
     erb = ERB.new file_system.load "#{html_directory}/#{$1}.erb"
     erb.result(caller_binding)
   end
