@@ -227,8 +227,8 @@ class ChartBase
         icon: ' 👀'
       )
     end
-    text = is_category ? status.category.name : status.name
-    "<span title='Category: #{status.category.name}'>#{color_block color.name} #{text}</span>#{visibility}"
+    text = is_category ? status.category : status
+    "<span title='Category: #{status.category}'>#{color_block color.name} #{text}</span>#{visibility}"
   end
 
   def icon_span title:, icon:

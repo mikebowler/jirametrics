@@ -183,8 +183,6 @@ class DailyView < ChartBase
     history = issue.changes.reverse
     lines = []
 
-    return lines if history.empty?
-
     id = next_id
     lines << [
       "<a href=\"javascript:toggle_visibility('open#{id}', 'close#{id}', 'table#{id}');\">" \
@@ -199,36 +197,40 @@ class DailyView < ChartBase
       table << '<tr>'
       table << "<td><span class='time' title='Timestamp: #{c.time}'>#{time}</span></td>"
       table << "<td><img src='#{c.author_icon_url}' class='icon' title='#{c.author}' /></td>"
-      text = case # rubocop:disable Style/EmptyCaseCondition
-      when c.comment?
-        jira_rich_text_to_html(c.value)
-      when c.status?
-        board = issue.board
-        to = format_status(board.possible_statuses.find_by_id(c.value_id), board: board)
-        if c.old_value
-          from = format_status(board.possible_statuses.find_by_id(c.old_value_id), board: board) if c.old_value
-          "Status changed from #{from} to #{to}"
-        else
-          "Status set to #{to}"
-        end
-      when c.priority?, c.assignee?, c.due_date?, c.field == 'issuetype'
-        if c.old_value && c.value
-          "Changed from #{c.old_value} to #{c.value}"
-        elsif c.value
-          "Set to #{c.value}"
-        else
-          "Cleared from #{c.old_value}"
-        end
-      when c.flagged?
-        c.value == '' ? 'Off' : 'On'
-      else c.value
-      end
+      text = history_text change: c, board: issue.board
       table << "<td><span class='field'>#{c.field_as_human_readable}</span> #{text}</td>"
       table << '</tr>'
     end
     table << '</table>'
     lines << [table]
     lines
+  end
+
+  def history_text change:, board:
+    case
+    when change.comment?
+      jira_rich_text_to_html(change.value)
+    when change.status?
+      convertor = ->(id) { format_status(board.possible_statuses.find_by_id(id), board: board) }
+      to = convertor.call(change.value_id)
+      if change.old_value
+        from = convertor.call(change.old_value_id)
+        "Status changed from #{from} to #{to}"
+      else
+        "Status set to #{to}"
+      end
+    when change.priority?, change.assignee?, change.due_date?, change.field == 'issuetype'
+      if change.old_value && change.value
+        "Changed from #{change.old_value} to #{change.value}"
+      elsif change.value
+        "Set to #{change.value}"
+      else
+        "Cleared from #{change.old_value}"
+      end
+    when change.flagged?
+      change.value == '' ? 'Off' : 'On'
+    else change.value
+    end
   end
 
   def assemble_issue_lines issue, child:

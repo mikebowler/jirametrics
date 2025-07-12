@@ -16,6 +16,12 @@ class StatusCollection
     @list.find { |status| status.id == id }
   end
 
+  def find_by_id! id
+    status = @list.find { |status| status.id == id }
+    raise "Can't find any status for id #{id} in #{self}" unless status
+    status
+  end
+
   def find_all_by_name identifier
     name, id = parse_name_id identifier
 

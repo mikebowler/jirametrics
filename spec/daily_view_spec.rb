@@ -416,4 +416,36 @@ describe DailyView do
       )
     end
   end
+
+  context 'history_text' do
+    let(:review_status) { board.possible_statuses.find_by_id! 10_011 }
+    let(:done_status) { board.possible_statuses.find_by_id! 10_002 }
+
+    it 'is comment' do
+      change = mock_change field: 'comment', value: 'foo', time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'foo'
+    end
+
+    it 'changes from no status to status' do
+      change = mock_change field: 'status', value: review_status, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        "Status set to #{view.format_status review_status, board: board}"
+      )
+    end
+
+    it 'changes from one status to another' do
+      change = mock_change field: 'status', value: done_status, old_value: review_status, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        "Status changed from #{view.format_status review_status, board: board} " \
+          "to #{view.format_status done_status, board: board}"
+      )
+    end
+
+    it 'sets priority' do
+      change = mock_change field: 'priority', value: 'Medium', value_id: 3, time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq(
+        'Set to Medium'
+      )
+    end
+  end
 end
