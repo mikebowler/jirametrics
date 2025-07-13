@@ -58,7 +58,7 @@ class Exporter
                  type: :header
           end
 
-          daily_view if show_experimental_charts
+          daily_view
 
           cycletime_scatterplot do
             show_trend_lines
