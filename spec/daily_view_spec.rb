@@ -467,4 +467,36 @@ describe DailyView do
       ]
     end
   end
+
+  context 'make_sprints_lines' do
+    it 'returns empty if and it is not a scrum board' do
+      board.raw['type'] = 'kanban'
+      expect(view.make_sprints_lines issue1).to be_empty
+    end
+
+    it 'returns warning if there are no sprints and it is a scrum board' do
+      board.raw['type'] = 'scrum'
+      expect(view.make_sprints_lines issue1).to eq [
+        ['Sprints: NONE']
+      ]
+    end
+
+    it 'returns sprints' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: {
+        'id' => 1,
+        'state' => 'closed',
+        'name' => 'Sprint 1'
+      })
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: {
+        'id' => 2,
+        'state' => 'active',
+        'name' => 'Sprint 2'
+      })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Scrum Sprint 1', value_id: '1,2', time: '2024-01-01'
+      expect(view.make_sprints_lines issue1).to eq [
+        ["Sprints: <span class='label'><s>Sprint 1</s></span> <span class='label'>Sprint 2</span>"]
+      ]
+    end
+  end
 end

@@ -693,6 +693,19 @@ class Issue
     @changes.select { |change| change.status? }
   end
 
+  def sprints
+    sprint_ids = []
+
+    changes.each do |change|
+      next unless change.sprint?
+
+      sprint_ids << change.raw['to'].split(/\s*,\s*/).collect { |id| id.to_i }
+    end
+    sprint_ids.flatten!
+
+    board.sprints.select { |s| sprint_ids.include? s.id }
+  end
+
   private
 
   def load_history_into_changes

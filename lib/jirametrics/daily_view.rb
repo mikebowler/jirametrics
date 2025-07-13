@@ -227,11 +227,30 @@ class DailyView < ChartBase
     end
   end
 
+  def make_sprints_lines issue
+    return [] unless issue.board.scrum?
+
+    sprint_names = issue.sprints.collect do |sprint|
+      if sprint.closed?
+        "<s>#{sprint.name}</s>"
+      else
+        sprint.name
+      end
+    end
+
+    return [['Sprints: NONE']] if sprint_names.empty?
+
+    [[+'Sprints: ' << sprint_names
+      .collect { |name| "<span class='label'>#{name}</span>" }
+      .join(' ')]]
+  end
+
   def assemble_issue_lines issue, child:
     lines = []
     lines << [make_title_line(issue)]
     lines += make_parent_lines(issue) unless child
     lines += make_stats_lines(issue)
+    lines += make_sprints_lines(issue)
     lines += make_blocked_stalled_lines(issue)
     lines += make_child_lines(issue)
     lines += make_history_lines(issue)

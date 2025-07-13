@@ -108,20 +108,11 @@ class AgingWorkTable < ChartBase
   end
 
   def sprints_text issue
-    sprint_ids = []
-
-    issue.changes.each do |change|
-      next unless change.sprint?
-
-      sprint_ids << change.raw['to'].split(/\s*,\s*/).collect { |id| id.to_i }
-    end
-    sprint_ids.flatten!
-
-    issue.board.sprints.select { |s| sprint_ids.include? s.id }.collect do |sprint|
+    issue.sprints.collect do |sprint|
       icon_text = nil
       if sprint.active?
         icon_text = icon_span title: 'Active sprint', icon: '➡️'
-      else
+      elsif sprint.closed?
         icon_text = icon_span title: 'Sprint closed', icon: '✅'
       end
       "#{sprint.name} #{icon_text}"

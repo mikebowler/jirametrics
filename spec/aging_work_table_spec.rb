@@ -190,7 +190,7 @@ describe AgingWorkTable do
         'id' => 2, 'state' => 'active', 'name' => 'Sprint1'
       })
       issue1.board.sprints << Sprint.new(timezone_offset: '+00:00', raw: {
-        'id' => 3, 'state' => 'inactive', 'name' => 'Sprint2'
+        'id' => 3, 'state' => 'closed', 'name' => 'Sprint2'
       })
       expect(table.sprints_text issue1).to eq(
         "Sprint1 <span title='Active sprint' style='font-size: 0.8em;'>➡️</span><br />" \

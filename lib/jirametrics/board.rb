@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 class Board
-  attr_reader :visible_columns, :raw, :possible_statuses, :sprints, :board_type
+  attr_reader :visible_columns, :raw, :possible_statuses, :sprints
   attr_accessor :cycletime, :project_config
 
   def initialize raw:, possible_statuses:
     @raw = raw
-    @board_type = raw['type']
     @possible_statuses = possible_statuses
     @sprints = []
 
@@ -67,13 +66,9 @@ class Board
     status_ids
   end
 
-  def kanban?
-    @board_type == 'kanban'
-  end
-
-  def scrum?
-    @board_type == 'scrum'
-  end
+  def board_type = raw['type']
+  def kanban? = (board_type == 'kanban')
+  def scrum? = (board_type == 'scrum')
 
   def id
     @raw['id'].to_i
