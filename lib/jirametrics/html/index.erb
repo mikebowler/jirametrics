@@ -50,8 +50,8 @@
   </head>
   <body>
     <noscript>
-      <div style="padding: 1em; background: gray; color: white; font-size: 2em;">
-        Javascript is currently disabled and that means that almost all of the charts in this report won't render. If you'd loaded this from a folder on SharePoint then save it locally and load it again.
+      <div style="padding: 1em; background: red; color: white; font-size: 2em;">
+        Javascript is currently disabled and that means that almost all of the charts in this report won't render. If you've loaded this from a folder on SharePoint then save it locally and load it again.
       </div>
     </noscript>
     <%= "\n" + @sections.collect { |text, type| text if type == :header }.compact.join("\n\n") %>
