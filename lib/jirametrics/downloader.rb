@@ -97,30 +97,59 @@ class Downloader
     log "  JQL: #{jql}"
     escaped_jql = CGI.escape jql
 
-    max_results = 100
-    start_at = 0
-    total = 1
-    while start_at < total
-      json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
-        "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
+    if @jira_gateway.cloud?
+      max_results = 5_000 # The maximum allowed by Jira
+      next_page_token = nil
+      issue_count = 0
 
-      json['issues'].each do |issue_json|
-        issue_json['exporter'] = {
-          'in_initial_query' => initial_query
-        }
-        identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
-        file = "#{issue_json['key']}-#{board.id}.json"
+      loop do
+        json = @jira_gateway.call_url relative_url: '/rest/api/3/search/jql' \
+          "?jql=#{escaped_jql}&maxResults=#{max_results}&" \
+          "nextPageToken=#{next_page_token}&expand=changelog&fields=*all"
+        next_page_token = json['nextPageToken']
 
-        @file_system.save_json(json: issue_json, filename: File.join(path, file))
+        json['issues'].each do |issue_json|
+          issue_json['exporter'] = {
+            'in_initial_query' => initial_query
+          }
+          identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
+          file = "#{issue_json['key']}-#{board.id}.json"
+
+          @file_system.save_json(json: issue_json, filename: File.join(path, file))
+          issue_count += 1
+        end
+
+        message = "    Downloaded #{issue_count} issues"
+        log message, both: true
+
+        break unless next_page_token
       end
+    else
+      max_results = 100
+      start_at = 0
+      total = 1
+      while start_at < total
+        json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
+          "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
 
-      total = json['total'].to_i
-      max_results = json['maxResults']
+        json['issues'].each do |issue_json|
+          issue_json['exporter'] = {
+            'in_initial_query' => initial_query
+          }
+          identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
+          file = "#{issue_json['key']}-#{board.id}.json"
 
-      message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
-      log message, both: true
+          @file_system.save_json(json: issue_json, filename: File.join(path, file))
+        end
 
-      start_at += json['issues'].size
+        total = json['total'].to_i
+        max_results = json['maxResults']
+
+        message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
+        log message, both: true
+
+        start_at += json['issues'].size
+      end
     end
   end
 

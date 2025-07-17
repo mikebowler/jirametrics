@@ -164,12 +164,64 @@ class DailyView < ChartBase
     lines
   end
 
-  def jira_rich_text_to_html text
-    text
-      .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
-      .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
-      .gsub(/\[([^\|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
-      .gsub("\n", '<br />')
+  def jira_rich_text_to_html input
+    if input.is_a? String
+      input
+        .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
+        .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
+        .gsub(/\[([^\|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
+        .gsub("\n", '<br />')
+    else
+      input['content'].collect { |element| adf_node_to_html element }.join("\n")
+    end
+  end
+
+  # ADF is Atlassian Document Format
+  # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
+  def adf_node_to_html node
+    closing_tag = nil
+    result = +''
+    case node['type']
+    when 'paragraph'
+      result << '<p>'
+      closing_tag = '</p>'
+    when 'text'
+      marks = adf_marks_to_html node['marks']
+      result << marks.collect(&:first).join
+      result << node['text']
+      result << marks.collect(&:last).join
+    when 'bulletList'
+      result << '<ul>'
+      closing_tag = '</ul>'
+    when 'orderedList'
+      result << '<ol>'
+      closing_tag = '</ol>'
+    when 'listItem'
+      result << '<li>'
+      closing_tag = '</li>'
+    else
+      result << "<p>Unparseable section: #{node['type']}</p>"
+    end
+
+    node['content']&.each do |child|
+      result << adf_node_to_html(child)
+    end
+
+    result << closing_tag if closing_tag
+    result
+  end
+
+  def adf_marks_to_html list
+    return [] if list.nil?
+
+    list.filter_map do |mark|
+      case mark['type']
+      when 'strong'
+        ['<b>', '</b>']
+      else
+        nil
+      end
+    end
   end
 
   def expand_account_id account_id

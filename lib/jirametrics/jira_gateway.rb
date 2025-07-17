@@ -77,4 +77,8 @@ class JiraGateway
 
     true
   end
+
+  def cloud?
+    @jira_url.downcase.end_with? '.atlassian.net'
+  end
 end

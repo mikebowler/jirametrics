@@ -254,7 +254,7 @@ describe DailyView do
     end
   end
 
-  context 'jira_rich_text_to_html' do
+  context 'v2 jira_rich_text_to_html' do
     it 'ignores plain text' do
       expect(view.jira_rich_text_to_html 'foobar').to eq 'foobar'
     end
@@ -289,6 +289,145 @@ describe DailyView do
       expect(view.jira_rich_text_to_html input).to eq(
         "foo <span class='account_id'>abcdef</span> bar"
       )
+    end
+  end
+
+  context 'v3 jira_rich_text_to_html' do
+    it 'handles single paragraph' do
+      input = {
+        'type' => 'doc',
+        'version' => 1,
+        'content' => [
+          {
+            'type' => 'paragraph',
+            'content' => [
+              {
+                'type' => 'text',
+                'text' => 'Comment 2'
+              }
+            ]
+          }
+        ]
+      }
+      expect(view.jira_rich_text_to_html input).to eq '<p>Comment 2</p>'
+    end
+
+    it 'single paragraph with a bold word' do
+      input = {
+        'version' => 1,
+        'type' => 'doc',
+        'content' => [
+          {
+            'type' => 'paragraph',
+            'content' => [
+              {
+                'type' => 'text',
+                'text' => 'Hello '
+              },
+              {
+                'type' => 'text',
+                'text' => 'world',
+                'marks' => [
+                  {
+                    'type' => 'strong'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      expect(view.jira_rich_text_to_html input).to eq '<p>Hello <b>world</b></p>'
+    end
+
+    it 'handles two simple paragraphs with only text' do
+      input = {
+        'type' => 'doc',
+        'version' => 1,
+        'content' => [
+          {
+            'type' => 'paragraph',
+            'content' => [
+              {
+                'type' => 'text',
+                'text' => 'paragraph 1'
+              }
+            ]
+          },
+          {
+            'type' => 'paragraph',
+            'content' => [
+              {
+                'type' => 'text',
+                'text' => 'paragraph 2'
+              }
+            ]
+          }
+        ]
+      }
+      expect(view.jira_rich_text_to_html input).to eq "<p>paragraph 1</p>\n<p>paragraph 2</p>"
+    end
+  end
+
+  context 'adf_node_to_html' do
+    it 'is simple list' do
+      input = {
+        'type' => 'bulletList',
+        'content' => [
+          {
+            'type' => 'listItem',
+            'content' => [
+              {
+                'type' => 'paragraph',
+                'content' => [
+                  {
+                    'type' => 'text',
+                    'text' => 'one'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            'type' => 'listItem',
+            'content' => [
+              {
+                'type' => 'paragraph',
+                'content' => [
+                  {
+                    'type' => 'text',
+                    'text' => 'two'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      expect(view.adf_node_to_html input).to eq '<ul><li><p>one</p></li><li><p>two</p></li></ul>'
+    end
+
+    it 'is an ordered list' do
+      input = {
+        'type' => 'orderedList',
+        'content' => [
+          {
+            'type' => 'listItem',
+            'content' => [
+              {
+                'type' => 'paragraph',
+                'content' => [
+                  {
+                    'type' => 'text',
+                    'text' => 'one'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      expect(view.adf_node_to_html input).to eq '<ol><li><p>one</p></li></ol>'
     end
   end
 
