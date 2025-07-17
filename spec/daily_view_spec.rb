@@ -429,6 +429,54 @@ describe DailyView do
       }
       expect(view.adf_node_to_html input).to eq '<ol><li><p>one</p></li></ol>'
     end
+
+    it 'has colour' do
+      input = {
+        'type' => 'text',
+        'text' => 'Hello world',
+        'marks' => [
+          {
+            'type' => 'textColor',
+            'attrs' => {
+              'color' => '#97a0af'
+            }
+          }
+        ]
+      }
+      expect(view.adf_node_to_html input).to eq "<span style='color: #97a0af'>Hello world</span>"
+    end
+
+    it 'has a link' do
+      input = {
+        'type' => 'text',
+        'text' => 'Hello world',
+        'marks' => [
+          {
+            'type' => 'link',
+            'attrs' => {
+              'href' => 'http://example.com',
+              'title' => 'Example'
+            }
+          }
+        ]
+      }
+
+      expect(view.adf_node_to_html input).to eq "<a href='http://example.com' title='Example'>Hello world</a>"
+    end
+
+    it 'has a mention' do
+      input = {
+        'type' => 'mention',
+        'attrs' => {
+          'id' => 'ABCDE-ABCDE-ABCDE-ABCDE',
+          'text' => '@Fred Flintstone',
+          'userType' => 'APP'
+        }
+      }
+
+
+      expect(view.adf_node_to_html input).to eq "<b>@Fred Flintstone</b>"
+    end
   end
 
   context 'make_blocked_stalled_lines' do

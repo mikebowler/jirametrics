@@ -199,6 +199,9 @@ class DailyView < ChartBase
     when 'listItem'
       result << '<li>'
       closing_tag = '</li>'
+    when 'mention'
+      user = node['attrs']['text']
+      result << "<b>#{user}</b>"
     else
       result << "<p>Unparseable section: #{node['type']}</p>"
     end
@@ -214,12 +217,26 @@ class DailyView < ChartBase
   def adf_marks_to_html list
     return [] if list.nil?
 
+    mappings = [
+      ['strong', '<b>', '</b>'],
+      ['code', '<code>', '</code>'],
+      ['em', '<em>', '</em>'],
+      ['strike', '<s>', '</s>'],
+      ['underline', '<u>', '</u>']
+    ]
+
     list.filter_map do |mark|
-      case mark['type']
-      when 'strong'
-        ['<b>', '</b>']
+      type = mark['type']
+      if type == 'textColor'
+        color = mark['attrs']['color']
+        ["<span style='color: #{color}'>", '</span>']
+      elsif type == 'link'
+        href = mark['attrs']['href']
+        title = mark['attrs']['title']
+        ["<a href='#{href}' title='#{title}'>", '</a>']
       else
-        nil
+        line = mappings.find { |key, _open, _close| key == type }
+        [line[1], line[2]] if line
       end
     end
   end
