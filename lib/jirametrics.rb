@@ -117,6 +117,7 @@ class JiraMetrics < Thor
     require 'jirametrics/board'
     require 'jirametrics/daily_view'
     require 'jirametrics/user'
+    require 'jirametrics/atlassian_document_format'
     load config_file
   end
 end
