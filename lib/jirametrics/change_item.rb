@@ -30,6 +30,7 @@ class ChangeItem
   def artificial? = @artificial
   def assignee? = (field == 'assignee')
   def comment? = (field == 'comment')
+  def description? = (field == 'description')
   def due_date? = (field == 'duedate')
   def flagged? = (field == 'Flagged')
   def issue_type? = field == 'issuetype'

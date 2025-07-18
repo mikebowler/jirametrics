@@ -196,7 +196,7 @@ class DailyView < ChartBase
   end
 
   def history_text change:, board:
-    if change.comment?
+    if change.comment? || change.description?
       atlassian_document_format.to_html(change.value)
     elsif change.status?
       convertor = ->(id) { format_status(board.possible_statuses.find_by_id(id), board: board) }

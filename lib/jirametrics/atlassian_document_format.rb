@@ -42,9 +42,30 @@ class AtlassianDocumentFormat
     when 'listItem'
       result << '<li>'
       closing_tag = '</li>'
+    when 'table'
+      result << '<table>'
+      closing_tag = '</table>'
+    when 'tableRow'
+      result << '<tr>'
+      closing_tag = '</tr>'
+    when 'tableCell'
+      result << '<td>'
+      closing_tag = '</td>'
+    when 'tableHeader'
+      result << '<th>'
+      closing_tag = '</th>'
     when 'mention'
       user = node['attrs']['text']
       result << "<b>#{user}</b>"
+    when 'taskList'
+      result << "<ul class='taskList'>"
+      closing_tag = '</ul>'
+    when 'taskItem'
+      state = node['attrs']['state'] == 'TODO' ? '☐' : '☑'
+      result << "<li>#{state} "
+      closing_tag = '</li>'
+    when 'emoji'
+      result << node['attrs']['text']
     else
       result << "<p>Unparseable section: #{node['type']}</p>"
     end

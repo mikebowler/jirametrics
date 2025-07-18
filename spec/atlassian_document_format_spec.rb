@@ -244,5 +244,110 @@ describe AtlassianDocumentFormat do
 
       expect(format.adf_node_to_html input).to eq '<b>@Fred Flintstone</b>'
     end
+
+    it 'has a table' do
+      input = {
+        'type' => 'table',
+        'attrs' => {
+          'isNumberColumnEnabled' => false,
+          'layout' => 'center',
+          'width' => 900,
+          'displayMode' => 'default'
+        },
+        'content' => [
+          {
+            'type' => 'tableRow',
+            'content' => [
+              {
+                'type' => 'tableCell',
+                'attrs' => {},
+                'content' => [
+                  {
+                    'type' => 'paragraph',
+                    'content' => [
+                      {
+                        'type' => 'text',
+                        'text' => ' Row one, cell one'
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                'type' => 'tableCell',
+                'attrs' => {},
+                'content' => [
+                  {
+                    'type' => 'paragraph',
+                    'content' => [
+                      {
+                        'type' => 'text',
+                        'text' => 'Row one, cell two'
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      expect(format.adf_node_to_html input).to eq(
+        '<table><tr><td><p> Row one, cell one</p></td><td><p>Row one, cell two</p></td></tr></table>'
+      )
+    end
+  end
+
+  it 'has task list' do
+    input = {
+      'type' => 'taskList',
+      'content' => [
+        {
+          'type' => 'taskItem',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'One thing '
+            }
+          ],
+          'attrs' => {
+            'localId' => '1e547f4f-ff44-494b-b22d-06cb78eaf5f1',
+            'state' => 'DONE'
+          }
+        },
+        {
+          'type' => 'taskItem',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'Another thing'
+            }
+          ],
+          'attrs' => {
+            'localId' => '0f0664a5-76c2-4a8c-b834-f3445aa9076f',
+            'state' => 'TODO'
+          }
+        }
+      ],
+      'attrs' => {
+        'localId' => '5ed5b805-e2b9-49b5-adf2-2b8b54e4b63e'
+      }
+    }
+    expect(format.adf_node_to_html input).to eq(
+      "<ul class='taskList'><li>☑ One thing </li><li>☐ Another thing</li></ul>"
+    )
+  end
+
+  it 'has emoji' do
+    input = {
+      'type' => 'emoji',
+      'attrs' => {
+        'shortName' => ':grinning:',
+        'text' => '😀'
+      }
+    }
+    expect(format.adf_node_to_html input).to eq(
+      '😀'
+    )
   end
 end
