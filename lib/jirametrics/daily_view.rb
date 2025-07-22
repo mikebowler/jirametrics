@@ -237,7 +237,7 @@ class DailyView < ChartBase
   def make_description_lines issue
     description = issue.raw['fields']['description']
     result = []
-    result << ["Description: #{atlassian_document_format.to_html(description)}"] if description
+    result << [atlassian_document_format.to_html(description)] if description
     result
   end
 
