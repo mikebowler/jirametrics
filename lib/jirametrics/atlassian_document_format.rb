@@ -3,7 +3,7 @@
 class AtlassianDocumentFormat
   attr_reader :users
 
-  def initialize users:
+  def initialize users:, timezone_offset:
     @users = users
   end
 
@@ -25,45 +25,17 @@ class AtlassianDocumentFormat
     closing_tag = nil
     result = +''
     case node['type']
-    when 'paragraph'
-      result << '<p>'
-      closing_tag = '</p>'
-    when 'text'
-      marks = adf_marks_to_html node['marks']
-      result << marks.collect(&:first).join
-      result << node['text']
-      result << marks.collect(&:last).join
+    when 'blockquote'
+      result << '<blockquote>'
+      closing_tag = '</blockquote>'
     when 'bulletList'
       result << '<ul>'
       closing_tag = '</ul>'
-    when 'orderedList'
-      result << '<ol>'
-      closing_tag = '</ol>'
-    when 'listItem'
-      result << '<li>'
-      closing_tag = '</li>'
-    when 'table'
-      result << '<table>'
-      closing_tag = '</table>'
-    when 'tableRow'
-      result << '<tr>'
-      closing_tag = '</tr>'
-    when 'tableCell'
-      result << '<td>'
-      closing_tag = '</td>'
-    when 'tableHeader'
-      result << '<th>'
-      closing_tag = '</th>'
-    when 'mention'
-      user = node['attrs']['text']
-      result << "<b>#{user}</b>"
-    when 'taskList'
-      result << "<ul class='taskList'>"
-      closing_tag = '</ul>'
-    when 'taskItem'
-      state = node['attrs']['state'] == 'TODO' ? '☐' : '☑'
-      result << "<li>#{state} "
-      closing_tag = '</li>'
+    when 'codeBlock'
+      result << '<code>'
+      closing_tag = '</code>'
+    when 'date'
+      result << Time.at(node['attrs']['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s
     when 'emoji'
       result << node['attrs']['text']
     when 'hardBreak'
@@ -72,9 +44,51 @@ class AtlassianDocumentFormat
       level = node['attrs']['level']
       result << "<h#{level}>"
       closing_tag = "</h#{level}>"
-    when 'codeBlock'
-      result << '<code>'
-      closing_tag = '</code>'
+    when 'inlineCard'
+      url = node['attrs']['url']
+      result << "[Inline card]: <a href='#{url}'>#{url}</a>"
+    when 'listItem'
+      result << '<li>'
+      closing_tag = '</li>'
+    when 'media'
+      text = node['attrs']['alt'] || node['attrs']['id']
+      result << "Media: #{text}"
+    when 'mediaSingle', 'mediaGroup'
+      result << '<div>'
+      closing_tag = '</div>'
+    when 'mention'
+      user = node['attrs']['text']
+      result << "<b>#{user}</b>"
+    when 'orderedList'
+      result << '<ol>'
+      closing_tag = '</ol>'
+    when 'paragraph'
+      result << '<p>'
+      closing_tag = '</p>'
+    when 'table'
+      result << '<table>'
+      closing_tag = '</table>'
+    when 'tableCell'
+      result << '<td>'
+      closing_tag = '</td>'
+    when 'tableHeader'
+      result << '<th>'
+      closing_tag = '</th>'
+    when 'tableRow'
+      result << '<tr>'
+      closing_tag = '</tr>'
+    when 'text'
+      marks = adf_marks_to_html node['marks']
+      result << marks.collect(&:first).join
+      result << node['text']
+      result << marks.collect(&:last).join
+    when 'taskItem'
+      state = node['attrs']['state'] == 'TODO' ? '☐' : '☑'
+      result << "<li>#{state} "
+      closing_tag = '</li>'
+    when 'taskList'
+      result << "<ul class='taskList'>"
+      closing_tag = '</ul>'
     else
       result << "<p>Unparseable section: #{node['type']}</p>"
     end

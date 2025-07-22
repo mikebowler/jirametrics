@@ -34,7 +34,7 @@ class DailyView < ChartBase
   end
 
   def atlassian_document_format
-    @atlassian_document_format ||= AtlassianDocumentFormat.new(users: users)
+    @atlassian_document_format ||= AtlassianDocumentFormat.new(users: users, timezone_offset: timezone_offset)
   end
 
   def select_aging_issues

@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe AtlassianDocumentFormat do
-  let(:format) { described_class.new users: [] }
+  let(:format) { described_class.new users: [], timezone_offset: '+00:00' }
 
   context 'expand_account_id' do
     it 'handles no matches' do
@@ -392,5 +392,93 @@ describe AtlassianDocumentFormat do
     expect(format.adf_node_to_html input).to eq('<code>var foo = 1;</code>')
   end
 
+  it 'has inline card' do
+    input = {
+      'type' => 'inlineCard',
+      'attrs' => {
+        'url' => 'https://atlassian.com'
+      }
+    }
+    expect(format.adf_node_to_html input).to eq(
+      "[Inline card]: <a href='https://atlassian.com'>https://atlassian.com</a>"
+    )
+  end
 
+  it 'has media single' do
+    input = {
+      'type' => 'mediaSingle',
+      'attrs' => {
+        'layout' => 'center'
+      },
+      'content' => [
+        {
+          'type' => 'media',
+          'attrs' => {
+            'id' => '4478e39c-cf9b-41d1-ba92-68589487cd75',
+            'type' => 'file',
+            'collection' => 'MediaServicesSample',
+            'alt' => 'moon.jpeg',
+            'width' => 225,
+            'height' => 225
+          }
+        }
+      ]
+    }
+    expect(format.adf_node_to_html input).to eq(
+      '<div>Media: moon.jpeg</div>'
+    )
+  end
+
+  it 'has media group' do
+    input = {
+      'type' => 'mediaGroup',
+      'content' => [
+        {
+          'type' => 'media',
+          'attrs' => {
+            'type' => 'file',
+            'id' => '6e7c7f2c-dd7a-499c-bceb-6f32bfbf30b5',
+            'collection' => 'ae730abd-a389-46a7-90eb-c03e75a45bf6'
+          }
+        }
+      ]
+    }
+    expect(format.adf_node_to_html input).to eq(
+      '<div>Media: 6e7c7f2c-dd7a-499c-bceb-6f32bfbf30b5</div>'
+    )
+  end
+
+  it 'has blockquote' do
+    input = {
+      'type' => 'blockquote',
+      'content' => [
+        {
+          'type' => 'paragraph',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'Hello world'
+            }
+          ]
+        }
+      ]
+    }
+
+    expect(format.adf_node_to_html input).to eq(
+      '<blockquote><p>Hello world</p></blockquote>'
+    )
+  end
+
+  it 'has date' do
+    input = {
+      'type' => 'date',
+      'attrs' => {
+        'timestamp' => '1753142400000'
+      }
+    }
+
+    expect(format.adf_node_to_html input).to eq(
+      '2025-07-21'
+    )
+  end
 end
