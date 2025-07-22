@@ -350,4 +350,47 @@ describe AtlassianDocumentFormat do
       '😀'
     )
   end
+
+  it 'has hard break' do
+    input = {
+      'type' => 'hardBreak'
+    }
+    expect(format.adf_node_to_html input).to eq('<br />')
+  end
+
+  it 'has heading' do
+    input = {
+      'type' => 'heading',
+      'attrs' => {
+        'level' => 2
+      },
+      'content' => [
+        {
+          'type' => 'text',
+          'text' => 'Foo'
+        }
+      ]
+    }
+
+    expect(format.adf_node_to_html input).to eq('<h2>Foo</h2>')
+  end
+
+  it 'has code block' do
+    input = {
+      'type' => 'codeBlock',
+      'attrs' => {
+        'language' => 'javascript'
+      },
+      'content' => [
+        {
+          'type' => 'text',
+          'text' => 'var foo = 1;'
+        }
+      ]
+    }
+
+    expect(format.adf_node_to_html input).to eq('<code>var foo = 1;</code>')
+  end
+
+
 end

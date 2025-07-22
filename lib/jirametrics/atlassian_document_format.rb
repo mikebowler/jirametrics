@@ -66,6 +66,15 @@ class AtlassianDocumentFormat
       closing_tag = '</li>'
     when 'emoji'
       result << node['attrs']['text']
+    when 'hardBreak'
+      result << '<br />'
+    when 'heading'
+      level = node['attrs']['level']
+      result << "<h#{level}>"
+      closing_tag = "</h#{level}>"
+    when 'codeBlock'
+      result << '<code>'
+      closing_tag = '</code>'
     else
       result << "<p>Unparseable section: #{node['type']}</p>"
     end
