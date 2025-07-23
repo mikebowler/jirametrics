@@ -491,4 +491,65 @@ describe AtlassianDocumentFormat do
       '<hr />'
     )
   end
+
+  it 'has a status' do
+    input = {
+      'type' => 'status',
+      'attrs' => {
+        'localId' => 'abcdef12-abcd-abcd-abcd-abcdef123456',
+        'text' => 'In Progress',
+        'color' => 'yellow'
+      }
+    }
+    expect(format.adf_node_to_html input).to eq(
+      'In Progress'
+    )
+  end
+
+  it 'has a panel' do
+    input = {
+      'type' => 'panel',
+      'attrs' => {
+        'panelType' => 'info'
+      },
+      'content' => [
+        {
+          'type' => 'paragraph',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'Hello world'
+            }
+          ]
+        }
+      ]
+    }
+    expect(format.adf_node_to_html input).to eq(
+      '<div>INFO</div><p>Hello world</p>'
+    )
+  end
+
+  it 'has an expand' do
+    input = {
+      'type' => 'expand',
+      'attrs' => {
+        'title' => 'Click me'
+      },
+      'content' => [
+        {
+          'type' => 'paragraph',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'Hello world'
+            }
+          ]
+        }
+      ]
+    }
+
+    expect(format.adf_node_to_html input).to eq(
+      '<div>Click me</div><p>Hello world</p>'
+    )
+  end
 end

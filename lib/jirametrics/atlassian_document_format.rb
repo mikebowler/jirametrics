@@ -23,6 +23,8 @@ class AtlassianDocumentFormat
   # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
   def adf_node_to_html node
     closing_tag = nil
+    node_attrs = node['attrs']
+
     result = +''
     case node['type']
     when 'blockquote'
@@ -35,38 +37,47 @@ class AtlassianDocumentFormat
       result << '<code>'
       closing_tag = '</code>'
     when 'date'
-      result << Time.at(node['attrs']['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s
+      result << Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s
     when 'emoji'
-      result << node['attrs']['text']
+      result << node_attrs['text']
+    when 'expand'
+      # TODO: Maybe, someday, make this actually expandable. For now it's always open
+      result << "<div>#{node_attrs['title']}</div>"
     when 'hardBreak'
       result << '<br />'
     when 'heading'
-      level = node['attrs']['level']
+      level = node_attrs['level']
       result << "<h#{level}>"
       closing_tag = "</h#{level}>"
     when 'inlineCard'
-      url = node['attrs']['url']
+      url = node_attrs['url']
       result << "[Inline card]: <a href='#{url}'>#{url}</a>"
     when 'listItem'
       result << '<li>'
       closing_tag = '</li>'
     when 'media'
-      text = node['attrs']['alt'] || node['attrs']['id']
+      text = node_attrs['alt'] || node_attrs['id']
       result << "Media: #{text}"
     when 'mediaSingle', 'mediaGroup'
       result << '<div>'
       closing_tag = '</div>'
     when 'mention'
-      user = node['attrs']['text']
+      user = node_attrs['text']
       result << "<b>#{user}</b>"
     when 'orderedList'
       result << '<ol>'
       closing_tag = '</ol>'
+    when 'panel'
+      type = node_attrs['panelType']
+      result << "<div>#{type.upcase}</div>"
     when 'paragraph'
       result << '<p>'
       closing_tag = '</p>'
     when 'rule'
       result << '<hr />'
+    when 'status'
+      text = node_attrs['text']
+      result << text
     when 'table'
       result << '<table>'
       closing_tag = '</table>'
@@ -85,7 +96,7 @@ class AtlassianDocumentFormat
       result << node['text']
       result << marks.collect(&:last).join
     when 'taskItem'
-      state = node['attrs']['state'] == 'TODO' ? '☐' : '☑'
+      state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
       result << "<li>#{state} "
       closing_tag = '</li>'
     when 'taskList'
