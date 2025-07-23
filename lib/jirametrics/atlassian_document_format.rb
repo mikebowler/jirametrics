@@ -65,6 +65,8 @@ class AtlassianDocumentFormat
     when 'paragraph'
       result << '<p>'
       closing_tag = '</p>'
+    when 'rule'
+      result << '<hr />'
     when 'table'
       result << '<table>'
       closing_tag = '</table>'

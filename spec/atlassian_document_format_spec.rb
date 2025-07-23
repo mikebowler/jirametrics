@@ -481,4 +481,14 @@ describe AtlassianDocumentFormat do
       '2025-07-21'
     )
   end
+
+  it 'has a divider (rule)' do
+    input = {
+      'type' => 'rule'
+    }
+
+    expect(format.adf_node_to_html input).to eq(
+      '<hr />'
+    )
+  end
 end
