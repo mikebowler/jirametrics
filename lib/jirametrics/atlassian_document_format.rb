@@ -38,6 +38,12 @@ class AtlassianDocumentFormat
       closing_tag = '</code>'
     when 'date'
       result << Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s
+    when 'decisionItem'
+      result << '<li>'
+      closing_tag = '</li>'
+    when 'decisionList'
+      result << '<div>Decisions<ul>'
+      closing_tag = '</ul></div>'
     when 'emoji'
       result << node_attrs['text']
     when 'expand'

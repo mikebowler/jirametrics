@@ -552,4 +552,32 @@ describe AtlassianDocumentFormat do
       '<div>Click me</div><p>Hello world</p>'
     )
   end
+
+  it 'has an expand' do
+    input = {
+      'type' => 'decisionList',
+      'content' => [
+        {
+          'type' => 'decisionItem',
+          'content' => [
+            {
+              'type' => 'text',
+              'text' => 'A decision'
+            }
+          ],
+          'attrs' => {
+            'localId' => 'bc436863-84c9-4332-85a8-21478ed203a1',
+            'state' => 'DECIDED'
+          }
+        }
+      ],
+      'attrs' => {
+        'localId' => 'd00434e6-e76e-4098-a8df-4833c8ddba40'
+      }
+    }
+
+    expect(format.adf_node_to_html input).to eq(
+      '<div>Decisions<ul><li>A decision</li></ul></div>'
+    )
+  end
 end
