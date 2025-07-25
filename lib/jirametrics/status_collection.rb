@@ -19,6 +19,7 @@ class StatusCollection
   def find_by_id! id
     status = @list.find { |status| status.id == id }
     raise "Can't find any status for id #{id} in #{self}" unless status
+
     status
   end
 
