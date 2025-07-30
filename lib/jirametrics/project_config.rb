@@ -114,9 +114,13 @@ class ProjectConfig
   def file_prefix prefix
     # The file_prefix has to be set before almost everything else. It really should have been an attribute
     # on the project declaration itself. Hindsight is 20/20.
+
+    # There can only be one of these
     if @file_prefix
-      raise "file_prefix should only be set once. Was #{@file_prefix.inspect} and now changed to #{prefix.inspect}."
+      raise "file_prefix can only be set once. Was #{@file_prefix.inspect} and now changed to #{prefix.inspect}."
     end
+
+    raise_if_prefix_already_used(prefix)
 
     @file_prefix = prefix
 
@@ -128,6 +132,17 @@ class ProjectConfig
     load_all_boards
 
     @file_prefix
+  end
+
+  def raise_if_prefix_already_used prefix
+    @exporter.project_configs.each do |project|
+      next unless project.get_file_prefix == prefix && project.target_path == target_path
+
+      raise "Project #{name.inspect} specifies file prefix #{prefix.inspect}, " \
+        "but that is already used by project #{project.name.inspect} in the same target path #{target_path.inspect}. " \
+        'This is almost guaranteed to be too much copy and paste in your configuration. ' \
+        'File prefixes must be unique within a directory.'
+    end
   end
 
   def get_file_prefix # rubocop:disable Naming/AccessorMethodName

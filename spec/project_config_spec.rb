@@ -12,15 +12,11 @@ describe ProjectConfig do
     exporter.file_system.when_foreach root: 'spec/tmp', result: :not_mocked
     exporter.file_system.when_foreach root: 'spec/testdata/sample_issues', result: :not_mocked
 
-    described_class.new(exporter: exporter, target_path: target_path, jira_config: nil, block: nil)
+    described_class.new(exporter: exporter, target_path: target_path, name: 'one', jira_config: nil, block: nil)
   end
   let(:board) do
     board = sample_board
     board.project_config = project_config
-    # statuses = board.possible_statuses
-    # statuses.clear
-    # statuses << Status.new(name: 'backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new')
-    # statuses << Status.new(name: 'doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done')
     board
   end
   let(:issue1) { load_issue('SP-1', board: board) }
@@ -234,6 +230,9 @@ describe ProjectConfig do
     end
 
     it 'does not require name' do
+      project_config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil
+      )
       expect(project_config.name).to eq ''
     end
   end
@@ -546,7 +545,7 @@ describe ProjectConfig do
       )
     end
 
-    it 'raises error when issues used before boards configured', :focus do
+    it 'raises error when issues used before boards configured' do
       # We have to create our own project_config here as the default one at the top of the file will have
       # already loaded issues so it's too late.
       path = 'spec/complete_sample/'
@@ -575,12 +574,12 @@ describe ProjectConfig do
 
       expect(project_config.find_default_board.id).to be 4
       expect(exporter.file_system.log_messages).to eq([
-        'Multiple boards are in use for project "". Picked "SP board" to attach issues to.'
+        'Multiple boards are in use for project "one". Picked "SP board" to attach issues to.'
       ])
     end
 
     it 'raises error when no boards' do
-      expect { project_config.find_default_board }.to raise_error 'No boards found for project ""'
+      expect { project_config.find_default_board }.to raise_error 'No boards found for project "one"'
     end
   end
 
@@ -632,13 +631,29 @@ describe ProjectConfig do
     it 'can only be set once' do
       project_config.file_prefix 'sample'
       expect { project_config.file_prefix 'second' }.to raise_error(
-        'file_prefix should only be set once. Was "sample" and now changed to "second".'
+        'file_prefix can only be set once. Was "sample" and now changed to "second".'
       )
     end
 
     it 'raises error if file_prefix not set early enough' do
       expect { project_config.get_file_prefix }.to raise_error(
         'file_prefix has not been set yet. Move it to the top of the project declaration.'
+      )
+    end
+
+    it 'raises error if the file_prefix is reused' do
+      project_config.file_prefix 'sample'
+      exporter.project_configs << project_config
+
+      project_config2 = described_class.new(
+        exporter: exporter, target_path: target_path, name: 'Two', jira_config: nil, block: nil
+      )
+      exporter.project_configs << project_config2
+
+      expect { project_config2.file_prefix 'sample' }.to raise_error(
+        'Project "Two" specifies file prefix "sample", but that is already used by project "one" ' \
+        'in the same target path "spec/testdata/". This is almost guaranteed to be too much copy ' \
+        'and paste in your configuration. File prefixes must be unique within a directory.'
       )
     end
   end

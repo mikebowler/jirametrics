@@ -11,6 +11,7 @@ class BoardConfig
 
   def run
     @board = @project_config.all_boards[id]
+    raise "Can't find board #{id.inspect} in #{@project_config.all_boards.keys.inspect}" unless @board
 
     instance_eval(&@block)
     raise "Must specify a cycletime for board #{@id}" if @board.cycletime.nil?

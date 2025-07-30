@@ -5,10 +5,12 @@ require './spec/spec_helper'
 describe AggregateConfig do
   let(:exporter) do
     Exporter.new(file_system: MockFileSystem.new).tap do |exporter|
-      exporter.file_system.when_loading file: 'spec/testdata/sample_board_1_configuration.json', json: :not_mocked
-      exporter.file_system.when_loading file: 'spec/testdata/sample_statuses.json', json: :not_mocked
-      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: :not_mocked
-      exporter.file_system.when_foreach root: 'spec/testdata/sample_issues', result: :not_mocked
+      %w[testdata complete_sample].each do |path|
+        exporter.file_system.when_loading file: "spec/#{path}/sample_board_1_configuration.json", json: :not_mocked
+        exporter.file_system.when_loading file: "spec/#{path}/sample_statuses.json", json: :not_mocked
+        exporter.file_system.when_loading file: "spec/#{path}/sample_meta.json", json: :not_mocked
+        exporter.file_system.when_foreach root: "spec/#{path}/sample_issues", result: :not_mocked
+      end
     end
   end
   let(:target_path) { 'spec/testdata/' }
@@ -34,16 +36,18 @@ describe AggregateConfig do
 
     it 'does not allow aggregating projects from different jira instances' do
       project1 = ProjectConfig.new(
-        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'foo'
+        exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil, name: 'foo'
       )
       exporter.file_system.when_foreach root: 'spec/testdata/', result: []
+      exporter.file_system.when_foreach root: 'spec/complete_sample/', result: []
+
       project1.file_prefix 'sample'
       project1.run
       project1.jira_url = 'http://foo.com'
       exporter.project_configs << project1
 
       project2 = ProjectConfig.new(
-        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'bar'
+        exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil, name: 'bar'
       )
       project2.file_prefix 'sample'
       project2.run
