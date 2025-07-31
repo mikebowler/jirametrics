@@ -136,7 +136,7 @@ class ProjectConfig
 
   def raise_if_prefix_already_used prefix
     @exporter.project_configs.each do |project|
-      next unless project.get_file_prefix == prefix && project.target_path == target_path
+      next unless project.get_file_prefix(raise_if_not_set: false) == prefix && project.target_path == target_path
 
       raise "Project #{name.inspect} specifies file prefix #{prefix.inspect}, " \
         "but that is already used by project #{project.name.inspect} in the same target path #{target_path.inspect}. " \
@@ -145,8 +145,10 @@ class ProjectConfig
     end
   end
 
-  def get_file_prefix # rubocop:disable Naming/AccessorMethodName
-    raise 'file_prefix has not been set yet. Move it to the top of the project declaration.' unless @file_prefix
+  def get_file_prefix raise_if_not_set: true
+    if @file_prefix.nil? && raise_if_not_set
+      raise 'file_prefix has not been set yet. Move it to the top of the project declaration.'
+    end
 
     @file_prefix
   end
