@@ -82,7 +82,7 @@ class DailyView < ChartBase
     blocked_stalled = issue.blocked_stalled_by_date(
       date_range: today..today, chart_end_time: time_range.end, settings: settings
     )[today]
-    return [] unless blocked_stalled
+    return [] if blocked_stalled.active?
 
     lines = []
     if blocked_stalled.blocked?
