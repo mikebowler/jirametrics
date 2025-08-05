@@ -191,6 +191,11 @@ div.daily_issue {
     padding-right: 0.2em;
     border-radius: 0.2em;
   }
+  h1 {
+    border: none;
+    background: none;
+    padding-left: 0;
+  }
   margin-bottom: 0.5em;
 }
 div.child_issue:hover {
