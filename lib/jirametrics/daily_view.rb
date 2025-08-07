@@ -282,16 +282,14 @@ class DailyView < ChartBase
     assemble_issue_lines(issue, child: child).each do |row|
       if row.is_a? Issue
         result << render_issue(row, child: true)
+      elsif row.is_a?(String)
+        result << row
       else
-        if row.is_a?(String)
-          result << row
-        else
-          result << '<div class="heading">'
-          row.each do |chunk|
-            result << "<div>#{chunk}</div>"
-          end
-          result << '</div>'
+        result << '<div class="heading">'
+        row.each do |chunk|
+          result << "<div>#{chunk}</div>"
         end
+        result << '</div>'
       end
     end
     result << '</div>'
