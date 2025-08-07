@@ -66,6 +66,8 @@ class ChartBase
   end
 
   def label_days days
+    return 'unknown' if days.nil?
+
     "#{days} day#{'s' unless days == 1}"
   end
 
