@@ -681,9 +681,8 @@ class Issue
   def done?
     if artificial? || board.cycletime.nil?
       # This was probably loaded as a linked issue, which means we don't know what board it really
-      # belonged to. The best we can do is look at the status category. This case should be rare but
-      # it can happen.
-      status.category.name == 'Done'
+      # belonged to. The best we can do is look at the status key
+      status.category.done?
     else
       board.cycletime.done? self
     end
