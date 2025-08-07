@@ -85,7 +85,7 @@ describe DailyView do
         [issue, '2024-01-02', nil]
       ]
 
-      expect(view.make_title_line issue).to eq(
+      expect(view.make_title_line issue: issue, done: false).to eq(
         "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
         "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
       )
@@ -101,7 +101,7 @@ describe DailyView do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-02', nil]
       ]
-      expect(view.make_title_line issue).to eq(
+      expect(view.make_title_line issue: issue, done: false).to eq(
         "#{view.color_block('--expedited-color', title: 'Expedited')}" \
         "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
         "<b><a href='#{issue.url}'>SP-1</a></b> &nbsp;<i>Create new draft event</i>"
@@ -143,7 +143,7 @@ describe DailyView do
       ]
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>19 days</b>',
@@ -159,7 +159,7 @@ describe DailyView do
       ]
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>(Not Started)</b>',
@@ -176,7 +176,7 @@ describe DailyView do
       issue1.raw['fields']['labels'] = ['foo']
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>(Not Started)</b>',
@@ -199,7 +199,7 @@ describe DailyView do
       }
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>(Not Started)</b>',
@@ -225,7 +225,7 @@ describe DailyView do
         }
       }
 
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>20 days</b>',
@@ -242,7 +242,7 @@ describe DailyView do
       issue1.raw['fields']['duedate'] = '2024-01-10'
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
-      expect(view.make_stats_lines issue1).to eq [
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
         [
           "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
           'Age: <b>(Not Started)</b>',
@@ -402,11 +402,13 @@ describe DailyView do
       parent.subtasks << issue2
 
       expect(view.make_child_lines parent).to eq [
-        [
-          "<img src='#{issue1.type_icon_url}' class='icon' />",
-          'Incomplete child issues'
-        ],
-        issue1
+          "<a href=\"javascript:toggle_visibility('open5', 'close5', 'section5');\">" \
+            "<span id='open5' style='display: none'>▶ Child issues</span>" \
+            "<span id='close5'>▼ Child issues</span></a>",
+          "<section id='section5'>",
+          issue1,
+          issue2,
+          '</section>'
       ]
     end
   end

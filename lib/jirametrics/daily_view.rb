@@ -102,15 +102,18 @@ class DailyView < ChartBase
     lines
   end
 
-  def make_issue_label issue
-    "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> " \
-      "<b><a href='#{issue.url}'>#{issue.key}</a></b> &nbsp;<i>#{issue.summary}</i>"
+  def make_issue_label issue:, done:
+    label = "<img src='#{issue.type_icon_url}' title='#{issue.type}' class='icon' /> "
+    label << '<s>' if done
+    label << "<b><a href='#{issue.url}'>#{issue.key}</a></b> &nbsp;<i>#{issue.summary}</i>"
+    label << '</s>' if done
+    label
   end
 
-  def make_title_line issue
+  def make_title_line issue:, done:
     title_line = +''
     title_line << color_block('--expedited-color', title: 'Expedited') if issue.expedited?
-    title_line << make_issue_label(issue)
+    title_line << make_issue_label(issue: issue, done: done)
     title_line
   end
 
@@ -119,20 +122,25 @@ class DailyView < ChartBase
     parent_key = issue.parent_key
     if parent_key
       parent = issues.find_by_key key: parent_key, include_hidden: true
-      text = parent ? make_issue_label(parent) : parent_key
+      text = parent ? make_issue_label(issue: parent, done: parent.done?) : parent_key
       lines << ["Parent: #{text}"]
     end
     lines
   end
 
-  def make_stats_lines issue
+  def make_stats_lines issue:, done:
     line = []
 
     line << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
 
-    age = issue.board.cycletime.age(issue, today: date_range.end)
-    line << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
+    if done
+      cycletime = issue.board.cycletime.cycletime(issue)
 
+      line << "Cycletime: <b>#{label_days cycletime}</b>"
+    else
+      age = issue.board.cycletime.age(issue, today: date_range.end)
+      line << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
+    end
     line << "Status: <b>#{format_status issue.status, board: issue.board}</b>"
 
     column = issue.board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
@@ -158,13 +166,22 @@ class DailyView < ChartBase
 
   def make_child_lines issue
     lines = []
-    subtasks = issue.subtasks.reject { |i| i.done? }
+    subtasks = issue.subtasks
 
-    unless subtasks.empty?
-      icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' class='icon' />" }
-      lines << (icon_urls << 'Incomplete child issues')
-      lines += subtasks
-    end
+    return lines if subtasks.empty?
+
+    id = next_id
+    lines <<
+      "<a href=\"javascript:toggle_visibility('open#{id}', 'close#{id}', 'section#{id}');\">" \
+      "<span id='open#{id}' style='display: none'>▶ Child issues</span>" \
+      "<span id='close#{id}'>▼ Child issues</span></a>"
+    lines << "<section id='section#{id}'>"
+
+    # icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' class='icon' />" }
+    # lines << (icon_urls << 'Child issues')
+    lines += subtasks
+    lines << '</section>'
+
     lines
   end
 
@@ -242,15 +259,19 @@ class DailyView < ChartBase
   end
 
   def assemble_issue_lines issue, child:
+    done = issue.done?
+
     lines = []
-    lines << [make_title_line(issue)]
+    lines << [make_title_line(issue: issue, done: done)]
     lines += make_parent_lines(issue) unless child
-    lines += make_stats_lines(issue)
-    lines += make_description_lines(issue)
-    lines += make_sprints_lines(issue)
-    lines += make_blocked_stalled_lines(issue)
-    lines += make_child_lines(issue)
-    lines += make_history_lines(issue)
+    lines += make_stats_lines(issue: issue, done: done)
+    unless done
+      lines += make_description_lines(issue)
+      lines += make_sprints_lines(issue)
+      lines += make_blocked_stalled_lines(issue)
+      lines += make_child_lines(issue)
+      lines += make_history_lines(issue)
+    end
     lines
   end
 
@@ -262,11 +283,15 @@ class DailyView < ChartBase
       if row.is_a? Issue
         result << render_issue(row, child: true)
       else
-        result << '<div class="heading">'
-        row.each do |chunk|
-          result << "<div>#{chunk}</div>"
+        if row.is_a?(String)
+          result << row
+        else
+          result << '<div class="heading">'
+          row.each do |chunk|
+            result << "<div>#{chunk}</div>"
+          end
+          result << '</div>'
         end
-        result << '</div>'
       end
     end
     result << '</div>'
