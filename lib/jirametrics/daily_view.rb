@@ -177,8 +177,6 @@ class DailyView < ChartBase
       "<span id='close#{id}'>▼ Child issues</span></a>"
     lines << "<section id='section#{id}'>"
 
-    # icon_urls = subtasks.collect(&:type_icon_url).uniq.collect { |url| "<img src='#{url}' class='icon' />" }
-    # lines << (icon_urls << 'Child issues')
     lines += subtasks
     lines << '</section>'
 
@@ -213,19 +211,19 @@ class DailyView < ChartBase
   end
 
   def history_text change:, board:
+    convertor = ->(value, _id) { value.inspect }
+    convertor = ->(_value, id) { format_status(board.possible_statuses.find_by_id(id), board: board) } if change.status?
+
     if change.comment? || change.description?
       atlassian_document_format.to_html(change.value)
-    elsif change.status?
-      convertor = ->(id) { format_status(board.possible_statuses.find_by_id(id), board: board) }
-      to = convertor.call(change.value_id)
+    elsif %w[status priority assignee duedate issuetype].include?(change.field)
+      to = convertor.call(change.value, change.value_id)
       if change.old_value
-        from = convertor.call(change.old_value_id)
+        from = convertor.call(change.old_value, change.old_value_id)
         "Changed from #{from} to #{to}"
       else
         "Set to #{to}"
       end
-    elsif %w[priority assignee duedate issuetype].include?(change.field)
-      "Changed from \"#{change.old_value}\" to \"#{change.value}\""
     elsif change.flagged?
       change.value == '' ? 'Off' : 'On'
     else

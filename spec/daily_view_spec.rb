@@ -360,7 +360,7 @@ describe DailyView do
     it 'sets priority' do
       change = mock_change field: 'priority', value: 'Medium', value_id: 3, time: '2024-01-01'
       expect(view.history_text change: change, board: board).to eq(
-        'Changed from "" to "Medium"'
+        'Set to "Medium"'
       )
     end
 
