@@ -135,6 +135,15 @@ describe AtlassianDocumentFormat do
       }
       expect(format.to_html input).to eq "<p>paragraph 1</p>\n<p>paragraph 2</p>"
     end
+
+    # You'd think that there would always be a content section but apparently not.
+    it 'handles an empty document' do
+      input = {
+        'type' => 'doc',
+        'version' => 1
+      }
+      expect(format.to_html input).to be_empty
+    end
   end
 
   context 'adf_node_to_html' do

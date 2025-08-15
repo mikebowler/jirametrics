@@ -15,8 +15,11 @@ class AtlassianDocumentFormat
         .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
         .gsub(/\[([^\|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
         .gsub("\n", '<br />')
-    else
+    elsif input['content']
       input['content'].collect { |element| adf_node_to_html element }.join("\n")
+    else
+      # We have an actual ADF document with no content.
+      ''
     end
   end
 
