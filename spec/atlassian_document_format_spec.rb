@@ -478,7 +478,7 @@ describe AtlassianDocumentFormat do
     }
 
     expect(format.adf_node_to_html input).to eq(
-      '2025-07-21'
+      '2025-07-22'
     )
   end
 

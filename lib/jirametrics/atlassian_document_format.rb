@@ -5,6 +5,7 @@ class AtlassianDocumentFormat
 
   def initialize users:, timezone_offset:
     @users = users
+    @timezone_offset = timezone_offset
   end
 
   def to_html input
@@ -21,7 +22,7 @@ class AtlassianDocumentFormat
 
   # ADF is Atlassian Document Format
   # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-  def adf_node_to_html node
+  def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity
     closing_tag = nil
     node_attrs = node['attrs']
 
