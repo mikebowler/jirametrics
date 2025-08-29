@@ -72,6 +72,7 @@ class HtmlReportConfig
 
     html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
     css = load_css html_directory: html_directory
+    javascript = file_system.load(File.join(html_directory, 'index.js'))
     erb = ERB.new file_system.load(File.join(html_directory, 'index.erb'))
     file_system.save_file content: erb.result(binding), filename: @file_config.output_filename
   end
@@ -87,7 +88,6 @@ class HtmlReportConfig
   def load_css html_directory:
     base_css_filename = File.join(html_directory, 'index.css')
     base_css = file_system.load(base_css_filename)
-    log("Loaded CSS:  #{base_css_filename}")
 
     extra_css_filename = settings['include_css']
     if extra_css_filename
