@@ -6,8 +6,8 @@ if show_stats
   link_id = next_id
   issues_id = next_id
 %>
-[<a id='<%= link_id %>' href="#" onclick='expand_collapse("<%= link_id %>", "<%= issues_id %>"); return false;'>Show details</a>]
-<div id="<%= issues_id %>" style="display: none;">
+<div class='foldable' style="padding-left: 1em;">Statistics</div>
+<div id="<%= issues_id %>" style="padding-left: 1em;">
   <div>
      <table class="standard">
       <tr>

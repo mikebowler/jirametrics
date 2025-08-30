@@ -68,8 +68,9 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   link_id = next_id
   issues_id = next_id
 %>
-[<a id='<%= link_id %>' href="#" onclick='expand_collapse("<%= link_id %>", "<%= issues_id %>"); return false;'>Show details</a>]
-<div id="<%= issues_id %>" style="display: none;">
+<section>
+<div class='foldable startFolded'>Show statistics</div>
+<div id="<%= issues_id %>">
 <table class='standard' style="margin-left: 1em;">
   <thead>
     <th>Sprint</th>
@@ -110,3 +111,4 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   </ul>
 </p>
 </div>
+</section>
