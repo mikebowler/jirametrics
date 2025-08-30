@@ -611,10 +611,7 @@ describe DataQualityReport do
       html_report = file_config.children.first
       data_quality_report = html_report.charts.find { |c| c.is_a? described_class }
 
-      expect(exporter.file_system.log_messages).to match_strings [
-        # 'Warning: No charts were specified for the report. This is almost certainly a mistake.',
-        /^Loaded CSS/
-      ]
+      expect(exporter.file_system.log_messages).to be_empty
 
       actual = data_quality_report.problems_for(:discarded_changes).collect do |issue, message, key|
         [issue.key, message, key]

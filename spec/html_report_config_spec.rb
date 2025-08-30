@@ -55,9 +55,7 @@ describe HtmlReportConfig do
     it 'loads standard css' do
       config = described_class.new file_config: file_config, block: nil
       config.load_css html_directory: 'lib/jirametrics/html'
-      expect(exporter.file_system.log_messages).to eq [
-        'Loaded CSS:  lib/jirametrics/html/index.css'
-      ]
+      expect(exporter.file_system.log_messages).to be_empty
     end
 
     it 'fails to load missing extra css' do
@@ -65,7 +63,6 @@ describe HtmlReportConfig do
       config = described_class.new file_config: file_config, block: nil
       config.load_css html_directory: 'lib/jirametrics/html'
       expect(exporter.file_system.log_messages).to eq [
-        'Loaded CSS:  lib/jirametrics/html/index.css',
         'Unable to find specified CSS file: not_found.css'
       ]
     end
@@ -75,7 +72,6 @@ describe HtmlReportConfig do
       config = described_class.new file_config: file_config, block: nil
       config.load_css html_directory: 'lib/jirametrics/html'
       expect(exporter.file_system.log_messages).to eq [
-        'Loaded CSS:  lib/jirametrics/html/index.css',
         'Loaded CSS:  Gemfile'
       ]
     end
