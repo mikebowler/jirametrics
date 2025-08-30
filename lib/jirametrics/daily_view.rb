@@ -170,13 +170,7 @@ class DailyView < ChartBase
 
     return lines if subtasks.empty?
 
-    id = next_id
-    lines <<
-      "<a href=\"javascript:toggle_visibility('open#{id}', 'close#{id}', 'section#{id}');\">" \
-      "<span id='open#{id}' style='display: none'>▶ Child issues</span>" \
-      "<span id='close#{id}'>▼ Child issues</span></a>"
-    lines << "<section id='section#{id}'>"
-
+    lines << '<section><div class="foldable">Child issues</div>'
     lines += subtasks
     lines << '</section>'
 
@@ -187,14 +181,9 @@ class DailyView < ChartBase
     history = issue.changes.reverse
     lines = []
 
-    id = next_id
-    lines << [
-      "<a href=\"javascript:toggle_visibility('open#{id}', 'close#{id}', 'table#{id}');\">" \
-      "<span id='open#{id}'>▶ Issue History</span>" \
-      "<span id='close#{id}' style='display: none'>▼ Issue History</span></a>"
-    ]
+    lines << '<section><div class="foldable startFolded">Issue history</div>'
     table = +''
-    table << "<table id='table#{id}' style='display: none'>"
+    table << '<table>'
     history.each do |c|
       time = c.time.strftime '%b %d, %I:%M%P'
 
@@ -207,6 +196,7 @@ class DailyView < ChartBase
     end
     table << '</table>'
     lines << [table]
+    lines << '</section>'
     lines
   end
 

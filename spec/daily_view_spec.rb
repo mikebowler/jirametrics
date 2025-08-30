@@ -402,10 +402,7 @@ describe DailyView do
       parent.subtasks << issue2
 
       expect(view.make_child_lines parent).to eq [
-          "<a href=\"javascript:toggle_visibility('open5', 'close5', 'section5');\">" \
-            "<span id='open5' style='display: none'>▶ Child issues</span>" \
-            "<span id='close5'>▼ Child issues</span></a>",
-          "<section id='section5'>",
+          '<section><div class="foldable">Child issues</div>',
           issue1,
           issue2,
           '</section>'
