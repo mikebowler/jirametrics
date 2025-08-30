@@ -48,7 +48,7 @@ class ExpeditedChart < ChartBase
     end
 
     if data_sets.empty?
-      '<h1>Expedited work</h1>There is no expedited work in this time period.'
+      '<h1>Expedited work</h1><p>There is no expedited work in this time period.</p>'
     else
       wrap_and_render(binding, __FILE__)
     end

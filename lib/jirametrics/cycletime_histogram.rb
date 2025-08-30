@@ -62,7 +62,9 @@ class CycletimeHistogram < ChartBase
       )
     end
 
-    return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
+    if data_sets.empty?
+      return "<h1>#{@header_text}</h1><div>No data matched the selected criteria. Nothing to show.</div>"
+    end
 
     wrap_and_render(binding, __FILE__)
   end

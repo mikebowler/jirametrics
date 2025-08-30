@@ -343,7 +343,7 @@ describe AgingWorkBarChart do
       chart.issues = []
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
 
-      expect(chart.run).to eq '<h1>Aging Work Bar Chart</h1><p>There is no aging work</p>'
+      expect(chart.run).to eq "<h1 class='foldable'>Aging Work Bar Chart</h1><p>There is no aging work</p>"
     end
   end
 
