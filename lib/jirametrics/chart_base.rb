@@ -44,7 +44,7 @@ class ChartBase
 
   def render_top_text caller_binding
     result = +''
-    result << "<h1>#{@header_text}</h1>" if @header_text
+    result << "<h1 class='foldable'>#{@header_text}</h1>" if @header_text
     result << ERB.new(@description_text).result(caller_binding) if @description_text
     result
   end
