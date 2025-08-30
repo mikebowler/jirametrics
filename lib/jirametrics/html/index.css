@@ -78,11 +78,6 @@ body {
   color: var(--default-text-color);
 }
 
-h1 {
-  border: 1px solid black;
-  background: lightgray;
-  padding-left: 0.2em;
-}
 dl, dd, dt {
   padding: 0;
   margin: 0;
@@ -242,11 +237,6 @@ div.child_issue {
     --wip-chart-duration-more-than-four-weeks-color: #8e0000;
 
     --daily-view-selected-issue-background: #474747;
-  }
-
-  h1 {
-    color: #e0e0e0;
-    background-color: #656565;
   }
 
   a[href] {
