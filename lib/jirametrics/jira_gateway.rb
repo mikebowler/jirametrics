@@ -17,7 +17,9 @@ class JiraGateway
     begin
       json = JSON.parse(result)
     rescue # rubocop:disable Style/RescueStandardError
-      raise "Error when parsing result: #{result.inspect}"
+      message = "Unable to parse results from #{sanitize_message(command)}"
+      @file_system.error message, more: result
+      raise message
     end
 
     raise "Download failed with: #{JSON.pretty_generate(json)}" unless json_successful?(json)
@@ -25,9 +27,13 @@ class JiraGateway
     json
   end
 
+  def sanitize_message message
+    message.gsub(@jira_api_token, '[API_TOKEN]')
+  end
+
   def call_command command
     log_entry = "  #{command.gsub(/\s+/, ' ')}"
-    log_entry = log_entry.gsub(@jira_api_token, '[API_TOKEN]') if @jira_api_token
+    log_entry = sanitize_message log_entry if @jira_api_token
     @file_system.log log_entry
 
     result = `#{command}`
