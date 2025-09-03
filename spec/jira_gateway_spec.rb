@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 describe JiraGateway do
-  let(:file_system) { FileSystem.new }
+  let(:file_system) { MockFileSystem.new }
   let(:gateway) { described_class.new file_system: file_system }
 
   context 'make_curl_command' do
@@ -97,10 +97,16 @@ describe JiraGateway do
       def gateway.call_command _command
         'foo'
       end
-      gateway.load_jira_config({ 'url' => 'https://example.com' })
-      expect { gateway.call_url relative_url: 'foo' }.to raise_error(
-        'Error when parsing result: "foo"'
-      )
+      gateway.load_jira_config({
+        'url' => 'https://example.com',
+        'api_token' => 'ABCD_EFGH',
+        'email' => 'a@example.com'
+      })
+      message = 'Unable to parse results from curl -L -s ' \
+        '--user a@example.com:[API_TOKEN] --request GET ' \
+        '--header "Accept: application/json" --url "https://example.comfoo"'
+      expect { gateway.call_url relative_url: 'foo' }.to raise_error(message)
+      expect(file_system.log_messages).to eq([["Error: #{message}", 'foo']])
     end
   end
 
