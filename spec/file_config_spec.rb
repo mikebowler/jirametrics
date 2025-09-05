@@ -135,6 +135,12 @@ describe FileConfig do
     end
 
     it 'writes an html' do
+      %w[css js erb].each do |extension|
+        exporter.file_system.when_loading(
+          file: File.expand_path("./lib/jirametrics/html/index.#{extension}"),
+          json: :not_mocked
+        )
+      end
       project_config.time_range = to_time('2024-01-01')..to_time('2024-01-01')
       file_config.file_suffix '.html'
       file_config.html_report do

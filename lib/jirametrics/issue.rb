@@ -608,7 +608,7 @@ class Issue
 
   def dump
     result = +''
-    result << "#{key} (#{type}): #{compact_text summary, 200}\n"
+    result << "#{key} (#{type}): #{compact_text summary, max: 200}\n"
 
     assignee = raw['fields']['assignee']
     result << "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>\n" unless assignee.nil?
@@ -705,6 +705,19 @@ class Issue
     board.sprints.select { |s| sprint_ids.include? s.id }
   end
 
+  def compact_text text, max: 60
+    return '' if text.nil?
+
+    if text.is_a? Hash
+      # We can't effectively compact it but we can convert it into a string.
+      text = @board.project_config.atlassian_document_format.to_html(text)
+    else
+      text = text.gsub(/\s+/, ' ').strip
+      text = "#{text[0...max]}..." if text.length > max
+    end
+    text
+  end
+
   private
 
   def load_history_into_changes
@@ -727,19 +740,6 @@ class Issue
       created = parse_time(comment['created'])
       @changes << ChangeItem.new(raw: raw, time: created, artificial: true, author_raw: comment['author'])
     end
-  end
-
-  def compact_text text, max = 60
-    return nil if text.nil?
-
-    if text.is_a? Hash
-      # We can't effectively compact it but we can convert it into a string.
-      text = @board.project_config.atlassian_document_format.to_html(text)
-    else
-      text = text.gsub(/\s+/, ' ').strip
-      text = "#{text[0..max]}..." if text.length > max
-    end
-    text
   end
 
   def sort_changes!

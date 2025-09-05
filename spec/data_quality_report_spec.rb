@@ -72,6 +72,8 @@ describe DataQualityReport do
     # without blowing up.
 
     it 'runs all the templates and verifies that they don\'t blow up' do
+      html_path = File.expand_path('./lib/jirametrics/html/')
+      report.file_system.when_loading file: "#{html_path}/collapsible_issues_panel.erb", json: :not_mocked
       expect(report.run).to match(/SP-1/)
       expect(report.file_system.log_messages).to be_empty
     end
@@ -564,6 +566,7 @@ describe DataQualityReport do
       # working and we didn't realize it.
       exporter = Exporter.new file_system: MockFileSystem.new
       target_path = 'spec/complete_sample/'
+      html_path = File.expand_path('./lib/jirametrics/html/')
 
       sp1_json = empty_issue(created: '2021-09-15', key: 'SP-1').raw
       exporter.file_system.when_loading file: "#{target_path}sample_statuses.json", json: :not_mocked
@@ -575,6 +578,11 @@ describe DataQualityReport do
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-7.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-8.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-11.json", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/cycletime_scatterplot.erb", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/collapsible_issues_panel.erb", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/index.css", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/index.js", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/index.erb", json: :not_mocked
       exporter.file_system.when_foreach root: target_path, result: :not_mocked
       exporter.file_system.when_foreach root: "#{target_path}sample_issues", result: :not_mocked
 

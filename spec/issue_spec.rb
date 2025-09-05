@@ -1366,4 +1366,37 @@ describe Issue do
       expect(issue1 <=> issue2).to be_zero
     end
   end
+
+  context 'compact_text' do
+    it 'returns empty for nil' do
+      expect(issue1.compact_text nil).to eq ''
+    end
+
+    it 'truncates when too long' do
+      expect(issue1.compact_text '123456789', max: 3).to eq '123...'
+    end
+
+    it 'passes through when within limit' do
+      expect(issue1.compact_text '123456789', max: 30).to eq '123456789'
+    end
+
+    it 'expands ADF without compressing' do
+      input = {
+        'type' => 'doc',
+        'version' => 1,
+        'content' => [
+          {
+            'type' => 'paragraph',
+            'content' => [
+              {
+                'type' => 'text',
+                'text' => 'Comment 2'
+              }
+            ]
+          }
+        ]
+      }
+      expect(issue1.compact_text input, max: 30).to eq '<p>Comment 2</p>'
+    end
+  end
 end

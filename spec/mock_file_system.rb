@@ -14,6 +14,15 @@ class MockFileSystem < FileSystem
     @log_messages = []
   end
 
+  def load filename, supress_deprecation: false
+    json = @data[filename]
+
+    return super if json == :not_mocked
+    return json if json
+
+    raise Errno::ENOENT, filename
+  end
+
   def load_json filename, fail_on_error: true
     json = @data[filename]
 

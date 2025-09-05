@@ -52,6 +52,12 @@ describe HtmlReportConfig do
   end
 
   context 'load_css' do
+    before do
+      ['lib/jirametrics/html/index.css', 'Gemfile'].each do |unmocked_file|
+        exporter.file_system.when_loading file: unmocked_file, json: :not_mocked
+      end
+    end
+
     it 'loads standard css' do
       config = described_class.new file_config: file_config, block: nil
       config.load_css html_directory: 'lib/jirametrics/html'

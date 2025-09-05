@@ -26,6 +26,12 @@ describe AgingWorkInProgressChart do
   let :chart do
     chart = described_class.new(empty_config_block)
     chart.file_system = MockFileSystem.new
+    html_path = File.expand_path('./lib/jirametrics/html/')
+    chart.file_system.when_loading(
+      file: "#{html_path}/aging_work_in_progress_chart.erb",
+      json: :not_mocked
+    )
+
     chart.board_id = 1
     chart.all_boards = { 1 => board }
     chart.issues = load_complete_sample_issues board: board

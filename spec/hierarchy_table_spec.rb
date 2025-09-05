@@ -6,6 +6,11 @@ describe HierarchyTable do
   it 'initializes for no issues' do
     table = described_class.new ->(_) { description_text 'foo' }
     table.file_system = MockFileSystem.new
+    table.file_system.when_loading(
+      file: File.expand_path('./lib/jirametrics/html/hierarchy_table.erb'),
+      json: :not_mocked
+    )
+
     table.issues = []
     table.run
     expect(table.description_text).to eq(
@@ -28,6 +33,11 @@ describe HierarchyTable do
 
     table = described_class.new empty_config_block
     table.file_system = MockFileSystem.new
+    table.file_system.when_loading(
+      file: File.expand_path('./lib/jirametrics/html/hierarchy_table.erb'),
+      json: :not_mocked
+    )
+
     table.issues = [issue1, issue2]
     table.run
     expect(table.description_text.strip).to eq(
