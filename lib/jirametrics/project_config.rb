@@ -352,6 +352,12 @@ class ProjectConfig
     json.each { |user_data| @users << User.new(raw: user_data) }
   end
 
+  def atlassian_document_format
+    @atlassian_document_format ||= AtlassianDocumentFormat.new(
+      users: @users, timezone_offset: exporter.timezone_offset
+    )
+  end
+
   def to_time string, end_of_day: false
     time = end_of_day ? '23:59:59' : '00:00:00'
     string = "#{string}T#{time}#{exporter.timezone_offset}" if string.match?(/^\d{4}-\d{2}-\d{2}$/)

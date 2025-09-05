@@ -160,7 +160,7 @@ class HtmlReportConfig
     chart.time_range = project_config.time_range
     chart.timezone_offset = timezone_offset
     chart.settings = settings
-    chart.users = project_config.users
+    chart.atlassian_document_format = project_config.atlassian_document_format
 
     chart.all_boards = project_config.all_boards
     chart.board_id = find_board_id

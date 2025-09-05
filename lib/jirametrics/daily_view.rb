@@ -33,10 +33,6 @@ class DailyView < ChartBase
     result
   end
 
-  def atlassian_document_format
-    @atlassian_document_format ||= AtlassianDocumentFormat.new(users: users, timezone_offset: timezone_offset)
-  end
-
   def select_aging_issues
     aging_issues = issues.select do |issue|
       started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)

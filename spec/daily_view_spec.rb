@@ -8,7 +8,9 @@ describe DailyView do
       view.date_range = to_date('2024-01-01')..to_date('2024-01-20')
       view.time_range = to_time('2024-01-01')..to_time('2024-01-20T23:59:59')
       view.settings = JSON.parse(File.read(File.join(['lib', 'jirametrics', 'settings.json']), encoding: 'UTF-8'))
-      view.users = []
+      view.atlassian_document_format = AtlassianDocumentFormat.new(
+        users: [], timezone_offset: '0000'
+      )
     end
   end
   let(:board) { sample_board }
