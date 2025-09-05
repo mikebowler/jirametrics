@@ -51,7 +51,10 @@ class DependencyChart < ChartBase
     instance_eval(&@rules_block) if @rules_block
 
     dot_graph = build_dot_graph
-    return "<h1>#{@header_text}</h1><div>No data matched the selected criteria. Nothing to show.</div>" if dot_graph.nil?
+    if dot_graph.nil?
+      return "<h1 class='foldable'>#{@header_text}</h1>" \
+        '<div>No data matched the selected criteria. Nothing to show.</div>'
+    end
 
     svg = execute_graphviz(dot_graph.join("\n"))
     "<h1>#{@header_text}</h1><div>#{@description_text}</div>#{shrink_svg svg}"
