@@ -1,0 +1,35 @@
+{
+  "name": "jira-export",
+  "version": "1.0.0",
+  "description": "Jira export tool with JavaScript testing",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^23.0.1"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.js"
+    ],
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "lib/jirametrics/html/index.js",
+      "!**/node_modules/**",
+      "!**/test/**"
+    ],
+    "coverageDirectory": "coverage/js",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
+  }
+}
