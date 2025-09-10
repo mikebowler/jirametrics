@@ -8,3 +8,10 @@ spec/tmp/
 *.gem
 *.log
 extra.css
+
+# Node.js dependencies
+node_modules/
+package-lock.json
+
+# JavaScript test coverage
+coverage/js/

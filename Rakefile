@@ -2,8 +2,8 @@
 
 require 'rspec/core/rake_task'
 
-task default: [:spec]
-task test: [:spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
+task default: %i[test_js spec]
+task test: %i[test_js spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
 
 task :initialize_config do # rubocop:disable Rake/Desc
   # Force lib onto the load path to match how it would run when packaged as a gem
@@ -29,11 +29,16 @@ task go: %i[initialize_config download export]
 
 desc 'info'
 task info: [:initialize_config] do
-  JiraMetrics.start ['info', 'SP-38']
+  JiraMetrics.start %w[info SP-38]
 end
 
 RSpec::Core::RakeTask.new(:spec)
 
 RSpec::Core::RakeTask.new(:focus) do |task, _args|
   task.rspec_opts = '--tag focus'
+end
+
+desc 'Run JavaScript tests'
+task :test_js do
+  sh 'npm test'
 end
