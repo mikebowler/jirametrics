@@ -4,7 +4,7 @@ require 'thor'
 require 'require_all'
 
 # This one does need to be loaded early. The rest will be loaded later.
-require './lib/jirametrics/file_system'
+require 'jirametrics/file_system'
 
 class JiraMetrics < Thor
   def self.exit_on_failure?
