@@ -98,58 +98,74 @@ class Downloader
     escaped_jql = CGI.escape jql
 
     if @jira_gateway.cloud?
-      max_results = 5_000 # The maximum allowed by Jira
-      next_page_token = nil
-      issue_count = 0
-
-      loop do
-        json = @jira_gateway.call_url relative_url: '/rest/api/3/search/jql' \
-          "?jql=#{escaped_jql}&maxResults=#{max_results}&" \
-          "nextPageToken=#{next_page_token}&expand=changelog&fields=*all"
-        next_page_token = json['nextPageToken']
-
-        json['issues'].each do |issue_json|
-          issue_json['exporter'] = {
-            'in_initial_query' => initial_query
-          }
-          identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
-          file = "#{issue_json['key']}-#{board.id}.json"
-
-          @file_system.save_json(json: issue_json, filename: File.join(path, file))
-          issue_count += 1
-        end
-
-        message = "    Downloaded #{issue_count} issues"
-        log message, both: true
-
-        break unless next_page_token
-      end
+      get_issues_from_jira_cloud(
+        escaped_jql: escaped_jql, initial_query: initial_query, board: board, path: path
+      )
     else
-      max_results = 100
-      start_at = 0
-      total = 1
-      while start_at < total
-        json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
-          "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
+      get_issues_from_jira_data_centre(
+        escaped_jql: escaped_jql, initial_query: initial_query, board: board, path: path
+      )
+    end
+  end
 
-        json['issues'].each do |issue_json|
-          issue_json['exporter'] = {
-            'in_initial_query' => initial_query
-          }
-          identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
-          file = "#{issue_json['key']}-#{board.id}.json"
+  def get_issues_from_jira_cloud escaped_jql:, initial_query:, board:, path:
+    max_results = 5_000 # The maximum allowed by Jira
+    next_page_token = nil
+    issue_count = 0
 
-          @file_system.save_json(json: issue_json, filename: File.join(path, file))
-        end
+    loop do
+      relative_url = +''
+      relative_url << '/rest/api/3/search/jql'
+      relative_url << "?jql=#{escaped_jql}&maxResults=#{max_results}"
+      relative_url << "&nextPageToken=#{next_page_token}" if next_page_token
+      relative_url << '&expand=changelog&fields=*all'
 
-        total = json['total'].to_i
-        max_results = json['maxResults']
+      json = @jira_gateway.call_url relative_url: relative_url
+      next_page_token = json['nextPageToken']
 
-        message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
-        log message, both: true
+      json['issues'].each do |issue_json|
+        issue_json['exporter'] = {
+          'in_initial_query' => initial_query
+        }
+        identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
+        file = "#{issue_json['key']}-#{board.id}.json"
 
-        start_at += json['issues'].size
+        @file_system.save_json(json: issue_json, filename: File.join(path, file))
+        issue_count += 1
       end
+
+      message = "    Downloaded #{issue_count} issues"
+      log message, both: true
+
+      break unless next_page_token
+    end
+  end
+
+  def get_issues_from_jira_data_centre escaped_jql:, initial_query:, board:, path:
+    max_results = 100
+    start_at = 0
+    total = 1
+    while start_at < total
+      json = @jira_gateway.call_url relative_url: '/rest/api/2/search' \
+        "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&expand=changelog&fields=*all"
+
+      json['issues'].each do |issue_json|
+        issue_json['exporter'] = {
+          'in_initial_query' => initial_query
+        }
+        identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
+        file = "#{issue_json['key']}-#{board.id}.json"
+
+        @file_system.save_json(json: issue_json, filename: File.join(path, file))
+      end
+
+      total = json['total'].to_i
+      max_results = json['maxResults']
+
+      message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
+      log message, both: true
+
+      start_at += json['issues'].size
     end
   end
 
