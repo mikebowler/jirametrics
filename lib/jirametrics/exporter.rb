@@ -50,7 +50,7 @@ class Exporter
       end
 
       project.download_config.run
-      downloader = Downloader.new(
+      downloader = Downloader.create(
         download_config: project.download_config,
         file_system: file_system,
         jira_gateway: JiraGateway.new(file_system: file_system)
