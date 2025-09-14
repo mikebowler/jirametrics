@@ -31,6 +31,10 @@ class FileSystem
     File.write(filename, content)
   end
 
+  def utime file:, time:
+    File.utime time, time, file
+  end
+
   def warning message, more: nil
     log "Warning: #{message}", more: more, also_write_to_stderr: true
   end

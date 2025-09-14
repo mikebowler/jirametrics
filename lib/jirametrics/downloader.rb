@@ -259,6 +259,7 @@ class Downloader
 
       # For an incremental download, we want to query from the end of the previous one, not from the
       # beginning of the full range.
+      metadata['date_end'] = nil #TODO: Debugging only. Do not check this line in
       @start_date_in_query = metadata['date_end'] || @download_date_range.begin
       log "    Incremental download only. Pulling from #{@start_date_in_query}", both: true if metadata['date_end']
 

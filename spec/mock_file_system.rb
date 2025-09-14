@@ -41,6 +41,10 @@ class MockFileSystem < FileSystem
     @saved_files[filename] = content
   end
 
+  def utime file:, time:
+    @log_message << "[Debug] utime #{time} #{file}"
+  end
+
   def when_loading file:, json:
     raise "File must be a string or :not_mocked. Found #{file.inspect}" unless file.is_a?(String) || file == :not_mocked
 

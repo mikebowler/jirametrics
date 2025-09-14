@@ -3,6 +3,7 @@
 require 'cgi'
 require 'json'
 require 'English'
+require 'open3'
 
 class JiraGateway
   attr_accessor :ignore_ssl_errors, :jira_url
@@ -11,9 +12,29 @@ class JiraGateway
     @file_system = file_system
   end
 
+  def post_request relative_url:, payload:
+    puts "payload: #{payload}"
+    command = make_curl_command url: "#{@jira_url}#{relative_url}", method: 'POST'
+    puts command
+    stdout, stderr, status = Open3.capture3(command, stdin_data: payload)
+    puts "status: #{status}"
+    @file_system.log "Error: #{stderr}" unless stderr == ''
+    raise 'no response' if stdout == ''
+    return parse_response(command: command, result: stdout) if status.success?
+
+    @file_system.log result
+    @file_system.log "Failed call with exit status #{status.exitstatus}."
+    raise "Failed call with exit status #{status.exitstatus}. " \
+      "See #{@file_system.logfile_name} for details"
+  end
+
   def call_url relative_url:
     command = make_curl_command url: "#{@jira_url}#{relative_url}"
     result = call_command command
+    parse_response(command: command, result: result)
+  end
+
+  def parse_response command:, result:
     begin
       json = JSON.parse(result)
     rescue # rubocop:disable Style/RescueStandardError
@@ -65,7 +86,7 @@ class JiraGateway
     @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
   end
 
-  def make_curl_command url:
+  def make_curl_command url:, method: 'GET'
     command = +''
     command << 'curl'
     command << ' -L' # follow redirects
@@ -74,8 +95,13 @@ class JiraGateway
     command << " --cookie #{@cookies.inspect}" unless @cookies.empty?
     command << " --user #{@jira_email}:#{@jira_api_token}" if @jira_api_token
     command << " -H \"Authorization: Bearer #{@jira_personal_access_token}\"" if @jira_personal_access_token
-    command << ' --request GET'
+    command << " --request #{method}"
+    if method == 'POST'
+      command << ' --data @-'
+      command << ' --header "Content-Type: application/json"'
+    end
     command << ' --header "Accept: application/json"'
+    command << ' --show-error --fail' # Better diagnostics when the server returns an error
     command << " --url \"#{url}\""
     command
   end
@@ -88,6 +114,7 @@ class JiraGateway
   end
 
   def cloud?
+    return false
     @jira_url.downcase.end_with? '.atlassian.net'
   end
 end
