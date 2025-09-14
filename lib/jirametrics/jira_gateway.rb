@@ -6,10 +6,12 @@ require 'English'
 require 'open3'
 
 class JiraGateway
-  attr_accessor :ignore_ssl_errors, :jira_url
+  attr_reader :ignore_ssl_errors, :jira_url
 
-  def initialize file_system:
+  def initialize file_system:, download_config:
     @file_system = file_system
+    load_jira_config(download_config.project_config.jira_config)
+    @ignore_ssl_errors = download_config.project_config.settings['ignore_ssl_errors']
   end
 
   def post_request relative_url:, payload:
@@ -114,7 +116,6 @@ class JiraGateway
   end
 
   def cloud?
-    return false
     @jira_url.downcase.end_with? '.atlassian.net'
   end
 end

@@ -1,37 +1,15 @@
 # frozen_string_literal: true
 
 class DownloaderForCloud < Downloader
-  def download_issues board:
-    log "  Downloading primary issues for board #{board.id} from Jira Cloud", both: true
-    path = File.join(@target_path, "#{file_prefix}_issues/")
-    unless Dir.exist?(path)
-      log "  Creating path #{path}"
-      Dir.mkdir(path)
-    end
-
-    filter_id = @board_id_to_filter_id[board.id]
-    jql = make_jql(filter_id: filter_id)
-    jira_search_by_jql(jql: jql, initial_query: true, board: board, path: path)
-
-    log "  Downloading linked issues for board #{board.id}", both: true
-    loop do
-      @issue_keys_pending_download.reject! { |key| @issue_keys_downloaded_in_current_run.include? key }
-      break if @issue_keys_pending_download.empty?
-
-      keys_to_request = @issue_keys_pending_download[0..99]
-      @issue_keys_pending_download.reject! { |key| keys_to_request.include? key }
-      jql = "key in (#{keys_to_request.join(', ')})"
-      jira_search_by_jql(jql: jql, initial_query: false, board: board, path: path)
-    end
+  def jira_instance_type
+    'Jira Cloud'
   end
 
-  def jira_search_by_jql jql:, initial_query:, board:, path:
-    intercept_jql = @download_config.project_config.settings['intercept_jql']
-    jql = intercept_jql.call jql if intercept_jql
-
+  def search_for_issues jql:, board_id:, path:
     log "  JQL: #{jql}"
     escaped_jql = CGI.escape jql
 
+    hash = {}
     max_results = 5_000 # The maximum allowed by Jira
     next_page_token = nil
     issue_count = 0
@@ -41,19 +19,20 @@ class DownloaderForCloud < Downloader
       relative_url << '/rest/api/3/search/jql'
       relative_url << "?jql=#{escaped_jql}&maxResults=#{max_results}"
       relative_url << "&nextPageToken=#{next_page_token}" if next_page_token
-      relative_url << '&expand=changelog&fields=*all'
+      relative_url << '&fields=updated'
 
       json = @jira_gateway.call_url relative_url: relative_url
       next_page_token = json['nextPageToken']
 
-      json['issues'].each do |issue_json|
-        issue_json['exporter'] = {
-          'in_initial_query' => initial_query
-        }
-        identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
-        file = "#{issue_json['key']}-#{board.id}.json"
-
-        @file_system.save_json(json: issue_json, filename: File.join(path, file))
+      json['issues'].each do |i|
+        key = i['key']
+        data = DownloadIssueData.new
+        data.key = key
+        data.last_modified = Time.parse i['fields']['updated']
+        data.found_in_primary_query = true
+        data.cache_path = File.join(path, "#{key}-#{board_id}.json")
+        data.up_to_date = last_modified(filename: data.cache_path) == data.last_modified
+        hash[key] = data
         issue_count += 1
       end
 
@@ -62,5 +41,10 @@ class DownloaderForCloud < Downloader
 
       break unless next_page_token
     end
+    hash
+  end
+
+  def issue_bulk_fetch_api
+    '/rest/api/3/issue/bulkfetch'
   end
 end
