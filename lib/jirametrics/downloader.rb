@@ -394,11 +394,12 @@ class Downloader
       next if file.start_with? '.'
       raise "Unexpected filename in #{path}: #{file}" unless file =~ /^(\w+-\d+)-\d+\.json$/
 
-      next if issue_data_hash[$1] # Still in Jira
+      key = $1
+      next if issue_data_hash[key] # Still in Jira
 
       file_to_delete = File.join(path, file)
-      puts "========== Flagging for delete: #{file_to_delete}"
-      # TODO: Actually do the delete
+      log "  Issue #{key} appears to have been deleted from Jira. Removing local copy", both: true
+      file_system.unlink file_to_delete
     end
   end
 

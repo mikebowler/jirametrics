@@ -73,6 +73,10 @@ class FileSystem
     File.exist? filename
   end
 
+  def unlink filename
+    File.unlink filename
+  end
+
   def deprecated message:, date:, depth: 2
     text = +''
     text << "Deprecated(#{date}): "
