@@ -341,8 +341,7 @@ class Downloader
       related_issue_keys.reject! { |key| issue_data_hash[key] }
 
       related_issue_keys.each do |key|
-        data = DownloadIssueData.new
-        data.key = key
+        data = DownloadIssueData.new key: key
         data.found_in_primary_query = false
         data.up_to_date = false
         data.cache_path = File.join(path, "#{key}-#{board.id}.json")
