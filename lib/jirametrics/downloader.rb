@@ -323,8 +323,7 @@ class Downloader
             # Set the timestamp on the file to match the updated one so that we don't have
             # to parse the file just to find the timestamp
             @file_system.utime time: data.issue.updated, file: data.cache_path
-          end
-          slice.each do |data|
+
             issue = data.issue
             next unless issue
 
@@ -398,7 +397,7 @@ class Downloader
       next if issue_data_hash[$1] # Still in Jira
 
       file_to_delete = File.join(path, file)
-      puts "========== Deleting #{file_to_delete}"
+      puts "========== Flagging for delete: #{file_to_delete}"
       # TODO: Actually do the delete
     end
   end

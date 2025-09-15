@@ -26,7 +26,7 @@ class DownloaderForCloud < Downloader
 
       json['issues'].each do |i|
         key = i['key']
-        data = DownloadIssueData.new
+        data = DownloadIssueData.new key: key
         data.key = key
         data.last_modified = Time.parse i['fields']['updated']
         data.found_in_primary_query = true
