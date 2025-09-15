@@ -2,14 +2,24 @@
 
 describe JiraGateway do
   let(:file_system) { MockFileSystem.new }
-  let(:gateway) { described_class.new file_system: file_system }
+  let(:gateway) do
+    described_class.new(
+      file_system: file_system,
+      jira_config: { 'url' => 'https://example.com' },
+      settings: { 'ignore_ssl_errors' => false }
+    )
+  end
 
   context 'make_curl_command' do
     it 'handles empty config' do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
 
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -L -s --request GET --header "Accept: application/json" --url "http://foo")
+        'curl -L -s' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
+        ' --url "http://foo"'
       )
     end
 
@@ -17,7 +27,11 @@ describe JiraGateway do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
       gateway.ignore_ssl_errors = true
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -L -s -k --request GET --header "Accept: application/json" --url "http://foo")
+        'curl -L -s -k' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
+        ' --url "http://foo"'
       )
     end
 
@@ -27,7 +41,11 @@ describe JiraGateway do
         'personal_access_token' => 'yy'
       })
       expect(gateway.make_curl_command url: 'http://foo').to eq(
-        %(curl -L -s -H "Authorization: Bearer yy" --request GET --header "Accept: application/json" --url "http://foo")
+        'curl -L -s -H "Authorization: Bearer yy"' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
+        ' --url "http://foo"'
       )
     end
   end
@@ -69,13 +87,22 @@ describe JiraGateway do
   context 'Build curl command' do
     it 'generates with url only' do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
-      expected = 'curl -L -s --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
+        ' --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
 
     it 'generates with cookies' do
       gateway.load_jira_config({ 'url' => 'https://example.com', 'cookies' => { 'a' => 'b' } })
-      expected = 'curl -L -s --cookie "a=b" --request GET --header "Accept: application/json" --url "URL"'
+      expected = 'curl -L -s' \
+        ' --cookie "a=b"' \
+        ' --request GET' \
+        ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
+        ' --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
 
@@ -87,6 +114,7 @@ describe JiraGateway do
         ' --user fred@flintstone:bedrock' \
         ' --request GET' \
         ' --header "Accept: application/json"' \
+        ' --show-error --fail' \
         ' --url "URL"'
       expect(gateway.make_curl_command(url: 'URL')).to eq expected
     end
@@ -104,7 +132,8 @@ describe JiraGateway do
       })
       message = 'Unable to parse results from curl -L -s ' \
         '--user a@example.com:[API_TOKEN] --request GET ' \
-        '--header "Accept: application/json" --url "https://example.comfoo"'
+        '--header "Accept: application/json" --show-error --fail ' \
+        '--url "https://example.comfoo"'
       expect { gateway.call_url relative_url: 'foo' }.to raise_error(message)
       expect(file_system.log_messages).to eq([["Error: #{message}", 'foo']])
     end

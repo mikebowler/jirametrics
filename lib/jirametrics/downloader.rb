@@ -3,6 +3,27 @@
 require 'cgi'
 require 'json'
 
+class DownloadIssueData
+  attr_accessor :key, :found_in_primary_query, :last_modified,
+    :up_to_date, :cache_path, :issue
+
+  def initialize(
+    key:,
+    found_in_primary_query: true,
+    last_modified: nil,
+    up_to_date: true,
+    cache_path: nil,
+    issue: nil
+  )
+    @key = key
+    @found_in_primary_query = found_in_primary_query
+    @last_modified = last_modified
+    @up_to_date = up_to_date
+    @cache_path = cache_path
+    @issue = issue
+  end
+end
+
 class Downloader
   CURRENT_METADATA_VERSION = 4
 
@@ -250,12 +271,7 @@ class Downloader
 
     if start_date
       @download_date_range = start_date..today.to_date
-
-      # For an incremental download, we want to query from the end of the previous one, not from the
-      # beginning of the full range.
-      metadata['date_end'] = nil #TODO: Debugging only. Do not check this line in
-      @start_date_in_query = metadata['date_end'] || @download_date_range.begin
-      log "    Incremental download only. Pulling from #{@start_date_in_query}", both: true if metadata['date_end']
+      @start_date_in_query = @download_date_range.begin
 
       # Catch-all to pick up anything that's been around since before the range started but hasn't
       # had an update during the range.
@@ -290,15 +306,14 @@ class Downloader
     jql = intercept_jql.call jql if intercept_jql
 
     issue_data_hash = search_for_issues jql: jql, board_id: board.id, path: path
-    # puts 'issue_data_hash'
+
     loop do
       related_issue_keys = Set.new
       issue_data_hash
         .values
         .reject { |data| data.up_to_date }
         .each_slice(100) do |slice|
-          puts 'slice'
-          bulk_fetch_issues(
+          slice = bulk_fetch_issues(
             issue_datas: slice, board: board, in_initial_query: true
           )
           slice.each do |data|
@@ -308,19 +323,17 @@ class Downloader
             # Set the timestamp on the file to match the updated one so that we don't have
             # to parse the file just to find the timestamp
             @file_system.utime time: data.issue.updated, file: data.cache_path
+          end
+          slice.each do |data|
+            issue = data.issue
+            next unless issue
 
-            puts "#{data.issue.key} #{data.issue.summary}"
-            slice.each do |data|
-              issue = data.issue
-              next unless issue
+            parent_key = issue.parent_key(project_config: @download_config.project_config)
+            related_issue_keys << parent_key if parent_key
 
-              parent_key = issue.parent_key(project_config: @download_config.project_config)
-              related_issue_keys << parent_key if parent_key
-
-              # Sub-tasks
-              issue.raw['fields']['subtasks']&.each do |raw_subtask|
-                related_issue_keys << raw_subtask['key']
-              end
+            # Sub-tasks
+            issue.raw['fields']['subtasks']&.each do |raw_subtask|
+              related_issue_keys << raw_subtask['key']
             end
           end
         end
@@ -336,7 +349,6 @@ class Downloader
         data.cache_path = File.join(path, "#{key}-#{board.id}.json")
         issue_data_hash[key] = data
       end
-      puts 'end of loop'
       break if related_issue_keys.empty?
 
       log "  Downloading linked issues for board #{board.id}", both: true
@@ -348,6 +360,7 @@ class Downloader
   end
 
   def bulk_fetch_issues issue_datas:, board:, in_initial_query:
+    log "  Downloading #{issue_datas.size} issues", both: true
     payload = {
       'expand' => [
         'changelog'
@@ -369,35 +382,28 @@ class Downloader
       data.last_modified = issue.updated
       data.issue = issue
     end
+    issue_datas
   end
 
   def delete_issues_from_cache_that_are_not_in_server issue_data_hash:, path:
-    # Walk through all the items in the cache. If they aren't found in issue_data_hash
-    # then that means they were deleted in Jira, so we flush them.
+    # The gotcha with deleted issues is that they just stop being returned in queries
+    # and we have no way to know that they should be removed from our local cache.
+    # With the new approach, we ask for every issue that Jira knows about (within
+    # the parameters of the query) and then delete anything that's in our local cache
+    # but wasn't returned.
     @file_system.foreach path do |file|
       next if file.start_with? '.'
       raise "Unexpected filename in #{path}: #{file}" unless file =~ /^(\w+-\d+)-\d+\.json$/
 
-      next if issue_data_hash[$1]
+      next if issue_data_hash[$1] # Still in Jira
 
       file_to_delete = File.join(path, file)
-      puts "Deleting #{file_to_delete}"
+      puts "========== Deleting #{file_to_delete}"
       # TODO: Actually do the delete
     end
   end
 
   def last_modified filename:
-    return nil unless File.exist?(filename)
-
-    File.mtime(filename)
-  end
-
-  def save_issue issue:
-    file = "#{issue.key}-#{issue.board.id}.json"
-
-    @file_system.save_json(json: issue_json, filename: File.join(path, file))
-
-    issue = Issue.new(raw: issue_json, board: board)
-    puts "#{issue.key} #{issue.summary}"
+    File.mtime(filename) if File.exist?(filename)
   end
 end

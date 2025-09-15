@@ -36,7 +36,7 @@ class DownloaderForCloud < Downloader
         issue_count += 1
       end
 
-      message = "    Downloaded #{issue_count} issues"
+      message = "    Found #{issue_count} issues"
       log message, both: true
 
       break unless next_page_token

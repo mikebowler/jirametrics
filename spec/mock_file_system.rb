@@ -42,7 +42,7 @@ class MockFileSystem < FileSystem
   end
 
   def utime file:, time:
-    @log_message << "[Debug] utime #{time} #{file}"
+    @log_messages << "[Debug] utime #{time} #{file}"
   end
 
   def when_loading file:, json:

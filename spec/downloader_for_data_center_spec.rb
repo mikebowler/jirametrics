@@ -22,102 +22,65 @@ end
 describe DownloaderForDataCenter do
   let(:download_config) { mock_download_config }
   let(:file_system) { MockFileSystem.new }
-  let(:jira_gateway) { MockJiraGateway.new(file_system: file_system) }
+  let(:jira_gateway) do
+    MockJiraGateway.new(
+      file_system: file_system,
+      jira_config: { 'url' => 'https://example.com' },
+      settings: { 'ignore_ssl_errors' => false }
+    )
+  end
   let(:downloader) do
-    described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
-      .tap do |d|
-        d.init_gateway
-      end
+    described_class.new(
+      download_config: download_config,
+      file_system: file_system,
+      jira_gateway: jira_gateway
+    )
   end
 
-  context 'download_issues' do
-    it 'downloads issues' do
-      url = '/rest/api/2/search?jql=filter%3D123&maxResults=100&startAt=0&expand=changelog&fields=*all'
-      issue_json = { 'key' => 'ABC-123', 'fields' => {} }
-      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
-      board = sample_board
-      board.raw['id'] = 2
-      downloader.board_id_to_filter_id[2] = 123
-      downloader.download_issues board: board
-
-      expect(file_system.log_messages).to eq([
-        'Downloading primary issues for board 2 from Jira DataCenter',
-        'JQL: filter=123',
-        'Downloaded 1-1 of 1 issues to spec/testdata/sample_issues/',
-        'Downloading linked issues for board 2'
-      ])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_issues/ABC-123-2.json' =>
-          '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
-      })
-    end
-  end
-
-  context 'jira_search_by_jql' do
+  context 'search_for_issues' do
     it 'completes when no issues found' do
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&fields=updated'
       jira_gateway.when url: url, response: { 'issues' => [], 'total' => 0, 'maxResults' => 0 }
 
       board = sample_board
       board.raw['id'] = 2
 
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
+      downloader.search_for_issues jql: 'project=ABC', board_id: board.id, path: '/abc'
 
       expect(file_system.log_messages).to eq(
         [
           'JQL: project=ABC',
-          'Downloaded 1-0 of 0 issues to /abc'
+          'Found 0 issues'
         ]
       )
       expect(file_system.saved_json).to be_empty
     end
 
-    it 'completes when one issue found' do
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
+    it 'follows pagination' do
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&fields=updated'
       issue_json = {
         'key' => 'ABC-123',
-        'fields' => {}
+        'fields' => { 'updated' => '2025-01-01T00:00:00:00 +0000'
+        }
       }
-      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 1, 'maxResults' => 100 }
-
-      board = sample_board
-      board.raw['id'] = 2
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
-
-      expect(file_system.log_messages).to eq(
-        [
-          'JQL: project=ABC',
-          'Downloaded 1-1 of 1 issues to /abc'
-        ]
-      )
-      expect(file_system.saved_json).to eq({
-        '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}'
-      })
-    end
-
-    it 'follows pagination' do
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&expand=changelog&fields=*all'
-      issue_json = { 'key' => 'ABC-123', 'fields' => {} }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
 
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=1&startAt=1&expand=changelog&fields=*all'
-      issue_json = { 'key' => 'ABC-125', 'fields' => {} }
+      url = '/rest/api/2/search?jql=project%3DABC&maxResults=1&startAt=1&fields=updated'
+      issue_json = {
+        'key' => 'ABC-125',
+        'fields' => { 'updated' => '2025-01-01T00:00:00:00 +0000'
+        }
+      }
       jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
 
       board = sample_board
       board.raw['id'] = 2
 
-      downloader.jira_search_by_jql jql: 'project=ABC', initial_query: true, board: board, path: '/abc'
+      downloader.search_for_issues jql: 'project=ABC', board_id: board.id, path: '/abc'
 
       expect(file_system.log_messages).to eq([
-        'JQL: project=ABC',
-        'Downloaded 1-1 of 2 issues to /abc',
-        'Downloaded 2-2 of 2 issues to /abc'
+        'JQL: project=ABC', 'Found 1 issues', 'Found 1 issues'
       ])
-      expect(file_system.saved_json).to eq({
-        '/abc/ABC-123-2.json' => '{"key":"ABC-123","fields":{},"exporter":{"in_initial_query":true}}',
-        '/abc/ABC-125-2.json' => '{"key":"ABC-125","fields":{},"exporter":{"in_initial_query":true}}'
-      })
     end
   end
 end

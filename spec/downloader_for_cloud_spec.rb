@@ -22,12 +22,19 @@ end
 describe DownloaderForCloud do
   let(:download_config) { mock_download_config }
   let(:file_system) { MockFileSystem.new }
-  let(:jira_gateway) { MockJiraGateway.new(file_system: file_system) }
+  let(:jira_gateway) do
+    MockJiraGateway.new(
+      file_system: file_system,
+      jira_config: { 'url' => 'https://example.com' },
+      settings: { 'ignore_ssl_errors' => false }
+    )
+  end
   let(:downloader) do
-    described_class.new(download_config: download_config, file_system: file_system, jira_gateway: jira_gateway)
-      .tap do |d|
-        d.init_gateway
-      end
+    described_class.new(
+      download_config: download_config,
+      file_system: file_system,
+      jira_gateway: jira_gateway
+    )
   end
 
   context 'run' do
@@ -39,58 +46,43 @@ describe DownloaderForCloud do
   end
 
   context 'make_jql' do
-    it 'only pull deltas if we have a previous download' do
-      downloader.metadata.clear
-      downloader.metadata['date_end'] = Date.parse('2021-07-20')
-
-      download_config.rolling_date_count 90
-      today = Time.parse('2021-08-01')
-      expected = 'filter=5 AND (updated >= "2021-07-20 00:00" OR ' \
-        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      expect(downloader.make_jql(today: today, filter_id: 5)).to eql expected
-
-      expect(downloader.start_date_in_query).to eq Date.parse('2021-07-20')
+    it 'pulls from all time when rolling_date_count not set' do
+      jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+      expect(jql).to eql 'filter=5'
     end
 
-    context 'with dates' do
-      it 'pulls from all time when rolling_date_count not set' do
-        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
-        expect(jql).to eql 'filter=5'
-      end
+    it 'pulls from specified date when only no_earlier_than is set' do
+      download_config.no_earlier_than '2020-08-15'
 
-      it 'pulls from specified date when only no_earlier_than is set' do
-        download_config.no_earlier_than '2020-08-15'
+      jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
+      expect(jql).to eql 'filter=5 AND (updated >= "2020-08-15 00:00" OR ' \
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+    end
 
-        jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
-        expect(jql).to eql 'filter=5 AND (updated >= "2020-08-15 00:00" OR ' \
-          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      end
+    it 'pulls only the days specified by rolling_date_count' do
+      download_config.rolling_date_count 90
 
-      it 'pulls only the days specified by rolling_date_count' do
-        download_config.rolling_date_count 90
+      jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+      expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+    end
 
-        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
-        expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
-          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      end
+    it 'pulls only issues after no_earlier_than when that is later than rolling date count' do
+      download_config.rolling_date_count 90
+      download_config.no_earlier_than '2021-08-10'
 
-      it 'pulls only issues after no_earlier_than when that is later than rolling date count' do
-        download_config.rolling_date_count 90
-        download_config.no_earlier_than '2021-08-10'
+      jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
+      expect(jql).to eql 'filter=5 AND (updated >= "2021-08-10 00:00" OR ' \
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
+    end
 
-        jql = downloader.make_jql(today: Time.parse('2021-08-20'), filter_id: 5)
-        expect(jql).to eql 'filter=5 AND (updated >= "2021-08-10 00:00" OR ' \
-          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      end
+    it 'ignores no_earlier_than if it is earlier than the rolling date count' do
+      download_config.rolling_date_count 90
+      download_config.no_earlier_than '2020-08-10'
 
-      it 'ignores no_earlier_than if it is earlier than the rolling date count' do
-        download_config.rolling_date_count 90
-        download_config.no_earlier_than '2020-08-10'
-
-        jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
-        expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
-          '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
-      end
+      jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
+      expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
+        '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
     end
   end
 
@@ -298,6 +290,59 @@ describe DownloaderForCloud do
         'Downloading sprints for board 2',
         'No sprints found for board 2'
       ])
+    end
+  end
+
+  context 'download_issues' do
+    it 'finds no issues' do
+      allow(downloader).to(receive(:search_for_issues)).and_return({})
+
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      downloader.download_issues board: board
+
+      expect(file_system.log_messages).to eq([
+        'Downloading primary issues for board 2 from Jira Cloud'
+      ])
+      expect(file_system.saved_json).to be_empty
+    end
+
+    it 'finds one issue that is not in cache' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+
+      issue = empty_issue(
+        key: 'ABC-123', created: '2025-01-01', board: board
+      )
+      allow(downloader).to receive(:search_for_issues) do
+        {
+          'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false),
+          'ABC-456' => DownloadIssueData.new(key: 'ABC-456', up_to_date: true)
+        }
+      end
+      allow(downloader).to receive(:bulk_fetch_issues) do
+        [
+          DownloadIssueData.new(
+            key: 'ABC-123', up_to_date: false, cache_path: 'foo.json', issue: issue
+          )
+        ]
+      end
+
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(file_system.log_messages).to eq([
+        'Downloading primary issues for board 2 from Jira Cloud',
+        '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json'
+      ])
+      expect(file_system.saved_json).to eq({
+        'foo.json' => JSON.generate(issue.raw)
+      })
     end
   end
 end

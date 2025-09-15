@@ -5,7 +5,7 @@ require 'json'
 require 'English'
 
 class MockJiraGateway < JiraGateway
-  def initialize file_system:
+  def initialize file_system:, settings:, jira_config:
     super
     @data = {}
   end

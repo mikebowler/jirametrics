@@ -50,8 +50,10 @@ class Exporter
       end
 
       project.download_config.run
+    # load_jira_config(download_config.project_config.jira_config)
+    # @ignore_ssl_errors = download_config.project_config.settings['ignore_ssl_errors']
       gateway = JiraGateway.new(
-        file_system: file_system, download_config: project.download_config
+        file_system: file_system, jira_config: project.jira_config, settings: project.settings
       )
       downloader = Downloader.create(
         download_config: project.download_config,

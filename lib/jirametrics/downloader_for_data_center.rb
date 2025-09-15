@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-class DownloadIssueData
-  attr_accessor :key, :found_in_primary_query, :last_modified,
-    :up_to_date, :cache_path, :issue
-end
-
 class DownloaderForDataCenter < Downloader
   def jira_instance_type
     'Jira DataCenter'
@@ -23,18 +18,21 @@ class DownloaderForDataCenter < Downloader
         "?jql=#{escaped_jql}&maxResults=#{max_results}&startAt=#{start_at}&fields=updated"
       json['issues'].each do |i|
         key = i['key']
-        data = DownloadIssueData.new
-        data.key = key
-        data.last_modified = Time.parse i['fields']['updated']
-        data.found_in_primary_query = true
-        data.cache_path = File.join(path, "#{key}-#{board_id}.json")
-        data.up_to_date = last_modified(filename: data.cache_path) == data.last_modified
+        cache_path = File.join(path, "#{key}-#{board_id}.json")
+        last_modified = Time.parse(i['fields']['updated'])
+        data = DownloadIssueData.new(
+          key: key,
+          last_modified: last_modified,
+          found_in_primary_query: true,
+          cache_path: cache_path,
+          up_to_date: last_modified(filename: cache_path) == last_modified
+        )
         hash[key] = data
       end
       total = json['total'].to_i
       max_results = json['maxResults']
 
-      message = "    Downloaded #{start_at + 1}-#{[start_at + max_results, total].min} of #{total} issues to #{path} "
+      message = "    Found #{json['issues'].count} issues"
       log message, both: true
 
       start_at += json['issues'].size
@@ -42,27 +40,7 @@ class DownloaderForDataCenter < Downloader
     hash
   end
 
-  def bulk_fetch_issues issue_datas:, board:, in_initial_query:
-    payload = {
-      'expand' => [
-        'changelog'
-      ],
-      'fields' => ['*all'],
-      'issueIdsOrKeys' => issue_datas.collect(&:key)
-    }
-    response = @jira_gateway.post_request(
-      relative_url: '/rest/api/2/issue/bulkfetch',
-      payload: JSON.generate(payload)
-    )
-    response['issues'].each do |issue_json|
-      issue_json['exporter'] = {
-        'in_initial_query' => in_initial_query
-      }
-      issue = Issue.new(raw: issue_json, board: board)
-      data = issue_datas.find { |d| d.key == issue.key }
-      data.up_to_date = true
-      data.last_modified = issue.updated
-      data.issue = issue
-    end
+  def issue_bulk_fetch_api
+    '/rest/api/2/issue/bulkfetch'
   end
 end

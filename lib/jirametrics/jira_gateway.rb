@@ -6,20 +6,18 @@ require 'English'
 require 'open3'
 
 class JiraGateway
-  attr_reader :ignore_ssl_errors, :jira_url
+  attr_accessor :ignore_ssl_errors
+  attr_reader :jira_url
 
-  def initialize file_system:, download_config:
+  def initialize file_system:, jira_config:, settings:
     @file_system = file_system
-    load_jira_config(download_config.project_config.jira_config)
-    @ignore_ssl_errors = download_config.project_config.settings['ignore_ssl_errors']
+    load_jira_config(jira_config)
+    @ignore_ssl_errors = settings['ignore_ssl_errors']
   end
 
   def post_request relative_url:, payload:
-    puts "payload: #{payload}"
     command = make_curl_command url: "#{@jira_url}#{relative_url}", method: 'POST'
-    puts command
     stdout, stderr, status = Open3.capture3(command, stdin_data: payload)
-    puts "status: #{status}"
     @file_system.log "Error: #{stderr}" unless stderr == ''
     raise 'no response' if stdout == ''
     return parse_response(command: command, result: stdout) if status.success?
