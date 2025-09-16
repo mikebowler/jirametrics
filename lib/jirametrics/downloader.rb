@@ -397,8 +397,9 @@ class Downloader
       next if issue_data_hash[key] # Still in Jira
 
       file_to_delete = File.join(path, file)
-      log "  Issue #{key} appears to have been deleted from Jira. Removing local copy", both: true
-      file_system.unlink file_to_delete
+      # log "  Issue #{key} appears to have been deleted from Jira. Removing local copy", both: true
+      # file_system.unlink file_to_delete
+      puts "Flagging #{key} for deletion"
     end
   end
 
