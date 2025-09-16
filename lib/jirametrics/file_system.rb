@@ -5,6 +5,13 @@ require 'json'
 class FileSystem
   attr_accessor :logfile, :logfile_name
 
+  def initialize
+    # In almost all cases, this will be immediately replaced in the Exporter
+    # but if we fail before we get that far, this will at least let a useful
+    # error show up on the console.
+    @logfile = $stdout
+  end
+
   # Effectively the same as File.read except it forces the encoding to UTF-8
   def load filename, supress_deprecation: false
     if filename.end_with?('.json') && !supress_deprecation
