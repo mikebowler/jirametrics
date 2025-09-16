@@ -181,7 +181,7 @@ class DailyView < ChartBase
     table = +''
     table << '<table>'
     history.each do |c|
-      time = c.time.strftime '%b %d, %I:%M%P'
+      time = c.time.strftime '%b %d, %Y @ %I:%M%P'
 
       table << '<tr>'
       table << "<td><span class='time' title='Timestamp: #{c.time}'>#{time}</span></td>"
