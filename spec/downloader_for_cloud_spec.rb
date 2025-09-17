@@ -7,7 +7,7 @@ require './spec/mock_jira_gateway'
 def mock_download_config
   exporter = Exporter.new
   jira_config = {
-    'url' => 'https://example.com',
+    'url' => 'https://example.atlassian.com',
     'email' => 'bugs_bunny@example.com',
     'api_token' => 'carrots'
   }
@@ -25,7 +25,7 @@ describe DownloaderForCloud do
   let(:jira_gateway) do
     MockJiraGateway.new(
       file_system: file_system,
-      jira_config: { 'url' => 'https://example.com' },
+      jira_config: { 'url' => 'https://example.atlassian.net' },
       settings: { 'ignore_ssl_errors' => false }
     )
   end
@@ -35,6 +35,36 @@ describe DownloaderForCloud do
       file_system: file_system,
       jira_gateway: jira_gateway
     )
+  end
+
+  context 'create' do
+    it 'defaults to cloud for atlassian domains' do
+      jira_gateway = MockJiraGateway.new(
+        file_system: file_system,
+        jira_config: { 'url' => 'https://example.atlassian.net' },
+        settings: { 'ignore_ssl_errors' => false }
+      )
+      instance = Downloader.create(
+        download_config: download_config,
+        file_system: file_system,
+        jira_gateway: jira_gateway
+      )
+      expect(instance).to be_instance_of described_class
+    end
+
+    it 'picks cloud when declared in settings' do
+      jira_gateway = MockJiraGateway.new(
+        file_system: file_system,
+        jira_config: { 'url' => 'https://example.com' },
+        settings: { 'ignore_ssl_errors' => false, 'jira_cloud' => true }
+      )
+      instance = Downloader.create(
+        download_config: download_config,
+        file_system: file_system,
+        jira_gateway: jira_gateway
+      )
+      expect(instance).to be_instance_of described_class
+    end
   end
 
   context 'run' do

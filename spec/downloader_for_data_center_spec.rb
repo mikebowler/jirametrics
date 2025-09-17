@@ -37,6 +37,22 @@ describe DownloaderForDataCenter do
     )
   end
 
+  context 'create' do
+    it 'defaults to data centre for non atlassian domains' do
+      jira_gateway = MockJiraGateway.new(
+        file_system: file_system,
+        jira_config: { 'url' => 'https://example.com' },
+        settings: { 'ignore_ssl_errors' => false }
+      )
+      instance = Downloader.create(
+        download_config: download_config,
+        file_system: file_system,
+        jira_gateway: jira_gateway
+      )
+      expect(instance).to be_instance_of DownloaderForDataCenter
+    end
+  end
+
   context 'search_for_issues' do
     it 'completes when no issues found' do
       url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&fields=updated'

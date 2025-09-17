@@ -34,19 +34,12 @@ class Downloader
   attr_reader :start_date_in_query, :board_id_to_filter_id
 
   def self.create download_config:, file_system:, jira_gateway:
-    if jira_gateway.cloud?
-      DownloaderForCloud.new(
-        download_config: download_config,
-        file_system: file_system,
-        jira_gateway: jira_gateway
-      )
-    else
-      DownloaderForDataCenter.new(
-        download_config: download_config,
-        file_system: file_system,
-        jira_gateway: jira_gateway
-      )
-    end
+    is_cloud = jira_gateway.settings['jira_cloud'] || jira_gateway.cloud?
+    (is_cloud ? DownloaderForCloud : DownloaderForDataCenter).new(
+      download_config: download_config,
+      file_system: file_system,
+      jira_gateway: jira_gateway
+    )
   end
 
   def initialize download_config:, file_system:, jira_gateway:
