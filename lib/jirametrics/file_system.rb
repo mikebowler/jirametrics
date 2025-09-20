@@ -38,6 +38,10 @@ class FileSystem
     File.write(filename, content)
   end
 
+  def mkdir path
+    FileUtils.mkdir_p path
+  end
+
   def utime file:, time:
     File.utime time, time, file
   end
@@ -77,7 +81,11 @@ class FileSystem
   end
 
   def file_exist? filename
-    File.exist? filename
+    File.exist?(filename) && File.file?(filename)
+  end
+
+  def dir_exist? path
+    File.exist?(path) && File.directory?(path)
   end
 
   def unlink filename

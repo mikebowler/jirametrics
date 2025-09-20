@@ -335,7 +335,9 @@ describe DownloaderForCloud do
       downloader.download_issues board: board
 
       expect(file_system.log_messages).to eq([
-        'Downloading primary issues for board 2 from Jira Cloud'
+        'Downloading primary issues for board 2 from Jira Cloud',
+        'Creating path spec/testdata/sample_issues/',
+        '[Debug] mkdir spec/testdata/sample_issues/'
       ])
       expect(file_system.saved_json).to be_empty
     end
@@ -365,9 +367,10 @@ describe DownloaderForCloud do
       file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
 
       downloader.download_issues board: board
-
       expect(file_system.log_messages).to eq([
         'Downloading primary issues for board 2 from Jira Cloud',
+        'Creating path spec/testdata/sample_issues/',
+        '[Debug] mkdir spec/testdata/sample_issues/',
         '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json'
       ])
       expect(file_system.saved_json).to eq({

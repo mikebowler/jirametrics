@@ -9,6 +9,7 @@ class MockFileSystem < FileSystem
     super
     @data = {}
     @foreach_data = {}
+    @dir_exist_data = {}
     @saved_json = {}
     @saved_files = {}
     @log_messages = []
@@ -41,6 +42,10 @@ class MockFileSystem < FileSystem
     @saved_files[filename] = content
   end
 
+  def mkdir path
+    @log_messages << "[Debug] mkdir #{path}"
+  end
+
   def utime file:, time:
     @log_messages << "[Debug] utime #{time} #{file}"
   end
@@ -48,7 +53,6 @@ class MockFileSystem < FileSystem
   def unlink filename
     @log_messages << "[Debug] unlink #{filename}"
   end
-
 
   def when_loading file:, json:
     raise "File must be a string or :not_mocked. Found #{file.inspect}" unless file.is_a?(String) || file == :not_mocked
@@ -90,5 +94,13 @@ class MockFileSystem < FileSystem
   def file_exist? filename
     # If we've mocked it out then it exists. Otherwise not.
     !!@data[filename]
+  end
+
+  def when_dir_exists? path:, result:
+    @dir_exist_data[path] = result
+  end
+
+  def dir_exist? path
+    @dir_exist_data[path] || false
   end
 end

@@ -288,9 +288,9 @@ class Downloader
   def download_issues board:
     log "  Downloading primary issues for board #{board.id} from #{jira_instance_type}", both: true
     path = File.join(@target_path, "#{file_prefix}_issues/")
-    unless Dir.exist?(path)
+    unless @file_system.dir_exist?(path)
       log "  Creating path #{path}"
-      Dir.mkdir(path)
+      @file_system.mkdir(path)
     end
 
     filter_id = @board_id_to_filter_id[board.id]
@@ -384,15 +384,14 @@ class Downloader
     # but wasn't returned.
     @file_system.foreach path do |file|
       next if file.start_with? '.'
-      raise "Unexpected filename in #{path}: #{file}" unless file =~ /^(\w+-\d+)-\d+\.json$/
-
-      key = $1
+      unless /^(?<key>\w+-\d+)-\d+\.json$/ =~ file
+        raise "Unexpected filename in #{path}: #{file}"
+      end
       next if issue_data_hash[key] # Still in Jira
 
       file_to_delete = File.join(path, file)
-      # log "  Issue #{key} appears to have been deleted from Jira. Removing local copy", both: true
-      # file_system.unlink file_to_delete
-      puts "Flagging #{key} for deletion"
+      log "  Removing #{file_to_delete} from local cache"
+      file_system.unlink file_to_delete
     end
   end
 
