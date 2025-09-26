@@ -13,8 +13,24 @@ class MockAnonymizer < Anonymizer
 end
 
 describe Anonymizer do
+  let(:exporter) { Exporter.new file_system: MockFileSystem.new }
+  let(:project_config) do
+    ProjectConfig.new(
+      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
+    ).tap do |p|
+      p.file_prefix 'sample'
+      p.load_status_category_mappings
+      p.load_all_boards
+      p.board id: 1 do
+        cycletime do
+          start_at first_time_in_status_category(:indeterminate)
+          stop_at first_time_in_status_category(:done)
+        end
+      end
+      p.time_range = to_time('2021-06-01')..to_time('2021-09-01')
+    end
+  end
   let(:anonymizer) do
-    exporter = Exporter.new file_system: MockFileSystem.new
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_statuses.json', json: :not_mocked
     exporter.file_system.when_loading file: 'spec/complete_sample/sample_meta.json', json: :not_mocked
@@ -24,19 +40,6 @@ describe Anonymizer do
         file: "spec/complete_sample/sample_issues/SP-#{issue_num}.json",
         json: :not_mocked
       )
-    end
-
-    project_config = ProjectConfig.new(
-      exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil
-    )
-    project_config.file_prefix 'sample'
-    project_config.load_status_category_mappings
-    project_config.load_all_boards
-    project_config.board id: 1 do
-      cycletime do
-        start_at first_time_in_status_category(:indeterminate)
-        stop_at first_time_in_status_category(:done)
-      end
     end
 
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
@@ -94,6 +97,46 @@ describe Anonymizer do
       anonymizer.anonymize_column_names
       expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
       expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+    end
+  end
+
+  context 'shift_all_dates' do
+    it 'changes nothing when shift is zero' do
+      issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
+      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time}" }
+
+      anonymizer.shift_all_dates date_adjustment: 0
+      expect(changes).to eq [
+        'status  2021-06-18 18:41:29 +0000',
+        'priority  2021-06-18 18:41:29 +0000',
+        'status  2021-06-18 18:43:34 +0000',
+        'status  2021-06-18 18:44:21 +0000',
+        'Flagged  2021-08-29 18:04:39 +0000',
+        'status  2021-12-14 00:30:15 +0000'
+      ]
+      expect(issue1.updated.to_s).to eql '2021-12-14 00:30:15 +0000'
+      expect(exporter.file_system.log_messages).to eq [
+        'Shifting all dates by 0 days'
+      ]
+    end
+
+    it 'shifts everything by one day' do
+      issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
+      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time}" }
+
+      anonymizer.shift_all_dates date_adjustment: 1
+      expect(changes).to eq [
+        'status  2021-06-18 18:41:29 +0000',
+        'priority  2021-06-18 18:41:29 +0000',
+        'status  2021-06-18 18:43:34 +0000',
+        'status  2021-06-18 18:44:21 +0000',
+        'Flagged  2021-08-29 18:04:39 +0000',
+        'status  2021-12-14 00:30:15 +0000'
+      ]
+      expect(issue1.updated.to_s).to eql '2021-12-15 00:30:15 +0000'
+      expect(exporter.file_system.log_messages).to eq [
+        'Shifting all dates by 1 day'
+      ]
     end
   end
 end

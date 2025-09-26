@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :field, :value_id, :old_value_id, :raw, :time, :author_raw
-  attr_accessor :value, :old_value
+  attr_reader :field, :value_id, :old_value_id, :raw, :author_raw
+  attr_accessor :value, :old_value, :time
 
   def initialize raw:, author_raw:, time:, artificial: false
     @raw = raw

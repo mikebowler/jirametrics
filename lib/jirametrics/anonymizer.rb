@@ -2,11 +2,12 @@
 
 require 'random-word'
 
-class Anonymizer
+class Anonymizer < ChartBase
   # needed for testing
   attr_reader :project_config, :issues
 
   def initialize project_config:, date_adjustment: -200
+    super()
     @project_config = project_config
     @issues = @project_config.issues
     @all_boards = @project_config.all_boards
@@ -130,18 +131,19 @@ class Anonymizer
     end
   end
 
-  def shift_all_dates
-    @file_system.log "Shifting all dates by #{@date_adjustment} days"
+  def shift_all_dates date_adjustment: @date_adjustment
+    adjustment_in_seconds = 60 * 60 * 24 * date_adjustment
+    @file_system.log "Shifting all dates by #{label_days date_adjustment}"
     @issues.each do |issue|
       issue.changes.each do |change|
-        change.time = change.time + @date_adjustment
+        change.time = change.time + adjustment_in_seconds
       end
 
-      issue.raw['fields']['updated'] = (issue.updated + @date_adjustment).to_s
+      issue.raw['fields']['updated'] = (issue.updated + adjustment_in_seconds).to_s
     end
 
     range = @project_config.time_range
-    @project_config.time_range = (range.begin + @date_adjustment)..(range.end + @date_adjustment)
+    @project_config.time_range = (range.begin + date_adjustment)..(range.end + date_adjustment)
   end
 
   def random_name
