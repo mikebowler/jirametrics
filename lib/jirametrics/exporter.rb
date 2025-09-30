@@ -65,14 +65,14 @@ class Exporter
     puts "Full output from downloader in #{file_system.logfile_name}"
   end
 
-  def info keys, name_filter:
+  def info key, name_filter:
     selected = []
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
 
       project.run load_only: true
       project.issues.each do |issue|
-        selected << [project, issue] if keys.include? issue.key
+        selected << [project, issue] if key == issue.key
       end
     rescue => e # rubocop:disable Style/RescueStandardError
       # This happens when we're attempting to load an aggregated project because it hasn't been
@@ -81,7 +81,7 @@ class Exporter
     end
 
     if selected.empty?
-      file_system.log "No issues found to match #{keys.collect(&:inspect).join(', ')}"
+      file_system.log "No issues found to match #{key.inspect}"
     else
       selected.each do |project, issue|
         file_system.log "\nProject #{project.name}", also_write_to_stderr: true

@@ -47,9 +47,9 @@ class JiraMetrics < Thor
 
   option :config
   desc 'info', 'Dump information about one issue'
-  def info keys
+  def info key
     load_config options[:config]
-    Exporter.instance.info(keys, name_filter: options[:name] || '*')
+    Exporter.instance.info(key, name_filter: options[:name] || '*')
   end
 
   no_commands do

@@ -118,7 +118,7 @@ describe Exporter do
 
   context 'info' do
     it 'does not match on any issue' do
-      exporter.info ['SP-1'], name_filter: '*'
+      exporter.info 'SP-1', name_filter: '*'
       expect(file_system.log_messages).to match_strings([
         'No issues found to match "SP-1"'
       ])

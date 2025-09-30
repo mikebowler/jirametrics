@@ -18,15 +18,23 @@ class JiraGateway
 
   def post_request relative_url:, payload:
     command = make_curl_command url: "#{@jira_url}#{relative_url}", method: 'POST'
-    stdout, stderr, status = Open3.capture3(command, stdin_data: payload)
-    @file_system.log "Error: #{stderr}" unless stderr == ''
-    raise 'no response' if stdout == ''
-    return parse_response(command: command, result: stdout) if status.success?
+    log_entry = "  #{command.gsub(/\s+/, ' ')}"
+    log_entry = sanitize_message log_entry
+    @file_system.log log_entry
 
-    @file_system.log result
-    @file_system.log "Failed call with exit status #{status.exitstatus}."
-    raise "Failed call with exit status #{status.exitstatus}. " \
-      "See #{@file_system.logfile_name} for details"
+    stdout, stderr, status = Open3.capture3(command, stdin_data: payload)
+    unless status.success?
+      @file_system.log "Failed call with exit status #{status.exitstatus}!"
+      @file_system.log "Returned (stdout): #{stdout.inspect}"
+      @file_system.log "Returned (stderr): #{stderr.inspect}"
+      raise "Failed call with exit status #{status.exitstatus}. " \
+        "See #{@file_system.logfile_name} for details"
+    end
+
+    @file_system.log "Returned (stderr): #{stderr}" unless stderr == ''
+    raise 'no response from curl on stdout' if stdout == ''
+
+    parse_response(command: command, result: stdout)
   end
 
   def call_url relative_url:
@@ -53,12 +61,12 @@ class JiraGateway
     token = @jira_api_token || @jira_personal_access_token
     raise 'Neither Jira API Token or personal access token has been set' unless token
 
-    message.gsub(@jira_api_token, '[API_TOKEN]')
+    message.gsub(token, '[API_TOKEN]')
   end
 
   def call_command command
     log_entry = "  #{command.gsub(/\s+/, ' ')}"
-    log_entry = sanitize_message log_entry if @jira_api_token
+    log_entry = sanitize_message log_entry
     @file_system.log log_entry
 
     result = `#{command}`
