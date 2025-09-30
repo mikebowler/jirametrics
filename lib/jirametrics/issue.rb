@@ -212,7 +212,11 @@ class Issue
   end
 
   def parse_time text
-    Time.parse(text).getlocal(@timezone_offset)
+    if text.is_a? String
+      Time.parse(text).getlocal(@timezone_offset)
+    else
+      Time.at(text / 1000).getlocal(@timezone_offset)
+    end
   end
 
   def created

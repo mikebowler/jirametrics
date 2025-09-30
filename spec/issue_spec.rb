@@ -1399,4 +1399,18 @@ describe Issue do
       expect(issue1.compact_text input, max: 30).to eq '<p>Comment 2</p>'
     end
   end
+
+  context 'parse_time' do
+    it 'parses string' do
+      expect(issue1.parse_time('2021-01-13T14:13:42.257-0500').to_s).to eq(
+        '2021-01-13 19:13:42 +0000'
+      )
+    end
+
+    it 'parses int' do
+      expect(issue1.parse_time(1_759_080_993_142).to_s).to eq(
+        '2025-09-28 17:36:33 +0000'
+      )
+    end
+  end
 end
