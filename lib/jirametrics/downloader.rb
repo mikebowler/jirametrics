@@ -350,32 +350,6 @@ class Downloader
     )
   end
 
-  def bulk_fetch_issues issue_datas:, board:, in_initial_query:
-    log "  Downloading #{issue_datas.size} issues", both: true
-    payload = {
-      'expand' => [
-        'changelog'
-      ],
-      'fields' => ['*all'],
-      'issueIdsOrKeys' => issue_datas.collect(&:key)
-    }
-    response = @jira_gateway.post_request(
-      relative_url: issue_bulk_fetch_api,
-      payload: JSON.generate(payload)
-    )
-    response['issues'].each do |issue_json|
-      issue_json['exporter'] = {
-        'in_initial_query' => in_initial_query
-      }
-      issue = Issue.new(raw: issue_json, board: board)
-      data = issue_datas.find { |d| d.key == issue.key }
-      data.up_to_date = true
-      data.last_modified = issue.updated
-      data.issue = issue
-    end
-    issue_datas
-  end
-
   def delete_issues_from_cache_that_are_not_in_server issue_data_hash:, path:
     # The gotcha with deleted issues is that they just stop being returned in queries
     # and we have no way to know that they should be removed from our local cache.

@@ -44,7 +44,29 @@ class DownloaderForCloud < Downloader
     hash
   end
 
-  def issue_bulk_fetch_api
-    '/rest/api/3/issue/bulkfetch'
+  def bulk_fetch_issues issue_datas:, board:, in_initial_query:
+    log "  Downloading #{issue_datas.size} issues", both: true
+    payload = {
+      'expand' => [
+        'changelog'
+      ],
+      'fields' => ['*all'],
+      'issueIdsOrKeys' => issue_datas.collect(&:key)
+    }
+    response = @jira_gateway.post_request(
+      relative_url: '/rest/api/3/issue/bulkfetch',
+      payload: JSON.generate(payload)
+    )
+    response['issues'].each do |issue_json|
+      issue_json['exporter'] = {
+        'in_initial_query' => in_initial_query
+      }
+      issue = Issue.new(raw: issue_json, board: board)
+      data = issue_datas.find { |d| d.key == issue.key }
+      data.up_to_date = true
+      data.last_modified = issue.updated
+      data.issue = issue
+    end
+    issue_datas
   end
 end
