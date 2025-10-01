@@ -340,6 +340,10 @@ def mock_user display_name:, account_id:, avatar_url:, active: true
     })
 end
 
+def deep_copy object
+  Marshal.load(Marshal.dump(object))
+end
+
 ######
 
 def match_strings expected

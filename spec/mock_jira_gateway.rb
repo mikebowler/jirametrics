@@ -12,6 +12,7 @@ class MockJiraGateway < JiraGateway
 
   def call_url relative_url:
     response = @data[relative_url]
+    response = response.shift if response.is_a? Array
     raise "404 for #{relative_url.inspect}" if response.nil?
 
     response
@@ -26,6 +27,8 @@ class MockJiraGateway < JiraGateway
     call_url relative_url: url
   end
 
+  # The response can either be a single JSON which returns every time or an array where
+  # we pop the first off the stack each time.
   def when url:, response:
     @data[url] = response
   end
