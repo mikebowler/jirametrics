@@ -51,9 +51,6 @@ class DownloaderForCloud < Downloader
     # into the raw issue as if it had been there all along.
     log "  Downloading #{issue_datas.size} issues", both: true
     payload = {
-      # 'expand' => [
-      #   'changelog'
-      # ],
       'fields' => ['*all'],
       'issueIdsOrKeys' => issue_datas.collect(&:key)
     }
@@ -61,6 +58,8 @@ class DownloaderForCloud < Downloader
       relative_url: '/rest/api/3/issue/bulkfetch',
       payload: JSON.generate(payload)
     )
+
+    attach_changelog_to_issues issue_datas: issue_datas, issue_jsons: response['issues']
 
     response['issues'].each do |issue_json|
       issue_json['exporter'] = {
@@ -73,48 +72,43 @@ class DownloaderForCloud < Downloader
       data.issue = issue
     end
 
-    attach_changelog_to_issues issue_datas: issue_datas, issue_jsons: response['issues']
-
     issue_datas
   end
 
   def attach_changelog_to_issues issue_datas:, issue_jsons:
+    max_results = 10_000 # The max jira accepts is 10K
     payload = {
       'issueIdsOrKeys' => issue_datas.collect(&:key),
-      'maxResults' => 10_000 # The max jira accepts is 10K
+      'maxResults' => max_results
     }
     loop do
-      puts payload
       response = @jira_gateway.post_request(
         relative_url: '/rest/api/3/changelog/bulkfetch',
         payload: JSON.generate(payload)
       )
 
       response['issueChangeLogs'].each do |issue_change_log|
-        # puts issue_change_log
-        # puts issue_change_log.keys.inspect
         issue_id = issue_change_log['issueId']
-        issue = issue_datas.find { |data| data.issue.raw['id'] == issue_id }.issue
-        # puts "Issue(#{issue.key})"
-        histories = issue_change_log['changeHistories']
-        issue.raw['changelog'] = {
-          'startAt' => 0,
-          'maxResults' => histories.size,
-          'total' => histories.size,
-          'histories' => histories
-        }
+        json = issue_jsons.find { |json| json['id'] == issue_id }
+
+        unless json['changelog']
+          # If this is our first time in, there won't be a changelog section
+          json['changelog'] = {
+            'startAt' => 0,
+            'maxResults' => max_results,
+            'total' => 0,
+            'histories' => []
+          }
+        end
+
+        new_changes = issue_change_log['changeHistories']
+        json['changelog']['total'] += new_changes.size
+        json['changelog']['histories'] += new_changes
       end
+
       next_page_token = response['nextPageToken']
       payload['nextPageToken'] = next_page_token
-      # puts "next page token=#{next_page_token.inspect}"
       break if next_page_token.nil?
-      # puts ''
     end
   end
 end
-
-# {"issueChangeLogs":[
-#   {"changeHistories":[
-#     {
-#       "author":{
-#         "accountId":"5b10a2844c20165700ede21g","active":true,"avatarUrls":{"16x16":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16","24x24":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24","32x32":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32","48x48":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48"},"displayName":"Mia Krystof","emailAddress":"mia@example.com","self":"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g","timeZone":"Australia/Sydney"},"created":1492070429,"id":"10001","items":[{"field":"fields","fieldId":"fieldId","fieldtype":"jira","fromString":"old summary","toString":"new summary"}]},{"author":{"accountId":"5b10a2844c20165700ede21g","active":true,"avatarUrls":{"16x16":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16","24x24":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24","32x32":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32","48x48":"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48"},"displayName":"Mia Krystof","emailAddress":"mia@example.com","self":"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g","timeZone":"Australia/Sydney"},"created":1492071429,"id":"10002","items":[{"field":"fields","fieldId":"fieldId","fieldtype":"jira","fromString":"old summary 2","toString":"new summary 2"}]}],"issueId":"10100"}],"nextPageToken":"UxAQBFRF"}

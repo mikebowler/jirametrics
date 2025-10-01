@@ -29,7 +29,7 @@ task go: %i[initialize_config download export]
 
 desc 'info'
 task info: [:initialize_config] do
-  JiraMetrics.start %w[info SP-38]
+  JiraMetrics.start %w[info SP-109]
 end
 
 RSpec::Core::RakeTask.new(:spec)

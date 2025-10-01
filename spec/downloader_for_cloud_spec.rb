@@ -25,7 +25,7 @@ describe DownloaderForCloud do
   let(:jira_gateway) do
     MockJiraGateway.new(
       file_system: file_system,
-      jira_config: { 'url' => 'https://example.atlassian.net' },
+      jira_config: download_config.project_config.jira_config,
       settings: { 'ignore_ssl_errors' => false }
     )
   end
@@ -376,6 +376,78 @@ describe DownloaderForCloud do
       expect(file_system.saved_json).to eq({
         'foo.json' => JSON.generate(issue.raw)
       })
+    end
+  end
+
+  context 'bulk_fetch_issues' do
+    it 'fetches' do
+      raw_issue = empty_issue(created: '2025-01-01').raw
+      raw_issue['changelog'] = nil
+      raw_issue['id'] = '123'
+
+      jira_gateway.when url: '/rest/api/3/issue/bulkfetch', response: {
+        'issues' => [raw_issue]
+      }
+      jira_gateway.when url: '/rest/api/3/changelog/bulkfetch', response: {
+        'issueChangeLogs' => [
+          {
+            'issueId' => raw_issue['id'],
+            'changeHistories' => [
+              {
+                'id' => '11813',
+                'author' => {
+                  'emailAddress' => 'mike@example.com',
+                  'avatarUrls' => {
+                    '16x16' => 'https://example.com'
+                  },
+                  'displayName' => 'Mike Bowler',
+                  'active' => true
+                },
+                'created' => 1_759_080_993_142,
+                'items' => [
+                  {
+                    'field' => 'status',
+                    'fieldId' => 'status',
+                    'from' => '1',
+                    'fromString' => 'Ready',
+                    'to' => '2',
+                    'toString' => 'Review'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      issue_data1 = DownloadIssueData.new key: 'SP-1', cache_path: 'SP-1.json'
+      downloader.bulk_fetch_issues(
+        issue_datas: [issue_data1], board: sample_board, in_initial_query: true
+      )
+      expect(file_system.log_messages).to eq([
+        'Downloading 1 issues',
+        'post_request: relative_url=/rest/api/3/issue/bulkfetch, ' \
+          'payload={"fields":["*all"],"issueIdsOrKeys":["SP-1"]}',
+        'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
+          'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}'
+      ])
+      expect(issue_data1.issue.changes).to eq([
+        mock_change(
+          field: 'status',
+          value: 'Ready',
+          value_id: 1,
+          time: '2025-01-01',
+          artificial: true
+        ),
+        mock_change(
+          field: 'status',
+          value: 'Review',
+          value_id: 2,
+          old_value: 'Ready',
+          old_value_id: 1,
+          time: '2025-09-28T17:36:33'
+        )
+     ])
     end
   end
 end

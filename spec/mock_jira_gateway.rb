@@ -17,6 +17,11 @@ class MockJiraGateway < JiraGateway
     response
   end
 
+  def post_request relative_url:, payload:
+    file_system.log "post_request: relative_url=#{relative_url}, payload=#{payload}"
+    call_url relative_url: relative_url
+  end
+
   def call_command url
     call_url relative_url: url
   end

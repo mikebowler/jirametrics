@@ -7,7 +7,7 @@ require 'open3'
 
 class JiraGateway
   attr_accessor :ignore_ssl_errors
-  attr_reader :jira_url, :settings
+  attr_reader :jira_url, :settings, :file_system
 
   def initialize file_system:, jira_config:, settings:
     @file_system = file_system
