@@ -25,7 +25,7 @@ class DownloadIssueData
 end
 
 class Downloader
-  CURRENT_METADATA_VERSION = 4
+  CURRENT_METADATA_VERSION = 5
 
   attr_accessor :metadata
   attr_reader :file_system
