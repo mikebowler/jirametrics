@@ -13,6 +13,7 @@ class MockFileSystem < FileSystem
     @saved_json = {}
     @saved_files = {}
     @log_messages = []
+    self.logfile_name = 'mock_logfile'
   end
 
   def load filename, supress_deprecation: false

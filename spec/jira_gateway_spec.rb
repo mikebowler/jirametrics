@@ -1,11 +1,30 @@
 # frozen_string_literal: true
 
+class MockStatus
+  attr_reader :exitstatus
+
+  def initialize exitstatus:
+    @exitstatus = exitstatus
+  end
+
+  def success?
+    @exitstatus.zero?
+  end
+end
+
 describe JiraGateway do
   let(:file_system) { MockFileSystem.new }
+  let(:jira_config) do
+    {
+      'url' => 'https://example.atlassian.com',
+      'email' => 'bugs_bunny@example.com',
+      'api_token' => 'carrots'
+    }
+  end
   let(:gateway) do
     described_class.new(
       file_system: file_system,
-      jira_config: { 'url' => 'https://example.com' },
+      jira_config: jira_config,
       settings: { 'ignore_ssl_errors' => false }
     )
   end
@@ -145,6 +164,35 @@ describe JiraGateway do
       # Seen this one from the status api
       json = ['errorMessage', 'Site temporarily unavailable']
       expect(gateway).not_to be_json_successful(json)
+    end
+  end
+
+  context 'exec_and_parse_response' do
+    it 'execs with failure' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['stdout', 'stderr', MockStatus.new(exitstatus: 1)]
+      )
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error 'Failed call with exit status 1. See mock_logfile for details'
+      )
+      expect(file_system.log_messages).to eq([
+        'foo',
+        'Failed call with exit status 1!',
+        'Returned (stdout): "stdout"',
+        'Returned (stderr): "stderr"'
+      ])
+    end
+
+    it 'execs successfully' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['{"a":1}', 'stderr', MockStatus.new(exitstatus: 0)]
+      )
+      result = gateway.exec_and_parse_response command: 'foo', stdin_data: nil
+      expect(result).to eq({'a' => 1})
+      expect(file_system.log_messages).to eq([
+        'foo',
+        'Returned (stderr): "stderr"'
+      ])
     end
   end
 end

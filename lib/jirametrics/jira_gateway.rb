@@ -26,7 +26,7 @@ class JiraGateway
     log_entry = sanitize_message log_entry
     @file_system.log log_entry
 
-    stdout, stderr, status = Open3.capture3(command, stdin_data: stdin_data)
+    stdout, stderr, status = capture3(command, stdin_data: stdin_data)
     unless status.success?
       @file_system.log "Failed call with exit status #{status.exitstatus}!"
       @file_system.log "Returned (stdout): #{stdout.inspect}"
@@ -35,10 +35,15 @@ class JiraGateway
         "See #{@file_system.logfile_name} for details"
     end
 
-    @file_system.log "Returned (stderr): #{stderr}" unless stderr == ''
+    @file_system.log "Returned (stderr): #{stderr.inspect}" unless stderr == ''
     raise 'no response from curl on stdout' if stdout == ''
 
     parse_response(command: command, result: stdout)
+  end
+
+  def capture3 command, stdin_data:
+    # In it's own method so we can mock it out in tests
+    Open3.capture3(command, stdin_data: stdin_data)
   end
 
   def call_url relative_url:
