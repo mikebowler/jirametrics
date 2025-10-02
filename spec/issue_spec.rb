@@ -99,7 +99,7 @@ describe Issue do
         'key' => 'SP-1',
         'changelog' => { 'histories' => [] }
       }
-      expect { described_class.new raw: raw, board: sample_board }.to raise_error(
+      expect { described_class.new raw: raw, board: nil }.to raise_error(
         'Unable to initialize SP-1'
       )
     end

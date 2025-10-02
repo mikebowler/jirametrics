@@ -19,9 +19,10 @@ class Issue
 
     # There are cases where we create an Issue of fragments like linked issues and those won't have
     # changelogs.
-    return unless @raw['changelog']
+    load_history_into_changes if @raw['changelog']
 
-    load_history_into_changes
+    # As above with fragments, there may not be a fields section
+    return unless @raw['fields']
 
     # If this is an older pull of data then comments may not be there.
     load_comments_into_changes if @raw['fields']['comment']
@@ -152,7 +153,7 @@ class Issue
   # Are we currently in this status? If yes, then return the most recent status change.
   def currently_in_status *status_names
     change = most_recent_status_change
-    return false if change.nil?
+    return nil if change.nil?
 
     change if change.current_status_matches(*status_names)
   end
@@ -162,7 +163,7 @@ class Issue
     category_ids = find_status_category_ids_by_names category_names
 
     change = most_recent_status_change
-    return false if change.nil?
+    return nil if change.nil?
 
     status = find_or_create_status id: change.value_id, name: change.value
     change if status && category_ids.include?(status.category.id)
@@ -762,6 +763,9 @@ class Issue
   def fabricate_change field_name:
     first_status = nil
     first_status_id = nil
+
+    # There won't be a created timestamp in cases where this was a linked issue
+    return unless @raw['fields']['created']
 
     created_time = parse_time @raw['fields']['created']
     first_change = @changes.find { |change| change.field == field_name }
