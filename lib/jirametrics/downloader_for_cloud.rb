@@ -111,4 +111,92 @@ class DownloaderForCloud < Downloader
       break if next_page_token.nil?
     end
   end
+
+  def download_issues board:
+    log "  Downloading primary issues for board #{board.id} from #{jira_instance_type}", both: true
+    path = File.join(@target_path, "#{file_prefix}_issues/")
+    unless @file_system.dir_exist?(path)
+      log "  Creating path #{path}"
+      @file_system.mkdir(path)
+    end
+
+    filter_id = @board_id_to_filter_id[board.id]
+    jql = make_jql(filter_id: filter_id)
+    intercept_jql = @download_config.project_config.settings['intercept_jql']
+    jql = intercept_jql.call jql if intercept_jql
+
+    issue_data_hash = search_for_issues jql: jql, board_id: board.id, path: path
+
+    loop do
+      related_issue_keys = Set.new
+      issue_data_hash
+        .values
+        .reject { |data| data.up_to_date }
+        .each_slice(100) do |slice|
+          slice = bulk_fetch_issues(
+            issue_datas: slice, board: board, in_initial_query: true
+          )
+          slice.each do |data|
+            @file_system.save_json(
+              json: data.issue.raw, filename: data.cache_path
+            )
+            # Set the timestamp on the file to match the updated one so that we don't have
+            # to parse the file just to find the timestamp
+            @file_system.utime time: data.issue.updated, file: data.cache_path
+
+            issue = data.issue
+            next unless issue
+
+            parent_key = issue.parent_key(project_config: @download_config.project_config)
+            related_issue_keys << parent_key if parent_key
+
+            # Sub-tasks
+            issue.raw['fields']['subtasks']&.each do |raw_subtask|
+              related_issue_keys << raw_subtask['key']
+            end
+          end
+        end
+
+      # Remove all the ones we already downloaded
+      related_issue_keys.reject! { |key| issue_data_hash[key] }
+
+      related_issue_keys.each do |key|
+        data = DownloadIssueData.new key: key
+        data.found_in_primary_query = false
+        data.up_to_date = false
+        data.cache_path = File.join(path, "#{key}-#{board.id}.json")
+        issue_data_hash[key] = data
+      end
+      break if related_issue_keys.empty?
+
+      log "  Downloading linked issues for board #{board.id}", both: true
+    end
+
+    delete_issues_from_cache_that_are_not_in_server(
+      issue_data_hash: issue_data_hash, path: path
+    )
+  end
+
+  def delete_issues_from_cache_that_are_not_in_server issue_data_hash:, path:
+    # The gotcha with deleted issues is that they just stop being returned in queries
+    # and we have no way to know that they should be removed from our local cache.
+    # With the new approach, we ask for every issue that Jira knows about (within
+    # the parameters of the query) and then delete anything that's in our local cache
+    # but wasn't returned.
+    @file_system.foreach path do |file|
+      next if file.start_with? '.'
+      unless /^(?<key>\w+-\d+)-\d+\.json$/ =~ file
+        raise "Unexpected filename in #{path}: #{file}"
+      end
+      next if issue_data_hash[key] # Still in Jira
+
+      file_to_delete = File.join(path, file)
+      log "  Removing #{file_to_delete} from local cache"
+      file_system.unlink file_to_delete
+    end
+  end
+
+  def last_modified filename:
+    File.mtime(filename) if File.exist?(filename)
+  end
 end

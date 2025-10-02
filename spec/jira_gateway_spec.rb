@@ -120,25 +120,6 @@ describe JiraGateway do
     end
   end
 
-  context 'call_url' do
-    it 'adds detail to exception when unable to parse result' do
-      def gateway.call_command _command
-        'foo'
-      end
-      gateway.load_jira_config({
-        'url' => 'https://example.com',
-        'api_token' => 'ABCD_EFGH',
-        'email' => 'a@example.com'
-      })
-      message = 'Unable to parse results from curl -L -s ' \
-        '--user a@example.com:[API_TOKEN] --request GET ' \
-        '--header "Accept: application/json" --show-error --fail ' \
-        '--url "https://example.comfoo"'
-      expect { gateway.call_url relative_url: 'foo' }.to raise_error(message)
-      expect(file_system.log_messages).to eq([["Error: #{message}", 'foo']])
-    end
-  end
-
   context 'json_successful' do
     it 'succeeds for simple json' do
       json = { 'a' => 'b' }

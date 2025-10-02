@@ -49,53 +49,35 @@ describe DownloaderForDataCenter do
         file_system: file_system,
         jira_gateway: jira_gateway
       )
-      expect(instance).to be_instance_of DownloaderForDataCenter
+      expect(instance).to be_instance_of DownloaderForDataCenter # rubocop:disable RSpec/DescribedClass
     end
   end
 
-  context 'search_for_issues' do
-    it 'completes when no issues found' do
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&fields=updated'
-      jira_gateway.when url: url, response: { 'issues' => [], 'total' => 0, 'maxResults' => 0 }
-
-      board = sample_board
-      board.raw['id'] = 2
-
-      downloader.search_for_issues jql: 'project=ABC', board_id: board.id, path: '/abc'
-
-      expect(file_system.log_messages).to eq(
-        [
-          'JQL: project=ABC',
-          'Found 0 issues'
-        ]
-      )
-      expect(file_system.saved_json).to be_empty
+  context 'download_issues' do
+    let(:raw_issue) do
+      raw_issue = empty_issue(created: '2025-01-01').raw
+      raw_issue['changelog'] = nil
+      raw_issue['id'] = '123'
+      raw_issue
     end
 
-    it 'follows pagination' do
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=100&startAt=0&fields=updated'
-      issue_json = {
-        'key' => 'ABC-123',
-        'fields' => { 'updated' => '2025-01-01T00:00:00:00 +0000'
+    it 'downloads' do
+      jira_gateway.when(
+        url: '/rest/api/2/search?jql=filter%3D3&maxResults=100&startAt=0&expand=changelog&fields=*all',
+        response: {
+          'maxResults' => 100,
+          'total' => 1,
+          'issues' => [raw_issue]
         }
-      }
-      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
-
-      url = '/rest/api/2/search?jql=project%3DABC&maxResults=1&startAt=1&fields=updated'
-      issue_json = {
-        'key' => 'ABC-125',
-        'fields' => { 'updated' => '2025-01-01T00:00:00:00 +0000'
-        }
-      }
-      jira_gateway.when url: url, response: { 'issues' => [issue_json], 'total' => 2, 'maxResults' => 1 }
-
+      )
       board = sample_board
-      board.raw['id'] = 2
-
-      downloader.search_for_issues jql: 'project=ABC', board_id: board.id, path: '/abc'
-
+      downloader.board_id_to_filter_id[board.id] = 3
+      downloader.download_issues board: board
       expect(file_system.log_messages).to eq([
-        'JQL: project=ABC', 'Found 1 issues', 'Found 1 issues'
+        'Downloading primary issues for board 1',
+        'JQL: filter=3',
+        'Downloaded 1-1 of 1 issues to spec/testdata/sample_issues/',
+        'Downloading linked issues for board 1'
       ])
     end
   end

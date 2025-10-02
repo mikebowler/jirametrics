@@ -18,11 +18,15 @@ class JiraGateway
 
   def post_request relative_url:, payload:
     command = make_curl_command url: "#{@jira_url}#{relative_url}", method: 'POST'
+    exec_and_parse_response command: command, stdin_data: payload
+  end
+
+  def exec_and_parse_response command:, stdin_data:
     log_entry = "  #{command.gsub(/\s+/, ' ')}"
     log_entry = sanitize_message log_entry
     @file_system.log log_entry
 
-    stdout, stderr, status = Open3.capture3(command, stdin_data: payload)
+    stdout, stderr, status = Open3.capture3(command, stdin_data: stdin_data)
     unless status.success?
       @file_system.log "Failed call with exit status #{status.exitstatus}!"
       @file_system.log "Returned (stdout): #{stdout.inspect}"
@@ -39,8 +43,7 @@ class JiraGateway
 
   def call_url relative_url:
     command = make_curl_command url: "#{@jira_url}#{relative_url}"
-    result = call_command command
-    parse_response(command: command, result: result)
+    exec_and_parse_response command: command, stdin_data: nil
   end
 
   def parse_response command:, result:
@@ -62,20 +65,6 @@ class JiraGateway
     raise 'Neither Jira API Token or personal access token has been set' unless token
 
     message.gsub(token, '[API_TOKEN]')
-  end
-
-  def call_command command
-    log_entry = "  #{command.gsub(/\s+/, ' ')}"
-    log_entry = sanitize_message log_entry
-    @file_system.log log_entry
-
-    result = `#{command}`
-    @file_system.log result unless $CHILD_STATUS.success?
-    return result if $CHILD_STATUS.success?
-
-    @file_system.log "Failed call with exit status #{$CHILD_STATUS.exitstatus}."
-    raise "Failed call with exit status #{$CHILD_STATUS.exitstatus}. " \
-      "See #{@file_system.logfile_name} for details"
   end
 
   def load_jira_config jira_config
