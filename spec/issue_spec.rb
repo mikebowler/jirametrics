@@ -371,6 +371,11 @@ describe Issue do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.currently_in_status('Done').time).to eql to_time('2021-10-04')
     end
+
+    it 'has no status changes' do
+      issue.changes.clear
+      expect(issue.currently_in_status('Done')).to be_nil
+    end
   end
 
   context 'still_in_status' do
@@ -415,6 +420,11 @@ describe Issue do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-03')
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-04')
       expect(issue.currently_in_status_category('finished').time).to eql to_time('2021-10-04')
+    end
+
+    it 'has no status changes' do
+      issue.changes.clear
+      expect(issue.currently_in_status_category('finished')).to be_nil
     end
   end
 
@@ -1411,6 +1421,28 @@ describe Issue do
       expect(issue1.parse_time(1_759_080_993_142).to_s).to eq(
         '2025-09-28 17:36:33 +0000'
       )
+    end
+  end
+
+  context 'assigned_to' do
+    it 'is assigned' do
+      issue1.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
+      expect(issue1.assigned_to).to eq 'Fred'
+    end
+
+    it 'is not assigned' do
+      expect(issue1.assigned_to).to be_nil
+    end
+  end
+
+  context 'assigned_to_icon_url' do
+    it 'is assigned' do
+      issue1.raw['fields']['assignee'] = { 'avatarUrls' => { '16x16' => 'myurl' } }
+      expect(issue1.assigned_to_icon_url).to eq 'myurl'
+    end
+
+    it 'is not assigned' do
+      expect(issue1.assigned_to_icon_url).to be_nil
     end
   end
 end

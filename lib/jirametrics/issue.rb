@@ -238,11 +238,11 @@ class Issue
   end
 
   def assigned_to
-    @raw['fields']&.[]('assignee')&.[]('displayName')
+    @raw['fields']['assignee']&.[]('displayName')
   end
 
   def assigned_to_icon_url
-    @raw['fields']&.[]('assignee')&.[]('avatarUrls')&.[]('16x16')
+    @raw['fields']['assignee']&.[]('avatarUrls')&.[]('16x16')
   end
 
   # Many test failures are simply unreadable because the default inspect on this class goes

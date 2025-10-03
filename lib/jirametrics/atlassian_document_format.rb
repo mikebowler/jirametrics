@@ -13,9 +13,9 @@ class AtlassianDocumentFormat
       input
         .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
         .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
-        .gsub(/\[([^\|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
+        .gsub(/\[([^|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
         .gsub("\n", '<br />')
-    elsif input['content']
+    elsif input&.[]('content')
       input['content'].collect { |element| adf_node_to_html element }.join("\n")
     else
       # We have an actual ADF document with no content.

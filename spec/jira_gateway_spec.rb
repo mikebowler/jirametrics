@@ -188,7 +188,7 @@ describe JiraGateway do
         ['{"a":1}', 'stderr', MockStatus.new(exitstatus: 0)]
       )
       result = gateway.exec_and_parse_response command: 'foo', stdin_data: nil
-      expect(result).to eq({'a' => 1})
+      expect(result).to eq({ 'a' => 1 })
       expect(file_system.log_messages).to eq([
         'foo',
         'Returned (stderr): "stderr"'

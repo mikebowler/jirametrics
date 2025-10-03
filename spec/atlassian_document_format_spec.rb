@@ -61,6 +61,10 @@ describe AtlassianDocumentFormat do
   end
 
   context 'v3 to_html' do
+    it 'handles nil' do
+      expect(format.to_html nil).to eq ''
+    end
+
     it 'handles single paragraph' do
       input = {
         'type' => 'doc',
