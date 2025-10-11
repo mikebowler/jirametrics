@@ -115,6 +115,8 @@ class Downloader
   end
 
   def download_users
+    return unless @jira_gateway.cloud?
+
     log '  Downloading all users', both: true
     json = @jira_gateway.call_url relative_url: '/rest/api/2/users'
 
