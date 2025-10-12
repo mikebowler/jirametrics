@@ -204,7 +204,9 @@ describe ChartBase do
           stop_at last_resolution
         end
 
-        board.cycletime = CycleTimeConfig.new parent_config: nil, label: 'default', block: block, today: today
+        board.cycletime = CycleTimeConfig.new(
+          parent_config: nil, label: 'default', block: block, today: today, settings: load_settings
+        )
       end
     end
 

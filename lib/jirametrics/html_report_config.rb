@@ -51,7 +51,9 @@ class HtmlReportConfig
     @file_config.project_config.all_boards.each_value do |board|
       raise 'Multiple cycletimes not supported' if board.cycletime
 
-      board.cycletime = CycleTimeConfig.new(parent_config: self, label: label, block: block, file_system: file_system)
+      board.cycletime = CycleTimeConfig.new(
+        parent_config: self, label: label, block: block, file_system: file_system, settings: settings
+      )
     end
   end
 

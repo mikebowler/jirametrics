@@ -12,13 +12,6 @@ describe AgingWorkInProgressChart do
 
   let(:board) do
     load_complete_sample_board.tap do |board|
-      # block = lambda do |_|
-      #   start_at first_time_in_status_category :indeterminate
-      #   stop_at first_time_in_status_category :done
-      # end
-      # board.cycletime = CycleTimeConfig.new(
-      #   parent_config: nil, label: 'test', file_system: nil, today: today, block: block
-      # )
       board.cycletime = default_cycletime_config
     end
   end

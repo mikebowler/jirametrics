@@ -11,7 +11,8 @@ describe AgingWorkTable do
         stop_at first_time_in_status 10_002
       end
       board.cycletime = CycleTimeConfig.new(
-        parent_config: nil, label: 'test', file_system: nil, today: today, block: block
+        parent_config: nil, label: 'test', file_system: nil, today: today, block: block,
+        settings: load_settings
       )
     end
   end

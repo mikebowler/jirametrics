@@ -549,6 +549,7 @@ class ProjectConfig
   end
 
   def discard_changes_before status_becomes: nil, &block
+    cycletimes_touched = Set.new
     if status_becomes
       status_becomes = [status_becomes] unless status_becomes.is_a? Array
 
@@ -581,6 +582,7 @@ class ProjectConfig
       next if original_start_time.nil?
 
       issue.discard_changes_before cutoff_time
+      cycletimes_touched << issue.board.cycletime
 
       next unless cutoff_time
       next if original_start_time > cutoff_time # ie the cutoff would have made no difference.
@@ -591,5 +593,7 @@ class ProjectConfig
         issue: issue
       }
     end
+
+    cycletimes_touched.each { |c| c.flush_cache }
   end
 end
