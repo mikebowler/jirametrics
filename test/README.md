@@ -63,3 +63,4 @@ Jest configuration is in `package.json` with:
 - Custom setup file for DOM mocks
 - Coverage collection from the JavaScript source file
 - HTML and LCOV coverage reports
+
