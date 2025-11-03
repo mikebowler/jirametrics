@@ -15,15 +15,6 @@ class Exporter
       self.anonymize if anonymize
       self.settings.merge! settings
 
-      status_category_mappings.each do |status, category|
-        status_category_mapping status: status, category: category
-      end
-
-      download do
-        self.rolling_date_count(rolling_date_count) if rolling_date_count
-        self.no_earlier_than(no_earlier_than) if no_earlier_than
-      end
-
       boards.each_key do |board_id|
         block = boards[board_id]
         if block == :default
@@ -35,6 +26,15 @@ class Exporter
         board id: board_id do
           cycletime(&block)
         end
+      end
+
+      status_category_mappings.each do |status, category|
+        status_category_mapping status: status, category: category
+      end
+
+      download do
+        self.rolling_date_count(rolling_date_count) if rolling_date_count
+        self.no_earlier_than(no_earlier_than) if no_earlier_than
       end
 
       issues.reject! do |issue|
