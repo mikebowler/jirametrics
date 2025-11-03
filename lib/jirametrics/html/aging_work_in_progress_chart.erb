@@ -40,7 +40,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
           color: <%= CssVariable['--grid-line-color'].to_json %>,
           z: 1 // draw the grid lines on top of the bars
         },
-        stacked: true,
+        stacked: false,
         max: <%= (@max_age * 1.1).to_i %>
       }
     },
