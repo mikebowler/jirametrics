@@ -410,14 +410,17 @@ class DataQualityReport < ChartBase
   def render_status_not_on_board problems
     <<-HTML
       #{label_issues problems.size} were not visible on the board for some period of time. This may impact
-      timings as the work was likely to have been forgotten if it wasn't visible.
+      timings as the work was likely to have been forgotten if it wasn't visible. What does "not visible"
+      mean in this context? The issue was in a status that is not mapped to any visible column on the board.
+      Look in "unmapped statuses" on your board.
     HTML
   end
 
   def render_created_in_wrong_status problems
     <<-HTML
-      #{label_issues problems.size} were created in a status not designated as Backlog. This will impact
-      the measurement of start times and will therefore impact whether it's shown as in progress or not.
+      #{label_issues problems.size} were created in a status that is not considered to be some varient
+      of To Do. Most likely this means that the issue was created from one of the columns on the board,
+      rather than in the backlog. Why Jira allows this is still a mystery.
     HTML
   end
 
