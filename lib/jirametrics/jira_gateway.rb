@@ -67,7 +67,7 @@ class JiraGateway
 
   def sanitize_message message
     token = @jira_api_token || @jira_personal_access_token
-    raise 'Neither Jira API Token or personal access token has been set' unless token
+    return message unless token # cookie based authentication
 
     message.gsub(token, '[API_TOKEN]')
   end
