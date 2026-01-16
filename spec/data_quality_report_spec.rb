@@ -24,6 +24,7 @@ describe DataQualityReport do
     subject = described_class.new([])
     subject.file_system = MockFileSystem.new
     subject.issues = [issue10, issue1]
+    subject.settings = load_settings
     subject.time_range = to_time('2021-06-01')..to_time('2021-10-01')
     subject
   end
@@ -672,24 +673,20 @@ describe DataQualityReport do
   end
 
   context 'scan_for_items_blocked_on_closed_tickets' do
-    it 'does the scan' do
+    it 'matches' do
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       link = IssueLink.new origin: issue1, raw: {
-        # 'id' => '10001',
-        # 'self' => 'https://improvingflow.atlassian.net/rest/api/2/issueLink/10001',
         'type' => {
           # 'id' => '10006',
           'name' => 'Blocked',
           'inward' => 'is blocked by',
-          'outward' => 'blocks',
-          # 'self' => 'https://improvingflow.atlassian.net/rest/api/2/issueLinkType/10006'
+          'outward' => 'blocks'
         },
         'inwardIssue' => {
           'id' => '10019',
           'key' => issue2.key,
           # 'self' => 'https://improvingflow.atlassian.net/rest/api/2/issue/10019',
           'fields' => {
-            # 'summary' => 'Report of all events',
             'status' => {
               'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/10002',
               'description' => '',
@@ -733,6 +730,62 @@ describe DataQualityReport do
       expect(entry1.problems).to eq [
         [:items_blocked_on_closed_tickets, "SP-1 thinks it's blocked by SP-2, except SP-2 is closed."]
       ]
+    end
+
+    it 'does not match when the link type is not blocked' do
+      entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
+      link = IssueLink.new origin: issue1, raw: {
+        'type' => {
+          # 'id' => '10006',
+          'name' => 'Cloned',
+          'inward' => 'is cloned by',
+          'outward' => 'clones'
+        },
+        'inwardIssue' => {
+          'id' => '10019',
+          'key' => issue2.key,
+          'fields' => {
+            'status' => {
+              'self' => 'https://improvingflow.atlassian.net/rest/api/2/status/10002',
+              'description' => '',
+              'iconUrl' => 'https://improvingflow.atlassian.net/',
+              'name' => 'Done',
+              'id' => '10002',
+              'statusCategory' => {
+                'self' => 'https://improvingflow.atlassian.net/rest/api/2/statuscategory/3',
+                'id' => 3,
+                'key' => 'done',
+                'colorName' => 'green',
+                'name' => 'Done'
+              }
+            },
+            'priority' => {
+              'self' => 'https://improvingflow.atlassian.net/rest/api/2/priority/3',
+              'iconUrl' => 'https://improvingflow.atlassian.net/images/icons/priorities/medium.svg',
+              'name' => 'Medium',
+              'id' => '3'
+            },
+            'issuetype' => {
+              'self' => 'https://improvingflow.atlassian.net/rest/api/2/issuetype/10001',
+              'id' => '10001',
+              'description' => 'Functionality or a feature expressed as a user goal.',
+              'iconUrl' => 'https://improvingflow.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium',
+              'name' => 'Story',
+              'subtask' => false,
+              'avatarId' => 10_315,
+              'hierarchyLevel' => 0
+            }
+          }
+        }
+      }
+      link.other_issue = issue2
+      issue1.issue_links << link
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue2, nil, to_time('2024-01-01')]
+      ]
+
+      report.scan_for_items_blocked_on_closed_tickets entry: entry1
+      expect(entry1.problems).to be_empty
     end
   end
 

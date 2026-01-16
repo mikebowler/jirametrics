@@ -266,6 +266,8 @@ class DataQualityReport < ChartBase
 
   def scan_for_items_blocked_on_closed_tickets entry:
     entry.issue.issue_links.each do |link|
+      next unless settings['blocked_link_text'].include?(link.label)
+
       this_active = !entry.stopped
       other_active = !link.other_issue.board.cycletime.started_stopped_times(link.other_issue).last
       next unless this_active && !other_active
