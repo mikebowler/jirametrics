@@ -27,6 +27,21 @@ describe ChangeItem do
     expect(change.to_s).to eq 'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000")'
   end
 
+  it 'parses multiple ids for Sprint' do
+    change = described_class.new time: time, author_raw: nil, raw: {
+      'field' => 'Sprint',
+      'fieldtype' => 'custom',
+      'from' => '2',
+      'fromString' => 'Scrum Sprint 10',
+      'to' => '2, 3',
+      'toString' => 'Scrum Sprint 10, Scrum Sprint 11'
+    }
+
+    expect(change).to be_sprint
+    expect(change.old_value_id).to eq [2]
+    expect(change.value_id).to eq [2, 3]
+  end
+
   it 'supports artificial' do
     change = described_class.new time: time, artificial: true, author_raw: nil, raw: {
       'field' => 'Flagged',

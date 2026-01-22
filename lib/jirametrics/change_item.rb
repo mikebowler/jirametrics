@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChangeItem
-  attr_reader :field, :value_id, :old_value_id, :raw, :author_raw
+  attr_reader :field, :value_id, :old_value_id, :raw, :author_raw, :field_id
   attr_accessor :value, :old_value, :time
 
   def initialize raw:, author_raw:, time:, artificial: false
@@ -13,9 +13,15 @@ class ChangeItem
 
     @field = @raw['field']
     @value = @raw['toString']
-    @value_id = @raw['to'].to_i
     @old_value = @raw['fromString']
-    @old_value_id = @raw['from']&.to_i
+    if sprint?
+      @value_id = @raw['to'].split(', ').collect(&:to_i)
+      @old_value_id = (@raw['from'] || '').split(', ').collect(&:to_i)
+    else
+      @value_id = @raw['to'].to_i
+      @old_value_id = @raw['from']&.to_i
+    end
+    @field_id = @raw['fieldId']
     @artificial = artificial
   end
 
