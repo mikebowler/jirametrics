@@ -493,6 +493,132 @@ describe Issue do
     end
   end
 
+  context 'first_time_in_active_sprint' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
+    it 'matches if sprint starts after add' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'closed',
+          'boardId' => 2,
+          'goal' => '',
+          'startDate' => '2021-10-04T00:00:00.000Z',
+          'endDate' => '2021-10-23T00:00:00.000Z',
+          'completeDate' => '2021-10-23T00:00:00.000Z'
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+    end
+
+    it 'matches if the sprint had already started on add' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'closed',
+          'boardId' => 2,
+          'goal' => '',
+          'startDate' => '2021-09-04T00:00:00.000Z',
+          'endDate' => '2021-10-23T00:00:00.000Z',
+          'completeDate' => '2021-10-23T00:00:00.000Z'
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+    end
+
+    it 'does not match if the sprint never starts' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'pending',
+          'boardId' => 2,
+          'goal' => ''
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to be_nil
+    end
+
+    it 'does not match if it was removed from the sprint before the sprint started' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'active',
+          'boardId' => 2,
+          'goal' => '',
+          'startDate' => '2021-11-04T00:00:00.000Z'
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
+        time: '2021-10-03', field_id: 'customfield_10020'
+      )
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
+        time: '2021-10-04', field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to be_nil
+    end
+
+    it 'does not match if it was removed from the sprint and the sprint never started anyway' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'active',
+          'boardId' => 2,
+          'goal' => ''
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
+        time: '2021-10-03', field_id: 'customfield_10020'
+      )
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
+        time: '2021-10-04', field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to be_nil
+    end
+
+    it 'matches if it was removed after sprint start' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'active',
+          'boardId' => 2,
+          'goal' => '',
+          'startDate' => '2021-10-04T00:00:00.000Z'
+        }
+     ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
+        time: '2021-10-03', field_id: 'customfield_10020'
+      )
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
+        time: '2021-10-05', field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+    end
+  end
+
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do

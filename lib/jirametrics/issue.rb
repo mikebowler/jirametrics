@@ -212,8 +212,51 @@ class Issue
     first_time_in_status(*board.visible_columns.collect(&:status_ids).flatten)
   end
 
+  def first_time_in_active_sprint
+    data_clazz = Struct.new(:sprint_id, :sprint_start, :sprint_stop, :change)
+
+    matching_changes = []
+    all_datas = []
+
+    @changes.each do |change|
+      next unless change.sprint?
+
+      added_sprint_ids = change.value_id - change.old_value_id
+      added_sprint_ids.each do |id|
+        data = data_clazz.new
+        data.sprint_id = id
+        data.change = change
+        sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == id }
+        data.sprint_start = parse_time(sprint_data['startDate'])
+        data.sprint_stop = parse_time(sprint_data['completeDate'])
+        all_datas << data
+      end
+
+      removed_sprint_ids = change.old_value_id - change.value_id
+      removed_sprint_ids.each do |id|
+        data = all_datas.find { |d| d.sprint_id == id }
+
+        all_datas.delete(data)
+
+        next if data.sprint_start.nil? || data.sprint_start >= change.time
+
+        matching_changes << data.change
+      end
+    end
+
+    # There can't be any more removes so whatever is left is a valid option
+    # Now all we care about is if the sprint has started.
+    all_datas.each do |data|
+      matching_changes << data.change if data.sprint_start
+    end
+
+    matching_changes.min(&:time)
+  end
+
   def parse_time text
-    if text.is_a? String
+    if text.nil?
+      nil
+    elsif text.is_a? String
       Time.parse(text).getlocal(@timezone_offset)
     else
       Time.at(text / 1000).getlocal(@timezone_offset)
