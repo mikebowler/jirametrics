@@ -116,20 +116,26 @@ def load_statuses input_file
   statuses
 end
 
-def add_mock_change issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false
+def add_mock_change(
+    issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
+    artificial: false, field_id: nil
+  )
   change = mock_change(
     issue: issue,
     field: field, time: time,
     value: value, value_id: value_id,
     old_value: old_value, old_value_id: old_value_id,
-    artificial: artificial
+    artificial: artificial,
+    field_id: field_id
   )
   issue.changes << change
   change
 end
 
 # If either value or old_value are statuses then the name and id will be pulled from that object
-def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil, artificial: false, issue: nil
+def mock_change(field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
+    artificial: false, issue: nil, field_id: nil)
+
   if value.is_a? Status
     value_id = value.id
     value = value.name
@@ -187,10 +193,10 @@ def mock_change field:, value:, time:, value_id: nil, old_value: nil, old_value_
     'to' => value_id,
     'toString' => value,
     'from' => old_value_id,
-    'fromString' => old_value
+    'fromString' => old_value,
+    'fieldId' => field_id
   }
 end
-
 
 def load_settings
   JSON.parse(File.read('./lib/jirametrics/settings.json')).tap do |settings|
