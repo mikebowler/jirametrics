@@ -212,7 +212,12 @@ class Issue
     first_time_in_status(*board.visible_columns.collect(&:status_ids).flatten)
   end
 
-  def first_time_in_active_sprint
+  # If this issue will ever be in an active sprint then return the time that it
+  # was first added to that sprint, whether or not the sprint was active at that
+  # time. Although it seems like an odd thing to calculate, it's a reasonable proxy
+  # for 'ready' in cases where the team doesn't have an explicit 'ready' status.
+  # You'd be better off with an explicit 'ready' but sometimes that's not an option.
+  def first_time_added_to_active_sprint
     data_clazz = Struct.new(:sprint_id, :sprint_start, :sprint_stop, :change)
 
     matching_changes = []

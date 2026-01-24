@@ -493,7 +493,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_in_active_sprint' do
+  context 'first_time_added_to_active_sprint' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'matches if sprint starts after add' do
@@ -513,7 +513,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
         field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
     it 'matches if the sprint had already started on add' do
@@ -533,7 +533,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
         field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
     it 'does not match if the sprint never starts' do
@@ -550,7 +550,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
         field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to be_nil
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
     end
 
     it 'does not match if it was removed from the sprint before the sprint started' do
@@ -572,7 +572,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
         time: '2021-10-04', field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to be_nil
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
     end
 
     it 'does not match if it was removed from the sprint and the sprint never started anyway' do
@@ -593,7 +593,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
         time: '2021-10-04', field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to be_nil
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
     end
 
     it 'matches if it was removed after sprint start' do
@@ -615,7 +615,7 @@ describe Issue do
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
         time: '2021-10-05', field_id: 'customfield_10020'
       )
-      expect(issue.first_time_in_active_sprint&.time).to eq to_time('2021-10-03')
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
   end
 
