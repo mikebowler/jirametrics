@@ -120,4 +120,10 @@ describe Board do
       expect(find_names.call(raw)).to eq %w[Backlog Backlog-2 Backlog-3]
     end
   end
+
+  it 'handles inspect' do
+    expect(load_complete_sample_board.inspect).to eq(
+      'Board(id:1, name:"SP board", board_type:"kanban")'
+    )
+  end
 end
