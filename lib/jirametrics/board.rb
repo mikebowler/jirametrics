@@ -116,4 +116,8 @@ class Board
   def estimation_configuration
     EstimationConfiguration.new raw: raw['estimation']
   end
+
+  def inspect
+    "Board(id:#{id}, name:#{name.inspect}, board_type:#{board_type.inspect})"
+  end
 end
