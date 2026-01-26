@@ -16,7 +16,7 @@ describe CycleTimeConfig do
   context 'deprecated' do
     it 'deprecates started_at' do
       config = described_class.new(
-        parent_config: project_config, label: 'foo', file_system: exporter.file_system, settings: load_settings,
+        possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
         block: lambda do |_|
           start_at first_time_in_status('In Progress')
           stop_at first_time_in_status('Done')
@@ -30,7 +30,7 @@ describe CycleTimeConfig do
 
     it 'deprecates stopped_at' do
       config = described_class.new(
-        parent_config: project_config, label: 'foo', file_system: exporter.file_system, settings: load_settings,
+        possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
         block: lambda do |_|
           start_at first_time_in_status('In Progress')
           stop_at first_time_in_status('Done')
@@ -44,7 +44,7 @@ describe CycleTimeConfig do
 
     it 'deprecates methods that return a time' do
       config = described_class.new(
-        parent_config: project_config, label: 'foo', file_system: exporter.file_system, settings: load_settings,
+        possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
         block: lambda do |_|
           start_at created
           stop_at created
@@ -62,7 +62,7 @@ describe CycleTimeConfig do
     let(:settings) { load_settings }
     let(:cycletime) do
       described_class.new(
-        parent_config: project_config,
+        possible_statuses: nil,
         label: 'foo',
         file_system: exporter.file_system,
         settings: settings,

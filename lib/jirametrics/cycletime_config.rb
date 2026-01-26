@@ -6,15 +6,14 @@ require 'date'
 class CycleTimeConfig
   include SelfOrIssueDispatcher
 
-  attr_reader :label, :parent_config, :settings, :file_system
+  attr_reader :label, :possible_statuses, :settings, :file_system
 
-  def initialize parent_config:, label:, block:, settings:, file_system: nil, today: Date.today
+  def initialize possible_statuses:, label:, block:, settings:, file_system: nil, today: Date.today
 
-    @parent_config = parent_config
+    @possible_statuses = possible_statuses
     @label = label
     @today = today
     @settings = settings
-    @cache_cycletime_calculations = settings['cache_cycletime_calculations']
 
     # If we hit something deprecated and this is nil then we'll blow up. Although it's ugly, this
     # may make it easier to find problems in the test code ;-)
@@ -68,7 +67,7 @@ class CycleTimeConfig
   def started_stopped_changes issue
     cache_key = "#{issue.key}:#{issue.board.id}"
     last_result = (@cache ||= {})[cache_key]
-    return *last_result if last_result && @cache_cycletime_calculations
+    return *last_result if last_result && settings['cache_cycletime_calculations']
 
     started = @start_at.call(issue)
     stopped = @stop_at.call(issue)

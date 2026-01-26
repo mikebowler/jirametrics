@@ -66,7 +66,7 @@ class DailyWipChart < ChartBase
     hash = {}
 
     @issues.each do |issue|
-      start, stop = issue.board.cycletime.started_stopped_dates(issue)
+      start, stop = cycletime_for_issue(issue).started_stopped_dates(issue)
       next if start.nil? && stop.nil?
 
       # If it stopped but never started then assume it started at creation so the data points

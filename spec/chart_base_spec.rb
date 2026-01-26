@@ -205,7 +205,7 @@ describe ChartBase do
         end
 
         board.cycletime = CycleTimeConfig.new(
-          parent_config: nil, label: 'default', block: block, today: today, settings: load_settings
+          possible_statuses: nil, label: 'default', block: block, today: today, settings: load_settings
         )
       end
     end

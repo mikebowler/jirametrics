@@ -52,7 +52,8 @@ class HtmlReportConfig
       raise 'Multiple cycletimes not supported' if board.cycletime
 
       board.cycletime = CycleTimeConfig.new(
-        parent_config: self, label: label, block: block, file_system: file_system, settings: settings
+        possible_statuses: file_config.project_config, label: label, block: block,
+        file_system: file_system, settings: settings
       )
     end
   end
@@ -175,6 +176,7 @@ class HtmlReportConfig
     after_init_block&.call chart
 
     @charts << chart
+    chart.before_run
     html chart.run
   end
 

@@ -24,7 +24,8 @@ class BoardConfig
     end
 
     @board.cycletime = CycleTimeConfig.new(
-      parent_config: self, label: label, block: block, file_system: project_config.file_system,
+      possible_statuses: project_config.possible_statuses,
+      label: label, block: block, file_system: project_config.file_system,
       settings: project_config.settings
     )
   end

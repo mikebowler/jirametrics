@@ -22,6 +22,14 @@ class ChartBase
     @canvas_responsive = true
   end
 
+  def call_before_run &proc
+    (@call_before_run_procs ||= []) << proc
+  end
+
+  def before_run
+    @call_before_run_procs&.each { |proc| proc.call }
+  end
+
   def aggregated_project?
     @aggregated_project
   end
@@ -278,5 +286,20 @@ class ChartBase
         and any other holidays mentioned in the configuration.
       </div>
     TEXT
+  end
+
+  # Set a cycletime for just this one chart, overriding the one for the report.
+  def cycletime &block
+    call_before_run do
+      @cycletime = CycleTimeConfig.new(
+        possible_statuses: possible_statuses, label: nil, block: block, file_system: file_system,
+        settings: settings
+      )
+    end
+  end
+
+  # Returns the cycletime in use right now, which may be specific to the chart or across the report.
+  def cycletime_for_issue issue
+    @cycletime || issue.board.cycletime
   end
 end

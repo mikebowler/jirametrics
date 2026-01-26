@@ -2,7 +2,7 @@
 
 class MockCycleTimeConfig < CycleTimeConfig
   def initialize stub_values:
-    super(parent_config: nil, label: nil, block: nil, settings: load_settings)
+    super(possible_statuses: nil, label: nil, block: nil, settings: load_settings)
 
     raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
 

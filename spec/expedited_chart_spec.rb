@@ -98,7 +98,8 @@ describe ExpeditedChart do
   context 'make_expedite_lines_data_set' do
     it 'handles the case with no start or stop times or data' do
       config = CycleTimeConfig.new(
-        parent_config: nil, label: nil, block: nil, settings: load_settings, file_system: chart.file_system
+        possible_statuses: nil, label: nil, block: nil, settings: load_settings,
+        file_system: chart.file_system
       )
       config.start_at ->(_issue) {}
       config.stop_at  ->(_issue) {}
