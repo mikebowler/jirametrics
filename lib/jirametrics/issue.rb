@@ -218,6 +218,10 @@ class Issue
   # for 'ready' in cases where the team doesn't have an explicit 'ready' status.
   # You'd be better off with an explicit 'ready' but sometimes that's not an option.
   def first_time_added_to_active_sprint
+    unless board.scrum?
+      raise 'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
+          "issue=#{key}, board=#{board.inspect}"
+    end
     data_clazz = Struct.new(:sprint_id, :sprint_start, :sprint_stop, :change)
 
     matching_changes = []
@@ -232,6 +236,10 @@ class Issue
         data.sprint_id = id
         data.change = change
         sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == id }
+        if sprint_data.nil?
+          puts "Can't find sprint data for issue #{key} in field #{change.field_id}"
+          next
+        end
         data.sprint_start = parse_time(sprint_data['startDate'])
         data.sprint_stop = parse_time(sprint_data['completeDate'])
         all_datas << data

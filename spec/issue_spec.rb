@@ -494,7 +494,16 @@ describe Issue do
   end
 
   context 'first_time_added_to_active_sprint' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
+    let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
+
+    it 'raises error when used on kanban board' do
+      issue = empty_issue created: '2021-10-01', board: board
+      expect { issue.first_time_added_to_active_sprint }.to raise_error(
+        'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
+        'issue=SP-1, board=Board(id:1, name:"SP board", board_type:"kanban")'
+      )
+    end
 
     it 'matches if sprint starts after add' do
       issue.raw['fields']['customfield_10020'] = [
