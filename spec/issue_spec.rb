@@ -1571,4 +1571,10 @@ describe Issue do
       expect(issue1.assigned_to_icon_url).to be_nil
     end
   end
+
+  context 'time_created' do
+    it 'returns the first item, which will be the created one' do
+      expect(issue1.time_created.time).to eq issue1.created
+    end
+  end
 end

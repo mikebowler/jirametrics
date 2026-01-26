@@ -273,6 +273,10 @@ class Issue
     parse_time @raw['fields']['created'] if @raw['fields']['created']
   end
 
+  def time_created
+    @changes.first
+  end
+
   def updated
     parse_time @raw['fields']['updated']
   end
