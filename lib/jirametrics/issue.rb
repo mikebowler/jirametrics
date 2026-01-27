@@ -241,6 +241,7 @@ class Issue
 
       removed_sprint_ids = change.old_value_id - change.value_id
       removed_sprint_ids.each do |id|
+        puts "Removing #{id} from all_datas: #{all_datas.inspect}"
         data = all_datas.find { |d| d.sprint_id == id }
 
         all_datas.delete(data)
