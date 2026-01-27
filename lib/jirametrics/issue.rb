@@ -235,7 +235,7 @@ class Issue
         data = data_clazz.new
         data.sprint_id = id
         data.change = change
-        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id)
+        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id, change: change)
         all_datas << data
       end
 
@@ -262,14 +262,26 @@ class Issue
     matching_changes.min_by(&:time)
   end
 
-  def find_sprint_start_end sprint_id:
+  def find_sprint_start_end sprint_id:, change:
+    # There are two different places that sprint data could be found. In theory all
+    # sprints would be found in both places. In practice, sometimes what we need is
+    # in one or the other but not both.
+
+    # First look in the actual sprints json.
     sprint = board.sprints.find { |s| s.id == sprint_id }
-    unless sprint
-      puts "Issue(#{key}): Could not find any data about sprint #{sprint_id}"
-      return [nil, nil]
+    return [sprint.start_time, sprint.completed_time] if sprint
+
+    # Then look at the sprints inside the issue.
+    sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == sprint_id }
+    if sprint_data
+      start = parse_time(sprint_data['startDate'])
+      stop = parse_time(sprint_data['completeDate'])
+      puts "Issue(#{key}): Had to look for sprint data inside issue for sprint #{sprint_id}"
+      return [start, stop]
     end
 
-    [sprint.start_time, sprint.completed_time]
+    puts "Issue(#{key}): Could not find any data about sprint #{sprint_id}"
+    [nil, nil]
   end
 
   def parse_time text
