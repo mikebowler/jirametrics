@@ -24,7 +24,10 @@ describe ChangeItem do
     expect(change).not_to be_resolution
     expect(change).not_to be_artificial
 
-    expect(change.to_s).to eq 'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000")'
+    expect(change.to_s).to eq(
+      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", ' \
+        'field_id: "customfield_10021")'
+    )
   end
 
   it 'parses multiple ids for Sprint' do
@@ -55,7 +58,8 @@ describe ChangeItem do
 
     expect(change).to be_artificial
     expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", artificial)'
+      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", ' \
+      'field_id: "customfield_10021", artificial)'
     )
   end
 

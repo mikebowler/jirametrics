@@ -60,6 +60,7 @@ class ChangeItem
       message << ':' << old_value_id.inspect if status?
     end
     message << ", time: #{time_to_s(@time).inspect}"
+    message << ", field_id: #{@field_id.inspect}" if @field_id
     message << ', artificial' if artificial?
     message << ')'
     message
