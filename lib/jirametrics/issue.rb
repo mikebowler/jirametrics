@@ -235,13 +235,7 @@ class Issue
         data = data_clazz.new
         data.sprint_id = id
         data.change = change
-        sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == id }
-        if sprint_data.nil?
-          puts "Can't find sprint data for issue #{key} in field #{change.field_id}"
-          next
-        end
-        data.sprint_start = parse_time(sprint_data['startDate'])
-        data.sprint_stop = parse_time(sprint_data['completeDate'])
+        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id, change: change)
         all_datas << data
       end
 
@@ -263,7 +257,30 @@ class Issue
       matching_changes << data.change if data.sprint_start
     end
 
-    matching_changes.min(&:time)
+    matching_changes.min_by(&:time)
+  end
+
+  def find_sprint_start_end sprint_id:, change:
+    start = nil
+    stop = nil
+
+    sprint = board.sprints.find { |s| s.id == sprint_id }
+    if sprint
+      start = sprint.start_time
+      stop = sprint.completed_time
+      puts "#{key}: Found sprint. values: #{start}/#{stop} from sprints file"
+    end
+
+    sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == sprint_id }
+    if sprint_data
+      start = parse_time(sprint_data['startDate'])
+      stop = parse_time(sprint_data['completeDate'])
+      puts "#{key}: Found sprint. values: #{start}/#{stop} from field: #{change.field_id}"
+    end
+
+    raise "Could not find any data about sprint #{sprint_id}" if sprint.nil? && sprint_data.nil?
+
+    [start, stop]
   end
 
   def parse_time text
