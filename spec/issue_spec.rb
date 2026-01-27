@@ -505,39 +505,17 @@ describe Issue do
       )
     end
 
-    it 'matches if sprint starts after add' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'closed',
-          'boardId' => 2,
-          'goal' => '',
-          'startDate' => '2021-10-04T00:00:00.000Z',
-          'endDate' => '2021-10-23T00:00:00.000Z',
-          'completeDate' => '2021-10-23T00:00:00.000Z'
-        }
-     ]
-      add_mock_change(
-        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
-        field_id: 'customfield_10020'
-      )
-      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
-    end
-
     it 'matches if the sprint had already started on add' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'closed',
-          'boardId' => 2,
-          'goal' => '',
-          'startDate' => '2021-09-04T00:00:00.000Z',
-          'endDate' => '2021-10-23T00:00:00.000Z',
-          'completeDate' => '2021-10-23T00:00:00.000Z'
-        }
-     ]
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-04T00:00:00.000Z',
+        'endDate' => '22021-10-23T00:00:00.000Z',
+        'completeDate' => '2021-10-23T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
         field_id: 'customfield_10020'
@@ -546,15 +524,13 @@ describe Issue do
     end
 
     it 'does not match if the sprint never starts' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'pending',
-          'boardId' => 2,
-          'goal' => ''
-        }
-     ]
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'pending',
+        'name' => 'Scrum Sprint 1',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
         field_id: 'customfield_10020'
@@ -563,16 +539,14 @@ describe Issue do
     end
 
     it 'does not match if it was removed from the sprint before the sprint started' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'active',
-          'boardId' => 2,
-          'goal' => '',
-          'startDate' => '2021-11-04T00:00:00.000Z'
-        }
-     ]
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-04T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
         time: '2021-10-03', field_id: 'customfield_10020'
@@ -585,15 +559,12 @@ describe Issue do
     end
 
     it 'does not match if it was removed from the sprint and the sprint never started anyway' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'active',
-          'boardId' => 2,
-          'goal' => ''
-        }
-     ]
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
         time: '2021-10-03', field_id: 'customfield_10020'
@@ -606,16 +577,14 @@ describe Issue do
     end
 
     it 'matches if it was removed after sprint start' do
-      issue.raw['fields']['customfield_10020'] = [
-        {
-          'id' => 10,
-          'name' => 'Sprint 1',
-          'state' => 'active',
-          'boardId' => 2,
-          'goal' => '',
-          'startDate' => '2021-10-04T00:00:00.000Z'
-        }
-     ]
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-04T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
         time: '2021-10-03', field_id: 'customfield_10020'

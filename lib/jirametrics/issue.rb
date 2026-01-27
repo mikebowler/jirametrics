@@ -235,17 +235,18 @@ class Issue
         data = data_clazz.new
         data.sprint_id = id
         data.change = change
-        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id, change: change)
+        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id)
         all_datas << data
       end
 
       removed_sprint_ids = change.old_value_id - change.value_id
       removed_sprint_ids.each do |id|
-        puts "Removing #{id} from all_datas: #{all_datas.inspect}"
         data = all_datas.find { |d| d.sprint_id == id }
+        # It's possible for an issue to be created inside a sprint and therefore for
+        # that add-to-sprint not show in the history.
+        next unless data
 
         all_datas.delete(data)
-
         next if data.sprint_start.nil? || data.sprint_start >= change.time
 
         matching_changes << data.change
@@ -261,27 +262,11 @@ class Issue
     matching_changes.min_by(&:time)
   end
 
-  def find_sprint_start_end sprint_id:, change:
-    start = nil
-    stop = nil
-
+  def find_sprint_start_end sprint_id:
     sprint = board.sprints.find { |s| s.id == sprint_id }
-    if sprint
-      start = sprint.start_time
-      stop = sprint.completed_time
-      puts "#{key}: Found sprint. values: #{start}/#{stop} from sprints file"
-    end
+    raise "Could not find any data about sprint #{sprint_id}" unless sprint
 
-    sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == sprint_id }
-    if sprint_data
-      start = parse_time(sprint_data['startDate'])
-      stop = parse_time(sprint_data['completeDate'])
-      puts "#{key}: Found sprint. values: #{start}/#{stop} from field: #{change.field_id}"
-    end
-
-    raise "Could not find any data about sprint #{sprint_id}" if sprint.nil? && sprint_data.nil?
-
-    [start, stop]
+    [sprint.start_time, sprint.completed_time]
   end
 
   def parse_time text
