@@ -264,7 +264,10 @@ class Issue
 
   def find_sprint_start_end sprint_id:
     sprint = board.sprints.find { |s| s.id == sprint_id }
-    raise "Issue(#{key}): Could not find any data about sprint #{sprint_id}" unless sprint
+    unless sprint
+      puts "Issue(#{key}): Could not find any data about sprint #{sprint_id}"
+      return [nil, nil]
+    end
 
     [sprint.start_time, sprint.completed_time]
   end
