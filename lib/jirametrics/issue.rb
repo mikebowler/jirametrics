@@ -280,7 +280,10 @@ class Issue
       return [start, stop]
     end
 
-    puts "Issue(#{key}): Could not find any data about sprint #{sprint_id}"
+    puts "Issue(#{key}): Could not find any data about sprint #{sprint_id.inspect} " \
+      "referenced in the history entry #{change.inspect} so this sprint is not included " \
+      'in the calculations for first_time_added_to_active_sprint()'
+
     [nil, nil]
   end
 
