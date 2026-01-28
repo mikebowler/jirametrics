@@ -272,6 +272,9 @@ class Issue
     return [sprint.start_time, sprint.completed_time] if sprint
 
     # Then look at the sprints inside the issue.
+    all_sprints = raw['fields'][change.field_id]
+    puts "No sprint data found in issue #{key}: field_id=#{change.field_id}" unless all_sprints
+
     sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == sprint_id }
     if sprint_data
       start = parse_time(sprint_data['startDate'])
@@ -281,8 +284,7 @@ class Issue
     end
 
     puts "Issue(#{key}): Could not find any data about sprint #{sprint_id.inspect} " \
-      "referenced in the history entry #{change.inspect} so this sprint is not included " \
-      'in the calculations for first_time_added_to_active_sprint()'
+      "referenced in the history entry #{change.inspect}"
 
     [nil, nil]
   end
