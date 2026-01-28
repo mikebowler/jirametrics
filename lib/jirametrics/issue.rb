@@ -267,25 +267,25 @@ class Issue
     # sprints would be found in both places. In practice, sometimes what we need is
     # in one or the other but not both.
 
-    # First look in the actual sprints json.
+    # First look in the actual sprints json. If any issues are in this sprint then it should
+    # be here.
     sprint = board.sprints.find { |s| s.id == sprint_id }
     return [sprint.start_time, sprint.completed_time] if sprint
 
-    # Then look at the sprints inside the issue.
-    all_sprints = raw['fields'][change.field_id]
-    puts "No sprint data found in issue #{key}: field_id=#{change.field_id}" unless all_sprints
-
-    sprint_data = raw['fields'][change.field_id].find { |sd| sd['id'].to_i == sprint_id }
+    # Then look at the sprints inside the issue. Even though the field id may be specified,
+    # that custom field may not be present. This happens if it was in that sprint but was
+    # then removed, whether or not that sprint had ever started.
+    sprint_data = raw['fields'][change.field_id]&.find { |sd| sd['id'].to_i == sprint_id }
     if sprint_data
       start = parse_time(sprint_data['startDate'])
       stop = parse_time(sprint_data['completeDate'])
-      puts "Issue(#{key}): Had to look for sprint data inside issue for sprint #{sprint_id}"
       return [start, stop]
     end
 
-    puts "Issue(#{key}): Could not find any data about sprint #{sprint_id.inspect} " \
-      "referenced in the history entry #{change.inspect}"
-
+    # If we got this far then the sprint can't be found anywhere, so we pretend that it never
+    # started. Is this guaranteed to be true? No. In theory if all issues were removed from
+    # an active sprint then it would also disappear, even though it had started. Nothing we
+    # can do to detect that edge-case though.
     [nil, nil]
   end
 
