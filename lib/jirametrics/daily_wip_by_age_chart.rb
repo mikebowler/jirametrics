@@ -51,8 +51,6 @@ class DailyWipByAgeChart < DailyWipChart
   def default_grouping_rules issue:, rules:
     started, stopped = issue.board.cycletime.started_stopped_dates(issue)
 
-    rules.issue_hint = "(age: #{label_days (rules.current_date - started + 1).to_i})" if started
-
     if stopped && started.nil? # We can't tell when it started
       @has_completed_but_not_started = true
       not_started stopped: stopped, rules: rules, created: issue.created.to_date
@@ -72,7 +70,7 @@ class DailyWipByAgeChart < DailyWipChart
       rules.label = 'Start date unknown'
       rules.color = '--body-background'
       rules.group_priority = 11
-      created_days = rules.current_date - created + 1
+      created_days = rules.current_date - created
       rules.issue_hint = "(created: #{label_days created_days.to_i} earlier, stopped on #{stopped})"
     end
   end
@@ -84,8 +82,9 @@ class DailyWipByAgeChart < DailyWipChart
   end
 
   def group_by_age started:, rules:
-    age = rules.current_date - started + 1
+    age = (rules.current_date - started).to_i + 1
     rules.issue_hint = "(age: #{label_days age})"
+
     case age
     when 1
       rules.label = 'Less than a day'
