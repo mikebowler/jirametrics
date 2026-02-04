@@ -41,21 +41,30 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   def default_grouping_rules issue:, rules:
     started, stopped = issue.board.cycletime.started_stopped_times(issue)
     stopped_date = stopped&.to_date
+    started_date = started&.to_date
 
     date = rules.current_date
     change = issue.blocked_stalled_by_date(date_range: date..date, chart_end_time: time_range.end)[date]
-
     stopped_today = stopped_date == rules.current_date
+
+    days = nil
+    if started_date && stopped_date
+      days = (stopped_date - started_date).to_i + 1 # cycletime
+    elsif started_date
+      days = (time_range.end.to_date - started_date).to_i + 1 # age
+    end
 
     if stopped_today && started.nil?
       @has_completed_but_not_started = true
       rules.label = 'Completed but not started'
       rules.color = '--wip-chart-completed-but-not-started-color'
       rules.group_priority = -1
+      rules.issue_hint = '(Cycle time: Unknown)'
     elsif stopped_today
       rules.label = 'Completed'
       rules.color = '--wip-chart-completed-color'
       rules.group_priority = -2
+      rules.issue_hint = "(Cycle time: #{label_days days})"
     elsif started.nil?
       rules.label = 'Start date unknown'
       rules.color = '--body-background'
@@ -64,16 +73,17 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.label = 'Blocked'
       rules.color = '--blocked-color'
       rules.group_priority = 1
-      rules.issue_hint = "(#{change.reasons})"
+      rules.issue_hint = "(Age: #{label_days days}, #{change.reasons})"
     elsif change&.stalled?
       rules.label = 'Stalled'
       rules.color = '--stalled-color'
       rules.group_priority = 2
-      rules.issue_hint = "(#{change.reasons})"
+      rules.issue_hint = "(Age: #{label_days days}, #{change.reasons})"
     else
       rules.label = 'Active'
       rules.color = '--wip-chart-active-color'
       rules.group_priority = 3
+      rules.issue_hint = "(Age: #{label_days days})"
     end
   end
 end
