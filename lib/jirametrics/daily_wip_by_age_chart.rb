@@ -85,7 +85,7 @@ class DailyWipByAgeChart < DailyWipChart
 
   def group_by_age started:, rules:
     age = rules.current_date - started + 1
-
+    rules.issue_hint = "(age: #{label_days age})"
     case age
     when 1
       rules.label = 'Less than a day'
