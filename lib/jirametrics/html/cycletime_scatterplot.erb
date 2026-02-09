@@ -10,15 +10,14 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   options: {
     title: {
       display: true,
-      text: "Cycletime Scatterplot"
+      text: "<%= @header_text %>"
     },
     responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen
     scales: {
       x: {
         type: "time",
         scaleLabel: {
-          display: true,
-          labelString: 'Date Completed'
+          display: true
         },
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
@@ -29,13 +28,12 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       y: {
         scaleLabel: {
           display: true,
-          labelString: 'Days',
           min: 0,
-          max: <%= @highest_cycletime %>
+          max: <%= @highest_y_value %>
         },
         title: {
           display: true,
-          text: 'Cycle time in days'
+          text: '<%= y_axis_heading %>'
         },
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>

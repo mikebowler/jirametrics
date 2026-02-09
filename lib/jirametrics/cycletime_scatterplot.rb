@@ -35,14 +35,33 @@ class CycletimeScatterplot < ChartBase
     end
 
     @percentage_lines = []
-    @highest_cycletime = 0
+    @highest_y_value = 0
+  end
+
+  def all_items
+    completed_issues_in_range include_unstarted: false
+  end
+
+  def x_value item
+    item.board.cycletime.started_stopped_times(item).last
+  end
+
+  def y_value item
+    item.board.cycletime.cycletime(item)
+  end
+
+  def title_value item
+    "#{item.key} : #{item.summary} (#{label_days(y_value(item))})"
+  end
+
+  def y_axis_heading
+    'Cycle time in days'
   end
 
   def run
-    completed_issues = completed_issues_in_range include_unstarted: false
-
-    data_sets = create_datasets completed_issues
-    overall_percent_line = calculate_percent_line(completed_issues)
+    items = all_items
+    data_sets = create_datasets items
+    overall_percent_line = calculate_percent_line(items)
     @percentage_lines << [overall_percent_line, CssVariable['--cycletime-scatterplot-overall-trendline-color']]
 
     return "<h1>#{@header_text}</h1>No data matched the selected criteria. Nothing to show." if data_sets.empty?
@@ -50,14 +69,14 @@ class CycletimeScatterplot < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
-  def create_datasets completed_issues
+  def create_datasets items
     data_sets = []
 
-    group_issues(completed_issues).each do |rules, completed_issues_by_type|
+    group_issues(items).each do |rules, completed_items_by_type|
       label = rules.label
       color = rules.color
-      percent_line = calculate_percent_line completed_issues_by_type
-      data = completed_issues_by_type.filter_map { |issue| data_for_issue(issue) }
+      percent_line = calculate_percent_line completed_items_by_type
+      data = completed_items_by_type.filter_map { |issue| data_for_issue(issue) }
       data_sets << {
         label: "#{label} (85% at #{label_days(percent_line)})",
         data: data,
@@ -86,7 +105,7 @@ class CycletimeScatterplot < ChartBase
     calculator = TrendLineCalculator.new(points)
     data_points = calculator.chart_datapoints(
       range: time_range.begin.to_i..time_range.end.to_i,
-      max_y: @highest_cycletime
+      max_y: @highest_y_value
     )
     data_points.each do |point_hash|
       point_hash[:x] = chart_format Time.at(point_hash[:x])
@@ -106,21 +125,21 @@ class CycletimeScatterplot < ChartBase
     }
   end
 
-  def data_for_issue issue
-    cycle_time = issue.board.cycletime.cycletime(issue)
+  def data_for_issue item
+    cycle_time = y_value(item)
     return nil if cycle_time < 1 # These will get called out on the quality report
 
-    @highest_cycletime = cycle_time if @highest_cycletime < cycle_time
+    @highest_y_value = cycle_time if @highest_y_value < cycle_time
 
     {
       y: cycle_time,
-      x: chart_format(issue.board.cycletime.started_stopped_times(issue).last),
-      title: ["#{issue.key} : #{issue.summary} (#{label_days(cycle_time)})"]
+      x: chart_format(x_value(item)),
+      title: [title_value(item)]
     }
   end
 
-  def calculate_percent_line completed_issues
-    times = completed_issues.collect { |issue| issue.board.cycletime.cycletime(issue) }
+  def calculate_percent_line items
+    times = items.collect { |item| y_value(item) }
     index = times.size * 85 / 100
     times.sort[index]
   end
