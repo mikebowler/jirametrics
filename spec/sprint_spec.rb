@@ -22,6 +22,8 @@ describe Sprint do
 
   it 'returns state' do
     expect(sprint).to be_active
+    expect(sprint).not_to be_closed
+    expect(sprint).not_to be_future
   end
 
   it 'returns start' do
