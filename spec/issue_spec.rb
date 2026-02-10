@@ -501,7 +501,7 @@ describe Issue do
       issue = empty_issue created: '2021-10-01', board: board
       expect { issue.first_time_added_to_active_sprint }.to raise_error(
         'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
-        'issue=SP-1, board=Board(id:1, name:"SP board", board_type:"kanban")'
+        'issue=SP-1, board=Board(id: 1, name: "SP board", board_type: "kanban")'
       )
     end
 
