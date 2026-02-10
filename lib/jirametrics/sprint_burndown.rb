@@ -48,8 +48,9 @@ class SprintBurndown < ChartBase
   end
 
   def run
-    sprints = sprints_in_time_range all_boards[board_id]
-    return nil if sprints.empty?
+    return nil unless current_board.scrum?
+
+    sprints = sprints_in_time_range current_board
 
     change_data_by_sprint = {}
     sprints.each do |sprint|
@@ -110,6 +111,9 @@ class SprintBurndown < ChartBase
 
   def sprints_in_time_range board
     board.sprints.select do |sprint|
+      # If it's never been started then it's just a holding area. Ignore it.
+      next if sprint.future?
+
       sprint_end_time = sprint.completed_time || sprint.end_time
       sprint_start_time = sprint.start_time
       next false if sprint_start_time.nil?
