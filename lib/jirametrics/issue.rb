@@ -793,6 +793,10 @@ class Issue
     board.sprints.select { |s| sprint_ids.include? s.id }
   end
 
+  def started_sprints
+    sprints.reject { |sprint| sprint.future? }
+  end
+
   def compact_text text, max: 60
     return '' if text.nil?
 
