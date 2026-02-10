@@ -123,7 +123,7 @@ describe Board do
 
   it 'handles inspect' do
     expect(load_complete_sample_board.inspect).to eq(
-      'Board(id:1, name:"SP board", board_type:"kanban")'
+      'Board(id: 1, name: "SP board", board_type: "kanban")'
     )
   end
 end
