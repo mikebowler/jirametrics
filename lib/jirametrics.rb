@@ -56,7 +56,7 @@ class JiraMetrics < Thor
     def load_config config_file, file_system: FileSystem.new
       config_file = './config.rb' if config_file.nil?
 
-      if File.exist? config_file
+      if file_system.file_exist? config_file
         # The fact that File.exist can see the file does not mean that require will be
         # able to load it. Convert this to an absolute pathname now for require.
         config_file = File.absolute_path(config_file).to_s
