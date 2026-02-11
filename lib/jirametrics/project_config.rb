@@ -295,8 +295,9 @@ class ProjectConfig
     file_system.foreach(@target_path) do |file|
       next unless file =~ /^#{get_file_prefix}_board_(\d+)_sprints_\d+.json$/
 
+      board_id = $1.to_i
       file_path = File.join(@target_path, file)
-      board = @all_boards[$1.to_i]
+      board = @all_boards[board_id]
       unless board
         @exporter.file_system.log(
           'Found sprint data but can\'t find a matching board in config. ' \
@@ -307,6 +308,9 @@ class ProjectConfig
 
       timezone_offset = exporter.timezone_offset
       file_system.load_json(file_path)['values']&.each do |json|
+        # Sometimes Jira returns sprints that aren't for this board. Ignore them.
+        next unless json['originBoardId'] == board_id
+
         board.sprints << Sprint.new(raw: json, timezone_offset: timezone_offset)
       end
     end
