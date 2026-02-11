@@ -74,6 +74,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 <table class='standard' style="margin-left: 1em;">
   <thead>
     <th>Sprint</th>
+    <th>Length</th>
     <th>State</th>
     <th>Started</th>
     <th>Completed</th>
@@ -86,6 +87,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     <% @summary_stats.keys.sort_by(&:start_time).each do |sprint| %>
       <tr>
         <td><%= sprint.name %></td>
+        <td><%= sprint.day_count %></td>
         <td><%= sprint.raw['state'] %></td>
         <% stats = @summary_stats[sprint] %>
         <td><%= stats.started %></td>

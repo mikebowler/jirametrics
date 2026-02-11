@@ -37,4 +37,14 @@ describe Sprint do
   it 'returns goal' do
     expect(sprint.goal).to eq 'Do something'
   end
+
+  it 'returns day_count when active' do
+    expect(sprint.day_count).to eq '15 days'
+  end
+
+  it 'returns day_count when closed' do
+    sprint.raw['state'] = 'closed'
+    sprint.raw['completeDate'] = '2022-03-28T16:04:00.000Z'
+    expect(sprint.day_count).to eq '3 days'
+  end
 end

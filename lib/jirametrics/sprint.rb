@@ -37,6 +37,17 @@ class Sprint
   def goal = @raw['goal']
   def name = @raw['name']
 
+  def day_count
+    return '' if future?
+
+    if closed?
+      days = (completed_time.to_date - start_time.to_date).to_i + 1
+    else
+      days = (end_time.to_date - start_time.to_date).to_i + 1
+    end
+    "#{days} days"
+  end
+
   private
 
   def parse_time time_string
