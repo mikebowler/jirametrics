@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require './spec/spec_helper'
+
 class MockStatus
   attr_reader :exitstatus
 
