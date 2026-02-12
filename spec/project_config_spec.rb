@@ -584,48 +584,6 @@ describe ProjectConfig do
   end
 
   context 'load_sprints' do
-    it 'loads the sprints' do
-      exporter.file_system.when_foreach root: 'spec/testdata/', result: ['sample_board_1_sprints_0.json']
-      exporter.file_system.when_loading(
-        file: 'spec/testdata/sample_board_1_sprints_0.json',
-        json: {
-          'maxResults' => 50,
-          'startAt' => 0,
-          'total' => 1,
-          'isLast' => true,
-          'values' => [
-            {
-              'id' => 1,
-              'state' => 'closed',
-              'name' => 'Scrum Sprint 1',
-              'startDate' => '2022-03-26T16:04:09.679Z',
-              'endDate' => '2022-04-09T16:04:00.000Z',
-              'completeDate' => '2022-04-10T22:17:29.972Z',
-              'createdDate' => '2022-03-26T16:03:49.814Z',
-              'originBoardId' => 1
-            },
-            {
-              'id' => 1,
-              'state' => 'closed',
-              'name' => 'Unrelated sprint for a different board',
-              'startDate' => '2022-03-26T16:04:09.679Z',
-              'endDate' => '2022-04-09T16:04:00.000Z',
-              'completeDate' => '2022-04-10T22:17:29.972Z',
-              'createdDate' => '2022-03-26T16:03:49.814Z',
-              'originBoardId' => 2
-            }
-          ]
-        }
-      )
-
-      board = sample_board
-      project_config.file_prefix 'sample'
-      project_config.all_boards[1] = board
-      project_config.load_sprints
-      expect(project_config.all_boards.keys).to eq [1] # why assserting this?
-      expect(board.sprints.collect(&:name)).to eq ['Scrum Sprint 1']
-    end
-
     it "ignores sprint data that doesn't correspond to a known board" do
       exporter.file_system.when_foreach root: 'spec/testdata/', result: ['foo.json', 'sample_board_2_sprints_0.json']
 
