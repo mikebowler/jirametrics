@@ -342,6 +342,7 @@ describe AgingWorkBarChart do
     it 'escapes early if no active items' do
       chart.issues = []
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
 
       expect(chart.run).to eq "<h1 class='foldable'>Aging Work Bar Chart</h1><p>There is no aging work</p>"
     end
@@ -374,6 +375,30 @@ describe AgingWorkBarChart do
       expect(exporter.file_system.log_messages).to match_strings [
         /^Deprecated\(2024-05-03\): stalled color should be set via css now/
       ]
+    end
+  end
+
+  context 'adjust_time_date_ranges_to_start_from_earliest_issue_start' do
+    it 'doesn\'t do anything when the earliest is already inside the normal range' do
+      chart.time_range = to_time('2021-03-01')..to_time('2021-05-30') # 90 days
+      chart.date_range = to_date('2021-03-01')..to_date('2021-05-30') # 90 days
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2021-03-02'), nil]
+      ]
+      chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
+      expect(chart.time_range).to eq(to_time('2021-03-01')..to_time('2021-05-30'))
+      expect(chart.date_range).to eq(to_date('2021-03-01')..to_date('2021-05-30'))
+    end
+
+    it 'adjusts time and date' do
+      chart.time_range = to_time('2021-03-01')..to_time('2021-05-30') # 90 days
+      chart.date_range = to_date('2021-03-01')..to_date('2021-05-30') # 90 days
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2021-02-01'), nil]
+      ]
+      chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
+      expect(chart.time_range).to eq(to_time('2021-02-01')..to_time('2021-05-30'))
+      expect(chart.date_range).to eq(to_date('2021-02-01')..to_date('2021-05-30'))
     end
   end
  end

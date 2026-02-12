@@ -36,6 +36,7 @@ class AgingWorkBarChart < ChartBase
 
   def run
     aging_issues = select_aging_issues issues: @issues
+    adjust_time_date_ranges_to_start_from_earliest_issue_start(aging_issues)
 
     today = date_range.end
     sort_by_age! issues: aging_issues, today: today
@@ -56,6 +57,16 @@ class AgingWorkBarChart < ChartBase
     end
 
     wrap_and_render(binding, __FILE__)
+  end
+
+  def adjust_time_date_ranges_to_start_from_earliest_issue_start aging_issues
+    earliest_start_time = aging_issues.collect do |issue|
+      issue.board.cycletime.started_stopped_times(issue).first
+    end.min
+    return if earliest_start_time.nil? || earliest_start_time >= @time_range.begin
+
+    @time_range = earliest_start_time..@time_range.end
+    @date_range = @time_range.begin.to_date..@time_range.end.to_date
   end
 
   def data_sets_for_one_issue issue:, today:
