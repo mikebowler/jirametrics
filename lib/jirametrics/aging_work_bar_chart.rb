@@ -84,7 +84,7 @@ class AgingWorkBarChart < ChartBase
 
   def sort_by_age! issues:, today:
     issues.sort! do |a, b|
-      a.board.cycletime.age(b, today: today) <=> b.board.cycletime.age(a, today: today)
+      b.board.cycletime.age(b, today: today) <=> a.board.cycletime.age(a, today: today)
     end
   end
 
