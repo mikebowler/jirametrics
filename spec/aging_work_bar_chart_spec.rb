@@ -7,6 +7,7 @@ describe AgingWorkBarChart do
   let(:chart) do
     described_class.new(empty_config_block).tap do |chart|
       chart.file_system = exporter.file_system
+      chart.timezone_offset = '+0000'
     end
   end
   let(:board) { sample_board }
@@ -90,28 +91,66 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'status_data_sets' do
-    it 'returns nil if no status' do
+  context 'collect_status_ranges' do
+    it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
-      issue = empty_issue created: '2021-01-01', board: sample_board
+      board = sample_board
+      backlog_status = board.possible_statuses.find_by_id!(10_000)
+      issue = empty_issue created: '2021-01-01', board: sample_board, creation_status: backlog_status
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
+
+      expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
+        [to_time('2021-01-01'), to_time('2021-01-05'), backlog_status]
+      ]
+    end
+
+    it 'starts between status changes' do
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.timezone_offset = '+0000'
+      backlog_status = board.possible_statuses.find_by_id!(10_000)
+      inprogress_status = board.possible_statuses.find_by_id!(3)
+
+      issue = empty_issue created: '2021-01-01', board: sample_board, creation_status: backlog_status
+
+      # We want the start time to be in between status changes
+      issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-02', nil]])
+      add_mock_change(
+        issue: issue, field: 'status', value: inprogress_status.name, value_id: inprogress_status.id,
+        time: '2021-01-03'
+      )
+      expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
+        [to_time('2021-01-02'), to_time('2021-01-03'), backlog_status],
+        [to_time('2021-01-03'), to_time('2021-01-05'), inprogress_status]
+      ]
+    end
+  end
+
+  context 'status_data_sets' do
+    it 'starts on creation and has no further status changes', :focus do
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.timezone_offset = '+0000'
+      issue = empty_issue created: '2021-01-01', board: sample_board, creation_status: ['Backlog', 10_000]
+      issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
+
       data_sets = chart.status_data_sets(
         issue: issue, label: issue.key, today: to_date('2021-01-05')
       )
       expect(data_sets).to eq([
         {
-          backgroundColor: CssVariable['--status-category-todo-color'],
+          type: 'bar',
           data: [
             {
-              title: 'Bug : Backlog',
-              x: ['2021-01-01T00:00:00+0000', '2021-01-05T00:00:00+0000'],
-              y: 'SP-1'
+              x: ['2021-01-01T00:00:00+0000', '2021-01-05T23:59:59+0000'],
+              y: 'SP-1',
+              title: '"Backlog":10000'
             }
           ],
-          stack: 'status',
+          backgroundColor: CssVariable['--status-category-todo-color'],
+          borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
+          borderWidth: { top: 0, right: 1, bottom: 0, left: 0 },
           stacked: true,
-          type: 'bar'
+          stack: 'status'
         }
       ])
     end
@@ -277,10 +316,12 @@ describe AgingWorkBarChart do
         [
           {
             backgroundColor: CssVariable['--status-category-todo-color'],
+            borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
+            borderWidth: { bottom: 0, left: 0, right: 1, top: 0 },
             data: [
               {
-                title: 'Bug : Backlog',
-                x: ['2024-01-01T00:00:00+0000', '2024-01-10T00:00:00'],
+                title: '"Backlog":10000',
+                x: ['2024-01-01T00:00:00+0000', '2024-01-10T23:59:59+0000'],
                 y: '[10 days] SP-1: Do the thing'
               }
             ],

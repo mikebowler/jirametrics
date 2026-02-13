@@ -113,61 +113,55 @@ class AgingWorkBarChart < ChartBase
     @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
   end
 
-  def status_data_sets issue:, label:, today:
-    cycletime = issue.board.cycletime
-
-    issue_started_time, _issue_stopped_time = cycletime.started_stopped_times(issue)
-
+  def collect_status_ranges issue:, now:
+    ranges = []
+    issue_started_time = issue.board.cycletime.started_stopped_times(issue).first
     previous_start = nil
     previous_status = nil
-
-    data_sets = []
-    issue.changes.each do |change|
-      next unless change.status?
-
-      status = issue.find_or_create_status id: change.value_id, name: change.value
-
-      unless previous_start.nil? || previous_start < issue_started_time
-        hash = {
-          type: 'bar',
-          data: [{
-            x: [chart_format(previous_start), chart_format(change.time)],
-            y: label,
-            title: "#{issue.type} : #{change.value}"
-          }],
-          backgroundColor: status_category_color(status),
-          borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
-          borderWidth: {
-             top: 0,
-             right: 1,
-             bottom: 0,
-             left: 0
-          },
-          stacked: true,
-          stack: 'status'
-        }
-        data_sets << hash if date_range.include?(change.time.to_date)
+    issue.status_changes.each do |change|
+      new_status = issue.find_or_create_status id: change.value_id, name: change.value
+      if previous_start.nil?
+        previous_start = change.time
+        previous_status = new_status
+        next
       end
 
+      previous_start = issue_started_time if issue_started_time > previous_start
+
+      ranges << [previous_start, change.time, previous_status]
       previous_start = change.time
-      previous_status = status
+      previous_status = new_status
     end
 
-    if previous_start
-      data_sets << {
+    ranges << [previous_start, now, previous_status]
+    ranges
+  end
+
+  def status_data_sets issue:, label:, today:
+    # Collect data in a list of [start_at, stop_at, status]
+    end_of_today = Time.parse("#{today}T23:59:59#{@timezone_offset}")
+    ranges = collect_status_ranges issue: issue, now: end_of_today
+
+    ranges.collect do |start, stop, status|
+      {
         type: 'bar',
         data: [{
-          x: [chart_format(previous_start), chart_format("#{today}T00:00:00#{@timezone_offset}")],
+          x: [chart_format(start), chart_format(stop)],
           y: label,
-          title: "#{issue.type} : #{previous_status.name}"
+          title: status.to_s
         }],
-        backgroundColor: status_category_color(previous_status),
+        backgroundColor: status_category_color(status),
+        borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
+        borderWidth: {
+           top: 0,
+           right: 1,
+           bottom: 0,
+           left: 0
+        },
         stacked: true,
         stack: 'status'
       }
     end
-
-    data_sets
   end
 
   def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:

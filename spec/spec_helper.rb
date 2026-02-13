@@ -44,11 +44,13 @@ def load_issue key, board: nil
 end
 
 def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
-  unless creation_status
+  if creation_status.nil?
     backlog_statuses = board.possible_statuses.find_all_by_name('Backlog')
     raise 'No Backlog status found' if backlog_statuses.empty?
 
     creation_status = [backlog_statuses.first.name, backlog_statuses.first.id]
+  elsif creation_status.is_a? Status
+    creation_status = [creation_status.name, creation_status.id]
   end
 
   Issue.new(
