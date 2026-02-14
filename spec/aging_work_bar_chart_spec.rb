@@ -101,7 +101,8 @@ describe AgingWorkBarChart do
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
 
       expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
-        [to_time('2021-01-01'), to_time('2021-01-05'), backlog_status]
+        BarChartRange.new(start: to_time('2021-01-01'), stop: to_time('2021-01-05'),
+          color: CssVariable['--status-category-todo-color'], title: '"Backlog":10000')
       ]
     end
 
@@ -120,14 +121,16 @@ describe AgingWorkBarChart do
         time: '2021-01-03'
       )
       expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
-        [to_time('2021-01-02'), to_time('2021-01-03'), backlog_status],
-        [to_time('2021-01-03'), to_time('2021-01-05'), inprogress_status]
+        BarChartRange.new(start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
+          color: CssVariable['--status-category-todo-color'], title: '"Backlog":10000'),
+        BarChartRange.new(start: to_time('2021-01-03'), stop: to_time('2021-01-05'),
+          color: CssVariable['--status-category-inprogress-color'], title: '"In Progress":3')
       ]
     end
   end
 
   context 'status_data_sets' do
-    it 'starts on creation and has no further status changes', :focus do
+    it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: sample_board, creation_status: ['Backlog', 10_000]

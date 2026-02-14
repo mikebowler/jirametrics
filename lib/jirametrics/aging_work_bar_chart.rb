@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'jirametrics/chart_base'
+require 'jirametrics/bar_chart_range'
 
 class AgingWorkBarChart < ChartBase
   def initialize block
@@ -128,29 +129,41 @@ class AgingWorkBarChart < ChartBase
 
       previous_start = issue_started_time if issue_started_time > previous_start
 
-      ranges << [previous_start, change.time, previous_status]
+      ranges << BarChartRange.new(
+        start: previous_start,
+        stop: change.time,
+        color: status_category_color(previous_status),
+        title: previous_status.to_s
+      )
       previous_start = change.time
       previous_status = new_status
     end
 
-    ranges << [previous_start, now, previous_status]
+    ranges << BarChartRange.new(
+      start: previous_start,
+      stop: now,
+      color: status_category_color(previous_status),
+      title: previous_status.to_s
+    )
     ranges
   end
 
   def status_data_sets issue:, label:, today:
-    # Collect data in a list of [start_at, stop_at, status]
     end_of_today = Time.parse("#{today}T23:59:59#{@timezone_offset}")
     ranges = collect_status_ranges issue: issue, now: end_of_today
+    bar_chart_range_to_data_set y_value: label, ranges: ranges
+  end
 
-    ranges.collect do |start, stop, status|
+  def bar_chart_range_to_data_set y_value:, ranges:
+    ranges.collect do |bar_chart_range| # start, stop, status|
       {
         type: 'bar',
         data: [{
-          x: [chart_format(start), chart_format(stop)],
-          y: label,
-          title: status.to_s
+          x: [chart_format(bar_chart_range.start), chart_format(bar_chart_range.stop)],
+          y: y_value,
+          title: bar_chart_range.title
         }],
-        backgroundColor: status_category_color(status),
+        backgroundColor: bar_chart_range.color,
         borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
         borderWidth: {
            top: 0,
