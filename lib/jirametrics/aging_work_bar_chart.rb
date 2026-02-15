@@ -177,7 +177,7 @@ class AgingWorkBarChart < ChartBase
     end
   end
 
-  def blocked_stalled_active_data_sets issue:, issue_start_time:
+  def collect_blocked_stalled_ranges issue:, issue_start_time:
     results = []
     starting_change = nil
 

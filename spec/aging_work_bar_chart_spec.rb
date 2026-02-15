@@ -159,7 +159,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'blocked_stalled_active_data_sets' do
+  context 'collect_blocked_stalled_ranges' do
     it 'handles blocked by flag' do
       chart.settings = board.project_config.settings
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
@@ -169,7 +169,7 @@ describe AgingWorkBarChart do
       add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
       add_mock_change(issue: issue, field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
-      data_sets = chart.blocked_stalled_active_data_sets(
+      data_sets = chart.collect_blocked_stalled_ranges(
         issue: issue, issue_start_time: issue.created
       )
       expect(data_sets).to eq [
@@ -192,7 +192,7 @@ describe AgingWorkBarChart do
       add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-01-02')
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-03')
 
-      data_sets = chart.blocked_stalled_active_data_sets(
+      data_sets = chart.collect_blocked_stalled_ranges(
         issue: issue, issue_start_time: issue.created
       )
       expect(data_sets).to eq [
@@ -216,7 +216,7 @@ describe AgingWorkBarChart do
         issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 
-      data_sets = chart.blocked_stalled_active_data_sets(
+      data_sets = chart.collect_blocked_stalled_ranges(
         issue: issue, issue_start_time: issue.created
       )
       expect(data_sets).to eq [
