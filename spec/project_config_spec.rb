@@ -477,8 +477,10 @@ describe ProjectConfig do
     end
   end
 
-  it 'loaded settings' do
-    expect(project_config.settings['stalled_threshold_days']).not_to be_nil
+  context 'settings' do
+    it 'loaded settings' do
+      expect(project_config.settings['stalled_threshold_days']).not_to be_nil
+    end
   end
 
   context 'load_project_metadata' do
