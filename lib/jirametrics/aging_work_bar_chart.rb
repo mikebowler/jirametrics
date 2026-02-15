@@ -76,12 +76,10 @@ class AgingWorkBarChart < ChartBase
     issue_start_date = issue_start_time.to_date
     issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
     [
-      status_data_sets(issue: issue, label: issue_label, today: today),
-      blocked_data_sets(
-        issue: issue,
-        issue_label: issue_label,
-        stack: 'blocked',
-        issue_start_time: issue_start_time
+      status_data_sets(issue: issue, label: issue_label, today: today, issue_start_time: issue_start_time),
+      bar_chart_range_to_data_set(
+        y_value: issue_label, stack: 'blocked', issue_start_time: issue_start_time,
+        ranges: blocked_stalled_active_data_sets(issue: issue, issue_start_time: issue_start_time)
       ),
       data_set_by_block(
         issue: issue,
@@ -148,18 +146,20 @@ class AgingWorkBarChart < ChartBase
     ranges
   end
 
-  def status_data_sets issue:, label:, today:
+  def status_data_sets issue:, label:, today:, issue_start_time:
     end_of_today = Time.parse("#{today}T23:59:59#{@timezone_offset}")
     ranges = collect_status_ranges issue: issue, now: end_of_today
-    bar_chart_range_to_data_set y_value: label, ranges: ranges
+    bar_chart_range_to_data_set y_value: label, ranges: ranges, stack: 'status', issue_start_time: issue_start_time
   end
 
-  def bar_chart_range_to_data_set y_value:, ranges:
-    ranges.collect do |bar_chart_range| # start, stop, status|
+  def bar_chart_range_to_data_set y_value:, ranges:, stack:, issue_start_time:
+    ranges.filter_map do |bar_chart_range|
+      next if bar_chart_range.stop < issue_start_time
+
       {
         type: 'bar',
         data: [{
-          x: [chart_format(bar_chart_range.start), chart_format(bar_chart_range.stop)],
+          x: [chart_format([bar_chart_range.start, issue_start_time].max), chart_format(bar_chart_range.stop)],
           y: y_value,
           title: bar_chart_range.title
         }],
@@ -172,38 +172,13 @@ class AgingWorkBarChart < ChartBase
            left: 0
         },
         stacked: true,
-        stack: 'status'
+        stack: stack
       }
     end
   end
 
-  def one_block_change_data_set starting_change:, ending_time:, issue_label:, stack:, issue_start_time:
-    if settings['blocked_color']
-      file_system.deprecated message: 'blocked color should be set via css now', date: '2024-05-03'
-    end
-    if settings['stalled_color']
-      file_system.deprecated message: 'stalled color should be set via css now', date: '2024-05-03'
-    end
-
-    color = settings['blocked_color'] || '--blocked-color'
-    color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?
-    {
-      backgroundColor: CssVariable[color],
-      data: [
-        {
-          title: starting_change.reasons,
-          x: [chart_format([issue_start_time, starting_change.time].max), chart_format(ending_time)],
-          y: issue_label
-        }
-      ],
-      stack: stack,
-      stacked: true,
-      type: 'bar'
-    }
-  end
-
-  def blocked_data_sets issue:, issue_label:, issue_start_time:, stack:
-    data_sets = []
+  def blocked_stalled_active_data_sets issue:, issue_start_time:
+    results = []
     starting_change = nil
 
     issue.blocked_stalled_changes(end_time: time_range.end).each do |change|
@@ -213,16 +188,17 @@ class AgingWorkBarChart < ChartBase
       end
 
       if change.time >= issue_start_time
-        data_sets << one_block_change_data_set(
-          starting_change: starting_change, ending_time: change.time,
-          issue_label: issue_label, stack: stack, issue_start_time: issue_start_time
+        color = settings['blocked_color'] || '--blocked-color'
+        color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?
+
+        results << BarChartRange.new(
+          start: starting_change.time, stop: change.time, color: CssVariable[color], title: starting_change.reasons
         )
       end
 
       starting_change = change
     end
-
-    data_sets
+    results
   end
 
   def data_set_by_block(

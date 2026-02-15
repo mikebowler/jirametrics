@@ -137,7 +137,7 @@ describe AgingWorkBarChart do
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
 
       data_sets = chart.status_data_sets(
-        issue: issue, label: issue.key, today: to_date('2021-01-05')
+        issue: issue, label: issue.key, today: to_date('2021-01-05'), issue_start_time: issue.created
       )
       expect(data_sets).to eq([
         {
@@ -159,15 +159,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'blocked_data_sets' do
-    let(:board) do
-      board = sample_board
-      board.project_config = ProjectConfig.new(
-        exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil
-      )
-      board
-    end
-
+  context 'blocked_stalled_active_data_sets' do
     it 'handles blocked by flag' do
       chart.settings = board.project_config.settings
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
@@ -177,24 +169,13 @@ describe AgingWorkBarChart do
       add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
       add_mock_change(issue: issue, field: 'Flagged', value: '',        time: '2021-01-02T02:00:00')
 
-      data_sets = chart.blocked_data_sets(
-        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      data_sets = chart.blocked_stalled_active_data_sets(
+        issue: issue, issue_start_time: issue.created
       )
-      expect(data_sets).to eq([
-        {
-          backgroundColor: CssVariable['--blocked-color'],
-          data: [
-            {
-              title: 'Blocked by flag',
-              x: ['2021-01-02T01:00:00+0000', '2021-01-02T02:00:00+0000'],
-              y: 'SP-1'
-            }
-          ],
-          stack: 'blocked',
-          stacked: true,
-          type: 'bar'
-        }
-      ])
+      expect(data_sets).to eq [
+        BarChartRange.new(start: to_time('2021-01-02T01:00:00'), stop: to_time('2021-01-02T02:00:00'),
+          color: CssVariable['--blocked-color'], title: 'Blocked by flag')
+      ]
     end
 
     it 'handles blocked by status' do
@@ -211,24 +192,13 @@ describe AgingWorkBarChart do
       add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-01-02')
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-03')
 
-      data_sets = chart.blocked_data_sets(
-        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      data_sets = chart.blocked_stalled_active_data_sets(
+        issue: issue, issue_start_time: issue.created
       )
-      expect(data_sets).to eq([
-        {
-          backgroundColor: CssVariable['--blocked-color'],
-          data: [
-            {
-              title: 'Blocked by status: Blocked',
-              x: ['2021-01-02T00:00:00+0000', '2021-01-03T00:00:00+0000'],
-              y: 'SP-1'
-            }
-          ],
-          stack: 'blocked',
-          stacked: true,
-          type: 'bar'
-        }
-      ])
+      expect(data_sets).to eq [
+        BarChartRange.new(start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
+          color: CssVariable['--blocked-color'], title: 'Blocked by status: Blocked')
+      ]
     end
 
     it 'handle blocked by issue' do
@@ -246,24 +216,13 @@ describe AgingWorkBarChart do
         issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-01-03'
       )
 
-      data_sets = chart.blocked_data_sets(
-        issue: issue, stack: 'blocked', issue_label: 'SP-1', issue_start_time: issue.created
+      data_sets = chart.blocked_stalled_active_data_sets(
+        issue: issue, issue_start_time: issue.created
       )
-      expect(data_sets).to eq([
-        {
-          backgroundColor: CssVariable['--blocked-color'],
-          data: [
-            {
-              title: 'Blocked by issues: SP-10',
-              x: ['2021-01-02T00:00:00+0000', '2021-01-03T00:00:00+0000'],
-              y: 'SP-1'
-            }
-          ],
-          stack: 'blocked',
-          stacked: true,
-          type: 'bar'
-        }
-      ])
+      expect(data_sets).to eq [
+        BarChartRange.new(start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
+          color: CssVariable['--blocked-color'], title: 'Blocked by issues: SP-10')
+      ]
     end
   end
 
@@ -302,40 +261,6 @@ describe AgingWorkBarChart do
         [issue3, '2024-01-01', '2024-01-05'] # completed
       ]
       expect(chart.select_aging_issues issues: [issue1, issue2, issue3]).to eq [issue2]
-    end
-  end
-
-  context 'data_sets_for_one_issue' do
-    it 'processes issue with no blocked, stalled, or expedited' do
-      issue = empty_issue key: 'SP-1', created: '2024-01-01', board: board
-      project_config = ProjectConfig.new(exporter: exporter, jira_config: nil, block: nil)
-      board.project_config = project_config
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
-      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
-      chart.time_range = to_time('2021-01-01')..to_time('2021-01-05')
-      expect(chart.data_sets_for_one_issue issue: issue, today: to_date('2024-01-10')).to eq [
-        [
-          {
-            backgroundColor: CssVariable['--status-category-todo-color'],
-            borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
-            borderWidth: { bottom: 0, left: 0, right: 1, top: 0 },
-            data: [
-              {
-                title: '"Backlog":10000',
-                x: ['2024-01-01T00:00:00+0000', '2024-01-10T23:59:59+0000'],
-                y: '[10 days] SP-1: Do the thing'
-              }
-            ],
-            stack: 'status',
-            stacked: true,
-            type: 'bar'
-          }
-        ],
-        [],
-        []
-      ]
     end
   end
 
@@ -389,36 +314,6 @@ describe AgingWorkBarChart do
       chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
 
       expect(chart.run).to eq "<h1 class='foldable'>Aging Work Bar Chart</h1><p>There is no aging work</p>"
-    end
-  end
-
-  context 'deprecated' do
-    it 'gives deprecated warning for blocked' do
-      chart.settings = { 'blocked_color' => 'black' }
-      chart.one_block_change_data_set(
-        starting_change: BlockedStalledChange.new(time: to_time('2024-08-01'), flagged: true),
-        ending_time: to_time('2024-12-31'),
-        issue_label: 'foo',
-        stack: 'blocked',
-        issue_start_time: to_time('2024-08-01')
-      )
-      expect(exporter.file_system.log_messages).to match_strings [
-        /^Deprecated\(2024-05-03\): blocked color should be set via css now/
-      ]
-    end
-
-    it 'gives deprecated warning for stalled' do
-      chart.settings = { 'stalled_color' => 'black' }
-      chart.one_block_change_data_set(
-        starting_change: BlockedStalledChange.new(time: to_time('2024-08-01'), stalled_days: 3),
-        ending_time: to_time('2024-12-31'),
-        issue_label: 'foo',
-        stack: 'blocked',
-        issue_start_time: to_time('2024-08-01')
-      )
-      expect(exporter.file_system.log_messages).to match_strings [
-        /^Deprecated\(2024-05-03\): stalled color should be set via css now/
-      ]
     end
   end
 
