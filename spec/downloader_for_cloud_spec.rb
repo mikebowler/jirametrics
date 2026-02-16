@@ -441,7 +441,7 @@ describe DownloaderForCloud do
         'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
           'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}'
       ])
-      expect(issue_data1.issue.changes).to eq([
+      expect(issue_data1.issue.status_changes).to eq([
         mock_change(
           field: 'status',
           value: 'Ready',
@@ -488,7 +488,7 @@ describe DownloaderForCloud do
           'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000,"nextPageToken":"ABC"}'
       ])
 
-      expect(issue_data1.issue.changes).to eq([
+      expect(issue_data1.issue.status_changes).to eq([
         mock_change(
           field: 'status',
           value: 'Ready',

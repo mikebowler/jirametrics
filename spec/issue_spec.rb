@@ -218,6 +218,9 @@ describe Issue do
       expect(issue.changes).to eq [
         mock_change(
           issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00'
+        ),
+        mock_change(
+          issue: issue, field: 'priority', value: 'Medium', value_id: 3, time: '2021-08-29T18:00:00+00:00'
         )
       ]
     end

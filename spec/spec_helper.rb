@@ -69,6 +69,10 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
             'key' => 'new'
           }
         },
+        'priority' => {
+          'name' => 'Medium',
+          'id' => '3'
+        },
         'issuetype' => {
           'name' => 'Bug'
         },
