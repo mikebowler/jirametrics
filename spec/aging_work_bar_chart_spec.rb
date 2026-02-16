@@ -14,83 +14,6 @@ describe AgingWorkBarChart do
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
 
-  context 'data_set_by_block' do
-    it 'handles nothing blocked at all' do
-      data_sets = chart.data_set_by_block(
-        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
-        color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |_day| false }
-
-      expect(data_sets).to be_empty
-    end
-
-    it 'handles a single blocked range completely within the date range' do
-      data_sets = chart.data_set_by_block(
-        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
-        color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |day| (3..6).cover? day.day }
-
-      expect(data_sets).to eq(
-        {
-          backgroundColor: 'red',
-          data: [
-            {
-              title: 'Story : Blocked 4 days',
-              x: %w[2022-01-03 2022-01-06],
-              y: 'SP-1'
-            }
-          ],
-          stack: 'blocked',
-          stacked: true,
-          type: 'bar'
-        }
-      )
-    end
-
-    it 'handles multiple blocked ranges, all completely within the date range' do
-      data_set = chart.data_set_by_block(
-        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
-        color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |day| (3..4).cover?(day.day) || day.day == 6 }
-
-      # Only checking the data section as the full wrapper was tested above.
-      expect(data_set[:data]).to eq([
-        {
-          title: 'Story : Blocked 2 days',
-          x: %w[2022-01-03 2022-01-04],
-          y: 'SP-1'
-        },
-        {
-          title: 'Story : Blocked 1 day',
-          x: %w[2022-01-06 2022-01-06],
-          y: 'SP-1'
-        }
-      ])
-    end
-
-    it 'never becomes unblocked' do
-      data_set = chart.data_set_by_block(
-        issue: issue1, issue_label: issue1.key, title_label: 'Blocked', stack: 'blocked',
-        color: 'red', start_date: to_date('2022-01-01'), end_date: to_date('2022-01-10')
-      ) { |_day| true }
-
-      # Only checking the data section as the full wrapper was tested above.
-      expect(data_set).to eq({
-        backgroundColor: 'red',
-        data: [
-          {
-            title: 'Story : Blocked 10 days',
-            x: %w[2022-01-01 2022-01-10],
-            y: 'SP-1'
-          }
-        ],
-        stack: 'blocked',
-        stacked: true,
-        type: 'bar'
-      })
-    end
-  end
-
   context 'collect_status_ranges' do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
@@ -264,6 +187,44 @@ describe AgingWorkBarChart do
     end
   end
 
+  context 'collect_priority_ranges', :focus do
+    it 'handles no priority changes' do
+      issue = empty_issue created: '2021-01-02'
+      chart.settings = board.project_config.settings
+      chart.time_range = to_time('2021-01-01')..to_time('2021-01-10')
+      expect(chart.collect_priority_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-02'), stop: to_time('2021-01-10'),
+          color: CssVariable['--priority-color-medium'],
+          title: 'Priority: Medium'
+        )
+      ]
+    end
+
+    it 'handles priority changes' do
+      issue = empty_issue created: '2021-01-02'
+      chart.settings = board.project_config.settings
+      chart.time_range = to_time('2021-01-01')..to_time('2021-01-10')
+
+      add_mock_change(
+        issue: issue, field: 'priority', value: 'Highest', time: '2021-01-03'
+      )
+
+      expect(chart.collect_priority_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
+          color: CssVariable['--priority-color-medium'],
+          title: 'Priority: Medium'
+        ),
+        BarChartRange.new(
+          start: to_time('2021-01-03'), stop: to_time('2021-01-10'),
+          color: CssVariable['--priority-color-highest'],
+          title: 'Priority: Highest (expedited)', highlight: true
+        )
+      ]
+    end
+  end
+
   context 'calculate_percent_line' do
     it 'returns nil when no issues' do
       chart.issues = []
@@ -303,7 +264,7 @@ describe AgingWorkBarChart do
 
     it 'grows as needed' do
       chart.grow_chart_height_if_too_many_issues aging_issue_count: 100
-      expect(chart.canvas_height).to eq 2400
+      expect(chart.canvas_height).to eq 3000
     end
   end
 

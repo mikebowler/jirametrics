@@ -73,22 +73,17 @@ class AgingWorkBarChart < ChartBase
   def data_sets_for_one_issue issue:, today:
     cycletime = issue.board.cycletime
     issue_start_time, _stopped_time = cycletime.started_stopped_times(issue)
-    issue_start_date = issue_start_time.to_date
     issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
     [
       status_data_sets(issue: issue, label: issue_label, today: today, issue_start_time: issue_start_time),
       bar_chart_range_to_data_set(
         y_value: issue_label, stack: 'blocked', issue_start_time: issue_start_time,
-        ranges: blocked_stalled_active_data_sets(issue: issue, issue_start_time: issue_start_time)
+        ranges: collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue_start_time)
       ),
-      data_set_by_block(
-        issue: issue,
-        issue_label: issue_label,
-        title_label: 'Expedited',
-        stack: 'expedited',
-        color: CssVariable['--expedited-color'],
-        start_date: issue_start_date
-      ) { |day| issue.expedited_on_date?(day) }
+      bar_chart_range_to_data_set(
+        y_value: issue_label, stack: 'priority', issue_start_time: issue_start_time,
+        ranges: collect_priority_ranges(issue: issue)
+      )
     ]
   end
 
@@ -106,7 +101,7 @@ class AgingWorkBarChart < ChartBase
   end
 
   def grow_chart_height_if_too_many_issues aging_issue_count:
-    px_per_bar = 8
+    px_per_bar = 10
     bars_per_issue = 3
     preferred_height = aging_issue_count * px_per_bar * bars_per_issue
     @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
@@ -156,6 +151,9 @@ class AgingWorkBarChart < ChartBase
     ranges.filter_map do |bar_chart_range|
       next if bar_chart_range.stop < issue_start_time
 
+      background_color = bar_chart_range.color
+      background_color = RawJavascript.new("createDiagonalPattern('#{background_color}')") if bar_chart_range.highlight
+
       {
         type: 'bar',
         data: [{
@@ -163,7 +161,7 @@ class AgingWorkBarChart < ChartBase
           y: y_value,
           title: bar_chart_range.title
         }],
-        backgroundColor: bar_chart_range.color,
+        backgroundColor: background_color,
         borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
         borderWidth: {
            top: 0,
@@ -201,46 +199,46 @@ class AgingWorkBarChart < ChartBase
     results
   end
 
-  def data_set_by_block(
-    issue:, issue_label:, title_label:, stack:, color:, start_date:, end_date: date_range.end
-  )
-    started = nil
-    ended = nil
-    data = []
+  def collect_priority_ranges issue:
+    expedited_priority_names = settings['expedited_priority_names']
 
-    (start_date..end_date).each do |day|
-      if yield(day)
-        started = day if started.nil?
-        ended = day
-      elsif ended
-        data << {
-          x: [chart_format(started), chart_format(ended)],
-          y: issue_label,
-          title: "#{issue.type} : #{title_label} #{label_days (ended - started).to_i + 1}"
-        }
+    previous_change = nil
+    results = []
 
-        started = nil
-        ended = nil
+    issue.changes.each do |change|
+      next unless change.priority?
+
+      if previous_change.nil?
+        previous_change = change
+        next
       end
+
+      results << create_range_for_priority(
+        previous_change: previous_change, stop_time: change.time,
+        expedited_priority_names: expedited_priority_names
+      )
+      previous_change = change
     end
 
-    if started
-      data << {
-        x: [chart_format(started), chart_format(ended)],
-        y: issue_label,
-        title: "#{issue.type} : #{title_label} #{label_days (end_date - started).to_i + 1}"
-      }
-    end
+    results << create_range_for_priority(
+      previous_change: previous_change, stop_time: time_range.end,
+      expedited_priority_names: expedited_priority_names
+    )
+    results
+  end
 
-    return [] if data.empty?
+  def create_range_for_priority previous_change:, stop_time:, expedited_priority_names:
+    expedited = expedited_priority_names.include?(previous_change.value)
+    title = "Priority: #{previous_change.value}"
+    title << ' (expedited)' if expedited
 
-    {
-      type: 'bar',
-      data: data,
-      backgroundColor: color,
-      stacked: true,
-      stack: stack
-    }
+    BarChartRange.new(
+      start: previous_change.time,
+      stop: stop_time,
+      color: CssVariable["--priority-color-#{previous_change.value.downcase.gsub(/\s/, '')}"],
+      title: title,
+      highlight: expedited
+    )
   end
 
   def calculate_percent_line percentage: 85

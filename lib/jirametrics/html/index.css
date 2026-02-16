@@ -71,6 +71,15 @@
   --daily-view-issue-border: green;
   --daily-view-selected-issue-border: red;
 
+  /* The first five are the standard priorities that Jira creates by default. */
+  --priority-color-highest: red;
+  --priority-color-high: orange;
+  --priority-color-medium: green;
+  --priority-color-low: lightgray;
+  --priority-color-lowest: gray;
+  /* Then here are some values we've seen in multiple instances. */
+  --priority-color-notset: gray;
+  --priority-color-critical: red;
 }
 
 body {
