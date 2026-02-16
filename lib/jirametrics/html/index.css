@@ -72,11 +72,11 @@
   --daily-view-selected-issue-border: red;
 
   /* The first five are the standard priorities that Jira creates by default. */
-  --priority-color-highest: red;
-  --priority-color-high: orange;
-  --priority-color-medium: green;
-  --priority-color-low: lightgray;
-  --priority-color-lowest: gray;
+  --priority-color-highest: #dc2626;  /* red-600 - urgent red */
+  --priority-color-high: #ea580c;     /* orange-600 - warning orange */
+  --priority-color-medium: #9ca3af;   /* gray-400 - neutral light gray */
+  --priority-color-low: #0891b2;      /* cyan-600 - calm blue */
+  --priority-color-lowest: #64748b;   /* slate-500 - muted slate */
   /* Then here are some values we've seen in multiple instances. */
   --priority-color-notset: gray;
   --priority-color-critical: red;
@@ -246,6 +246,12 @@ div.child_issue {
     --wip-chart-duration-more-than-four-weeks-color: #8e0000;
 
     --daily-view-selected-issue-background: #474747;
+
+    --priority-color-highest: #ef4444;  /* red-500 - bright urgent red */
+    --priority-color-high: #f97316;     /* orange-500 - bright orange */
+    --priority-color-medium: #9ca3af;   /* gray-400 - neutral light gray */
+    --priority-color-low: #06b6d4;      /* cyan-500 - bright calm blue */
+    --priority-color-lowest: #94a3b8;   /* slate-400 - muted light slate */  
   }
 
   a[href] {

@@ -14,16 +14,16 @@ class AgingWorkBarChart < ChartBase
         newest at the bottom.
       </p>
       <p>
-        There are potentially three bars for each issue, although a bar may be missing if the issue has no
-        information relevant to that. Hovering over any of the bars will provide more details.
+        There are three bars for each issue, and hovering over any of the bars will provide more details.
         <ol>
-          <li>The top bar tells you what status the issue is in at any time. The colour indicates the
+          <li>Status: The status the issue was in at any time. The colour indicates the
           status category, which will be one of #{color_block '--status-category-todo-color'} To Do,
           #{color_block '--status-category-inprogress-color'} In Progress,
           or #{color_block '--status-category-done-color'} Done</li>
-          <li>The middle bar indicates #{color_block '--blocked-color'} blocked
+          <li>Activity: This bar indicates #{color_block '--blocked-color'} blocked
           or #{color_block '--stalled-color'} stalled.</li>
-          <li>The bottom bar indicated #{color_block '--expedited-color'} expedited.</li>
+          <li>Priority: This shows the priority over time. If one of these priorities is considered expedited
+          then it will be drawn with diagonal lines.</li>
         </ol>
       </p>
       #{describe_non_working_days}
@@ -152,7 +152,9 @@ class AgingWorkBarChart < ChartBase
       next if bar_chart_range.stop < issue_start_time
 
       background_color = bar_chart_range.color
-      background_color = RawJavascript.new("createDiagonalPattern('#{background_color}')") if bar_chart_range.highlight
+      if bar_chart_range.highlight
+        background_color = RawJavascript.new("createDiagonalPattern(#{background_color.to_json})")
+      end
 
       {
         type: 'bar',
