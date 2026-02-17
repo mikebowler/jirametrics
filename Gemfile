@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-ruby '>= 3'
+# ruby '>= 3.0.0'
 
 gem 'csv' # No longer core in ruby 3.4
 gem 'rake'
