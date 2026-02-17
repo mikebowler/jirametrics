@@ -52,27 +52,32 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'status_data_sets' do
+  context 'bar_chart_range_to_data_set' do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
       issue = empty_issue created: '2021-01-01', board: sample_board, creation_status: ['Backlog', 10_000]
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
 
-      data_sets = chart.status_data_sets(
-        issue: issue, label: issue.key, today: to_date('2021-01-05'), issue_start_time: issue.created
+      data_sets = chart.bar_chart_range_to_data_set(
+        y_value: 'story 1', stack: 'status', issue_start_time: to_time('2021-01-01'), ranges: [
+          BarChartRange.new(
+            start: to_time('2021-01-01'), stop: to_time('2021-01-05'),
+            color: 'blue', title: 'mytitle', highlight: false
+          )
+        ]
       )
       expect(data_sets).to eq([
         {
           type: 'bar',
           data: [
             {
-              x: ['2021-01-01T00:00:00+0000', '2021-01-05T23:59:59+0000'],
-              y: 'SP-1',
-              title: '"Backlog":10000'
+              x: ['2021-01-01T00:00:00+0000', '2021-01-05T00:00:00+0000'],
+              y: 'story 1',
+              title: 'mytitle'
             }
           ],
-          backgroundColor: CssVariable['--status-category-todo-color'],
+          backgroundColor: 'blue',
           borderColor: CssVariable['--aging-work-bar-chart-separator-color'],
           borderWidth: { top: 0, right: 1, bottom: 0, left: 0 },
           stacked: true,
