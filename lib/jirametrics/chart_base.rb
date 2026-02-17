@@ -302,4 +302,12 @@ class ChartBase
   def cycletime_for_issue issue
     @cycletime || issue.board.cycletime
   end
+
+  def seam_start
+    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} -->"
+  end
+
+  def seam_end
+    "\n<!-- seam-end | chart#{@@chart_counter} | #{self.class} | #{header_text} -->"
+  end
 end
