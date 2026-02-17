@@ -72,19 +72,19 @@ class AgingWorkBarChart < ChartBase
 
   def data_sets_for_one_issue issue:, today:
     cycletime = issue.board.cycletime
-    issue_start_time, _stopped_time = cycletime.started_stopped_times(issue)
-    issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
-    [
-      status_data_sets(issue: issue, label: issue_label, today: today, issue_start_time: issue_start_time),
-      bar_chart_range_to_data_set(
-        y_value: issue_label, stack: 'blocked', issue_start_time: issue_start_time,
-        ranges: collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue_start_time)
-      ),
-      bar_chart_range_to_data_set(
-        y_value: issue_label, stack: 'priority', issue_start_time: issue_start_time,
-        ranges: collect_priority_ranges(issue: issue)
-      )
+    issue_start_time = cycletime.started_stopped_times(issue).first
+    end_of_today = Time.parse("#{today}T23:59:59#{@timezone_offset}")
+
+    bar_data = [
+      ['status', collect_status_ranges(issue: issue, now: end_of_today)],
+      ['blocked', collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue_start_time)],
+      ['priority', collect_priority_ranges(issue: issue)]
     ]
+
+    issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
+    bar_data.collect do |stack, ranges|
+      bar_chart_range_to_data_set y_value: issue_label, ranges: ranges, stack: stack, issue_start_time: issue_start_time
+    end
   end
 
   def sort_by_age! issues:, today:
@@ -139,12 +139,6 @@ class AgingWorkBarChart < ChartBase
       title: previous_status.to_s
     )
     ranges
-  end
-
-  def status_data_sets issue:, label:, today:, issue_start_time:
-    end_of_today = Time.parse("#{today}T23:59:59#{@timezone_offset}")
-    ranges = collect_status_ranges issue: issue, now: end_of_today
-    bar_chart_range_to_data_set y_value: label, ranges: ranges, stack: 'status', issue_start_time: issue_start_time
   end
 
   def bar_chart_range_to_data_set y_value:, ranges:, stack:, issue_start_time:
