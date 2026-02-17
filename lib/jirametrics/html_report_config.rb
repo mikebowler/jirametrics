@@ -34,7 +34,6 @@ class HtmlReportConfig
   define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
   define_chart name: 'flow_efficiency_scatterplot', classname: 'FlowEfficiencyScatterplot'
   define_chart name: 'daily_view', classname: 'DailyView'
-  define_chart name: 'sprint_carryover_chart', classname: 'SprintCarryoverChart'
 
   define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
     deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
