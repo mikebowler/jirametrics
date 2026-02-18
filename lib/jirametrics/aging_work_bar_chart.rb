@@ -7,6 +7,7 @@ class AgingWorkBarChart < ChartBase
   def initialize block
     super()
 
+    @age_cutoff = nil
     header_text 'Aging Work Bar Chart'
     description_text <<-HTML
       <p>
@@ -96,7 +97,10 @@ class AgingWorkBarChart < ChartBase
   def select_aging_issues issues:
     issues.select do |issue|
       started_time, stopped_time = issue.board.cycletime.started_stopped_times(issue)
-      started_time && stopped_time.nil?
+      next false unless started_time && stopped_time.nil?
+
+      age = (date_range.end - started_time.to_date).to_i + 1
+      !(@age_cutoff && @age_cutoff < age)
     end
   end
 
@@ -242,5 +246,9 @@ class AgingWorkBarChart < ChartBase
     return nil if days.empty?
 
     days[days.length * percentage / 100]
+  end
+
+  def age_cutoff days
+    @age_cutoff = days
   end
 end

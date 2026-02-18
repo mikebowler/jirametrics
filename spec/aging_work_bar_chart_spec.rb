@@ -183,6 +183,7 @@ describe AgingWorkBarChart do
 
     it 'selects only aging' do
       issue3 = load_issue 'SP-1', board: board
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil],                  # not started
         [issue2, '2024-01-01', nil],         # started
@@ -190,9 +191,19 @@ describe AgingWorkBarChart do
       ]
       expect(chart.select_aging_issues issues: [issue1, issue2, issue3]).to eq [issue2]
     end
+
+    it 'excludes any that were ignored in the grouping rules', :focus do
+      chart = described_class.new ->(_) { age_cutoff 3 }
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', nil],
+        [issue2, '2024-01-05', nil]
+      ]
+      expect(chart.select_aging_issues issues: [issue1, issue2]).to eq [issue2]
+    end
   end
 
-  context 'collect_priority_ranges', :focus do
+  context 'collect_priority_ranges' do
     it 'handles no priority changes' do
       issue = empty_issue created: '2021-01-02'
       chart.settings = board.project_config.settings
@@ -306,4 +317,4 @@ describe AgingWorkBarChart do
       expect(chart.date_range).to eq(to_date('2021-02-01')..to_date('2021-05-30'))
     end
   end
- end
+end
