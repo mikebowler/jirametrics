@@ -303,11 +303,11 @@ class ChartBase
     @cycletime || issue.board.cycletime
   end
 
-  def seam_start
-    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} -->"
+  def seam_start type = 'chart'
+    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->"
   end
 
-  def seam_end
-    "\n<!-- seam-end | chart#{@@chart_counter} | #{self.class} | #{header_text} -->"
+  def seam_end type = 'chart'
+    "\n<!-- seam-end | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->"
   end
 end

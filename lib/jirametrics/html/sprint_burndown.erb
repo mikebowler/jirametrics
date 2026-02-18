@@ -73,6 +73,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
 <section>
 <div class='foldable startFolded'>Show statistics</div>
 <div id="<%= issues_id %>">
+<%= seam_start 'stats_table' %>
 <table class='standard' style="margin-left: 1em;">
   <thead>
     <th>Sprint</th>
@@ -106,6 +107,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     <% end %>
   </tbody>
 </table>
+<%= seam_stop 'stats_table' %>
 
 <p>Legend:
   <ul>
