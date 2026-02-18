@@ -199,7 +199,7 @@ describe AgingWorkBarChart do
         [issue1, '2024-01-01', nil],
         [issue2, '2024-01-05', nil]
       ]
-      expect(chart.select_aging_issues issues: [issue1, issue2]).to eq [issue2]
+      expect(chart.select_aging_issues issues: [issue1, issue2]).to eq [issue1]
     end
   end
 

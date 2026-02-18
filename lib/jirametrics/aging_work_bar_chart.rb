@@ -100,7 +100,7 @@ class AgingWorkBarChart < ChartBase
       next false unless started_time && stopped_time.nil?
 
       age = (date_range.end - started_time.to_date).to_i + 1
-      !(@age_cutoff && @age_cutoff < age)
+      !(@age_cutoff && @age_cutoff >= age)
     end
   end
 
