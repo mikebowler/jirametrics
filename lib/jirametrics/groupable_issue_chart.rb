@@ -15,13 +15,19 @@ module GroupableIssueChart
 
   def group_issues completed_issues
     result = {}
+    ignored_issues = []
     completed_issues.each do |issue|
       rules = GroupingRules.new
       @group_by_block.call(issue, rules)
-      next if rules.ignored?
+      if rules.ignored?
+        ignored_issues << issue
+        next
+      end
 
       (result[rules] ||= []) << issue
     end
+
+    completed_issues.reject! { |issue| ignored_issues.include? issue }
 
     result.each_key do |rules|
       rules.color = random_color if rules.color.nil?
