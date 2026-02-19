@@ -23,6 +23,6 @@
       </div>
     </noscript>
     <%= "\n" + @sections.collect { |text, type| text if type == :header }.compact.join("\n\n") %>
-    <%= "\n" + @sections.collect { |text, type| text if type == :body }.compact.join("\n\n") %>
+    <%= "\n" + @sections.collect { |text, type| text if type != :header }.compact.join("\n\n") %>
   </body>
 </html>
