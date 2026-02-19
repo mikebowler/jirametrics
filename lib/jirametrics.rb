@@ -52,6 +52,13 @@ class JiraMetrics < Thor
     Exporter.instance.info(key, name_filter: options[:name] || '*')
   end
 
+  option :config
+  desc 'stitch', 'Dump information about one issue'
+  def stitch stitch_file = 'stitcher.erb'
+    load_config options[:config]
+    Exporter.instance.stitch stitch_file
+  end
+
   no_commands do
     def load_config config_file, file_system: FileSystem.new
       config_file = './config.rb' if config_file.nil?

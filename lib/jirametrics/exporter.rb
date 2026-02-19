@@ -50,8 +50,6 @@ class Exporter
       end
 
       project.download_config.run
-    # load_jira_config(download_config.project_config.jira_config)
-    # @ignore_ssl_errors = download_config.project_config.settings['ignore_ssl_errors']
       gateway = JiraGateway.new(
         file_system: file_system, jira_config: project.jira_config, settings: project.settings
       )
@@ -88,6 +86,10 @@ class Exporter
         file_system.log issue.dump, also_write_to_stderr: true
       end
     end
+  end
+
+  def stitch stitch_file
+    Stitcher.new(file_system: file_system).run(stitch_file: stitch_file)
   end
 
   def each_project_config name_filter:
