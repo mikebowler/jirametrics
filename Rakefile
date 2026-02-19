@@ -32,6 +32,11 @@ task info: [:initialize_config] do
   JiraMetrics.start %w[info SP-109]
 end
 
+desc 'stitch'
+task stitch: [:initialize_config] do
+  JiraMetrics.start %w[stitch]
+end
+
 RSpec::Core::RakeTask.new(:spec)
 
 RSpec::Core::RakeTask.new(:focus) do |task, _args|
