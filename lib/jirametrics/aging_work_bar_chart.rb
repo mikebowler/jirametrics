@@ -231,7 +231,6 @@ class AgingWorkBarChart < ChartBase
   end
 
   def collect_sprint_ranges issue:
-    puts "*** collect_sprint_ranges"
     results = []
     open_sprints = {}
 
@@ -271,7 +270,6 @@ class AgingWorkBarChart < ChartBase
       )
     end
 
-    puts "#{issue.key} #{results.inspect}"
     results
   end
 
