@@ -81,6 +81,7 @@ class AgingWorkBarChart < ChartBase
       ['blocked', collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue_start_time)],
       ['priority', collect_priority_ranges(issue: issue)]
     ]
+    bar_data << ['sprints', collect_sprint_ranges(issue: issue)] if current_board.scrum?
 
     issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
     bar_data.collect do |stack, ranges|
@@ -107,6 +108,8 @@ class AgingWorkBarChart < ChartBase
   def grow_chart_height_if_too_many_issues aging_issue_count:
     px_per_bar = 10
     bars_per_issue = 3
+    bars_per_issue += 1 if current_board.scrum?
+
     preferred_height = aging_issue_count * px_per_bar * bars_per_issue
     @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
   end
@@ -224,6 +227,51 @@ class AgingWorkBarChart < ChartBase
       previous_change: previous_change, stop_time: time_range.end,
       expedited_priority_names: expedited_priority_names
     )
+    results
+  end
+
+  def collect_sprint_ranges issue:
+    puts "*** collect_sprint_ranges"
+    results = []
+    open_sprints = {}
+
+    issue.changes.each do |change|
+      next unless change.sprint?
+
+      removed_sprint_ids = change.old_value_id - change.value_id
+      added_sprint_ids = change.value_id - change.old_value_id
+
+      removed_sprint_ids.each do |id|
+        data = open_sprints.delete(id)
+        next unless data
+
+        completed = data[:sprint].completed_time
+        stop = completed ? [change.time, completed].min : change.time
+        results << BarChartRange.new(
+          start: data[:start_time], stop: stop,
+          color: CssVariable['--sprint-color'], title: data[:sprint].name
+        )
+      end
+
+      added_sprint_ids.each do |id|
+        sprint = issue.board.sprints.find { |s| s.id == id }
+        next unless sprint
+        next if sprint.future?
+
+        start_time = [sprint.start_time, change.time].max
+        open_sprints[id] = { start_time: start_time, sprint: sprint }
+      end
+    end
+
+    open_sprints.each_value do |data|
+      stop = data[:sprint].completed_time || time_range.end
+      results << BarChartRange.new(
+        start: data[:start_time], stop: stop,
+        color: CssVariable['--sprint-color'], title: data[:sprint].name
+      )
+    end
+
+    puts "#{issue.key} #{results.inspect}"
     results
   end
 

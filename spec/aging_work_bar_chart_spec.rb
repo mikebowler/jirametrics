@@ -317,4 +317,149 @@ describe AgingWorkBarChart do
       expect(chart.date_range).to eq(to_date('2021-02-01')..to_date('2021-05-30'))
     end
   end
+
+  context 'collect_sprint_ranges' do
+    let(:sprint1) do
+      Sprint.new(
+        raw: {
+          'id' => 1,
+          'state' => 'closed',
+          'name' => 'Sprint 1',
+          'activatedDate' => '2021-01-03T00:00:00+00:00',
+          'endDate' => '2021-01-17T00:00:00+00:00',
+          'completeDate' => '2021-01-17T00:00:00+00:00'
+        },
+        timezone_offset: '+0000'
+      )
+    end
+
+    before do
+      board.sprints << sprint1
+      chart.time_range = to_time('2021-01-01')..to_time('2021-01-20')
+    end
+
+    it 'returns empty when there are no sprint changes' do
+      issue = empty_issue created: '2021-01-01', board: board
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq []
+    end
+
+    it 'returns a range for a closed sprint the issue was in' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-05'), stop: to_time('2021-01-17'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1'
+        )
+      ]
+    end
+
+    it 'uses the sprint start time when the issue was added before the sprint began' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-01')
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-03'), stop: to_time('2021-01-17'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1'
+        )
+      ]
+    end
+
+    it 'uses time_range.end when the sprint is still active' do
+      active_sprint = Sprint.new(
+        raw: {
+          'id' => 2,
+          'state' => 'active',
+          'name' => 'Sprint 2',
+          'activatedDate' => '2021-01-03T00:00:00+00:00',
+          'endDate' => '2021-01-17T00:00:00+00:00'
+        },
+        timezone_offset: '+0000'
+      )
+      board.sprints << active_sprint
+
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: active_sprint.name, value_id: active_sprint.id.to_s, time: '2021-01-05')
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-05'), stop: to_time('2021-01-20'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 2'
+        )
+      ]
+    end
+
+    it 'ends the range when the issue is removed from the sprint' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '',
+        old_value: sprint1.name, old_value_id: sprint1.id.to_s,
+        time: '2021-01-10'
+      )
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-05'), stop: to_time('2021-01-10'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1'
+        )
+      ]
+    end
+
+    it 'returns no range for a future sprint' do
+      future_sprint = Sprint.new(
+        raw: {
+          'id' => 3,
+          'state' => 'future',
+          'name' => 'Sprint 3',
+          'startDate' => '2021-02-01T00:00:00+00:00',
+          'endDate' => '2021-02-14T00:00:00+00:00'
+        },
+        timezone_offset: '+0000'
+      )
+      board.sprints << future_sprint
+
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s, time: '2021-01-05')
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq []
+    end
+
+    it 'returns ranges for two consecutive sprints' do
+      sprint2 = Sprint.new(
+        raw: {
+          'id' => 2,
+          'state' => 'active',
+          'name' => 'Sprint 2',
+          'activatedDate' => '2021-01-18T00:00:00+00:00',
+          'endDate' => '2021-02-01T00:00:00+00:00'
+        },
+        timezone_offset: '+0000'
+      )
+      board.sprints << sprint2
+
+      issue = empty_issue created: '2021-01-01', board: board
+      # Added to sprint 1
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
+      # Moved from sprint 1 to sprint 2
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: sprint2.name, value_id: sprint2.id.to_s,
+        old_value: sprint1.name, old_value_id: sprint1.id.to_s,
+        time: '2021-01-18'
+      )
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-05'), stop: to_time('2021-01-17'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1'
+        ),
+        BarChartRange.new(
+          start: to_time('2021-01-18'), stop: to_time('2021-01-20'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 2'
+        )
+      ]
+    end
+  end
 end

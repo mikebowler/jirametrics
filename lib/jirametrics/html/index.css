@@ -67,6 +67,8 @@
   --sprint-burndown-sprint-color-4: red;
   --sprint-burndown-sprint-color-5: brown;
 
+  --sprint-color: lightblue;
+
   --daily-view-selected-issue-background: lightgray;
   --daily-view-issue-border: green;
   --daily-view-selected-issue-border: red;
