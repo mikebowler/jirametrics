@@ -4,13 +4,14 @@ require './spec/spec_helper'
 
 describe AgingWorkBarChart do
   let(:exporter) { Exporter.new(file_system: MockFileSystem.new) }
+  let(:board) { sample_board }
   let(:chart) do
     described_class.new(empty_config_block).tap do |chart|
       chart.file_system = exporter.file_system
       chart.timezone_offset = '+0000'
+      chart.all_boards = { board.id => board }
     end
   end
-  let(:board) { sample_board }
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
 
