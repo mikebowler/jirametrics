@@ -68,12 +68,13 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         stacked: true,
         title: {
           display: true,
-          text: 'Cycletime in days'
+          text: '<%= @x_axis_label %>'
         },
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
         min: 0,
+        <%= @max_x_value.nil? ? '' : "max: #{@max_x_value}," %>
         offset: false, // Gets rid of the ugly padding on left.
       },
       y: {

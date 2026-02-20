@@ -80,6 +80,12 @@ class ChartBase
     "#{days} day#{'s' unless days == 1}"
   end
 
+  def label_hours hours
+    return 'unknown' if hours.nil?
+
+    "#{hours} hour#{'s' unless hours == 1}"
+  end
+
   def label_issues count
     "#{count} issue#{'s' unless count == 1}"
   end

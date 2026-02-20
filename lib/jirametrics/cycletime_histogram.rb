@@ -12,7 +12,7 @@ class CycletimeHistogram < ChartBase
 
     percentiles [50, 85, 98]
     @show_stats = true
-
+    @x_axis_label = 'Cycletime in days'
     header_text 'Cycletime Histogram'
     description_text <<-HTML
       <p>
@@ -30,6 +30,21 @@ class CycletimeHistogram < ChartBase
     end
   end
 
+  def all_items
+    stopped_issues = completed_issues_in_range include_unstarted: true
+
+    # For the histogram, we only want to consider items that have both a start and a stop time.
+    stopped_issues.select { |issue| issue.board.cycletime.started_stopped_times(issue).first }
+  end
+
+  def value_for_item issue
+    issue.board.cycletime.cycletime(issue)
+  end
+
+  def title_for_item count:, value:
+    "#{count} items completed in #{label_days value}"
+  end
+
   def percentiles percs = nil
     @percentiles = percs unless percs.nil?
     @percentiles
@@ -40,10 +55,7 @@ class CycletimeHistogram < ChartBase
   end
 
   def run
-    stopped_issues = completed_issues_in_range include_unstarted: true
-
-    # For the histogram, we only want to consider items that have both a start and a stop time.
-    histogram_issues = stopped_issues.select { |issue| issue.board.cycletime.started_stopped_times(issue).first }
+    histogram_issues = all_items
     rules_to_issues = group_issues histogram_issues
 
     the_stats = {}
@@ -72,7 +84,7 @@ class CycletimeHistogram < ChartBase
   def histogram_data_for issues:
     count_hash = {}
     issues.each do |issue|
-      days = issue.board.cycletime.cycletime(issue)
+      days = value_for_item issue
       count_hash[days] = (count_hash[days] || 0) + 1 if days.positive?
     end
     count_hash
@@ -131,7 +143,7 @@ class CycletimeHistogram < ChartBase
         {
           x: key,
           y: histogram_data[key],
-          title: "#{histogram_data[key]} items completed in #{label_days key}"
+          title: title_for_item(count: histogram_data[key], value: key)
         }
       end,
       backgroundColor: color,
