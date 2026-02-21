@@ -18,9 +18,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         min: '<%= @date_range.begin.to_s %>',
         max: '<%= (@date_range.end ).to_s %>',
         stacked: false,
-        title: {
-          display: false
-        },
+        <%= render_axis_title :x %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
@@ -31,6 +29,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         ticks: {
           display: true
         },
+        <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

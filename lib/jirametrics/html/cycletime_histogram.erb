@@ -15,10 +15,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       x: {
         type: 'linear',
         stacked: true,
-        title: {
-          display: true,
-          text: '<%= @x_axis_label %>'
-        },
+        <%= render_axis_title :x %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
@@ -28,10 +25,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       },
       y: {
         stacked: true,
-        title: {
-          display: true,
-          text: 'Number of items that had that cycletime'
-        },
+        <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

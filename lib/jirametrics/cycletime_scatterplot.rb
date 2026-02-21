@@ -26,6 +26,8 @@ class CycletimeScatterplot < ChartBase
       </div>
       #{describe_non_working_days}
     HTML
+    @x_axis_title = 'Date completed'
+    @y_axis_title = 'Cycletime in days'
 
     init_configuration_block block do
       grouping_rules do |issue, rule|

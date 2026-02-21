@@ -21,6 +21,8 @@ class EstimateAccuracyChart < ChartBase
         <% end %>
       </div>
     HTML
+    @x_axis_title = 'Cycletime (days)'
+    @y_axis_title = 'Count of items'
 
     @y_axis_type = 'linear'
     @y_axis_block = ->(issue, start_time) { estimate_at(issue: issue, start_time: start_time)&.to_f }
@@ -30,9 +32,9 @@ class EstimateAccuracyChart < ChartBase
   end
 
   def run
-    if @y_axis_label.nil?
+    if @y_axis_title.nil?
       text = current_board.estimation_configuration.units == :story_points ? 'Story Points' : 'Days'
-      @y_axis_label = "Estimated #{text}"
+      @y_axis_title = "Estimated #{text}"
     end
     data_sets = scan_issues
 

@@ -81,7 +81,7 @@ describe DataQualityReport do
       expect(report.file_system.log_messages).to be_empty
     end
 
-    excluded_methods = %i[render_top_text render_problem_type]
+    excluded_methods = %i[render_top_text render_problem_type render_axis_title]
     described_class.instance_methods.select { |m| m.to_s.start_with? 'render_' }.each do |method|
       next if excluded_methods.include? method
 

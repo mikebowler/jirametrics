@@ -20,10 +20,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           display: true,
           labelString: 'Days'
         },
-        title: {
-          display: true,
-          text: 'Total time (days)'
-        },
+        <%= render_axis_title :x %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
@@ -36,10 +33,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           min: 0,
           max: <%= @highest_cycletime %>
         },
-        title: {
-          display: true,
-          text: 'Time adding value (days)'
-        },
+        <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

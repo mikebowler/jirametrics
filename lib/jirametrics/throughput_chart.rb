@@ -15,6 +15,9 @@ class ThroughputChart < ChartBase
       </div>
       #{describe_non_working_days}
     TEXT
+    @x_axis_title = nil
+    @y_axis_title = 'Count of items'
+
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|

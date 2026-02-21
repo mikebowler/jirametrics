@@ -32,6 +32,8 @@ class FlowEfficiencyScatterplot < ChartBase
         So be aware that your team may have to change their behaviours if you want this chart to be useful.
       </div>
     HTML
+    @x_axis_title = 'Total time (days)'
+    @y_axis_title = 'Time adding value (days)'
 
     init_configuration_block block do
       grouping_rules do |issue, rule|

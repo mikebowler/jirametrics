@@ -19,6 +19,8 @@ class DailyWipChart < ChartBase
 
     header_text default_header_text
     description_text default_description_text
+    @x_axis_title = nil
+    @y_axis_title = 'Count of items'
 
     instance_eval(&block) if block
 

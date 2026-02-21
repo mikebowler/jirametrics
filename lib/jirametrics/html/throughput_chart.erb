@@ -20,10 +20,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         time: {
             format: 'YYYY-MM-DD'
         },
-        scaleLabel: {
-          display: true,
-          labelString: 'Date Completed'
-        },
+        <%= render_axis_title :x %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
@@ -32,10 +29,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         scaleLabel: {
           display: true,
         },
-        title: {
-          display: true,
-          text: 'Count of items'
-        },
+        <%= render_axis_title :y %>
         min: 0,
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>

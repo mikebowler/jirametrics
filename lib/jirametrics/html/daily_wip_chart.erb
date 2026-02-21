@@ -22,6 +22,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           unit: 'day'
         },
         stacked: true,
+        <%= render_axis_title :x %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
@@ -32,10 +33,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
           display: true,
           labelString: 'WIP'
         },
-        title: {
-          display: true,
-          text: 'Count of items'
-        },
+        <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

@@ -9,10 +9,6 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     datasets: <%= JSON.generate(data_sets) %>
   },
   options: {
-    title: {
-      display: true,
-      text: "Sprint Burndown"
-    },
     responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen
     scales: {
       x: {
@@ -21,10 +17,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           display: true,
           labelString: 'Date'
         },
-        title: {
-          display: true,
-          text: "Cycletime (days)"
-        },
+        <%= render_axis_title :x %>
         min: 0,
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
@@ -39,10 +32,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           display: true,
           labelString: 'Items remaining'
         },
-        title: {
-          display: true,
-          text: "<%= @y_axis_label %>"
-        },
+        <%= render_axis_title :y %>
         min: 0.0,
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>

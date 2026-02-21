@@ -3,7 +3,7 @@
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings, :issues, :file_system,
-    :atlassian_document_format
+    :atlassian_document_format, :x_axis_title, :y_axis_title
   attr_writer :aggregated_project
   attr_reader :canvas_width, :canvas_height
 
@@ -315,5 +315,24 @@ class ChartBase
 
   def seam_end type = 'chart'
     "\n<!-- seam-end | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->"
+  end
+
+  def render_axis_title axis_direction
+    text = case axis_direction
+    when :x
+      x_axis_title
+    when :y
+      y_axis_title
+    else
+      raise "Unexpected axis_direction: #{axis_direction}"
+    end
+    return '' unless text
+
+    <<~CONTENT
+      title: {
+          display: true,
+          text: "#{text}"
+        },
+    CONTENT
   end
 end

@@ -20,10 +20,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     scales: {
       x: {
         type: "time",
-        scaleLabel: {
-          display: true,
-          labelString: 'Date Completed'
-        },
+        <%= render_axis_title :x %>
         min: "<%= date_range.begin.to_s %>",
         max: "<%= date_range.end.to_s %>",
         grid: {
@@ -31,14 +28,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         },
       },
       y: {
-        scaleLabel: {
-          display: true,
-          labelString: 'Days'
-        },
-        title: {
-          display: true,
-          text: 'Age in days'
-        },        
+        <%= render_axis_title :y %>
         min: 0,
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>

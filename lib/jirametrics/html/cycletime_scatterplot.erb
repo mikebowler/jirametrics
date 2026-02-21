@@ -23,6 +23,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
+        <%= render_axis_title :x %>
         min: "<%= date_range.begin.to_s %>",
         max: "<%= (date_range.end + 1).to_s %>"
       },
@@ -32,10 +33,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           min: 0,
           max: <%= @highest_y_value %>
         },
-        title: {
-          display: true,
-          text: '<%= y_axis_heading %>'
-        },
+        <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

@@ -38,6 +38,8 @@ class ExpeditedChart < ChartBase
       </div>
       #{describe_non_working_days}
     HTML
+    @x_axis_title = 'Date'
+    @y_axis_title = 'Age in days'
 
     instance_eval(&block)
   end

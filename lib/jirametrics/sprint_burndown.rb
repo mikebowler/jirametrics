@@ -29,6 +29,8 @@ class SprintBurndown < ChartBase
       </div>
       #{describe_non_working_days}
     TEXT
+    @x_axis_title = 'Date'
+    @y_axis_title = 'Items remaining'
   end
 
   def options= arg

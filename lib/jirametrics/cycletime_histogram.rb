@@ -12,7 +12,9 @@ class CycletimeHistogram < ChartBase
 
     percentiles [50, 85, 98]
     @show_stats = true
-    @x_axis_label = 'Cycletime in days'
+    @x_axis_title = 'Cycletime in days'
+    @y_axis_title = 'Count'
+
     header_text 'Cycletime Histogram'
     description_text <<-HTML
       <p>
