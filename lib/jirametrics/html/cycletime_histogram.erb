@@ -2,57 +2,6 @@
 <div class="chart">
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
-<%
-if show_stats 
-  link_id = next_id
-  issues_id = next_id
-%>
-<div class='foldable' style="padding-left: 1em;">Statistics</div>
-<div id="<%= issues_id %>" style="padding-left: 1em;">
-  <div>
-     <table class="standard">
-      <tr>
-        <th>Issue Type</th>
-        <th>Min</th>
-        <th>Max</th>
-        <th>Avg</th>
-        <th>Mode</th>
-        <% percentiles.each do |p| %>
-           <th><%= p %>th</th>
-        <% end %>
-      </tr>
-      <% the_stats.each do |k, v| %>
-          <tr>
-            <td><%= k %></td>
-            <td style="text-align: right;"><%= v[:min] %></td>
-            <td style="text-align: right;"><%= v[:max] %></td>
-            <td style="text-align: right;"><%= sprintf('%.2f', v[:average]) %></td>
-            <td><%= v[:mode].join(', ') %></td>
-            <% percentiles.each do |p| %>
-               <td style="text-align: right;"><%= v[:percentiles][p] %></td>
-            <% end %>
-          </tr>
-       <% end %>
-     </table>
-  </div>
-  <div>
-    <p>These statistics help understand the <i>"shape"</i> of the cycletime histogram distribution, to help us with predictions.</p>
-    <ul>
-      <li><b>Min & Max:</b> the observed spread for the data set. Useful to judge how wide the variation is. </li>
-      <li><b>Average:</b> the arithmetic mean of the data set. Useful as a <i>"typical representative"</i> of the complete set.</li>
-      <li><b>Mode:</b> the most repeated value(s) in the data set. This is the value we're most likely to remember. </li>
-      <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of cycletime values are X or less. Typical percentiles of interest are:</li>
-      <ul>
-        <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
-        <li><b>85%</b>: useful to establish service level expectations, accounting for rare events..</li>
-        <li><b>98% (or higher)</b>: useful to gauge worst case expectations..</li>
-      </ul>
-    </ul>
-  </div>
-</div>
-<%
-end
-%>
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 {
@@ -122,3 +71,57 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
 });
 </script>
 <%= seam_end %>
+
+<%= seam_start 'stats_table' %>
+<%
+if show_stats 
+  link_id = next_id
+  issues_id = next_id
+%>
+<div class='foldable' style="padding-left: 1em;">Statistics</div>
+<div id="<%= issues_id %>" style="padding-left: 1em;">
+  <div>
+     <table class="standard">
+      <tr>
+        <th>Issue Type</th>
+        <th>Min</th>
+        <th>Max</th>
+        <th>Avg</th>
+        <th>Mode</th>
+        <% percentiles.each do |p| %>
+           <th><%= p %>th</th>
+        <% end %>
+      </tr>
+      <% the_stats.each do |k, v| %>
+          <tr>
+            <td><%= k %></td>
+            <td style="text-align: right;"><%= v[:min] %></td>
+            <td style="text-align: right;"><%= v[:max] %></td>
+            <td style="text-align: right;"><%= sprintf('%.2f', v[:average]) %></td>
+            <td><%= v[:mode].join(', ') %></td>
+            <% percentiles.each do |p| %>
+               <td style="text-align: right;"><%= v[:percentiles][p] %></td>
+            <% end %>
+          </tr>
+       <% end %>
+     </table>
+  </div>
+  <div>
+    <p>These statistics help understand the <i>"shape"</i> of the cycletime histogram distribution, to help us with predictions.</p>
+    <ul>
+      <li><b>Min & Max:</b> the observed spread for the data set. Useful to judge how wide the variation is. </li>
+      <li><b>Average:</b> the arithmetic mean of the data set. Useful as a <i>"typical representative"</i> of the complete set.</li>
+      <li><b>Mode:</b> the most repeated value(s) in the data set. This is the value we're most likely to remember. </li>
+      <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of cycletime values are X or less. Typical percentiles of interest are:</li>
+      <ul>
+        <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
+        <li><b>85%</b>: useful to establish service level expectations, accounting for rare events..</li>
+        <li><b>98% (or higher)</b>: useful to gauge worst case expectations..</li>
+      </ul>
+    </ul>
+  </div>
+</div>
+<%
+end
+%>
+<%= seam_end 'stats_table' %>
