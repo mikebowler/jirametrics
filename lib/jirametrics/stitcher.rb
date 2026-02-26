@@ -44,7 +44,8 @@ class Stitcher < HtmlGenerator
     stitch_content = @all_stitches.find { |s| s.file == from_file && s.title == title && s.type == type }
     return stitch_content.content if stitch_content
 
-    raise "Unable to find content in file #{from_file.inspect} matching title: #{title.inspect}"
+    file_system.error "Unable to find content in file #{from_file.inspect} matching title: #{title.inspect}"
+    ''
   end
 
   def parse_file filename

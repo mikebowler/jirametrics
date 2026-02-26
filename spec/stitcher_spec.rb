@@ -42,4 +42,26 @@ describe Stitcher do
       ]
     end
   end
+
+  context 'grab by title' do
+    it 'logs an error if title not found' do
+      file_system.when_loading file: 'foo.html', json: 'foo'
+      stitcher.grab_by_title 'missing-chart', from_file: 'foo.html'
+      expect(file_system.log_messages).to eq [
+        'Error: Unable to find content in file "foo.html" matching title: "missing-chart"'
+      ]
+    end
+
+    it 'grabs successfully' do
+      file_system.when_loading file: 'foo.html', json: <<~JSON
+        before
+        <!-- seam-start | chart78 | CycletimeScatterplot | My title | chart -->
+        during
+        <!-- seam-end | chart78 | CycletimeScatterplot | My title | chart -->
+        after
+      JSON
+      expect(stitcher.grab_by_title('My title', from_file: 'foo.html').chomp).to eq 'during'
+      expect(file_system.log_messages).to be_empty
+    end
+  end
 end
