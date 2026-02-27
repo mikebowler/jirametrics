@@ -90,6 +90,10 @@ Each chart class in `lib/jirametrics/` has a matching ERB template in `lib/jiram
 - SimpleCov with branch coverage is enabled; output goes to `coverage/`
 - `load_settings` turns off `cache_cycletime_calculations` by default for tests
 
+## Testing Requirements
+
+Tests must always be written for new or modified functionality. There are no exceptions to this rule.
+
 ## Code Conventions
 
 - All Ruby files use `# frozen_string_literal: true`
