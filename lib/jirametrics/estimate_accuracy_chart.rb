@@ -5,7 +5,7 @@ class EstimateAccuracyChart < ChartBase
     super()
 
     header_text 'Estimate Accuracy'
-    description_text <<-HTML
+    description_text <<~HTML
       <div class="p">
         This chart graphs estimates against actual recorded cycle times. Since
         estimates can change over time, we're graphing the estimate at the time that the story started.
@@ -20,7 +20,15 @@ class EstimateAccuracyChart < ChartBase
           far to the right then you know you have a problem.
         <% end %>
       </div>
+      <% if @correlation_coefficient %>
+        <div class="p">
+          The completed items here have a correlation coefficient of <b><%= @correlation_coefficient.round(3) %></b>.
+          The closer it is to +1, the stronger the positive correlation. The closer it is to -1,
+          the stronger the negative collalation. Zero would mean no correlation at all.
+        </div>
+      <% end %>
     HTML
+
     @x_axis_title = 'Cycletime (days)'
     @y_axis_title = 'Count of items'
 
@@ -45,7 +53,7 @@ class EstimateAccuracyChart < ChartBase
 
   def scan_issues
     completed_hash, aging_hash = split_into_completed_and_aging issues: issues
-
+    @correlation_coefficient = correlation_coefficient(completed_hash) unless completed_hash.empty?
     estimation_units = current_board.estimation_configuration.units
     @has_aging_data = !aging_hash.empty?
 
@@ -171,5 +179,33 @@ class EstimateAccuracyChart < ChartBase
       @y_axis_type = 'linear'
     end
     @y_axis_block = block
+  end
+
+  # Correlation coefficient is calculated using the Pearson Correlation Coefficient
+  # r = Σ((xi - x̄)(yi - ȳ)) / sqrt(Σ(xi - x̄)² · Σ(yi - ȳ)²)
+  def correlation_coefficient completed_hash
+    list1 = []
+    list2 = []
+    completed_hash.each do |(estimate, cycle_time), issues|
+      issues.size.times do
+        list1 << estimate
+        list2 << cycle_time
+      end
+    end
+
+    n = list1.size
+    return nil if n < 2
+
+    mean1 = list1.sum.to_f / n
+    mean2 = list2.sum.to_f / n
+
+    numerator = list1.zip(list2).sum { |x, y| (x - mean1) * (y - mean2) }
+    sum_sq1 = list1.sum { |x| (x - mean1)**2 }
+    sum_sq2 = list2.sum { |y| (y - mean2)**2 }
+
+    denominator = Math.sqrt(sum_sq1 * sum_sq2)
+    return nil if denominator.zero?
+
+    numerator / denominator
   end
 end

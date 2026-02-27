@@ -89,6 +89,38 @@ describe EstimateAccuracyChart do
     end
   end
 
+  context 'correlation_coefficient' do
+    it 'returns nil for an empty hash' do
+      expect(chart.correlation_coefficient({})).to be_nil
+    end
+
+    it 'returns nil when there is only one data point' do
+      expect(chart.correlation_coefficient({ [1, 2] => [:a] })).to be_nil
+    end
+
+    it 'returns nil when one list has zero variance' do
+      hash = { [5, 1] => [:a], [5, 2] => [:b], [5, 3] => [:c] }
+      expect(chart.correlation_coefficient(hash)).to be_nil
+    end
+
+    it 'returns 1.0 for a perfect positive correlation' do
+      hash = { [1, 1] => [:a], [2, 2] => [:b], [3, 3] => [:c] }
+      expect(chart.correlation_coefficient(hash)).to eq 1.0
+    end
+
+    it 'returns -1.0 for a perfect negative correlation' do
+      hash = { [1, 3] => %i[a], [2, 2] => %i[b], [3, 1] => %i[c] }
+      expect(chart.correlation_coefficient(hash)).to eq(-1.0)
+    end
+
+    it 'counts multiple issues at the same key as individual data points' do
+      # [1,2] has 2 issues so it contributes 2 data points, changing the result
+      # vs treating each key as a single point (which would give r=0.5)
+      hash = { [1, 2] => %i[a b], [3, 1] => %i[c], [5, 3] => %i[d] }
+      expect(chart.correlation_coefficient(hash)).to be_within(0.0001).of(2.0 / Math.sqrt(22))
+    end
+  end
+
   context 'split_into_completed_and_aging' do
     it 'works for no issues' do
       expect(chart.split_into_completed_and_aging issues: []).to eq [{}, {}]
