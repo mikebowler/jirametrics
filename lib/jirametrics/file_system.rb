@@ -61,6 +61,10 @@ class FileSystem
     logfile.puts more if more
     return unless also_write_to_stderr
 
+    # Obscure edge-case where we're trying to log something before logging is even
+    # set up. Quick escape here so that we don't dump the error twice.
+    return if logfile == $stdout
+
     $stderr.puts message # rubocop:disable Style/StderrPuts
   end
 
