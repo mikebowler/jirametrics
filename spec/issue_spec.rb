@@ -695,7 +695,25 @@ describe Issue do
       }
       add_mock_change(issue: issue, field: 'comment', value: adf_body, time: '2021-10-03T00:01:00')
       result = issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')
-      expect(result[1].flag_reason).to eq '<p>Waiting on vendor</p>'
+      expect(result[1].flag_reason).to eq 'Waiting on vendor'
+    end
+
+    it 'strips the Jira-generated flag preamble leaving the real reason' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'comment', value: ":flag_on: Flag added\nWaiting on vendor", time: '2021-10-03T00:01:00')
+      result = issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')
+      expect(result[1].flag_reason).to eq 'Waiting on vendor'
+    end
+
+    it 'sets flag_reason to nil when comment is only the Jira-generated flag preamble' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'comment', value: ':flag_on: Flag added', time: '2021-10-03T00:01:00')
+      result = issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')
+      expect(result[1].flag_reason).to be_nil
     end
 
     it 'leaves flag_reason nil when no comment matches the flag timestamp' do

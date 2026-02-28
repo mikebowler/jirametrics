@@ -23,105 +23,106 @@ class AtlassianDocumentFormat
     end
   end
 
+  def to_text input
+    if input.is_a? String
+      input
+    elsif input&.[]('content')
+      input['content'].collect { |element| adf_node_to_text element }.join
+    else
+      ''
+    end
+  end
+
   # ADF is Atlassian Document Format
   # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
   def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity
-    closing_tag = nil
-    node_attrs = node['attrs']
-
-    result = +''
-    case node['type']
-    when 'blockquote'
-      result << '<blockquote>'
-      closing_tag = '</blockquote>'
-    when 'bulletList'
-      result << '<ul>'
-      closing_tag = '</ul>'
-    when 'codeBlock'
-      result << '<code>'
-      closing_tag = '</code>'
-    when 'date'
-      result << Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s
-    when 'decisionItem'
-      result << '<li>'
-      closing_tag = '</li>'
-    when 'decisionList'
-      result << '<div>Decisions<ul>'
-      closing_tag = '</ul></div>'
-    when 'emoji'
-      result << node_attrs['text']
-    when 'expand'
-      # TODO: Maybe, someday, make this actually expandable. For now it's always open
-      result << "<div>#{node_attrs['title']}</div>"
-    when 'hardBreak'
-      result << '<br />'
-    when 'heading'
-      level = node_attrs['level']
-      result << "<h#{level}>"
-      closing_tag = "</h#{level}>"
-    when 'inlineCard'
-      url = node_attrs['url']
-      result << "[Inline card]: <a href='#{url}'>#{url}</a>"
-    when 'listItem'
-      result << '<li>'
-      closing_tag = '</li>'
-    when 'media'
-      text = node_attrs['alt'] || node_attrs['id']
-      result << "Media: #{text}"
-    when 'mediaSingle', 'mediaGroup'
-      result << '<div>'
-      closing_tag = '</div>'
-    when 'mention'
-      user = node_attrs['text']
-      result << "<b>#{user}</b>"
-    when 'orderedList'
-      result << '<ol>'
-      closing_tag = '</ol>'
-    when 'panel'
-      type = node_attrs['panelType']
-      result << "<div>#{type.upcase}</div>"
-    when 'paragraph'
-      result << '<p>'
-      closing_tag = '</p>'
-    when 'rule'
-      result << '<hr />'
-    when 'status'
-      text = node_attrs['text']
-      result << text
-    when 'table'
-      result << '<table>'
-      closing_tag = '</table>'
-    when 'tableCell'
-      result << '<td>'
-      closing_tag = '</td>'
-    when 'tableHeader'
-      result << '<th>'
-      closing_tag = '</th>'
-    when 'tableRow'
-      result << '<tr>'
-      closing_tag = '</tr>'
-    when 'text'
-      marks = adf_marks_to_html node['marks']
-      result << marks.collect(&:first).join
-      result << node['text']
-      result << marks.collect(&:last).join
-    when 'taskItem'
-      state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
-      result << "<li>#{state} "
-      closing_tag = '</li>'
-    when 'taskList'
-      result << "<ul class='taskList'>"
-      closing_tag = '</ul>'
-    else
-      result << "<p>Unparseable section: #{node['type']}</p>"
+    adf_node_render(node) do |n|
+      node_attrs = n['attrs']
+      case n['type']
+      when 'blockquote'                then ['<blockquote>', '</blockquote>']
+      when 'bulletList'                then ['<ul>', '</ul>']
+      when 'codeBlock'                 then ['<code>', '</code>']
+      when 'date'
+        [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
+      when 'decisionItem'              then ['<li>', '</li>']
+      when 'decisionList'              then ['<div>Decisions<ul>', '</ul></div>']
+      when 'emoji'                     then [node_attrs['text'], nil]
+      when 'expand'                    then ["<div>#{node_attrs['title']}</div>", nil]
+      when 'hardBreak'                 then ['<br />', nil]
+      when 'heading'
+        level = node_attrs['level']
+        ["<h#{level}>", "</h#{level}>"]
+      when 'inlineCard'
+        url = node_attrs['url']
+        ["[Inline card]: <a href='#{url}'>#{url}</a>", nil]
+      when 'listItem'                  then ['<li>', '</li>']
+      when 'media'
+        text = node_attrs['alt'] || node_attrs['id']
+        ["Media: #{text}", nil]
+      when 'mediaSingle', 'mediaGroup' then ['<div>', '</div>']
+      when 'mention'                   then ["<b>#{node_attrs['text']}</b>", nil]
+      when 'orderedList'               then ['<ol>', '</ol>']
+      when 'panel'                     then ["<div>#{node_attrs['panelType'].upcase}</div>", nil]
+      when 'paragraph'                 then ['<p>', '</p>']
+      when 'rule'                      then ['<hr />', nil]
+      when 'status'                    then [node_attrs['text'], nil]
+      when 'table'                     then ['<table>', '</table>']
+      when 'tableCell'                 then ['<td>', '</td>']
+      when 'tableHeader'               then ['<th>', '</th>']
+      when 'tableRow'                  then ['<tr>', '</tr>']
+      when 'text'
+        marks = adf_marks_to_html(n['marks'])
+        [marks.collect(&:first).join + n['text'], marks.collect(&:last).join]
+      when 'taskItem'
+        state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
+        ["<li>#{state} ", '</li>']
+      when 'taskList'                  then ["<ul class='taskList'>", '</ul>']
+      else
+        ["<p>Unparseable section: #{n['type']}</p>", nil]
+      end
     end
+  end
 
-    node['content']&.each do |child|
-      result << adf_node_to_html(child)
+  def adf_node_to_text node # rubocop:disable Metrics/CyclomaticComplexity
+    adf_node_render(node) do |n|
+      node_attrs = n['attrs']
+      case n['type']
+      when 'blockquote'                then ['', nil]
+      when 'bulletList'                then ['', nil]
+      when 'codeBlock'                 then ['', nil]
+      when 'date'
+        [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
+      when 'decisionItem'              then ['- ', "\n"]
+      when 'decisionList'              then ["Decisions:\n", nil]
+      when 'emoji'                     then [node_attrs['text'], nil]
+      when 'expand'                    then ["#{node_attrs['title']}\n", nil]
+      when 'hardBreak'                 then ["\n", nil]
+      when 'heading'                   then ['', "\n"]
+      when 'inlineCard'                then [node_attrs['url'], nil]
+      when 'listItem'                  then ['- ', nil]
+      when 'media'
+        text = node_attrs['alt'] || node_attrs['id']
+        ["Media: #{text}", nil]
+      when 'mediaSingle', 'mediaGroup' then ['', nil]
+      when 'mention'                   then [node_attrs['text'], nil]
+      when 'orderedList'               then ['', nil]
+      when 'panel'                     then ["#{node_attrs['panelType'].upcase}\n", nil]
+      when 'paragraph'                 then ['', "\n"]
+      when 'rule'                      then ["---\n", nil]
+      when 'status'                    then [node_attrs['text'], nil]
+      when 'table'                     then ['', nil]
+      when 'tableCell'                 then ['', "\t"]
+      when 'tableHeader'               then ['', "\t"]
+      when 'tableRow'                  then ['', "\n"]
+      when 'text'                      then [n['text'], nil]
+      when 'taskItem'
+        state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
+        ["#{state} ", "\n"]
+      when 'taskList'                  then ['', nil]
+      else
+        ["[Unparseable: #{n['type']}]\n", nil]
+      end
     end
-
-    result << closing_tag if closing_tag
-    result
   end
 
   def adf_marks_to_html list
@@ -156,5 +157,15 @@ class AtlassianDocumentFormat
     text = account_id
     text = "@#{user.display_name}" if user
     "<span class='account_id'>#{text}</span>"
+  end
+
+  private
+
+  def adf_node_render node, &render_node
+    prefix, suffix = render_node.call(node)
+    result = +(prefix || '')
+    node['content']&.each { |child| result << adf_node_render(child, &render_node) }
+    result << suffix if suffix
+    result
   end
 end

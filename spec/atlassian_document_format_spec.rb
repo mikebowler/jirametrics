@@ -150,6 +150,85 @@ describe AtlassianDocumentFormat do
     end
   end
 
+  context 'to_text' do
+    it 'returns plain string as-is' do
+      expect(format.to_text 'foobar').to eq 'foobar'
+    end
+
+    it 'returns empty string for a document with no content' do
+      expect(format.to_text('type' => 'doc', 'version' => 1)).to be_empty
+    end
+
+    it 'converts a simple paragraph' do
+      input = {
+        'type' => 'doc', 'version' => 1,
+        'content' => [
+          { 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'Hello world' }] }
+        ]
+      }
+      expect(format.to_text input).to eq "Hello world\n"
+    end
+
+    it 'separates two paragraphs with newlines' do
+      input = {
+        'type' => 'doc', 'version' => 1,
+        'content' => [
+          { 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'paragraph 1' }] },
+          { 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'paragraph 2' }] }
+        ]
+      }
+      expect(format.to_text input).to eq "paragraph 1\nparagraph 2\n"
+    end
+  end
+
+  context 'adf_node_to_text' do
+    it 'renders plain text' do
+      input = { 'type' => 'text', 'text' => 'Hello world' }
+      expect(format.adf_node_to_text input).to eq 'Hello world'
+    end
+
+    it 'strips text marks' do
+      input = {
+        'type' => 'text',
+        'text' => 'Hello world',
+        'marks' => [{ 'type' => 'strong' }]
+      }
+      expect(format.adf_node_to_text input).to eq 'Hello world'
+    end
+
+    it 'renders hard break as newline' do
+      input = { 'type' => 'hardBreak' }
+      expect(format.adf_node_to_text input).to eq "\n"
+    end
+
+    it 'renders bullet list with dashes' do
+      input = {
+        'type' => 'bulletList',
+        'content' => [
+          { 'type' => 'listItem',
+            'content' => [{ 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'one' }] }] },
+          { 'type' => 'listItem',
+            'content' => [{ 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'two' }] }] }
+        ]
+      }
+      expect(format.adf_node_to_text input).to eq "- one\n- two\n"
+    end
+
+    it 'renders task list with state symbols' do
+      input = {
+        'type' => 'taskList',
+        'attrs' => { 'localId' => 'abc' },
+        'content' => [
+          { 'type' => 'taskItem', 'attrs' => { 'localId' => '1', 'state' => 'DONE' },
+            'content' => [{ 'type' => 'text', 'text' => 'Done thing' }] },
+          { 'type' => 'taskItem', 'attrs' => { 'localId' => '2', 'state' => 'TODO' },
+            'content' => [{ 'type' => 'text', 'text' => 'Todo thing' }] }
+        ]
+      }
+      expect(format.adf_node_to_text input).to eq "☑ Done thing\n☐ Todo thing\n"
+    end
+  end
+
   context 'adf_node_to_html' do
     it 'is simple list' do
       input = {

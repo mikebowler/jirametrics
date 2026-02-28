@@ -435,7 +435,9 @@ class Issue
         flag = nil if change.value == ''
         if flag
           comment_change = changes.find { |c| c.comment? && c.time >= change.time && (c.time - change.time) <= 30 }
-          flag_reason = comment_change && @board.project_config.atlassian_document_format.to_html(comment_change.value)
+          flag_reason = comment_change && @board.project_config.atlassian_document_format.to_text(comment_change.value)
+          flag_reason = flag_reason&.sub(/\A:flag_on: Flag added\s*/m, '')&.strip
+          flag_reason = nil if flag_reason&.empty?
         else
           flag_reason = nil
         end
@@ -459,7 +461,6 @@ class Issue
           end
         end
       end
-puts "#{key} #{flag_reason.inspect}" if flag && key == 'SP-75'
 
       new_change = BlockedStalledChange.new(
         flagged: flag,
