@@ -431,16 +431,7 @@ class Issue
       )
 
       if change.flagged? && flagged_means_blocked
-        flag = change.value
-        flag = nil if change.value == ''
-        if flag
-          comment_change = changes.find { |c| c.comment? && c.time >= change.time && (c.time - change.time) <= 30 }
-          flag_reason = comment_change && @board.project_config.atlassian_document_format.to_text(comment_change.value)
-          flag_reason = flag_reason&.sub(/\A:flag_on: Flag added\s*/m, '')&.strip
-          flag_reason = nil if flag_reason&.empty?
-        else
-          flag_reason = nil
-        end
+        flag, flag_reason = blocked_stalled_changes_flag_logic change
       elsif change.status?
         blocking_status = nil
         if blocked_statuses.include?(change.value) || stalled_statuses.include?(change.value)
@@ -495,6 +486,28 @@ class Issue
     end
 
     result
+  end
+
+  def blocked_stalled_changes_flag_logic change
+    flag = change.value
+    flag = nil if change.value == ''
+    if flag
+      # When the user is adding a comment to explain why a flag was set, the flag is set immediately
+      # and the comment is inserted after the user hits enter, which means that there is some time
+      # gap. If a comment happened shortly after the flag was set, we assume they're linked. This
+      # won't always be true and so there will be false positives, but it's a reasonable assumption.
+      max_seconds_between_flag_and_comment = 30
+      comment_change = changes.find do |c|
+        c.comment? && c.time >= change.time && (c.time - change.time) <= max_seconds_between_flag_and_comment
+      end
+      flag_reason = comment_change && @board.project_config.atlassian_document_format.to_text(comment_change.value)
+      # Newer Jira instances may add this extra text but older instances did not. Strip it out if found.
+      flag_reason = flag_reason&.sub(/\A:flag_on: Flag added\s*/m, '')&.strip
+      flag_reason = nil if flag_reason&.empty?
+    else
+      flag_reason = nil
+    end
+    [flag, flag_reason]
   end
 
   def check_for_stalled change_time:, previous_change_time:, stalled_threshold:, blocking_stalled_changes:
