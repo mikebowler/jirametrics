@@ -34,6 +34,16 @@ describe BlockedStalledChange do
       )
       expect(change.reasons).to eq 'Blocked by flag'
     end
+
+    it 'blocked by flag without flag_reason' do
+      change = described_class.new(time: '2022-01-01', flagged: true)
+      expect(change.reasons).to eq 'Blocked by flag'
+    end
+
+    it 'blocked by flag with flag_reason' do
+      change = described_class.new(time: '2022-01-01', flagged: true, flag_reason: 'Waiting on vendor')
+      expect(change.reasons).to eq 'Blocked by flag: Waiting on vendor'
+    end
   end
 
   context 'inspect' do
@@ -45,6 +55,18 @@ describe BlockedStalledChange do
     it 'is blocked by flag' do
       change = described_class.new(time: '2022-01-01', flagged: true)
       expect(change.inspect).to eq "BlockedStalledChange(time: '2022-01-01', Blocked by flag)"
+    end
+  end
+
+  context 'flag_reason' do
+    it 'stores the flag reason when provided' do
+      change = described_class.new(time: '2022-01-01', flagged: true, flag_reason: 'Waiting on vendor')
+      expect(change.flag_reason).to eq 'Waiting on vendor'
+    end
+
+    it 'is nil when not provided' do
+      change = described_class.new(time: '2022-01-01', flagged: true)
+      expect(change.flag_reason).to be_nil
     end
   end
 end

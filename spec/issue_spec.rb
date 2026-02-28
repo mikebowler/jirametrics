@@ -653,6 +653,64 @@ describe Issue do
       ]
     end
 
+    it 'sets flag_reason from comment at the same timestamp as the flag' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'comment', value: 'Waiting on external team', time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      # The comment change at the same timestamp generates a second blocked entry (comment iteration also
+      # produces a BlockedStalledChange since flag is still set when the comment is processed in the loop)
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: 'Waiting on external team', time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: 'Waiting on external team', time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
+      ]
+    end
+
+    it 'sets flag_reason from comment within 30 seconds after the flag' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'comment', value: 'Waiting on vendor', time: '2021-10-03T00:01:15')
+      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: 'Waiting on vendor', time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: 'Waiting on vendor', time: to_time('2021-10-03T00:01:15')),
+        BlockedStalledChange.new(time: to_time('2021-10-03T00:02:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-05'))
+      ]
+    end
+
+    it 'converts ADF comment body to html for flag_reason' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      adf_body = {
+        'type' => 'doc', 'version' => 1,
+        'content' => [{ 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'Waiting on vendor' }] }]
+      }
+      add_mock_change(issue: issue, field: 'comment', value: adf_body, time: '2021-10-03T00:01:00')
+      result = issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')
+      expect(result[1].flag_reason).to eq '<p>Waiting on vendor</p>'
+    end
+
+    it 'leaves flag_reason nil when no comment matches the flag timestamp' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'comment', value: 'Unrelated comment', time: '2021-10-04T00:00:00')
+      expect(issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-05')).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: nil, time: to_time('2021-10-03T00:01:00')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: nil, time: to_time('2021-10-04T00:00:00')),
+        BlockedStalledChange.new(flagged: 'Blocked', flag_reason: nil, time: to_time('2021-10-05'))
+      ]
+    end
+
     it 'ignores flagged when "flagged_means_blocked" is false' do
       settings['flagged_means_blocked'] = false
       issue = empty_issue created: '2021-10-01', board: board

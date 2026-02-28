@@ -416,6 +416,7 @@ class Issue
 
     blocking_status = nil
     flag = nil
+    flag_reason = nil
 
     # This mock change is to force the writing of one last entry at the end of the time range.
     # By doing this, we're able to eliminate a lot of duplicated code in charts.
@@ -432,6 +433,12 @@ class Issue
       if change.flagged? && flagged_means_blocked
         flag = change.value
         flag = nil if change.value == ''
+        if flag
+          comment_change = changes.find { |c| c.comment? && c.time >= change.time && (c.time - change.time) <= 30 }
+          flag_reason = comment_change && @board.project_config.atlassian_document_format.to_html(comment_change.value)
+        else
+          flag_reason = nil
+        end
       elsif change.status?
         blocking_status = nil
         if blocked_statuses.include?(change.value) || stalled_statuses.include?(change.value)
@@ -452,9 +459,11 @@ class Issue
           end
         end
       end
+puts "#{key} #{flag_reason.inspect}" if flag && key == 'SP-75'
 
       new_change = BlockedStalledChange.new(
         flagged: flag,
+        flag_reason: flag_reason,
         status: blocking_status,
         status_is_blocking: blocking_status.nil? || blocked_statuses.include?(blocking_status),
         blocking_issue_keys: (blocking_issue_keys.empty? ? nil : blocking_issue_keys.dup),
@@ -475,6 +484,7 @@ class Issue
       hack = result.pop
       result << BlockedStalledChange.new(
         flagged: hack.flag,
+        flag_reason: hack.flag_reason,
         status: hack.status,
         status_is_blocking: hack.status_is_blocking,
         blocking_issue_keys: hack.blocking_issue_keys,
