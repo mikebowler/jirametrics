@@ -75,6 +75,55 @@ describe DownloaderForCloud do
     end
   end
 
+  context 'load_metadata' do
+    it 'forces a full download when rolling_date_count has changed' do
+      file_system.when_loading(
+        file: 'spec/testdata/sample_meta.json',
+        json: {
+          'version' => Downloader::CURRENT_METADATA_VERSION,
+          'rolling_date_count' => 90,
+          'date_end' => '2021-08-01'
+        }
+      )
+      download_config.rolling_date_count 60
+
+      downloader.load_metadata
+
+      expect(downloader.metadata['date_end']).to be_nil
+      expect(file_system.log_messages).to include 'rolling_date_count has changed. Forcing a full download.'
+    end
+
+    it 'does not force a full download when rolling_date_count is unchanged' do
+      file_system.when_loading(
+        file: 'spec/testdata/sample_meta.json',
+        json: {
+          'version' => Downloader::CURRENT_METADATA_VERSION,
+          'rolling_date_count' => 90,
+          'date_end' => '2021-08-01'
+        }
+      )
+      download_config.rolling_date_count 90
+
+      downloader.load_metadata
+
+      expect(downloader.metadata['date_end']).to eq(Date.parse('2021-08-01'))
+    end
+
+    it 'does not force a full download when neither old nor new config has rolling_date_count' do
+      file_system.when_loading(
+        file: 'spec/testdata/sample_meta.json',
+        json: {
+          'version' => Downloader::CURRENT_METADATA_VERSION,
+          'date_end' => '2021-08-01'
+        }
+      )
+
+      downloader.load_metadata
+
+      expect(downloader.metadata['date_end']).to eq(Date.parse('2021-08-01'))
+    end
+  end
+
   context 'make_jql' do
     it 'pulls from all time when rolling_date_count not set' do
       jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)

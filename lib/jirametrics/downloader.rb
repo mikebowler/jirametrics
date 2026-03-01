@@ -211,6 +211,14 @@ class Downloader
         value = Date.parse(value) if value.is_a?(String) && value =~ /^\d{4}-\d{2}-\d{2}$/
         @metadata[key] = value
       end
+
+      # If rolling_date_count has changed, we may be missing data outside the previous range,
+      # so force a full re-download.
+      if @metadata['rolling_date_count'] != @download_config.rolling_date_count
+        log '  rolling_date_count has changed. Forcing a full download.', both: true
+        @cached_data_format_is_current = false
+        @metadata = {}
+      end
     end
 
     # Even if this is the old format, we want to obey this one tag
@@ -227,6 +235,7 @@ class Downloader
 
   def save_metadata
     @metadata['version'] = CURRENT_METADATA_VERSION
+    @metadata['rolling_date_count'] = @download_config.rolling_date_count
     @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
     if @download_date_range.nil?
