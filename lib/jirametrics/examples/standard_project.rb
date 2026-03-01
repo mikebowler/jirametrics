@@ -87,7 +87,6 @@ class Exporter
           daily_wip_by_blocked_stalled_chart
           daily_wip_by_parent_chart
           flow_efficiency_scatterplot if show_experimental_charts
-          expedited_chart
           sprint_burndown
           estimate_accuracy_chart
           dependency_chart
