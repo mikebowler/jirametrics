@@ -23,6 +23,25 @@ describe DailyWipChart do
     chart
   end
 
+  context 'run' do
+    it 'sets x-axis min and max to the full date range' do
+      chart = described_class.new(empty_config_block)
+      chart.file_system = MockFileSystem.new
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/daily_wip_chart.erb'),
+        json: :not_mocked
+      )
+      chart.date_range = Date.parse('2021-10-11')..Date.parse('2021-11-07')
+      chart.time_range = to_time('2021-10-11')..to_time('2021-11-07')
+      chart.holiday_dates = []
+      chart.issues = []
+
+      output = chart.run
+      expect(output).to include('min: "2021-10-11"')
+      expect(output).to include('max: "2021-11-08"')
+    end
+  end
+
   context 'group_issues_by_active_dates' do
     it 'returns nothing when no issues' do
       chart.issues = []

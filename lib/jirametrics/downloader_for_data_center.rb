@@ -63,7 +63,8 @@ class DownloaderForDataCenter < Downloader
     end
   end
 
-  def make_jql filter_id:, today: Date.today
+  def make_jql filter_id:, today: nil
+    today ||= today_in_project_timezone
     segments = []
     segments << "filter=#{filter_id}"
 

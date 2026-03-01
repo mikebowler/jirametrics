@@ -21,6 +21,8 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         time: {
           unit: 'day'
         },
+        min: "<%= date_range.begin.to_s %>",
+        max: "<%= (date_range.end + 1).to_s %>",
         stacked: true,
         <%= render_axis_title :x %>
         grid: {

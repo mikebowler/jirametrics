@@ -114,6 +114,19 @@ describe DownloaderForCloud do
       expect(jql).to eql 'filter=5 AND (updated >= "2021-05-03 00:00" OR ' \
         '((status changed OR Sprint is not EMPTY) AND statusCategory != Done))'
     end
+
+    it 'uses project timezone to compute today when no today is passed' do
+      download_config.project_config.exporter.timezone_offset '+05:30'
+      download_config.rolling_date_count 90
+
+      # Freeze time to a specific UTC moment where UTC date != +05:30 date
+      # 2021-08-01 20:00:00 UTC = 2021-08-02 01:30:00 +05:30
+      allow(Time).to receive(:now).and_return(Time.parse('2021-08-01T20:00:00+00:00'))
+
+      jql = downloader.make_jql(filter_id: 5)
+      # today in +05:30 is 2021-08-02, so 90 days back is 2021-05-04
+      expect(jql).to include('updated >= "2021-05-04 00:00"')
+    end
   end
 
   context 'download_statuses' do

@@ -217,13 +217,21 @@ class Downloader
     @metadata['no-download'] = hash['no-download'] if hash['no-download']
   end
 
+  def timezone_offset
+    @download_config.project_config.exporter.timezone_offset
+  end
+
+  def today_in_project_timezone
+    Time.now.getlocal(timezone_offset).to_date
+  end
+
   def save_metadata
     @metadata['version'] = CURRENT_METADATA_VERSION
     @metadata['date_start_from_last_query'] = @start_date_in_query if @start_date_in_query
 
     if @download_date_range.nil?
       log "Making up a date range in meta since one wasn't specified. You'll want to change that.", both: true
-      today = Date.today
+      today = today_in_project_timezone
       @download_date_range = (today - 7)..today
     end
 
@@ -258,7 +266,8 @@ class Downloader
     end
   end
 
-  def make_jql filter_id:, today: Date.today
+  def make_jql filter_id:, today: nil
+    today ||= today_in_project_timezone
     segments = []
     segments << "filter=#{filter_id}"
 

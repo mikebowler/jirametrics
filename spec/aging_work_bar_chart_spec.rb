@@ -293,6 +293,26 @@ describe AgingWorkBarChart do
 
       expect(chart.run).to eq "<h1 class='foldable'>Aging Work Bar Chart</h1><p>There is no aging work</p>"
     end
+
+    it 'sets x-axis max to one day past date_range.end' do
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
+        json: :not_mocked
+      )
+      issue = empty_issue created: '2024-01-15', board: board
+      board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
+      add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')
+
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
+      chart.holiday_dates = []
+      chart.settings = board.project_config.settings
+      chart.issues = [issue]
+
+      output = chart.run
+      expect(output).to include("max: '2024-02-01'")
+    end
   end
 
   context 'adjust_time_date_ranges_to_start_from_earliest_issue_start' do

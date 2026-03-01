@@ -22,7 +22,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         type: "time",
         <%= render_axis_title :x %>
         min: "<%= date_range.begin.to_s %>",
-        max: "<%= date_range.end.to_s %>",
+        max: "<%= (date_range.end + 1).to_s %>",
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },

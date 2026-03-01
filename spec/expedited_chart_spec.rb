@@ -16,6 +16,26 @@ describe ExpeditedChart do
   let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
   let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
+  context 'run' do
+    it 'sets x-axis max to one day past date_range.end' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2022-01-01'), nil]]
+      add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2022-01-05')
+
+      render_chart = described_class.new(empty_config_block)
+      render_chart.file_system = MockFileSystem.new
+      render_chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/expedited_chart.erb'),
+        json: :not_mocked
+      )
+      render_chart.date_range = Date.parse('2022-01-01')..Date.parse('2022-01-30')
+      render_chart.holiday_dates = []
+      render_chart.issues = [issue1]
+
+      output = render_chart.run
+      expect(output).to include('max: "2022-01-31"')
+    end
+  end
+
   context 'prepare_expedite_data' do
     it 'handles issue with no changes' do
       expect(chart.prepare_expedite_data(issue1)).to be_empty
