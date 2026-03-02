@@ -4,13 +4,14 @@ require 'time'
 
 class Issue
   attr_reader :changes, :raw, :subtasks, :board
-  attr_accessor :parent
+  attr_accessor :parent, :github_prs
 
   def initialize raw:, board:, timezone_offset: '+00:00'
     @raw = raw
     @timezone_offset = timezone_offset
     @subtasks = []
     @changes = []
+    @github_prs = []
     @board = board
 
     # We only check for this here because if a board isn't passed in then things will fail much

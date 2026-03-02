@@ -25,10 +25,25 @@ class DownloadConfig
     @no_earlier_than
   end
 
+  def github_repos
+    @github_repos ||= []
+  end
+
+  def github_repo *repos
+    github_repos.concat(repos.map { |r| normalize_github_repo(r) })
+  end
+
   def start_date today:
     date = today.to_date - @rolling_date_count if @rolling_date_count
     date = [date, @no_earlier_than].max if date && @no_earlier_than
     date = @no_earlier_than if date.nil? && @no_earlier_than
     date
+  end
+
+  private
+
+  def normalize_github_repo repo
+    match = repo.match(%r{github\.com/([^/]+/[^/]+?)/?$})
+    match ? match[1] : repo
   end
 end

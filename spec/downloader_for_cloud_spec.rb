@@ -124,6 +124,63 @@ describe DownloaderForCloud do
     end
   end
 
+  context 'extract_project_keys_from_downloaded_issues' do
+    it 'returns project keys from issue filenames' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: %w[SP-1-1.json SP-2-1.json OTHER-10-1.json]
+
+      expect(downloader.extract_project_keys_from_downloaded_issues).to match_array %w[SP OTHER]
+    end
+
+    it 'returns empty when the issues directory does not exist' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: false
+
+      expect(downloader.extract_project_keys_from_downloaded_issues).to be_empty
+    end
+
+    it 'ignores non-issue files in the directory' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues',
+                               result: %w[SP-1-1.json .gitkeep some_other_file.json]
+
+      expect(downloader.extract_project_keys_from_downloaded_issues).to eq ['SP']
+    end
+  end
+
+  context 'download_github_prs' do
+    it 'skips download when no project keys are found' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: []
+
+      download_config.github_repo 'owner/repo'
+      downloader.download_github_prs
+
+      expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
+      expect(file_system.log_messages).to include 'No project keys found in downloaded issues, skipping GitHub PR download'
+    end
+
+    it 'collects PRs from multiple repos and saves them' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: ['SP-1-1.json']
+
+      download_config.github_repo 'owner/repo1', 'owner/repo2'
+
+      pr1 = { 'number' => 1, 'repo' => 'owner/repo1', 'issue_keys' => ['SP-1'] }
+      pr2 = { 'number' => 2, 'repo' => 'owner/repo2', 'issue_keys' => ['SP-1'] }
+
+      gateway1 = instance_double(GithubGateway, fetch_pull_requests: [pr1])
+      gateway2 = instance_double(GithubGateway, fetch_pull_requests: [pr2])
+
+      allow(GithubGateway).to receive(:new).with(hash_including(repo: 'owner/repo1')).and_return(gateway1)
+      allow(GithubGateway).to receive(:new).with(hash_including(repo: 'owner/repo2')).and_return(gateway2)
+
+      downloader.download_github_prs
+
+      saved = JSON.parse(file_system.saved_json['spec/testdata/sample_github_prs.json'])
+      expect(saved.map { |pr| pr['number'] }).to eq [1, 2]
+    end
+  end
+
   context 'make_jql' do
     it 'pulls from all time when rolling_date_count not set' do
       jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)

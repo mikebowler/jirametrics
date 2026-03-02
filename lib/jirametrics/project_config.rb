@@ -362,6 +362,18 @@ class ProjectConfig
     json.each { |user_data| @users << User.new(raw: user_data) }
   end
 
+  def attach_github_prs
+    filename = File.join(@target_path, "#{get_file_prefix}_github_prs.json")
+    return unless File.exist?(filename)
+
+    prs_by_issue_key = Hash.new { |h, k| h[k] = [] }
+    file_system.load_json(filename).each do |pr|
+      pr['issue_keys'].each { |key| prs_by_issue_key[key] << pr }
+    end
+
+    @issues.each { |issue| issue.github_prs = prs_by_issue_key[issue.key] }
+  end
+
   def atlassian_document_format
     @atlassian_document_format ||= AtlassianDocumentFormat.new(
       users: @users, timezone_offset: exporter.timezone_offset
@@ -444,6 +456,7 @@ class ProjectConfig
       # attached them in the appropriate places, remove any that aren't part of that initial set.
       issues.reject! { |i| !i.in_initial_query? } # rubocop:disable Style/InverseMethods
       @issues = issues
+      attach_github_prs
     end
 
     @issues

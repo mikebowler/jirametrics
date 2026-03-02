@@ -77,6 +77,7 @@ class Downloader
     download_users
 
     save_metadata
+    download_github_prs if @download_config.github_repos.any?
   end
 
   def log text, both: false
@@ -299,6 +300,38 @@ class Downloader
     end
 
     segments.join ' AND '
+  end
+
+  def download_github_prs
+    project_keys = extract_project_keys_from_downloaded_issues
+    if project_keys.empty?
+      log '  No project keys found in downloaded issues, skipping GitHub PR download', both: true
+      return
+    end
+
+    prs = @download_config.github_repos.flat_map do |repo|
+      GithubGateway.new(
+        repo: repo,
+        project_keys: project_keys,
+        file_system: @file_system
+      ).fetch_pull_requests(since: @download_date_range&.begin)
+    end
+
+    @file_system.save_json(
+      json: prs,
+      filename: File.join(@target_path, "#{file_prefix}_github_prs.json")
+    )
+  end
+
+  def extract_project_keys_from_downloaded_issues
+    path = File.join(@target_path, "#{file_prefix}_issues")
+    return [] unless @file_system.dir_exist?(path)
+
+    keys = []
+    @file_system.foreach(path) do |filename|
+      keys << filename.split('-').first if filename =~ /^[A-Z]+-\d+-\d+\.json$/
+    end
+    keys.uniq
   end
 
   def file_prefix
