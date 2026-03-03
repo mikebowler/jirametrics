@@ -161,27 +161,45 @@ class ChartBase
     end.join
   end
 
+  LABEL_POSITIONS = %w[5% 25% 45% 65%].freeze
+
   def date_annotation
     annotations = settings['date_annotations'] || []
-    annotations
-      .select { |a| date_range.cover?(Date.parse(normalize_annotation_datetime(a['date']))) }
-      .each_with_index.collect do |a, index|
-        normalized = normalize_annotation_datetime(a['date'])
-        <<~TEXT
-          dateAnnotation#{index}: {
-            type: 'line',
-            xMin: #{normalized.to_json},
-            xMax: #{normalized.to_json},
-            borderColor: 'rgba(0,0,0,0.7)',
-            borderWidth: 1,
-            label: {
-              display: true,
-              content: #{a['label'].to_json},
-              position: 'start'
-            }
-          },
-        TEXT
-      end.join
+    in_range = annotations
+      .map { |a| [a, normalize_annotation_datetime(a['date'])] }
+      .select { |(_, dt)| date_range.cover?(Date.parse(dt)) }
+      .sort_by { |(_, dt)| dt }
+
+    positions = stagger_label_positions(in_range.map { |(_, dt)| dt })
+
+    in_range.each_with_index.collect do |(a, normalized), index|
+      <<~TEXT
+        dateAnnotation#{index}: {
+          type: 'line',
+          xMin: #{normalized.to_json},
+          xMax: #{normalized.to_json},
+          borderColor: 'rgba(0,0,0,0.7)',
+          borderWidth: 1,
+          label: {
+            display: true,
+            content: #{a['label'].to_json},
+            position: #{positions[index].to_json}
+          }
+        },
+      TEXT
+    end.join
+  end
+
+  def stagger_label_positions datetimes
+    return [] if datetimes.empty?
+
+    threshold_days = (date_range.end - date_range.begin).to_f / 5.0
+    slot = 0
+    [LABEL_POSITIONS[0]] + datetimes.each_cons(2).map do |a, b|
+      days_apart = (Date.parse(b) - Date.parse(a)).to_f.abs
+      slot = days_apart < threshold_days ? slot + 1 : 0
+      LABEL_POSITIONS[slot % LABEL_POSITIONS.size]
+    end
   end
 
   def normalize_annotation_datetime value

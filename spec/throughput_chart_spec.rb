@@ -90,6 +90,7 @@ describe ThroughputChart do
       chart.time_range = to_time('2021-10-11')..to_time('2021-11-07')
       chart.holiday_dates = []
       chart.issues = []
+      chart.settings = {}
 
       output = chart.run
       expect(output).to include('min: "2021-10-11"')

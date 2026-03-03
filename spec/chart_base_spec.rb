@@ -158,6 +158,43 @@ describe ChartBase do
     end
   end
 
+  context 'stagger_label_positions' do
+    before { chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31') }
+
+    it 'returns empty for no datetimes' do
+      expect(chart_base.stagger_label_positions([])).to eq []
+    end
+
+    it 'returns ["5%"] for a single datetime' do
+      expect(chart_base.stagger_label_positions(['2022-06-01T00:00:00+00:00'])).to eq ['5%']
+    end
+
+    it 'returns ["5%", "5%"] for datetimes far apart' do
+      expect(chart_base.stagger_label_positions(['2022-01-01T00:00:00+00:00', '2022-12-01T00:00:00+00:00'])).to eq ['5%', '5%']
+    end
+
+    it 'returns ["5%", "25%"] for datetimes close together' do
+      expect(chart_base.stagger_label_positions(['2022-06-01T00:00:00+00:00', '2022-06-03T00:00:00+00:00'])).to eq ['5%', '25%']
+    end
+
+    it 'returns ["5%", "25%", "45%"] for three datetimes all close together' do
+      expect(chart_base.stagger_label_positions([
+        '2022-06-01T00:00:00+00:00', '2022-06-02T00:00:00+00:00', '2022-06-03T00:00:00+00:00'
+      ])).to eq ['5%', '25%', '45%']
+    end
+
+    it 'resets slot after a large gap' do
+      expect(chart_base.stagger_label_positions([
+        '2022-01-01T00:00:00+00:00', '2022-01-02T00:00:00+00:00', '2022-12-01T00:00:00+00:00'
+      ])).to eq ['5%', '25%', '5%']
+    end
+
+    it 'wraps around after exhausting all positions' do
+      datetimes = (1..5).map { |d| "2022-06-0#{d}T00:00:00+00:00" }
+      expect(chart_base.stagger_label_positions(datetimes)).to eq ['5%', '25%', '45%', '65%', '5%']
+    end
+  end
+
   context 'normalize_annotation_datetime' do
     before { chart_base.timezone_offset = '-05:00' }
 
@@ -205,6 +242,19 @@ describe ChartBase do
       expect(result).to include('"2022-06-01T00:00:00+00:00"')
       expect(result).to include('"Coaching started"')
       expect(result).to include('dateAnnotation0:')
+      expect(result).to include('position: "5%"')
+    end
+
+    it 'staggers labels for close annotations' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'First' },
+          { 'date' => '2022-06-03', 'label' => 'Second' }
+        ]
+      }
+      result = chart_base.date_annotation
+      expect(result).to include('position: "5%"')
+      expect(result).to include('position: "25%"')
     end
 
     it 'includes annotation for a datetime within range' do

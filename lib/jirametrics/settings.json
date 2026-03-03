@@ -11,8 +11,5 @@
 
   "cache_cycletime_calculations": true,
 
-  "date_annotations": [
-    { "date": "2025-06-05T10:00:00", "label": "Coaching started" },
-    { "date": "2025-06-08T10:00:00", "label": "Coaching 2" }
-  ]
+  "date_annotations": []
 }
