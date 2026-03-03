@@ -9,5 +9,10 @@
   "expedited_priority_names": ["Critical", "Highest"],
   "priority_order": ["Lowest", "Low", "Medium", "High", "Highest"],
 
-  "cache_cycletime_calculations": true
+  "cache_cycletime_calculations": true,
+
+  "date_annotations": [
+    { "date": "2025-06-05T10:00:00", "label": "Coaching started" },
+    { "date": "2025-06-08T10:00:00", "label": "Coaching 2" }
+  ]
 }

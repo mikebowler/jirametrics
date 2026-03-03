@@ -161,6 +161,38 @@ class ChartBase
     end.join
   end
 
+  def date_annotation
+    annotations = settings['date_annotations'] || []
+    annotations
+      .select { |a| date_range.cover?(Date.parse(normalize_annotation_datetime(a['date']))) }
+      .each_with_index.collect do |a, index|
+        normalized = normalize_annotation_datetime(a['date'])
+        <<~TEXT
+          dateAnnotation#{index}: {
+            type: 'line',
+            xMin: #{normalized.to_json},
+            xMax: #{normalized.to_json},
+            borderColor: 'rgba(0,0,0,0.7)',
+            borderWidth: 1,
+            label: {
+              display: true,
+              content: #{a['label'].to_json},
+              position: 'start'
+            }
+          },
+        TEXT
+      end.join
+  end
+
+  def normalize_annotation_datetime value
+    offset = timezone_offset || '+00:00'
+    if value.include?('T')
+      value.match?(/([+-]\d{2}:\d{2}|Z)$/) ? value : "#{value}#{offset}"
+    else
+      "#{value}T00:00:00#{offset}"
+    end
+  end
+
   # Return only the board columns for the current board.
   def current_board
     if @board_id.nil?

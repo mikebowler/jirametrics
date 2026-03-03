@@ -158,6 +158,100 @@ describe ChartBase do
     end
   end
 
+  context 'normalize_annotation_datetime' do
+    before { chart_base.timezone_offset = '-05:00' }
+
+    it 'appends timezone to a plain date' do
+      expect(chart_base.normalize_annotation_datetime('2022-06-01')).to eq '2022-06-01T00:00:00-05:00'
+    end
+
+    it 'appends timezone to a datetime without timezone' do
+      expect(chart_base.normalize_annotation_datetime('2022-06-01T10:30:00')).to eq '2022-06-01T10:30:00-05:00'
+    end
+
+    it 'leaves a datetime with explicit + offset unchanged' do
+      expect(chart_base.normalize_annotation_datetime('2022-06-01T10:30:00+02:00')).to eq '2022-06-01T10:30:00+02:00'
+    end
+
+    it 'leaves a datetime with Z suffix unchanged' do
+      expect(chart_base.normalize_annotation_datetime('2022-06-01T10:30:00Z')).to eq '2022-06-01T10:30:00Z'
+    end
+
+    it 'falls back to +00:00 when timezone_offset is nil' do
+      chart_base.timezone_offset = nil
+      expect(chart_base.normalize_annotation_datetime('2022-06-01')).to eq '2022-06-01T00:00:00+00:00'
+    end
+  end
+
+  context 'date_annotation' do
+    before do
+      chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31')
+      chart_base.timezone_offset = '+00:00'
+    end
+
+    it 'returns empty string when no annotations configured' do
+      chart_base.settings = {}
+      expect(chart_base.date_annotation).to eq ''
+    end
+
+    it 'returns empty string when date_annotations is empty' do
+      chart_base.settings = { 'date_annotations' => [] }
+      expect(chart_base.date_annotation).to eq ''
+    end
+
+    it 'includes annotation for a plain date within range' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01', 'label' => 'Coaching started' }] }
+      result = chart_base.date_annotation
+      expect(result).to include('"2022-06-01T00:00:00+00:00"')
+      expect(result).to include('"Coaching started"')
+      expect(result).to include('dateAnnotation0:')
+    end
+
+    it 'includes annotation for a datetime within range' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01T10:00:00', 'label' => 'Meeting' }] }
+      result = chart_base.date_annotation
+      expect(result).to include('"2022-06-01T10:00:00+00:00"')
+      expect(result).to include('dateAnnotation0:')
+    end
+
+    it 'includes annotation for a datetime with explicit timezone' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01T10:00:00-05:00', 'label' => 'Meeting' }] }
+      result = chart_base.date_annotation
+      expect(result).to include('"2022-06-01T10:00:00-05:00"')
+    end
+
+    it 'excludes annotation for a date outside range' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2021-01-01', 'label' => 'Old event' }] }
+      expect(chart_base.date_annotation).to eq ''
+    end
+
+    it 'numbers multiple annotations sequentially' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-03-01', 'label' => 'First' },
+          { 'date' => '2022-09-01', 'label' => 'Second' }
+        ]
+      }
+      result = chart_base.date_annotation
+      expect(result).to include('dateAnnotation0:')
+      expect(result).to include('dateAnnotation1:')
+    end
+
+    it 'filters out-of-range annotations while keeping in-range ones' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2021-01-01', 'label' => 'Too early' },
+          { 'date' => '2022-06-01', 'label' => 'In range' }
+        ]
+      }
+      result = chart_base.date_annotation
+      expect(result).to include('dateAnnotation0:')
+      expect(result).not_to include('dateAnnotation1:')
+      expect(result).to include('"In range"')
+      expect(result).not_to include('"Too early"')
+    end
+  end
+
   context 'holidays' do
     it 'handles Tues-Thu in the same week' do
       chart_base.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-03')
