@@ -94,6 +94,20 @@ Each chart class in `lib/jirametrics/` has a matching ERB template in `lib/jiram
 
 Tests must always be written for new or modified functionality. There are no exceptions to this rule.
 
+## Known Gotchas
+
+### Timezone consistency
+All timestamps must be in `exporter.timezone_offset` (default `+00:00`). Issue timestamps are converted on load via `Issue#parse_time`. Use `today_in_project_timezone` (`Time.now.getlocal(timezone_offset).to_date`) in downloaders — never `Date.today`, which uses the system local timezone and will cause issues to fall outside the date range.
+
+### Chart.js time axis max
+Chart.js interprets `max` as the *start* of that day, so always use `date_range.end + 1` for the max value on time-scale x-axes.
+
+### chartjs-plugin-annotation v3 label position
+The `position` property on a line annotation label accepts `'start'`, `'center'`, `'end'`, or a **percentage string** like `'25%'`. Decimal numbers (e.g. `0.25`) are silently ignored — the label stays at the default position with no warning or error. Always call `.to_json` when interpolating string values into JS heredocs.
+
+### Running tests
+Always run `rake spec` rather than individual spec files — running a single file causes `NameError: uninitialized constant MockFileSystem` due to a load-order dependency.
+
 ## Code Conventions
 
 - All Ruby files use `# frozen_string_literal: true`
