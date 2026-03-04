@@ -4,7 +4,7 @@
 # as a complete setup that will work in every case.
 class Exporter
   def standard_project name:, file_prefix:, ignore_issues: nil, starting_status: nil, boards: {},
-      default_board: nil, anonymize: false, settings: {}, status_category_mappings: {},
+      default_board: nil, anonymize: true, settings: {}, status_category_mappings: {},
       rolling_date_count: 90, no_earlier_than: nil, ignore_types: %w[Sub-task Subtask Epic],
       show_experimental_charts: false, github_repos: nil
 

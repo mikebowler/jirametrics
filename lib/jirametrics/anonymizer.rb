@@ -21,6 +21,10 @@ class Anonymizer < ChartBase
     anonymize_column_names
     # anonymize_issue_statuses
     anonymize_board_names
+    anonymize_labels_and_components
+    anonymize_sprints
+    anonymize_fix_versions
+    anonymize_server_url
     shift_all_dates unless @date_adjustment.zero?
     @file_system.log 'Anonymize done'
   end
@@ -38,12 +42,24 @@ class Anonymizer < ChartBase
 
   def anonymize_issue_keys_and_titles issues: @issues
     counter = 0
+    seen_author_raws = {}
     issues.each do |issue|
       new_key = "ANON-#{counter += 1}"
 
       issue.raw['key'] = new_key
       issue.raw['fields']['summary'] = random_phrase
+      issue.raw['fields']['description'] = nil
       issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
+
+      anonymize_author_raw(issue.raw['fields']['creator'], seen_author_raws)
+
+      issue.changes.each do |change|
+        anonymize_author_raw(change.author_raw, seen_author_raws)
+        if change.comment? || change.description?
+          change.value = nil
+          change.old_value = nil
+        end
+      end
 
       issue.issue_links.each do |link|
         other_issue = link.other_issue
@@ -52,6 +68,49 @@ class Anonymizer < ChartBase
         other_issue.raw['key'] = "ANON-#{counter += 1}"
         other_issue.raw['fields']['summary'] = random_phrase
       end
+    end
+  end
+
+  def anonymize_labels_and_components
+    @issues.each do |issue|
+      issue.raw['fields']['labels'] = []
+      issue.raw['fields']['components'] = []
+    end
+  end
+
+  def anonymize_sprints
+    sprint_counter = 0
+    sprint_name_map = {}
+    @all_boards.each_value do |board|
+      board.sprints.each do |sprint|
+        name = sprint.raw['name']
+        unless sprint_name_map[name]
+          sprint_counter += 1
+          sprint_name_map[name] = "Sprint-#{sprint_counter}"
+        end
+        sprint.raw['name'] = sprint_name_map[name]
+      end
+    end
+  end
+
+  def anonymize_fix_versions
+    version_counter = 0
+    version_name_map = {}
+    @issues.each do |issue|
+      issue.raw['fields']['fixVersions']&.each do |fix_version|
+        name = fix_version['name']
+        unless version_name_map[name]
+          version_counter += 1
+          version_name_map[name] = "Version-#{version_counter}"
+        end
+        fix_version['name'] = version_name_map[name]
+      end
+    end
+  end
+
+  def anonymize_server_url
+    @all_boards.each_value do |board|
+      board.raw['self'] = board.raw['self']&.sub(/^https?:\/\/[^\/]+/, 'https://anon.example.com')
     end
   end
 
@@ -143,7 +202,7 @@ class Anonymizer < ChartBase
     end
 
     range = @project_config.time_range
-    @project_config.time_range = (range.begin + date_adjustment)..(range.end + date_adjustment)
+    @project_config.time_range = (range.begin + adjustment_in_seconds)..(range.end + adjustment_in_seconds)
   end
 
   def random_name
@@ -185,5 +244,19 @@ class Anonymizer < ChartBase
     @all_boards.each_value do |board|
       board.raw['name'] = "#{random_phrase} board"
     end
+  end
+
+  private
+
+  def anonymize_author_raw author_raw, seen
+    return unless author_raw
+    return if seen[author_raw.object_id]
+
+    seen[author_raw.object_id] = true
+    name = random_name
+    author_raw['displayName'] = name
+    author_raw['name'] = name
+    author_raw.delete('emailAddress')
+    author_raw.delete('avatarUrls')
   end
 end
