@@ -47,7 +47,7 @@ class Exporter
       file do
         file_suffix '.html'
 
-        issues.reject! { |issue| ignore_issues.include? issue.key } if ignore_issues
+        filter_issues issues, ignore_issues
 
         html_report do
           board_id default_board if default_board
@@ -93,6 +93,16 @@ class Exporter
           dependency_chart
         end
       end
+    end
+  end
+
+  # Extracted as a separate method so it can be tested independently, without needing to invoke
+  # the full standard_project DSL setup.
+  def filter_issues issues, ignore_issues
+    return unless ignore_issues
+
+    issues.reject! do |issue|
+      ignore_issues.is_a?(Proc) ? ignore_issues.call(issue) : ignore_issues.include?(issue.key)
     end
   end
 end

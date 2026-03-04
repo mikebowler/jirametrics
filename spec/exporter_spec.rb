@@ -124,4 +124,35 @@ describe Exporter do
       ])
     end
   end
+
+  context 'filter_issues' do
+    let(:board) { load_complete_sample_board }
+    let(:issue1) { load_issue 'SP-1', board: board }
+    let(:issue2) { load_issue 'SP-2', board: board }
+
+    it 'does not filter when ignore_issues is nil' do
+      issues = [issue1, issue2]
+      exporter.filter_issues issues, nil
+      expect(issues).to eq [issue1, issue2]
+    end
+
+    it 'filters by array of keys' do
+      issues = [issue1, issue2]
+      exporter.filter_issues issues, ['SP-1']
+      expect(issues).to eq [issue2]
+    end
+
+    it 'filters by lambda returning true to ignore' do
+      issues = [issue1, issue2]
+      exporter.filter_issues issues, ->(issue) { issue.key == 'SP-1' }
+      expect(issues).to eq [issue2]
+    end
+
+    it 'passes the issue to the lambda' do
+      received = []
+      issues = [issue1, issue2]
+      exporter.filter_issues issues, ->(issue) { received << issue; false }
+      expect(received).to eq [issue1, issue2]
+    end
+  end
 end
