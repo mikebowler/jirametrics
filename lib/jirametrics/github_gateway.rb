@@ -6,14 +6,20 @@ require 'json'
 class GithubGateway
   attr_reader :repo
 
-  def initialize repo:, project_keys:, file_system:
+  def initialize repo:, project_keys:, file_system:, raw_pr_cache: {}
     @repo = repo
     @project_keys = project_keys
     @file_system = file_system
+    @raw_pr_cache = raw_pr_cache
     @issue_key_pattern = build_issue_key_pattern
   end
 
   def fetch_pull_requests since: nil
+    raw_prs = @raw_pr_cache[[@repo, since]] ||= fetch_raw_pull_requests(since: since)
+    raw_prs.filter_map { |pr| build_pr_data(pr) }
+  end
+
+  def fetch_raw_pull_requests since: nil
     # Note: 'commits' is intentionally excluded — including it triggers GitHub's GraphQL node
     # limit (authors sub-connection × PRs × commits exceeds 500,000 nodes). Branch name,
     # title, and body are sufficient for issue key extraction in the vast majority of cases.
@@ -23,8 +29,7 @@ class GithubGateway
     args += ['--search', "updated:>=#{since}"] if since
 
     @file_system.log "  Downloading pull requests from #{@repo}", also_write_to_stderr: true
-    raw_prs = run_command(args)
-    raw_prs.filter_map { |pr| build_pr_data(pr) }
+    run_command(args)
   end
 
   def build_pr_data raw_pr

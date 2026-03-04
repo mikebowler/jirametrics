@@ -33,21 +33,23 @@ class Downloader
   # For testing only
   attr_reader :start_date_in_query, :board_id_to_filter_id
 
-  def self.create download_config:, file_system:, jira_gateway:
+  def self.create download_config:, file_system:, jira_gateway:, github_pr_cache: {}
     is_cloud = jira_gateway.settings['jira_cloud'] || jira_gateway.cloud?
     (is_cloud ? DownloaderForCloud : DownloaderForDataCenter).new(
       download_config: download_config,
       file_system: file_system,
-      jira_gateway: jira_gateway
+      jira_gateway: jira_gateway,
+      github_pr_cache: github_pr_cache
     )
   end
 
-  def initialize download_config:, file_system:, jira_gateway:
+  def initialize download_config:, file_system:, jira_gateway:, github_pr_cache: {}
     @metadata = {}
     @download_config = download_config
     @target_path = @download_config.project_config.target_path
     @file_system = file_system
     @jira_gateway = jira_gateway
+    @github_pr_cache = github_pr_cache
     @board_id_to_filter_id = {}
 
     @issue_keys_downloaded_in_current_run = []
@@ -313,7 +315,8 @@ class Downloader
       GithubGateway.new(
         repo: repo,
         project_keys: project_keys,
-        file_system: @file_system
+        file_system: @file_system,
+        raw_pr_cache: @github_pr_cache
       ).fetch_pull_requests(since: @download_date_range&.begin)
     end
 

@@ -40,6 +40,7 @@ class Exporter
 
   def download name_filter:
     @downloading = true
+    github_pr_cache = {}
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
       next if project.aggregated_project?
@@ -56,7 +57,8 @@ class Exporter
       downloader = Downloader.create(
         download_config: project.download_config,
         file_system: file_system,
-        jira_gateway: gateway
+        jira_gateway: gateway,
+        github_pr_cache: github_pr_cache
       )
       downloader.run
     end

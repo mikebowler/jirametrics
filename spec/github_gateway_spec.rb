@@ -177,5 +177,29 @@ describe GithubGateway do
       end
       gateway.fetch_pull_requests
     end
+
+    it 'uses the shared cache to avoid duplicate GitHub requests for the same repo and since date' do
+      cache = {}
+      gateway1 = described_class.new(repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
+      gateway2 = described_class.new(repo: 'owner/repo', project_keys: %w[OTHER], file_system: file_system, raw_pr_cache: cache)
+
+      allow(gateway1).to receive(:run_command).and_return([])
+      expect(gateway2).not_to receive(:run_command)
+
+      gateway1.fetch_pull_requests
+      gateway2.fetch_pull_requests
+    end
+
+    it 'makes separate requests for different repos even with a shared cache' do
+      cache = {}
+      gateway1 = described_class.new(repo: 'owner/repo1', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
+      gateway2 = described_class.new(repo: 'owner/repo2', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
+
+      allow(gateway1).to receive(:run_command).and_return([])
+      expect(gateway2).to receive(:run_command).and_return([])
+
+      gateway1.fetch_pull_requests
+      gateway2.fetch_pull_requests
+    end
   end
 end
