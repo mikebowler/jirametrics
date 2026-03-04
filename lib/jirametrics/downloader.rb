@@ -318,7 +318,7 @@ class Downloader
     end
 
     @file_system.save_json(
-      json: prs,
+      json: prs.map(&:raw),
       filename: File.join(@target_path, "#{file_prefix}_github_prs.json")
     )
   end

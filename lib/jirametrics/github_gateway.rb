@@ -31,7 +31,7 @@ class GithubGateway
     issue_keys = extract_issue_keys(raw_pr)
     return nil if issue_keys.empty?
 
-    {
+    PullRequest.new(raw: {
       'number'     => raw_pr['number'],
       'repo'       => @repo,
       'url'        => raw_pr['url'],
@@ -43,7 +43,7 @@ class GithubGateway
       'state'      => raw_pr['state'],
       'issue_keys' => issue_keys,
       'reviews'    => extract_reviews(raw_pr['reviews'] || [])
-    }
+    })
   end
 
   def extract_issue_keys raw_pr

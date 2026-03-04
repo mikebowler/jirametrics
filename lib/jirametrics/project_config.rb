@@ -368,8 +368,9 @@ class ProjectConfig
     return unless File.exist?(filename)
 
     prs_by_issue_key = Hash.new { |h, k| h[k] = [] }
-    file_system.load_json(filename).each do |pr|
-      pr['issue_keys'].each { |key| prs_by_issue_key[key] << pr }
+    file_system.load_json(filename).each do |raw|
+      pr = PullRequest.new(raw: raw)
+      pr.issue_keys.each { |key| prs_by_issue_key[key] << pr }
     end
 
     @issues.each { |issue| issue.github_prs = prs_by_issue_key[issue.key] }

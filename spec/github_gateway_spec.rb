@@ -102,20 +102,20 @@ describe GithubGateway do
       }
     end
 
-    it 'builds the correct hash for a matched PR' do
-      expect(gateway.build_pr_data(raw_pr)).to eq(
-        'number'     => 42,
-        'repo'       => 'owner/repo',
-        'url'        => 'https://github.com/owner/repo/pull/42',
-        'title'      => 'Fix SP-112',
-        'branch'     => 'SP-112-fix-validation',
-        'opened_at'  => '2026-01-10T09:00:00Z',
-        'closed_at'  => '2026-01-14T16:30:00Z',
-        'merged_at'  => '2026-01-14T16:30:00Z',
-        'state'      => 'MERGED',
-        'issue_keys' => ['SP-112'],
-        'reviews'    => []
-      )
+    it 'builds a PullRequest for a matched PR' do
+      result = gateway.build_pr_data(raw_pr)
+      expect(result).to be_a PullRequest
+      expect(result.number).to eq 42
+      expect(result.repo).to eq 'owner/repo'
+      expect(result.url).to eq 'https://github.com/owner/repo/pull/42'
+      expect(result.title).to eq 'Fix SP-112'
+      expect(result.branch).to eq 'SP-112-fix-validation'
+      expect(result.opened_at).to eq Time.parse('2026-01-10T09:00:00Z')
+      expect(result.closed_at).to eq Time.parse('2026-01-14T16:30:00Z')
+      expect(result.merged_at).to eq Time.parse('2026-01-14T16:30:00Z')
+      expect(result.state).to eq 'MERGED'
+      expect(result.issue_keys).to eq ['SP-112']
+      expect(result.reviews).to be_empty
     end
 
     it 'returns nil when no issue keys can be found' do
@@ -129,9 +129,9 @@ describe GithubGateway do
       raw_pr['closedAt'] = nil
       raw_pr['mergedAt'] = nil
       result = gateway.build_pr_data(raw_pr)
-      expect(result['state']).to eq 'OPEN'
-      expect(result['closed_at']).to be_nil
-      expect(result['merged_at']).to be_nil
+      expect(result.state).to eq 'OPEN'
+      expect(result.closed_at).to be_nil
+      expect(result.merged_at).to be_nil
     end
   end
 
@@ -159,7 +159,7 @@ describe GithubGateway do
       allow(gateway).to receive(:run_command).and_return(raw_prs)
       results = gateway.fetch_pull_requests
       expect(results.size).to eq 1
-      expect(results.first['number']).to eq 42
+      expect(results.first.number).to eq 42
     end
 
     it 'passes the since date to the gh command' do

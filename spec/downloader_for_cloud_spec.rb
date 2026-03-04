@@ -173,8 +173,8 @@ describe DownloaderForCloud do
 
       download_config.github_repo 'owner/repo1', 'owner/repo2'
 
-      pr1 = { 'number' => 1, 'repo' => 'owner/repo1', 'issue_keys' => ['SP-1'] }
-      pr2 = { 'number' => 2, 'repo' => 'owner/repo2', 'issue_keys' => ['SP-1'] }
+      pr1 = PullRequest.new(raw: { 'number' => 1, 'repo' => 'owner/repo1', 'issue_keys' => ['SP-1'] })
+      pr2 = PullRequest.new(raw: { 'number' => 2, 'repo' => 'owner/repo2', 'issue_keys' => ['SP-1'] })
 
       gateway1 = instance_double(GithubGateway, fetch_pull_requests: [pr1])
       gateway2 = instance_double(GithubGateway, fetch_pull_requests: [pr2])
