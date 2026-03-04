@@ -329,7 +329,7 @@ class Downloader
 
     keys = []
     @file_system.foreach(path) do |filename|
-      keys << filename.split('-').first if filename =~ /^[A-Z]+-\d+-\d+\.json$/
+      keys << filename.split('-').first if filename =~ /^[A-Z][A-Z_0-9]+-\d+-\d+\.json$/
     end
     keys.uniq
   end

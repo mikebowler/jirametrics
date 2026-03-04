@@ -145,6 +145,14 @@ describe DownloaderForCloud do
 
       expect(downloader.extract_project_keys_from_downloaded_issues).to eq ['SP']
     end
+
+    it 'handles project keys with underscores and numbers' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues',
+                               result: %w[MY_PROJECT-1-1.json AB2C-10-1.json]
+
+      expect(downloader.extract_project_keys_from_downloaded_issues).to match_array %w[MY_PROJECT AB2C]
+    end
   end
 
   context 'download_github_prs' do
