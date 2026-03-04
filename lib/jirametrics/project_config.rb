@@ -47,9 +47,10 @@ class ProjectConfig
     return if @exporter.downloading?
 
     load_data unless aggregated_project?
-    anonymize_data if @anonymizer_needed
 
     return if load_only
+
+    anonymize_data if @anonymizer_needed
 
     @file_configs.each do |file_config|
       file_config.run

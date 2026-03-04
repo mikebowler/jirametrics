@@ -629,4 +629,13 @@ describe ProjectConfig do
       )
     end
   end
+
+  context 'run' do
+    it 'does not anonymize data when load_only is true' do
+      project_config.anonymize
+      allow(project_config).to receive(:load_data)
+      expect(project_config).not_to receive(:anonymize_data)
+      project_config.run(load_only: true)
+    end
+  end
 end
