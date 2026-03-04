@@ -21,6 +21,14 @@ describe CycletimeScatterplot do
         y: 81
       })
     end
+
+    it 'appends issue_hint when set' do
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
+      chart.instance_variable_set(:@issue_hints, { issue => '(priority: high)' })
+      expect(chart.data_for_issue(issue)[:title]).to eq ['SP-10 : Check in people at an event (81 days) (priority: high)']
+    end
   end
 
   context 'label_days' do

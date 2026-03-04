@@ -76,6 +76,22 @@ describe ThroughputChart do
         }
       ]
     end
+
+    it 'appends issue_hint to each issue line when set' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1]
+      board.cycletime = default_cycletime_config
+      subject.instance_variable_set(:@issue_hints, { issue1 => '(priority: high)' })
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
+        completed_issues: [issue1]
+      )
+      expect(dataset.first[:title][1]).to eq 'SP-1 : Create new draft event (priority: high)'
+    end
   end
 
   context 'run' do

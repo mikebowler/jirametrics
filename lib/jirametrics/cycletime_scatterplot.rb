@@ -53,7 +53,8 @@ class CycletimeScatterplot < ChartBase
   end
 
   def title_value item
-    "#{item.key} : #{item.summary} (#{label_days(y_value(item))})"
+    hint = @issue_hints&.fetch(item, nil)
+    "#{item.key} : #{item.summary} (#{label_days(y_value(item))})#{" #{hint}" if hint}"
   end
 
   def y_axis_heading

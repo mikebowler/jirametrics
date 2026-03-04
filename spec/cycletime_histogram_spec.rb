@@ -20,7 +20,7 @@ describe CycletimeHistogram do
         [issue2, '2022-01-01', '2022-01-04'],
         [issue10, '2022-01-01', '2022-01-01T01:00:00']
       ]
-      expect(chart.histogram_data_for issues: [issue1, issue2, issue10]).to eq({ 4 => 2, 1 => 1 })
+      expect(chart.histogram_data_for issues: [issue1, issue2, issue10]).to eq({ 4 => [issue1, issue2], 1 => [issue10] })
     end
   end
 
@@ -117,12 +117,18 @@ describe CycletimeHistogram do
     end
 
     it 'handles simple data' do
-      expect(chart.data_set_for histogram_data: { 4 => 2, 3 => 0 }, label: 'foo', color: 'red').to eq({
+      board.cycletime = default_cycletime_config
+      result = chart.data_set_for histogram_data: { 4 => [issue1, issue2], 3 => [] }, label: 'foo', color: 'red'
+      expect(result).to eq({
         backgroundColor: 'red',
         borderRadius: 0,
         data: [
           {
-            title: '2 items completed in 4 days',
+            title: [
+              '2 items completed in 4 days',
+              "#{issue1.key} : #{issue1.summary}",
+              "#{issue2.key} : #{issue2.summary}"
+            ],
             x: 4,
             y: 2
           }
@@ -130,6 +136,13 @@ describe CycletimeHistogram do
         label: 'foo',
         type: 'bar'
       })
+    end
+
+    it 'appends issue_hint to each issue line when set' do
+      board.cycletime = default_cycletime_config
+      chart.instance_variable_set(:@issue_hints, { issue1 => '(hint for issue1)' })
+      result = chart.data_set_for histogram_data: { 4 => [issue1] }, label: 'foo', color: 'red'
+      expect(result[:data].first[:title][1]).to eq "#{issue1.key} : #{issue1.summary} (hint for issue1)"
     end
   end
 end

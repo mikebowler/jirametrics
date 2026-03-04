@@ -95,7 +95,10 @@ class ThroughputChart < ChartBase
       { y: closed_issues.size,
         x: "#{period.end}T23:59:59",
         title: ["#{closed_issues.size} items completed #{date_label}"] +
-          closed_issues.collect { |_stop_date, issue| "#{issue.key} : #{issue.summary}" }
+          closed_issues.collect do |_stop_date, issue|
+            hint = @issue_hints&.fetch(issue, nil)
+            "#{issue.key} : #{issue.summary}#{" #{hint}" if hint}"
+          end
       }
     end
   end

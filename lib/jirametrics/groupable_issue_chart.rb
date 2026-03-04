@@ -16,6 +16,7 @@ module GroupableIssueChart
   def group_issues completed_issues
     result = {}
     ignored_issues = []
+    @issue_hints = {}
     completed_issues.each do |issue|
       rules = GroupingRules.new
       @group_by_block.call(issue, rules)
@@ -24,6 +25,7 @@ module GroupableIssueChart
         next
       end
 
+      @issue_hints[issue] = rules.issue_hint
       (result[rules] ||= []) << issue
     end
 

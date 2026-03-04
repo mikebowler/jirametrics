@@ -62,12 +62,12 @@ class CycletimeHistogram < ChartBase
 
     the_stats = {}
 
-    overall_stats = stats_for histogram_data: histogram_data_for(issues: histogram_issues), percentiles: @percentiles
+    overall_stats = stats_for histogram_data: histogram_data_for(issues: histogram_issues).transform_values(&:size), percentiles: @percentiles
     the_stats[:all] = overall_stats
     data_sets = rules_to_issues.keys.collect do |rules|
       the_issue_type = rules.label
       the_histogram = histogram_data_for(issues: rules_to_issues[rules])
-      the_stats[the_issue_type] = stats_for histogram_data: the_histogram, percentiles: @percentiles if @show_stats
+      the_stats[the_issue_type] = stats_for histogram_data: the_histogram.transform_values(&:size), percentiles: @percentiles if @show_stats
 
       data_set_for(
         histogram_data: the_histogram,
@@ -84,12 +84,12 @@ class CycletimeHistogram < ChartBase
   end
 
   def histogram_data_for issues:
-    count_hash = {}
+    issues_hash = {}
     issues.each do |issue|
       days = value_for_item issue
-      count_hash[days] = (count_hash[days] || 0) + 1 if days.positive?
+      (issues_hash[days] ||= []) << issue if days.positive?
     end
-    count_hash
+    issues_hash
   end
 
   def stats_for histogram_data:, percentiles:
@@ -135,17 +135,21 @@ class CycletimeHistogram < ChartBase
   end
 
   def data_set_for histogram_data:, label:, color:
-    keys = histogram_data.keys.sort
     {
       type: 'bar',
       label: label,
-      data: keys.sort.filter_map do |key|
-        next if histogram_data[key].zero?
+      data: histogram_data.keys.sort.filter_map do |days|
+        issues = histogram_data[days]
+        next if issues.empty?
 
         {
-          x: key,
-          y: histogram_data[key],
-          title: title_for_item(count: histogram_data[key], value: key)
+          x: days,
+          y: issues.size,
+          title: [title_for_item(count: issues.size, value: days)] +
+            issues.sort_by(&:key_as_i).collect do |issue|
+              hint = @issue_hints&.fetch(issue, nil)
+              "#{issue.key} : #{issue.summary}#{" #{hint}" if hint}"
+            end
         }
       end,
       backgroundColor: color,
