@@ -70,14 +70,18 @@ describe GithubGateway do
     end
 
     it 'includes CHANGES_REQUESTED reviews' do
-      reviews = [{ 'author' => { 'login' => 'bob' }, 'submittedAt' => '2026-01-11T10:00:00Z', 'state' => 'CHANGES_REQUESTED' }]
+      reviews = [
+        { 'author' => { 'login' => 'bob' }, 'submittedAt' => '2026-01-11T10:00:00Z', 'state' => 'CHANGES_REQUESTED' }
+    ]
       expect(gateway.extract_reviews(reviews)).to eq [
         { 'author' => 'bob', 'submitted_at' => '2026-01-11T10:00:00Z', 'state' => 'CHANGES_REQUESTED' }
       ]
     end
 
     it 'excludes COMMENTED reviews' do
-      reviews = [{ 'author' => { 'login' => 'carol' }, 'submittedAt' => '2026-01-12T09:00:00Z', 'state' => 'COMMENTED' }]
+      reviews = [
+        { 'author' => { 'login' => 'carol' }, 'submittedAt' => '2026-01-12T09:00:00Z', 'state' => 'COMMENTED' }
+      ]
       expect(gateway.extract_reviews(reviews)).to be_empty
     end
 
@@ -180,26 +184,38 @@ describe GithubGateway do
 
     it 'uses the shared cache to avoid duplicate GitHub requests for the same repo and since date' do
       cache = {}
-      gateway1 = described_class.new(repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
-      gateway2 = described_class.new(repo: 'owner/repo', project_keys: %w[OTHER], file_system: file_system, raw_pr_cache: cache)
+      gateway1 = described_class.new(
+        repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+      gateway2 = described_class.new(
+        repo: 'owner/repo', project_keys: %w[OTHER], file_system: file_system, raw_pr_cache: cache
+      )
 
       allow(gateway1).to receive(:run_command).and_return([])
-      expect(gateway2).not_to receive(:run_command)
+      allow(gateway2).to receive(:run_command)
 
       gateway1.fetch_pull_requests
       gateway2.fetch_pull_requests
+
+      expect(gateway2).not_to have_received(:run_command)
     end
 
     it 'makes separate requests for different repos even with a shared cache' do
       cache = {}
-      gateway1 = described_class.new(repo: 'owner/repo1', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
-      gateway2 = described_class.new(repo: 'owner/repo2', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache)
+      gateway1 = described_class.new(
+        repo: 'owner/repo1', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+      gateway2 = described_class.new(
+        repo: 'owner/repo2', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
 
       allow(gateway1).to receive(:run_command).and_return([])
-      expect(gateway2).to receive(:run_command).and_return([])
+      allow(gateway2).to receive(:run_command).and_return([])
 
       gateway1.fetch_pull_requests
       gateway2.fetch_pull_requests
+
+      expect(gateway2).to have_received(:run_command)
     end
   end
 end
