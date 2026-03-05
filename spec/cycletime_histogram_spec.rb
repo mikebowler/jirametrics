@@ -11,7 +11,7 @@ describe CycletimeHistogram do
 
   context 'histogram_data_for' do
     it 'handles no issues' do
-      expect(chart.histogram_data_for issues: []).to be_empty
+      expect(chart.histogram_data_for items: []).to be_empty
     end
 
     it 'handles a mix of issues' do
@@ -20,7 +20,7 @@ describe CycletimeHistogram do
         [issue2, '2022-01-01', '2022-01-04'],
         [issue10, '2022-01-01', '2022-01-01T01:00:00']
       ]
-      expect(chart.histogram_data_for issues: [issue1, issue2, issue10]).to eq({ 4 => [issue1, issue2], 1 => [issue10] })
+      expect(chart.histogram_data_for items: [issue1, issue2, issue10]).to eq({ 4 => [issue1, issue2], 1 => [issue10] })
     end
   end
 
@@ -143,6 +143,22 @@ describe CycletimeHistogram do
       chart.instance_variable_set(:@issue_hints, { issue1 => '(hint for issue1)' })
       result = chart.data_set_for histogram_data: { 4 => [issue1] }, label: 'foo', color: 'red'
       expect(result[:data].first[:title][1]).to eq "#{issue1.key} : #{issue1.summary} (hint for issue1)"
+    end
+  end
+
+  context 'sort_items' do
+    it 'sorts by key_as_i' do
+      expect(chart.sort_items([issue10, issue1, issue2])).to eq([issue1, issue2, issue10])
+    end
+  end
+
+  context 'label_for_item' do
+    it 'formats issue key and summary without hint' do
+      expect(chart.label_for_item(issue1, hint: nil)).to eq("#{issue1.key} : #{issue1.summary}")
+    end
+
+    it 'appends hint when provided' do
+      expect(chart.label_for_item(issue1, hint: '(my hint)')).to eq("#{issue1.key} : #{issue1.summary} (my hint)")
     end
   end
 end
