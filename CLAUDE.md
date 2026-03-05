@@ -108,6 +108,10 @@ The `position` property on a line annotation label accepts `'start'`, `'center'`
 ### Running tests
 Always run `rake spec` rather than individual spec files — running a single file causes `NameError: uninitialized constant MockFileSystem` due to a load-order dependency.
 
+## Linting
+
+After making changes to Ruby files, run `rubocop` on the modified files and fix any offenses before finishing. RuboCop warnings about `plugins:` vs `require:` in `.rubocop.yml` are pre-existing and can be ignored — only fix actual code offenses.
+
 ## Code Conventions
 
 - All Ruby files use `# frozen_string_literal: true`

@@ -29,12 +29,16 @@ class TimeBasedHistogram < ChartBase
 
     the_stats = {}
 
-    overall_stats = stats_for histogram_data: histogram_data_for(items: histogram_items).transform_values(&:size), percentiles: @percentiles
-    the_stats[:all] = overall_stats
+    overall_histogram = histogram_data_for(items: histogram_items).transform_values(&:size)
+    the_stats[:all] = stats_for histogram_data: overall_histogram, percentiles: @percentiles
     data_sets = rules_to_items.keys.collect do |rules|
       the_label = rules.label
       the_histogram = histogram_data_for(items: rules_to_items[rules])
-      the_stats[the_label] = stats_for histogram_data: the_histogram.transform_values(&:size), percentiles: @percentiles if @show_stats
+      if @show_stats
+        the_stats[the_label] = stats_for(
+          histogram_data: the_histogram.transform_values(&:size), percentiles: @percentiles
+        )
+      end
 
       data_set_for(
         histogram_data: the_histogram,
@@ -44,7 +48,8 @@ class TimeBasedHistogram < ChartBase
     end
 
     if data_sets.empty?
-      return "<h1 class='foldable'>#{@header_text}</h1><div>No data matched the selected criteria. Nothing to show.</div>"
+      return "<h1 class='foldable'>#{@header_text}</h1>" \
+             '<div>No data matched the selected criteria. Nothing to show.</div>'
     end
 
     wrap_and_render(binding, __FILE__)
