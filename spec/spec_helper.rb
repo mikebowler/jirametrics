@@ -123,9 +123,9 @@ def load_statuses input_file
 end
 
 def add_mock_change(
-    issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
-    artificial: false, field_id: nil
-  )
+  issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
+  artificial: false, field_id: nil
+)
   change = mock_change(
     issue: issue,
     field: field, time: time,
@@ -139,9 +139,10 @@ def add_mock_change(
 end
 
 # If either value or old_value are statuses then the name and id will be pulled from that object
-def mock_change(field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
-    artificial: false, issue: nil, field_id: nil)
-
+def mock_change(
+  field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
+  artificial: false, issue: nil, field_id: nil
+)
   if value.is_a? Status
     value_id = value.id
     value = value.name
