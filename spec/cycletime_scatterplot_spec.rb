@@ -27,7 +27,8 @@ describe CycletimeScatterplot do
       issue = load_issue('SP-10', board: board)
       board.cycletime = default_cycletime_config
       chart.instance_variable_set(:@issue_hints, { issue => '(priority: high)' })
-      expect(chart.data_for_issue(issue)[:title]).to eq ['SP-10 : Check in people at an event (81 days) (priority: high)']
+      expect(chart.data_for_issue(issue)[:title])
+        .to eq ['SP-10 : Check in people at an event (81 days) (priority: high)']
     end
   end
 
@@ -88,6 +89,41 @@ describe CycletimeScatterplot do
       expect(chart.group_issues([issue1])).to eq({
         expected_rules => [issue1]
       })
+    end
+  end
+
+  context 'x_value' do
+    it 'returns the stop time from cycletime' do
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
+      expect(chart.x_value(issue)).to eq issue.last_resolution.time
+    end
+  end
+
+  context 'y_value' do
+    it 'returns the cycletime in days' do
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
+      expect(chart.y_value(issue)).to eq 81
+    end
+  end
+
+  context 'title_value' do
+    it 'formats key, summary, and cycletime' do
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
+      expect(chart.title_value(issue)).to eq 'SP-10 : Check in people at an event (81 days)'
+    end
+
+    it 'appends hint when set' do
+      board = load_complete_sample_board
+      issue = load_issue('SP-10', board: board)
+      board.cycletime = default_cycletime_config
+      chart.instance_variable_set(:@issue_hints, { issue => '(priority: high)' })
+      expect(chart.title_value(issue)).to eq 'SP-10 : Check in people at an event (81 days) (priority: high)'
     end
   end
 end

@@ -581,7 +581,7 @@ describe DataQualityReport do
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-7.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-8.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_issues/SP-11.json", json: :not_mocked
-      exporter.file_system.when_loading file: "#{html_path}/cycletime_scatterplot.erb", json: :not_mocked
+      exporter.file_system.when_loading file: "#{html_path}/time_based_scatterplot.erb", json: :not_mocked
       exporter.file_system.when_loading file: "#{html_path}/collapsible_issues_panel.erb", json: :not_mocked
       exporter.file_system.when_loading file: "#{html_path}/index.css", json: :not_mocked
       exporter.file_system.when_loading file: "#{html_path}/index.js", json: :not_mocked
