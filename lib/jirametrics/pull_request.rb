@@ -1,16 +1,7 @@
 # frozen_string_literal: true
 
 require 'time'
-
-class Review
-  def initialize raw:
-    @raw = raw
-  end
-
-  def author = @raw['author']
-  def state = @raw['state']
-  def submitted_at = Time.parse(@raw['submitted_at'])
-end
+require 'jirametrics/pull_request_review'
 
 class PullRequest
   attr_reader :raw
@@ -31,5 +22,5 @@ class PullRequest
   def closed_at = @raw['closed_at'] ? Time.parse(@raw['closed_at']) : nil
   def merged_at = @raw['merged_at'] ? Time.parse(@raw['merged_at']) : nil
 
-  def reviews = (@raw['reviews'] || []).map { |r| Review.new(raw: r) }
+  def reviews = (@raw['reviews'] || []).map { |r| PullRequestReview.new(raw: r) }
 end

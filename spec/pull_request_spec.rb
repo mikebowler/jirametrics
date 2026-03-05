@@ -58,28 +58,13 @@ describe PullRequest do
     expect(pr.merged_at).to be_nil
   end
 
-  it 'returns reviews as Review objects' do
+  it 'returns reviews as PullRequestReview objects' do
     expect(pr.reviews.size).to eq 1
-    expect(pr.reviews.first).to be_a Review
+    expect(pr.reviews.first).to be_a PullRequestReview
   end
 
   it 'returns empty array when no reviews' do
     raw['reviews'] = []
     expect(pr.reviews).to be_empty
-  end
-end
-
-describe Review do
-  let(:raw) { { 'author' => 'alice', 'state' => 'APPROVED', 'submitted_at' => '2026-01-13T10:00:00Z' } }
-  let(:review) { described_class.new(raw: raw) }
-
-  it 'exposes author and state' do
-    expect(review.author).to eq 'alice'
-    expect(review.state).to eq 'APPROVED'
-  end
-
-  it 'returns submitted_at as a Time' do
-    expect(review.submitted_at).to be_a Time
-    expect(review.submitted_at).to eq Time.parse('2026-01-13T10:00:00Z')
   end
 end
