@@ -46,6 +46,7 @@ class ChangeItem
   def resolution? = (field == 'resolution')
   def sprint? = (field == 'Sprint')
   def status? = (field == 'status')
+  def fix_version? = (field == 'Fix Version')
 
   # An alias for time so that logic accepting a Time, Date, or ChangeItem can all respond to :to_time
   def to_time = @time
