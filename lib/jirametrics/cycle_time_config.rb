@@ -6,10 +6,9 @@ require 'date'
 class CycleTimeConfig
   include SelfOrIssueDispatcher
 
-  attr_reader :label, :possible_statuses, :settings, :file_system
+  attr_reader :label, :settings, :file_system
 
   def initialize possible_statuses:, label:, block:, settings:, file_system: nil, today: Date.today
-
     @possible_statuses = possible_statuses
     @label = label
     @today = today
