@@ -2,7 +2,7 @@
 
 require './spec/spec_helper'
 
-describe 'spec_helper' do
+describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
   context 'to_time' do
     it 'parses date only' do
       expect(to_time('2024-01-01').inspect).to eq '2024-01-01 00:00:00 +0000'

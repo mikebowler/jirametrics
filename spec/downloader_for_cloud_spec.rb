@@ -164,7 +164,9 @@ describe DownloaderForCloud do
       downloader.download_github_prs
 
       expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
-      expect(file_system.log_messages).to include 'No project keys found in downloaded issues, skipping GitHub PR download'
+      expect(file_system.log_messages).to include(
+        'No project keys found in downloaded issues, skipping GitHub PR download'
+      )
     end
 
     it 'collects PRs from multiple repos and saves them' do

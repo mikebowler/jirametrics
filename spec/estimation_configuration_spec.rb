@@ -43,7 +43,7 @@ describe EstimationConfiguration do
       ])
     end
 
-    it 'returns seconds' do
+    it 'returns issue count' do
       board.raw['estimation'] = {
         'type' => 'issueCount'
       }

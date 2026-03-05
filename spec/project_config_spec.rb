@@ -634,8 +634,9 @@ describe ProjectConfig do
     it 'does not anonymize data when load_only is true' do
       project_config.anonymize
       allow(project_config).to receive(:load_data)
-      expect(project_config).not_to receive(:anonymize_data)
+      allow(project_config).to receive(:anonymize_data)
       project_config.run(load_only: true)
+      expect(project_config).not_to have_received(:anonymize_data)
     end
   end
 end
