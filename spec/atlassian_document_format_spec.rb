@@ -645,7 +645,7 @@ describe AtlassianDocumentFormat do
     )
   end
 
-  it 'has an expand' do
+  it 'has an decision list' do
     input = {
       'type' => 'decisionList',
       'content' => [

@@ -67,7 +67,7 @@ describe Board do
         }
       }
 
-      board = Board.new raw: raw, possible_statuses: StatusCollection.new
+      board = described_class.new raw: raw, possible_statuses: StatusCollection.new
       expect(board.accumulated_status_ids_per_column).to be_empty
     end
 

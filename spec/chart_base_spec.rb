@@ -170,11 +170,15 @@ describe ChartBase do
     end
 
     it 'returns ["5%", "5%"] for datetimes far apart' do
-      expect(chart_base.stagger_label_positions(['2022-01-01T00:00:00+00:00', '2022-12-01T00:00:00+00:00'])).to eq ['5%', '5%']
+      expect(
+        chart_base.stagger_label_positions(['2022-01-01T00:00:00+00:00', '2022-12-01T00:00:00+00:00'])
+      ).to eq ['5%', '5%']
     end
 
     it 'returns ["5%", "25%"] for datetimes close together' do
-      expect(chart_base.stagger_label_positions(['2022-06-01T00:00:00+00:00', '2022-06-03T00:00:00+00:00'])).to eq ['5%', '25%']
+      expect(
+        chart_base.stagger_label_positions(['2022-06-01T00:00:00+00:00', '2022-06-03T00:00:00+00:00'])
+      ).to eq ['5%', '25%']
     end
 
     it 'returns ["5%", "25%", "45%"] for three datetimes all close together' do
