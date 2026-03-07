@@ -65,8 +65,16 @@ class AggregateConfig
 
     if issues.nil?
       file_system.warning "No issues found for #{project_name}"
-    else
-      @project_config.add_issues issues
+      return
+    end
+
+    @project_config.add_issues issues
+
+    # Bring fix versions over
+    project.fix_versions.each do |fix_version|
+      unless @project_config.fix_versions.find { |fv| fv.id == fix_version.id }
+        @project_config.fix_versions << fix_version
+      end
     end
   end
 
