@@ -147,6 +147,7 @@ class HtmlReportConfig < HtmlGenerator
     chart.all_boards = project_config.all_boards
     chart.board_id = find_board_id
     chart.holiday_dates = project_config.exporter.holiday_dates
+    chart.fix_versions = project_config.fix_versions
 
     time_range = @file_config.project_config.time_range
     chart.date_range = time_range.begin.to_date..time_range.end.to_date
