@@ -18,7 +18,7 @@ class ChangeItem
       @value_id = @raw['to'].split(', ').collect(&:to_i)
       @old_value_id = (@raw['from'] || '').split(', ').collect(&:to_i)
     else
-      @value_id = @raw['to'].to_i
+      @value_id = @raw['to']&.to_i
       @old_value_id = @raw['from']&.to_i
     end
     @field_id = @raw['fieldId']
