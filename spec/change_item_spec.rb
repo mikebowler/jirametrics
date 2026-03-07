@@ -25,7 +25,7 @@ describe ChangeItem do
     expect(change).not_to be_artificial
 
     expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", ' \
+      'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
         'field_id: "customfield_10021")'
     )
   end
@@ -58,7 +58,7 @@ describe ChangeItem do
 
     expect(change).to be_artificial
     expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked", time: "2021-09-06 04:33:55 +0000", ' \
+      'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
       'field_id: "customfield_10021", artificial)'
     )
   end
