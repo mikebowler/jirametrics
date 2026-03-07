@@ -55,10 +55,10 @@ class ChangeItem
     message = +''
     message << "ChangeItem(field: #{field.inspect}"
     message << ", value: #{value.inspect}"
-    message << ':' << value_id.inspect if status?
+    message << ':' << value_id.inspect if value_id
     if old_value
       message << ", old_value: #{old_value.inspect}"
-      message << ':' << old_value_id.inspect if status?
+      message << ':' << old_value_id.inspect if old_value_id
     end
     message << ", time: #{time_to_s(@time).inspect}"
     message << ", field_id: #{@field_id.inspect}" if @field_id
