@@ -6,7 +6,7 @@ require 'jirametrics/status_collection'
 class ProjectConfig
   attr_reader :target_path, :jira_config, :all_boards, :possible_statuses,
     :download_config, :file_configs, :exporter, :data_version, :name, :board_configs,
-    :settings, :aggregate_config, :discarded_changes_data, :users
+    :settings, :aggregate_config, :discarded_changes_data, :users, :fix_versions
   attr_accessor :time_range, :jira_url, :id
 
   def initialize exporter:, jira_config:, block:, target_path: '.', name: '', id: nil
@@ -23,6 +23,7 @@ class ProjectConfig
     @settings = load_settings
     @id = id
     @has_loaded_data = false
+    @fix_versions = []
   end
 
   def evaluate_next_level
@@ -40,6 +41,7 @@ class ProjectConfig
     @id = guess_project_id
     load_project_metadata
     load_sprints
+    load_fix_versions
     load_users
   end
 
@@ -325,6 +327,13 @@ class ProjectConfig
     @all_boards.each_value do |board|
       board.sprints.sort_by!(&:id)
     end
+  end
+
+  def load_fix_versions
+    filename = File.join(@target_path, "#{get_file_prefix}_fix_versions.json")
+    return unless file_system.file_exist?(filename)
+
+    @fix_versions = file_system.load_json(filename).map { |raw| FixVersion.new(raw) }
   end
 
   def load_project_metadata

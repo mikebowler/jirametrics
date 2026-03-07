@@ -452,6 +452,62 @@ describe DownloaderForCloud do
     end
   end
 
+  context 'download_fix_versions' do
+    it 'does nothing when no project key has been captured' do
+      downloader.download_fix_versions
+      expect(file_system.saved_json).to be_empty
+    end
+
+    context 'when project key is known' do
+      let(:board_config_json) do
+        {
+          'id' => '2',
+          'filter' => { 'id' => 1 },
+          'type' => 'kanban',
+          'location' => { 'type' => 'project', 'key' => 'SP' },
+          'columnConfig' => {
+            'columns' => [{ 'name' => 'Backlog', 'statuses' => [{ 'id' => '10000' }] }]
+          }
+        }
+      end
+
+      before do
+        jira_gateway.when url: '/rest/agile/1.0/board/2/configuration', response: board_config_json
+        downloader.download_board_configuration board_id: 2
+      end
+
+      it 'fetches and saves fix versions in a single page' do
+        versions = [{ 'id' => '1', 'name' => 'v1.0' }]
+        jira_gateway.when(
+          url: '/rest/api/3/project/SP/version?startAt=0&maxResults=50',
+          response: { 'isLast' => true, 'values' => versions }
+        )
+
+        downloader.download_fix_versions
+
+        expect(file_system.log_messages).to include('Downloading fix versions for project SP')
+        expect(file_system.saved_json_expanded['spec/testdata/sample_fix_versions.json']).to eq(versions)
+      end
+
+      it 'fetches all pages when paginated' do
+        v1 = { 'id' => '1', 'name' => 'v1.0' }
+        v2 = { 'id' => '2', 'name' => 'v2.0' }
+        jira_gateway.when(
+          url: '/rest/api/3/project/SP/version?startAt=0&maxResults=50',
+          response: { 'isLast' => false, 'values' => [v1] }
+        )
+        jira_gateway.when(
+          url: '/rest/api/3/project/SP/version?startAt=1&maxResults=50',
+          response: { 'isLast' => true, 'values' => [v2] }
+        )
+
+        downloader.download_fix_versions
+
+        expect(file_system.saved_json_expanded['spec/testdata/sample_fix_versions.json']).to eq([v1, v2])
+      end
+    end
+  end
+
   context 'download_issues' do
     it 'finds no issues' do
       allow(downloader).to(receive(:search_for_issues)).and_return({})

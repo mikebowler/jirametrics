@@ -599,6 +599,28 @@ describe ProjectConfig do
     end
   end
 
+  context 'load_fix_versions' do
+    it 'loads fix versions from file' do
+      project_config.file_prefix 'sample'
+      raw = [{ 'id' => '10', 'name' => 'v1.0', 'released' => true, 'releaseDate' => '2026-01-15' }]
+      exporter.file_system.when_loading file: 'spec/testdata/sample_fix_versions.json', json: raw
+
+      project_config.load_fix_versions
+
+      expect(project_config.fix_versions.size).to eq(1)
+      expect(project_config.fix_versions.first).to be_a(FixVersion)
+      expect(project_config.fix_versions.first.name).to eq('v1.0')
+    end
+
+    it 'leaves fix_versions empty when file does not exist' do
+      project_config.file_prefix 'sample'
+
+      project_config.load_fix_versions
+
+      expect(project_config.fix_versions).to be_empty
+    end
+  end
+
   context 'file_prefix' do
     it 'can only be set once' do
       project_config.file_prefix 'sample'

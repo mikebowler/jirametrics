@@ -5,6 +5,45 @@ class DownloaderForCloud < Downloader
     'Jira Cloud'
   end
 
+  def run
+    super
+    download_fix_versions
+  end
+
+  def download_board_configuration board_id:
+    board = super
+    location = board.raw['location']
+    @project_key ||= location['key'] if location&.[]('type') == 'project'
+    board
+  end
+
+  def download_fix_versions
+    return unless @project_key
+
+    log "  Downloading fix versions for project #{@project_key}", both: true
+    max_results = 50
+    start_at = 0
+    all_versions = []
+
+    loop do
+      json = @jira_gateway.call_url(
+        relative_url: "/rest/api/3/project/#{@project_key}/version?" \
+          "startAt=#{start_at}&maxResults=#{max_results}"
+      )
+
+      values = json['values'] || []
+      all_versions.concat(values)
+      break if json['isLast'] || values.empty?
+
+      start_at += values.size
+    end
+
+    @file_system.save_json(
+      json: all_versions,
+      filename: File.join(@target_path, "#{file_prefix}_fix_versions.json")
+    )
+  end
+
   def search_for_issues jql:, board_id:, path:
     log "  JQL: #{jql}"
     escaped_jql = CGI.escape jql
