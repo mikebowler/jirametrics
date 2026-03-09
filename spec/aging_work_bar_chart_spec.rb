@@ -204,6 +204,36 @@ describe AgingWorkBarChart do
     end
   end
 
+  context 'clip_ranges_to_start_time' do
+    let(:color) { CssVariable['--blocked-color'] }
+
+    it 'does nothing when issue_start_time is nil' do
+      range = BarChartRange.new(start: to_time('2021-01-01'), stop: to_time('2021-01-05'), color: color, title: 'x')
+      ranges = [range]
+      chart.clip_ranges_to_start_time(ranges: ranges, issue_start_time: nil)
+      expect(ranges).to eq [range]
+    end
+
+    it 'does not modify ranges that start after issue_start_time' do
+      range = BarChartRange.new(start: to_time('2021-01-03'), stop: to_time('2021-01-05'), color: color, title: 'x')
+      chart.clip_ranges_to_start_time(ranges: [range], issue_start_time: to_time('2021-01-02'))
+      expect(range.start).to eq to_time('2021-01-03')
+    end
+
+    it 'clamps the start of a range that begins before issue_start_time' do
+      range = BarChartRange.new(start: to_time('2021-01-01'), stop: to_time('2021-01-05'), color: color, title: 'x')
+      chart.clip_ranges_to_start_time(ranges: [range], issue_start_time: to_time('2021-01-03'))
+      expect(range.start).to eq to_time('2021-01-03')
+    end
+
+    it 'removes a range that ends at or before issue_start_time' do
+      range = BarChartRange.new(start: to_time('2021-01-01'), stop: to_time('2021-01-03'), color: color, title: 'x')
+      ranges = [range]
+      chart.clip_ranges_to_start_time(ranges: ranges, issue_start_time: to_time('2021-01-03'))
+      expect(ranges).to be_empty
+    end
+  end
+
   context 'collect_priority_ranges' do
     it 'handles no priority changes' do
       issue = empty_issue created: '2021-01-02'

@@ -3,7 +3,7 @@
 require 'time'
 
 class Issue
-  attr_reader :changes, :raw, :subtasks, :board
+  attr_reader :changes, :raw, :subtasks, :board, :discarded_changes, :discarded_change_times
   attr_accessor :parent, :github_prs
 
   def initialize raw:, board:, timezone_offset: '+00:00'
@@ -726,75 +726,7 @@ class Issue
   end
 
   def dump
-    result = +''
-    result << "#{key} (#{type}): #{compact_text summary, max: 200}\n"
-
-    assignee = raw['fields']['assignee']
-    result << "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>\n" unless assignee.nil?
-
-    raw['fields']['issuelinks']&.each do |link|
-      result << "  [link] #{link['type']['outward']} #{link['outwardIssue']['key']}\n" if link['outwardIssue']
-      result << "  [link] #{link['type']['inward']} #{link['inwardIssue']['key']}\n" if link['inwardIssue']
-    end
-    history = [] # time, type, detail
-
-    if board.cycletime
-      started_at, stopped_at = board.cycletime.started_stopped_times(self)
-      history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
-      history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
-    else
-      result << "  Unable to determine start/end times as board #{board.id} has no cycletime specified\n"
-    end
-
-    @discarded_change_times&.each do |time|
-      history << [time, nil, '↑↑↑↑ Changes discarded ↑↑↑↑', true]
-    end
-
-    (changes + (@discarded_changes || [])).each do |change|
-      if change.status?
-        value = "#{change.value.inspect}:#{change.value_id.inspect}"
-        old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
-      else
-        value = compact_text(change.value).inspect
-        old_value = change.old_value ? compact_text(change.old_value).inspect : nil
-      end
-
-      message = +''
-      message << "#{old_value} -> " unless old_value.nil? || old_value.empty?
-      message << value
-      if change.artificial?
-        message << ' (Artificial entry)' if change.artificial?
-      else
-        message << " (Author: #{change.author})"
-      end
-      history << [change.time, change.field, message, change.artificial?]
-    end
-
-    result << "  History:\n"
-    type_width = history.collect { |_time, type, _detail, _artificial| type&.length || 0 }.max
-    history.sort! do |a, b|
-      if a[0] == b[0]
-        if a[1].nil?
-          1
-        elsif b[1].nil?
-          -1
-        else
-          a[1] <=> b[1]
-        end
-      else
-        a[0] <=> b[0]
-      end
-    end
-    history.each do |time, type, detail, _artificial|
-      if type.nil?
-        type = '-' * type_width
-      else
-        type = (' ' * (type_width - type.length)) << type
-      end
-      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{type}] #{detail}\n"
-    end
-
-    result
+    IssuePrinter.new(self).to_s
   end
 
   def done?

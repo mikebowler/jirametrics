@@ -83,6 +83,8 @@ class AgingWorkBarChart < ChartBase
     ]
     bar_data << ['sprints', collect_sprint_ranges(issue: issue)] if current_board.scrum?
 
+    bar_data.each { |entry| clip_ranges_to_start_time(ranges: entry.last, issue_start_time: issue_start_time) }
+
     issue_label = "[#{label_days cycletime.age(issue, today: today)}] #{issue.key}: #{issue.summary}"[0..60]
     bar_data.collect do |stack, ranges|
       bar_chart_range_to_data_set y_value: issue_label, ranges: ranges, stack: stack, issue_start_time: issue_start_time
@@ -112,6 +114,13 @@ class AgingWorkBarChart < ChartBase
 
     preferred_height = aging_issue_count * px_per_bar * bars_per_issue
     @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
+  end
+
+  def clip_ranges_to_start_time ranges:, issue_start_time:
+    return if issue_start_time.nil?
+
+    ranges.each { |range| range.start = issue_start_time if range.start < issue_start_time }
+    ranges.reject! { |range| range.start >= range.stop }
   end
 
   def collect_status_ranges issue:, now:
