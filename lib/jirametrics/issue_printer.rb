@@ -5,7 +5,7 @@ class IssuePrinter
     @issue = issue
   end
 
-  def to_s # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def to_s
     issue = @issue
     result = +''
     result << "#{issue.key} (#{issue.type}): #{issue.compact_text issue.summary, max: 200}\n"
@@ -22,14 +22,14 @@ class IssuePrinter
 
     if issue.board.cycletime
       started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)
-      history << [started_at, nil, '↓↓↓↓ Started here ↓↓↓↓', true] if started_at
-      history << [stopped_at, nil, '↑↑↑↑ Finished here ↑↑↑↑', true] if stopped_at
+      history << [started_at, nil, 'vvvv Started here vvvv', true] if started_at
+      history << [stopped_at, nil, '^^^^ Finished here ^^^^', true] if stopped_at
     else
       result << "  Unable to determine start/end times as board #{issue.board.id} has no cycletime specified\n"
     end
 
     issue.discarded_change_times&.each do |time|
-      history << [time, nil, '↑↑↑↑ Changes discarded ↑↑↑↑', true]
+      history << [time, nil, '^^^^ Changes discarded ^^^^', true]
     end
 
     (issue.changes + (issue.discarded_changes || [])).each do |change|
@@ -54,6 +54,16 @@ class IssuePrinter
 
     result << "  History:\n"
     type_width = history.collect { |_time, type, _detail, _artificial| type&.length || 0 }.max
+    sort_history!(history)
+    history.each do |time, type, detail, _artificial|
+      type = type.nil? ? '-' * type_width : type.rjust(type_width)
+      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{type}] #{detail}\n"
+    end
+
+    result
+  end
+
+  def sort_history! history
     history.sort! do |a, b|
       if a[0] == b[0]
         if a[1].nil?
@@ -67,11 +77,5 @@ class IssuePrinter
         a[0] <=> b[0]
       end
     end
-    history.each do |time, type, detail, _artificial|
-      type = type.nil? ? '-' * type_width : type.rjust(type_width)
-      result << "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{type}] #{detail}\n"
-    end
-
-    result
   end
 end
