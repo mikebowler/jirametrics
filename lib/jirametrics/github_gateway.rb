@@ -23,8 +23,9 @@ class GithubGateway
     # Note: 'commits' is intentionally excluded — including it triggers GitHub's GraphQL node
     # limit (authors sub-connection × PRs × commits exceeds 500,000 nodes). Branch name,
     # title, and body are sufficient for issue key extraction in the vast majority of cases.
-    args = %w[pr list --state all --limit 5000
-              --json number,title,body,headRefName,createdAt,closedAt,mergedAt,url,state,reviews]
+    json_fields = %w[number title body headRefName createdAt closedAt mergedAt
+                     url state reviews additions deletions changedFiles].join(',')
+    args = ['pr', 'list', '--state', 'all', '--limit', '5000', '--json', json_fields]
     args += ['--repo', @repo]
     args += ['--search', "updated:>=#{since}"] if since
 
@@ -46,8 +47,11 @@ class GithubGateway
       'closed_at'  => raw_pr['closedAt'],
       'merged_at'  => raw_pr['mergedAt'],
       'state'      => raw_pr['state'],
-      'issue_keys' => issue_keys,
-      'reviews'    => extract_reviews(raw_pr['reviews'] || [])
+      'issue_keys'    => issue_keys,
+      'reviews'       => extract_reviews(raw_pr['reviews'] || []),
+      'additions'     => raw_pr['additions'],
+      'deletions'     => raw_pr['deletions'],
+      'changed_files' => raw_pr['changedFiles']
     })
   end
 

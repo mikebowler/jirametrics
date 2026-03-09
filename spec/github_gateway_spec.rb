@@ -102,7 +102,10 @@ describe GithubGateway do
         'mergedAt' => '2026-01-14T16:30:00Z',
         'state' => 'MERGED',
         'body' => nil,
-        'reviews' => []
+        'reviews' => [],
+        'additions' => 120,
+        'deletions' => 30,
+        'changedFiles' => 5
       }
     end
 
@@ -120,6 +123,10 @@ describe GithubGateway do
       expect(result.state).to eq 'MERGED'
       expect(result.issue_keys).to eq ['SP-112']
       expect(result.reviews).to be_empty
+      expect(result.additions).to eq 120
+      expect(result.deletions).to eq 30
+      expect(result.changed_files).to eq 5
+      expect(result.lines_changed).to eq 150
     end
 
     it 'returns nil when no issue keys can be found' do
@@ -147,14 +154,14 @@ describe GithubGateway do
           'title' => 'Fix SP-112', 'headRefName' => 'SP-112-fix',
           'createdAt' => '2026-01-10T09:00:00Z', 'closedAt' => '2026-01-14T16:30:00Z',
           'mergedAt' => '2026-01-14T16:30:00Z', 'state' => 'MERGED',
-          'body' => nil, 'reviews' => []
+          'body' => nil, 'reviews' => [], 'additions' => 10, 'deletions' => 5, 'changedFiles' => 2
         },
         {
           'number' => 43, 'url' => 'https://github.com/owner/repo/pull/43',
           'title' => 'Unrelated', 'headRefName' => 'some-other-branch',
           'createdAt' => '2026-01-11T09:00:00Z', 'closedAt' => nil,
           'mergedAt' => nil, 'state' => 'OPEN',
-          'body' => nil, 'reviews' => []
+          'body' => nil, 'reviews' => [], 'additions' => 0, 'deletions' => 0, 'changedFiles' => 0
         }
       ]
     end
