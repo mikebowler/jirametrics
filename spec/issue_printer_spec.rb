@@ -22,6 +22,33 @@ describe IssuePrinter do
     TEXT
   end
 
+  context 'create_change_message' do
+    let(:printer) { described_class.new(issue1) }
+
+    it 'formats a non-status change with no prior value' do
+      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      expect(printer.create_change_message(change: change, issue: issue1)).to eq '"High" (Artificial entry)'
+    end
+
+    it 'formats a non-status change with a prior value' do
+      change = mock_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01', artificial: true)
+      expect(printer.create_change_message(change: change, issue: issue1)).to eq '"Low" -> "High" (Artificial entry)'
+    end
+
+    it 'formats a status change with value ids' do
+      change = mock_change(field: 'status', value: 'In Progress', value_id: 3,
+                           old_value: 'Backlog', old_value_id: 10_000, time: '2021-01-01', artificial: true)
+      expect(printer.create_change_message(change: change, issue: issue1)).to eq \
+        '"Backlog":10000 -> "In Progress":3 (Artificial entry)'
+    end
+
+    it 'includes the author for non-artificial changes' do
+      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false,
+                           issue: issue1)
+      expect(printer.create_change_message(change: change, issue: issue1)).to match(/\(Author: /)
+    end
+  end
+
   context 'sort_history!' do
     let(:printer) { described_class.new(issue1) }
     let(:t1) { to_time '2021-01-01' }

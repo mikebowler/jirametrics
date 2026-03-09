@@ -33,23 +33,7 @@ class IssuePrinter
     end
 
     (issue.changes + (issue.discarded_changes || [])).each do |change|
-      if change.status?
-        value = "#{change.value.inspect}:#{change.value_id.inspect}"
-        old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
-      else
-        value = issue.compact_text(change.value).inspect
-        old_value = change.old_value ? issue.compact_text(change.old_value).inspect : nil
-      end
-
-      message = +''
-      message << "#{old_value} -> " unless old_value.nil? || old_value.empty?
-      message << value
-      if change.artificial?
-        message << ' (Artificial entry)'
-      else
-        message << " (Author: #{change.author})"
-      end
-      history << [change.time, change.field, message, change.artificial?]
+      history << [change.time, change.field, create_change_message(change: change, issue: issue), change.artificial?]
     end
 
     result << "  History:\n"
@@ -61,6 +45,26 @@ class IssuePrinter
     end
 
     result
+  end
+
+  def create_change_message change:, issue:
+    if change.status?
+      value = "#{change.value.inspect}:#{change.value_id.inspect}"
+      old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
+    else
+      value = issue.compact_text(change.value).inspect
+      old_value = change.old_value ? issue.compact_text(change.old_value).inspect : nil
+    end
+
+    message = +''
+    message << "#{old_value} -> " unless old_value.nil? || old_value.empty?
+    message << value
+    if change.artificial?
+      message << ' (Artificial entry)'
+    else
+      message << " (Author: #{change.author})"
+    end
+    message
   end
 
   def sort_history! history
