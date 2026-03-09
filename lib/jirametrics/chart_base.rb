@@ -90,6 +90,10 @@ class ChartBase
     "#{count} issue#{'s' unless count == 1}"
   end
 
+  def to_human_readable number
+    number.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse
+  end
+
   def daily_chart_dataset date_issues_list:, color:, label:, positive: true
     {
       type: 'bar',

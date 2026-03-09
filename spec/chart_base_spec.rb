@@ -410,4 +410,22 @@ describe ChartBase do
     # Since it's random, all we can verify is the format.
     expect(chart_base.random_color).to match(/^#[0-9a-f]{6}$/)
   end
+
+  context 'to_human_readable' do
+    it 'returns small numbers unchanged' do
+      expect(chart_base.to_human_readable(999)).to eq '999'
+    end
+
+    it 'adds a comma for thousands' do
+      expect(chart_base.to_human_readable(1000)).to eq '1,000'
+    end
+
+    it 'adds commas for millions' do
+      expect(chart_base.to_human_readable(1_000_000)).to eq '1,000,000'
+    end
+
+    it 'handles zero' do
+      expect(chart_base.to_human_readable(0)).to eq '0'
+    end
+  end
 end
