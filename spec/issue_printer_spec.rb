@@ -47,6 +47,39 @@ describe IssuePrinter do
                            issue: issue1)
       expect(printer.create_change_message(change: change, issue: issue1)).to match(/\(Author: /)
     end
+
+    context 'sprint changes' do
+      it 'shows added sprint id when added to a new sprint' do
+        change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+                             old_value: '', old_value_id: '', time: '2021-01-01', artificial: false, issue: issue1)
+        expect(printer.create_change_message(change: change, issue: issue1)).to include('(added: [10])')
+      end
+
+      it 'shows removed sprint id when removed from a sprint' do
+        change = mock_change(field: 'Sprint', value: '', value_id: '',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
+                             issue: issue1)
+        expect(printer.create_change_message(change: change, issue: issue1)).to include('(removed: [10])')
+      end
+
+      it 'shows both added and removed when moved between sprints' do
+        change = mock_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
+                             issue: issue1)
+        message = printer.create_change_message(change: change, issue: issue1)
+        expect(message).to include('(added: [20])')
+        expect(message).to include('(removed: [10])')
+      end
+
+      it 'shows no added or removed when sprint list is unchanged' do
+        change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
+                             issue: issue1)
+        message = printer.create_change_message(change: change, issue: issue1)
+        expect(message).not_to include('added:')
+        expect(message).not_to include('removed:')
+      end
+    end
   end
 
   context 'sort_history!' do

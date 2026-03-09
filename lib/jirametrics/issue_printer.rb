@@ -48,13 +48,7 @@ class IssuePrinter
   end
 
   def create_change_message change:, issue:
-    if change.status?
-      value = "#{change.value.inspect}:#{change.value_id.inspect}"
-      old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
-    else
-      value = issue.compact_text(change.value).inspect
-      old_value = change.old_value ? issue.compact_text(change.old_value).inspect : nil
-    end
+    value, old_value = format_change_values(change: change, issue: issue)
 
     message = +''
     message << "#{old_value} -> " unless old_value.nil? || old_value.empty?
@@ -65,6 +59,24 @@ class IssuePrinter
       message << " (Author: #{change.author})"
     end
     message
+  end
+
+  def format_change_values change:, issue:
+    if change.status?
+      value = "#{change.value.inspect}:#{change.value_id.inspect}"
+      old_value = change.old_value ? "#{change.old_value.inspect}:#{change.old_value_id.inspect}" : nil
+    elsif change.sprint?
+      added = change.value_id - change.old_value_id
+      removed = change.old_value_id - change.value_id
+      value = "#{change.value.inspect} #{change.value_id}"
+      value << " (added: #{added})" unless added.empty?
+      value << " (removed: #{removed})" unless removed.empty?
+      old_value = nil
+    else
+      value = issue.compact_text(change.value).inspect
+      old_value = change.old_value ? issue.compact_text(change.old_value).inspect : nil
+    end
+    [value, old_value]
   end
 
   def sort_history! history
