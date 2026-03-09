@@ -561,6 +561,26 @@ describe Issue do
       expect(issue.first_time_added_to_active_sprint&.time).to be_nil
     end
 
+    it 'does not match if it was removed from the sprint before the sprint started and the sprint then starts' do
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-06T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10',
+        time: '2021-10-01', field_id: 'customfield_10020'
+      )
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '', old_value_id: '10',
+        time: '2021-10-03', field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
     it 'does not match if it was removed from the sprint and the sprint never started anyway' do
       issue.board.sprints << Sprint.new(raw: {
         'id' => 10,
