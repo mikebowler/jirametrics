@@ -478,6 +478,35 @@ describe AgingWorkBarChart do
       expect(chart.collect_sprint_ranges(issue: issue)).to eq []
     end
 
+    it 'ignores a future sprint when an issue is moved from a closed sprint to a future sprint' do
+      future_sprint = Sprint.new(
+        raw: {
+          'id' => 3,
+          'state' => 'future',
+          'name' => 'Sprint 3',
+          'startDate' => '2021-02-01T00:00:00+00:00',
+          'endDate' => '2021-02-14T00:00:00+00:00'
+        },
+        timezone_offset: '+0000'
+      )
+      board.sprints << future_sprint
+
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s,
+        old_value: sprint1.name, old_value_id: sprint1.id.to_s,
+        time: '2021-01-15'
+      )
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(
+          start: to_time('2021-01-05'), stop: to_time('2021-01-15'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1'
+        )
+      ]
+    end
+
     it 'returns ranges for two consecutive sprints' do
       sprint2 = Sprint.new(
         raw: {

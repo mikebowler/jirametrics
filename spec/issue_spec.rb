@@ -619,6 +619,42 @@ describe Issue do
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
+    it 'does not match when added to a future sprint' do
+      issue.board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'future',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-04T00:00:00.000Z',
+        'endDate' => '2021-10-23T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
+    it 'does not match when the sprint data is not in the sprint list but the raw field shows future state' do
+      issue.raw['fields']['customfield_10020'] = [
+        {
+          'id' => 10,
+          'name' => 'Sprint 1',
+          'state' => 'future',
+          'boardId' => 2,
+          'goal' => '',
+          'startDate' => '2021-10-04T00:00:00.000Z',
+          'endDate' => '2021-10-23T00:00:00.000Z'
+        }
+      ]
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-03',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
     it 'matches when the sprint data is not in the list of sprints' do
       issue.raw['fields']['customfield_10020'] = [
         {

@@ -271,13 +271,19 @@ class Issue
     # First look in the actual sprints json. If any issues are in this sprint then it should
     # be here.
     sprint = board.sprints.find { |s| s.id == sprint_id }
-    return [sprint.start_time, sprint.completed_time] if sprint
+    if sprint
+      return [nil, nil] if sprint.future?
+
+      return [sprint.start_time, sprint.completed_time]
+    end
 
     # Then look at the sprints inside the issue. Even though the field id may be specified,
     # that custom field may not be present. This happens if it was in that sprint but was
     # then removed, whether or not that sprint had ever started.
     sprint_data = raw['fields'][change.field_id]&.find { |sd| sd['id'].to_i == sprint_id }
     if sprint_data
+      return [nil, nil] if sprint_data['state'] == 'future'
+
       start = parse_time(sprint_data['startDate'])
       stop = parse_time(sprint_data['completeDate'])
       return [start, stop]

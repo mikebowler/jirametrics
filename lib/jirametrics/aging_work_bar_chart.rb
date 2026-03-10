@@ -272,6 +272,8 @@ class AgingWorkBarChart < ChartBase
     end
 
     open_sprints.each_value do |data|
+      next if data[:sprint].future?
+
       stop = data[:sprint].completed_time || time_range.end
       results << BarChartRange.new(
         start: data[:start_time], stop: stop,
