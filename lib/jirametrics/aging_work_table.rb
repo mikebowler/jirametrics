@@ -174,6 +174,6 @@ class AgingWorkTable < ChartBase
   end
 
   def priority_text issue
-    "<img src='#{issue.priority_url}' title='Priority: #{issue.priority_name}' />"
+    "<img src='#{issue.priority_url}' title='Priority: #{issue.priority_name}' style='max-width: 1em;'/>"
   end
 end
