@@ -133,7 +133,7 @@ describe DailyWipChart do
         ]
       }
       expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
-        %w[foo red]
+        ['foo', 'red', false]
       ])
     end
 
@@ -155,8 +155,8 @@ describe DailyWipChart do
         ]
       }
       expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
-        %w[foo red],
-        %w[bar gray]
+        ['foo', 'red', false],
+        ['bar', 'gray', false]
       ])
     end
 
@@ -178,7 +178,31 @@ describe DailyWipChart do
         ]
       }
       expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
-        %w[foo red]
+        ['foo', 'red', false]
+      ])
+    end
+
+    it 'returns two groups when label is the same but highlight differs' do
+      rule1 = DailyGroupingRules.new
+      rule1.label = 'foo'
+      rule1.color = 'red'
+      rule1.group_priority = 0
+
+      rule2 = DailyGroupingRules.new
+      rule2.label = 'foo'
+      rule2.color = 'red'
+      rule2.highlight = true
+      rule2.group_priority = 0
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [
+          [issue1, rule1],
+          [issue2, rule2]
+        ]
+      }
+      expect(chart.select_possible_rules(issue_rules_by_active_date).collect(&:group)).to eq([
+        ['foo', 'red', false],
+        ['foo', 'red', true]
       ])
     end
   end
@@ -244,6 +268,38 @@ describe DailyWipChart do
         label: 'foo',
         type: 'bar'
       })
+    end
+
+    it 'uses diagonal pattern when highlight is true' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.highlight = true
+      rule.group_priority = 0
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [[issue1, rule]]
+      }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set[:backgroundColor]).to eq RawJavascript.new('createDiagonalPattern("red")')
+    end
+
+    it 'appends * to label when label_suffix is provided' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.highlight = true
+      rule.group_priority = 0
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [[issue1, rule]]
+      }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date,
+                                     label_suffix: '*'
+      expect(data_set[:label]).to eq 'foo*'
+      expect(data_set[:data].first[:title].first).to eq 'foo* (1 issue)'
     end
   end
 

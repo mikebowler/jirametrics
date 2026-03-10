@@ -3,11 +3,15 @@
 require 'jirametrics/chart_base'
 
 class DailyGroupingRules < GroupingRules
-  attr_accessor :current_date, :group_priority, :issue_hint
+  attr_accessor :current_date, :group_priority, :issue_hint, :highlight
 
   def initialize
     super
     @group_priority = 0
+  end
+
+  def group
+    [@label, @color, @highlight ? true : false]
   end
 end
 
@@ -35,8 +39,15 @@ class DailyWipChart < ChartBase
     issue_rules_by_active_date = group_issues_by_active_dates
     possible_rules = select_possible_rules issue_rules_by_active_date
 
+    conflicting_labels = possible_rules
+      .group_by(&:label)
+      .select { |_label, rules| rules.any?(&:highlight) && rules.any? { |r| !r.highlight } }
+      .keys
+
     data_sets = possible_rules.collect do |grouping_rule|
-      make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date
+      suffix = conflicting_labels.include?(grouping_rule.label) && grouping_rule.highlight ? '*' : ''
+      make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date,
+                    label_suffix: suffix
     end
     if @trend_lines
       data_sets = @trend_lines.filter_map do |group_labels, line_color|
@@ -84,16 +95,16 @@ class DailyWipChart < ChartBase
     hash
   end
 
-  def make_data_set grouping_rule:, issue_rules_by_active_date:
+  def make_data_set grouping_rule:, issue_rules_by_active_date:, label_suffix: ''
     positive = grouping_rule.group_priority >= 0
+    display_label = "#{grouping_rule.label}#{label_suffix}"
 
     data = issue_rules_by_active_date.collect do |date, issue_rules|
-      # issues = []
       issue_strings = issue_rules
         .select { |_issue, rules| rules.group == grouping_rule.group }
         .sort_by { |issue, _rules| issue.key_as_i }
         .collect { |issue, rules| "#{issue.key} : #{issue.summary.strip} #{rules.issue_hint}" }
-      title = ["#{grouping_rule.label} (#{label_issues issue_strings.size})"] + issue_strings
+      title = ["#{display_label} (#{label_issues issue_strings.size})"] + issue_strings
 
       {
         x: date,
@@ -102,11 +113,18 @@ class DailyWipChart < ChartBase
       }
     end
 
+    color = grouping_rule.color || random_color
+    background_color = if grouping_rule.highlight
+                         RawJavascript.new("createDiagonalPattern(#{color.to_json})")
+                       else
+                         color
+                       end
+
     {
       type: 'bar',
-      label: grouping_rule.label,
+      label: display_label,
       data: data,
-      backgroundColor: grouping_rule.color || random_color,
+      backgroundColor: background_color,
       borderColor: CssVariable['--wip-chart-border-color'],
       borderWidth: grouping_rule.color.to_s == 'var(--body-background)' ? 1 : 0,
       borderRadius: positive ? 0 : 5

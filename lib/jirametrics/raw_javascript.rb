@@ -10,4 +10,8 @@ class RawJavascript
   def to_json(*_args)
     @content
   end
+
+  def == other
+    other.is_a?(RawJavascript) && to_json == other.to_json
+  end
 end
