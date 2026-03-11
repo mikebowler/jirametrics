@@ -168,9 +168,26 @@ class Downloader
     # actually look at the returned json.
     @board_id_to_filter_id[board_id] = json['filter']['id'].to_i
 
+    if json['type'] == 'simple'
+      features_json = download_features board_id: board_id
+      if features_json['features']&.any? { |f| f['feature'] == 'jsw.agility.sprints' && f['state'] == 'ENABLED' }
+        download_sprints board_id: board_id
+      end
+    end
     download_sprints board_id: board_id if json['type'] == 'scrum'
     # TODO: Should be passing actual statuses, not empty list
     Board.new raw: json, possible_statuses: StatusCollection.new
+  end
+
+  def download_features board_id:
+    log "  Downloading features for board #{board_id}", both: true
+    json = @jira_gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/features"
+
+    @file_system.save_json(
+      json: json,
+      filename: File.join(@target_path, "#{file_prefix}_board_#{board_id}_features.json")
+    )
+    json
   end
 
   def download_sprints board_id:
@@ -332,7 +349,7 @@ class Downloader
 
     keys = []
     @file_system.foreach(path) do |filename|
-      keys << filename.split('-').first if filename =~ /^[A-Z][A-Z_0-9]+-\d+-\d+\.json$/
+      keys << filename.split('-').first if filename.match?(/^[A-Z][A-Z_0-9]+-\d+-\d+\.json$/)
     end
     keys.uniq
   end

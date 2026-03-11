@@ -363,6 +363,100 @@ describe DownloaderForCloud do
       })
     end
 
+    it 'pulls extra data for simple board' do
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'simple',
+        'columnConfig' => { 'columns' => [] }
+      }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
+      )
+
+      features_json = { 'features' => [] }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/features',
+        response: features_json
+      )
+
+      downloader.download_board_configuration board_id: 2
+
+      expect(file_system.log_messages).to eq([
+        'Downloading board configuration for board 2',
+        'Downloading features for board 2'
+      ])
+      expect(file_system.saved_json).to eq({
+        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
+        'spec/testdata/sample_board_2_features.json' => JSON.generate(features_json)
+      })
+    end
+
+    it 'downloads sprints for a simple board that has the sprint feature enabled' do
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'simple',
+        'columnConfig' => { 'columns' => [] }
+      }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
+      )
+
+      features_json = { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' }] }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/features',
+        response: features_json
+      )
+
+      sprints_json = { 'isLast' => true, 'maxResults' => 100, 'values' => [] }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/sprint?maxResults=100&startAt=0',
+        response: sprints_json
+      )
+
+      downloader.download_board_configuration board_id: 2
+
+      expect(file_system.log_messages).to eq([
+        'Downloading board configuration for board 2',
+        'Downloading features for board 2',
+        'Downloading sprints for board 2'
+      ])
+      expect(file_system.saved_json.keys).to include(
+        'spec/testdata/sample_board_2_features.json',
+        'spec/testdata/sample_board_2_sprints_0.json'
+      )
+    end
+
+    it 'does not download sprints for a simple board when the sprint feature is disabled' do
+      configuration_json = {
+        'id' => '2',
+        'filter' => { 'id' => 1 },
+        'type' => 'simple',
+        'columnConfig' => { 'columns' => [] }
+      }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/configuration',
+        response: configuration_json
+      )
+
+      features_json = { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' }] }
+      jira_gateway.when(
+        url: '/rest/agile/1.0/board/2/features',
+        response: features_json
+      )
+
+      downloader.download_board_configuration board_id: 2
+
+      expect(file_system.log_messages).to eq([
+        'Downloading board configuration for board 2',
+        'Downloading features for board 2'
+      ])
+      expect(file_system.saved_json.keys).not_to include('spec/testdata/sample_board_2_sprints_0.json')
+    end
+
     it 'pulls extra data for scrum board' do
       configuration_json = {
         'id' => '2',

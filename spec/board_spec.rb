@@ -126,4 +126,40 @@ describe Board do
       'Board(id: 1, name: "SP board", board_type: "kanban")'
     )
   end
+
+  context 'scrum? and kanban? for simple boards' do
+    let(:simple_raw) do
+      {
+        'id' => 1,
+        'type' => 'simple',
+        'columnConfig' => { 'columns' => [] }
+      }
+    end
+    let(:sprints_enabled) do
+      { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' }] }
+    end
+    let(:sprints_disabled) do
+      { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' }] }
+    end
+
+    it 'is scrum when sprints feature is enabled' do
+      board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
+                                  features_raw: sprints_enabled
+      expect(board.scrum?).to be true
+      expect(board.kanban?).to be false
+    end
+
+    it 'is kanban when sprints feature is disabled' do
+      board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
+                                  features_raw: sprints_disabled
+      expect(board.scrum?).to be false
+      expect(board.kanban?).to be true
+    end
+
+    it 'is kanban when no features file is available' do
+      board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new
+      expect(board.scrum?).to be false
+      expect(board.kanban?).to be true
+    end
+  end
 end
