@@ -13,10 +13,9 @@ class Board
     columns = raw['columnConfig']['columns']
     ensure_uniqueness_of_column_names! columns
 
-    # For a Kanban board, the first column here will always be called 'Backlog' and will NOT be
-    # visible on the board. If the board is configured to have a kanban backlog then it will have
-    # statuses matched to it and otherwise, there will be no statuses.
-    columns = columns.drop(1) if kanban?
+    # For a classic Kanban board (type 'kanban'), the first column will always be called 'Backlog'
+    # and will NOT be visible on the board. This does not apply to team-managed boards (type 'simple').
+    columns = columns.drop(1) if board_type == 'kanban'
 
     @backlog_statuses = []
     @visible_columns = columns.filter_map do |column|
@@ -26,7 +25,7 @@ class Board
   end
 
   def backlog_statuses
-    if @backlog_statuses.empty? && kanban?
+    if @backlog_statuses.empty? && board_type == 'kanban'
       status_ids = status_ids_from_column raw['columnConfig']['columns'].first
       @backlog_statuses = status_ids.filter_map do |id|
         @possible_statuses.find_by_id id
