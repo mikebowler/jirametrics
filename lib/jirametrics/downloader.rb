@@ -170,7 +170,7 @@ class Downloader
 
     if json['type'] == 'simple'
       features_json = download_features board_id: board_id
-      if features_json['features']&.any? { |f| f['feature'] == 'jsw.agility.sprints' && f['state'] == 'ENABLED' }
+      if BoardFeature.from_raw(features_json).any? { |f| f.name == 'jsw.agility.sprints' && f.enabled? }
         download_sprints board_id: board_id
       end
     end

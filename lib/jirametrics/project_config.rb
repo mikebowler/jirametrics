@@ -273,9 +273,13 @@ class ProjectConfig
     raw = file_system.load_json(filename)
 
     features_filename = File.join(@target_path, "#{get_file_prefix}_board_#{board_id}_features.json")
-    features_raw = file_system.load_json(features_filename) if file_system.file_exist?(features_filename)
+    features = if file_system.file_exist?(features_filename)
+                 BoardFeature.from_raw(file_system.load_json(features_filename))
+               else
+                 []
+               end
 
-    board = Board.new(raw: raw, possible_statuses: @possible_statuses, features_raw: features_raw)
+    board = Board.new(raw: raw, possible_statuses: @possible_statuses, features: features)
     board.project_config = self
     @all_boards[board_id] = board
   end

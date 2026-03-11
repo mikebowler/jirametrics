@@ -4,11 +4,11 @@ class Board
   attr_reader :visible_columns, :raw, :possible_statuses, :sprints
   attr_accessor :cycletime, :project_config
 
-  def initialize raw:, possible_statuses:, features_raw: nil
+  def initialize raw:, possible_statuses:, features: []
     @raw = raw
     @possible_statuses = possible_statuses
     @sprints = []
-    @features_raw = features_raw
+    @features = features
 
     columns = raw['columnConfig']['columns']
     ensure_uniqueness_of_column_names! columns
@@ -73,8 +73,7 @@ class Board
     return true if board_type == 'scrum'
     return false unless board_type == 'simple'
 
-    @features_raw&.[]('features')
-               &.any? { |f| f['feature'] == 'jsw.agility.sprints' && f['state'] == 'ENABLED' } || false
+    @features.any? { |f| f.name == 'jsw.agility.sprints' && f.enabled? }
   end
 
   def kanban?

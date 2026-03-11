@@ -135,23 +135,19 @@ describe Board do
         'columnConfig' => { 'columns' => [] }
       }
     end
-    let(:sprints_enabled) do
-      { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' }] }
-    end
-    let(:sprints_disabled) do
-      { 'features' => [{ 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' }] }
-    end
+    let(:sprints_enabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' })] }
+    let(:sprints_disabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' })] }
 
     it 'is scrum when sprints feature is enabled' do
       board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
-                                  features_raw: sprints_enabled
+                                  features: sprints_enabled
       expect(board.scrum?).to be true
       expect(board.kanban?).to be false
     end
 
     it 'is kanban when sprints feature is disabled' do
       board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
-                                  features_raw: sprints_disabled
+                                  features: sprints_disabled
       expect(board.scrum?).to be false
       expect(board.kanban?).to be true
     end
