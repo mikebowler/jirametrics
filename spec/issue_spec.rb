@@ -1663,4 +1663,44 @@ describe Issue do
       expect(issue1.time_created.time).to eq issue1.created
     end
   end
+
+  context 'status_resolution_at_done' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
+    it 'returns [nil, nil] when issue is not done' do
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
+      expect(issue.status_resolution_at_done).to eq [nil, nil]
+    end
+
+    it 'returns status and nil resolution when no resolution change exists' do
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      status, resolution = issue.status_resolution_at_done
+      expect(status.name).to eq 'Done'
+      expect(resolution).to be_nil
+    end
+
+    it 'returns status and resolution at the done time' do
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Fixed', time: '2021-10-03')
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      status, resolution = issue.status_resolution_at_done
+      expect(status.name).to eq 'Done'
+      expect(resolution).to eq 'Fixed'
+    end
+
+    it 'ignores status and resolution changes after the done time' do
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Fixed', time: '2021-10-03')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-04')
+      add_mock_change(issue: issue, field: 'resolution', value: nil, time: '2021-10-04')
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      status, resolution = issue.status_resolution_at_done
+      expect(status.name).to eq 'Done'
+      expect(resolution).to eq 'Fixed'
+    end
+  end
 end

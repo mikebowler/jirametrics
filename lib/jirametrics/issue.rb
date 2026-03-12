@@ -749,6 +749,24 @@ class Issue
     @changes.select { |change| change.status? }
   end
 
+  def status_resolution_at_done
+    done_time = board.cycletime.started_stopped_times(self).last
+    return [nil, nil] if done_time.nil?
+
+    status_change = nil
+    resolution = nil
+
+    @changes.each do |change|
+      break if change.time > done_time
+
+      status_change = change if change.status?
+      resolution = change.value if change.resolution?
+    end
+
+    status = status_change ? find_or_create_status(id: status_change.value_id, name: status_change.value) : nil
+    [status, resolution]
+  end
+
   def sprints
     sprint_ids = []
 

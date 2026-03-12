@@ -73,10 +73,11 @@ class Exporter
             header_text nil
             description_text '<h2>Number of items completed, grouped by completion status and resolution</h2>'
             grouping_rules do |issue, rules|
-              if issue.resolution
-                rules.label = "#{issue.status.name}:#{issue.resolution}"
+              status, resolution = issue.status_resolution_at_done
+              if resolution
+                rules.label = "#{status.name}:#{resolution}"
               else
-                rules.label = issue.status.name
+                rules.label = status.name
               end
             end
           end
