@@ -15,6 +15,22 @@ describe AgingWorkBarChart do
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
 
+  context 'description_text' do
+    it 'mentions four bars and includes sprints item for scrum board' do
+      board.raw['type'] = 'scrum'
+      rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
+      expect(rendered).to include('four bars')
+      expect(rendered).to include('Sprints')
+    end
+
+    it 'mentions three bars and excludes sprints item for kanban board' do
+      board.raw['type'] = 'kanban'
+      rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
+      expect(rendered).to include('three bars')
+      expect(rendered).not_to include('Sprints')
+    end
+  end
+
   context 'collect_status_ranges' do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')

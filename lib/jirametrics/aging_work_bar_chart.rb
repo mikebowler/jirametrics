@@ -15,7 +15,7 @@ class AgingWorkBarChart < ChartBase
         newest at the bottom.
       </p>
       <p>
-        There are three bars for each issue, and hovering over any of the bars will provide more details.
+        There are <%= current_board.scrum? ? 'four' : 'three' %> bars for each issue, and hovering over any of the bars will provide more details.
         <ol>
           <li>Status: The status the issue was in at any time. The colour indicates the
           status category, which will be one of #{color_block '--status-category-todo-color'} To Do,
@@ -25,6 +25,9 @@ class AgingWorkBarChart < ChartBase
           or #{color_block '--stalled-color'} stalled.</li>
           <li>Priority: This shows the priority over time. If one of these priorities is considered expedited
           then it will be drawn with diagonal lines.</li>
+          <% if current_board.scrum? %>
+            <li>Sprints: The sprints that the issue was in.</li>
+          <% end %>
         </ol>
       </p>
       #{describe_non_working_days}
