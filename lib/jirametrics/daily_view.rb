@@ -237,9 +237,10 @@ class DailyView < ChartBase
 
   def make_description_lines issue
     description = issue.raw['fields']['description']
-    result = []
-    result << [atlassian_document_format.to_html(description)] if description
-    result
+    return [] unless description
+
+    text = "<div class='foldable startFolded'>Description</div><div>#{atlassian_document_format.to_html(description)}</div>"
+    [[text]]
   end
 
   def assemble_issue_lines issue, child:
