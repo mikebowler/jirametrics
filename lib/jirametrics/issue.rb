@@ -782,13 +782,13 @@ class Issue
   def compact_text text, max: 60
     return '' if text.nil?
 
-    if text.is_a? Hash
-      # We can't effectively compact it but we can convert it into a string.
-      text = @board.project_config.atlassian_document_format.to_html(text)
-    else
-      text = text.gsub(/\s+/, ' ').strip
-      text = "#{text[0...max]}..." if text.length > max
-    end
+    text = if text.is_a? Hash
+             @board.project_config.atlassian_document_format.to_text(text)
+           else
+             text
+           end
+    text = text.gsub(/\s+/, ' ').strip
+    text = "#{text[0...max]}..." if text.length > max
     text
   end
 

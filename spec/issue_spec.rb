@@ -1606,7 +1606,7 @@ describe Issue do
           }
         ]
       }
-      expect(issue1.compact_text input, max: 30).to eq '<p>Comment 2</p>'
+      expect(issue1.compact_text input, max: 30).to eq 'Comment 2'
     end
   end
 
