@@ -680,8 +680,8 @@ describe Issue do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do
       {
-        'blocked_statuses' => %w[Blocked Blocked2],
-        'stalled_statuses' => %w[Stalled Stalled2],
+        'blocked_statuses' => status_collection_for(board: board, names: %w[Blocked Blocked2]),
+        'stalled_statuses' => status_collection_for(board: board, names: %w[Stalled Stalled2]),
         'blocked_link_text' => ['is blocked by'],
         'stalled_threshold_days' => 5,
         'flagged_means_blocked' => true
@@ -937,18 +937,6 @@ describe Issue do
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-08T00:00:00'))
       ]
-    end
-
-    it 'notices if blocked_statuses is a string' do
-      settings['blocked_statuses'] = ''
-      expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
-        .to raise_error 'blocked_statuses("") and stalled_statuses(["Stalled", "Stalled2"]) must both be arrays'
-    end
-
-    it 'notices if stalled_statuses is a string' do
-      settings['stalled_statuses'] = ''
-      expect { issue.blocked_stalled_changes settings: settings, end_time: to_time('2021-10-08') }
-        .to raise_error 'blocked_statuses(["Blocked", "Blocked2"]) and stalled_statuses("") must both be arrays'
     end
 
     it 'shows blocked even when there has been a big enough gap to be stalled' do
@@ -1419,8 +1407,8 @@ describe Issue do
   context 'flow_efficiency_numbers' do # part of a flow efficiency calculation
     let(:settings) do
       {
-        'blocked_statuses' => %w[Blocked Blocked2],
-        'stalled_statuses' => %w[Stalled Stalled2],
+        'blocked_statuses' => status_collection_for(board: board, names: %w[Blocked Blocked2]),
+        'stalled_statuses' => status_collection_for(board: board, names: %w[Stalled Stalled2]),
         'stalled_threshold_days' => 5
       }
     end
@@ -1486,7 +1474,7 @@ describe Issue do
     end
 
     it 'was created in blocked status' do
-      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Blocked', 1]
+      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Blocked', 10]
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), nil]
       ]

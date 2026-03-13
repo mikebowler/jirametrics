@@ -7,7 +7,10 @@ describe DailyView do
     described_class.new(nil).tap do |view|
       view.date_range = to_date('2024-01-01')..to_date('2024-01-20')
       view.time_range = to_time('2024-01-01')..to_time('2024-01-20T23:59:59')
-      view.settings = JSON.parse(File.read(File.join(['lib', 'jirametrics', 'settings.json']), encoding: 'UTF-8'))
+      settings = JSON.parse(File.read(File.join(['lib', 'jirametrics', 'settings.json']), encoding: 'UTF-8'))
+      settings['blocked_statuses'] = StatusCollection.new
+      settings['stalled_statuses'] = StatusCollection.new
+      view.settings = settings
       view.atlassian_document_format = AtlassianDocumentFormat.new(
         users: [], timezone_offset: '0000'
       )
@@ -270,7 +273,7 @@ describe DailyView do
     end
 
     it 'renders stalled by status' do
-      view.settings['stalled_statuses'] = ['Review']
+      view.settings['stalled_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
       issue = empty_issue created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
@@ -285,7 +288,7 @@ describe DailyView do
     end
 
     it 'renders blocked by status' do
-      view.settings['blocked_statuses'] = ['Review']
+      view.settings['blocked_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
       issue = empty_issue created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]

@@ -43,6 +43,7 @@ class ProjectConfig
     load_sprints
     load_fix_versions
     load_users
+    resolve_blocked_stalled_status_settings
   end
 
   def run load_only: false
@@ -69,6 +70,9 @@ class ProjectConfig
     if settings['stalled_color']
       file_system.deprecated message: 'stalled color should be set via css now', date: '2024-05-03'
     end
+
+    settings['blocked_statuses'] = StatusCollection.new
+    settings['stalled_statuses'] = StatusCollection.new
 
     settings
   end
@@ -636,5 +640,22 @@ class ProjectConfig
     end
 
     cycletimes_touched.each { |c| c.flush_cache }
+  end
+
+  def resolve_blocked_stalled_status_settings
+    %w[blocked_statuses stalled_statuses].each do |key|
+      next if @settings[key].is_a?(StatusCollection)
+
+      collection = StatusCollection.new
+      @settings[key].each do |identifier|
+        statuses = @possible_statuses.find_all_by_name(identifier)
+        if statuses.empty?
+          file_system.warning "Status #{identifier.inspect} in #{key} not found. Ignoring."
+        else
+          statuses.each { |status| collection << status }
+        end
+      end
+      @settings[key] = collection
+    end
   end
 end

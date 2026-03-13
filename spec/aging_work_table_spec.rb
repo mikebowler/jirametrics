@@ -70,7 +70,9 @@ describe AgingWorkTable do
       review_status = issue1.board.possible_statuses.find_by_id 10_011
       expect(review_status.name).to eq 'Review' # Sanity check to ensure test data is correct.
 
-      issue1.board.project_config.settings['blocked_statuses'] = [review_status.name]
+      collection = StatusCollection.new
+      collection << review_status
+      issue1.board.project_config.settings['blocked_statuses'] = collection
       add_mock_change(issue: issue1, field: 'status', value: review_status, time: '2020-10-03')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 

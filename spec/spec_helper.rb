@@ -112,6 +112,14 @@ def load_complete_sample_statuses
   load_statuses './spec/complete_sample/sample_statuses.json'
 end
 
+def status_collection_for board:, names:
+  collection = StatusCollection.new
+  names.each do |name|
+    board.possible_statuses.find_all_by_name(name).each { |s| collection << s }
+  end
+  collection
+end
+
 def load_statuses input_file
   statuses = StatusCollection.new
 

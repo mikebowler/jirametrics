@@ -395,21 +395,11 @@ class Issue
     results
   end
 
-  def blocked_stalled_statuses settings
-    blocked_statuses = settings['blocked_statuses']
-    stalled_statuses = settings['stalled_statuses']
-    unless blocked_statuses.is_a?(Array) && stalled_statuses.is_a?(Array)
-      raise "blocked_statuses(#{blocked_statuses.inspect}) and " \
-        "stalled_statuses(#{stalled_statuses.inspect}) must both be arrays"
-    end
-
-    [blocked_statuses, stalled_statuses]
-  end
-
   def blocked_stalled_changes end_time:, settings: nil
     settings ||= @board.project_config.settings
 
-    blocked_statuses, stalled_statuses = blocked_stalled_statuses(settings)
+    blocked_statuses = settings['blocked_statuses']
+    stalled_statuses = settings['stalled_statuses']
 
     blocked_link_texts = settings['blocked_link_text']
     stalled_threshold = settings['stalled_threshold_days']
@@ -422,6 +412,7 @@ class Issue
     previous_change_time = created
 
     blocking_status = nil
+    blocking_is_blocked = false
     flag = nil
     flag_reason = nil
 
@@ -441,7 +432,11 @@ class Issue
         flag, flag_reason = blocked_stalled_changes_flag_logic change
       elsif change.status?
         blocking_status = nil
-        if blocked_statuses.include?(change.value) || stalled_statuses.include?(change.value)
+        blocking_is_blocked = false
+        if blocked_statuses.find_by_id(change.value_id)
+          blocking_status = change.value
+          blocking_is_blocked = true
+        elsif stalled_statuses.find_by_id(change.value_id)
           blocking_status = change.value
         end
       elsif change.link?
@@ -464,7 +459,7 @@ class Issue
         flagged: flag,
         flag_reason: flag_reason,
         status: blocking_status,
-        status_is_blocking: blocking_status.nil? || blocked_statuses.include?(blocking_status),
+        status_is_blocking: blocking_status.nil? || blocking_is_blocked,
         blocking_issue_keys: (blocking_issue_keys.empty? ? nil : blocking_issue_keys.dup),
         time: change.time
       )

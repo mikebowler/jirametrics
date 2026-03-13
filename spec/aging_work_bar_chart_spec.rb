@@ -129,7 +129,7 @@ describe AgingWorkBarChart do
       )
 
       chart.settings = board.project_config.settings
-      chart.settings['blocked_statuses'] = ['Blocked']
+      chart.settings['blocked_statuses'] = status_collection_for(board: board, names: ['Blocked'])
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'

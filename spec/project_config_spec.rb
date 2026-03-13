@@ -661,4 +661,56 @@ describe ProjectConfig do
       expect(project_config).not_to have_received(:anonymize_data)
     end
   end
+
+  context 'resolve_blocked_stalled_status_settings' do
+    before do
+      project_config.file_prefix 'sample'
+    end
+
+    it 'resolves status names to a StatusCollection' do
+      project_config.settings['blocked_statuses'] = ['Review']
+      project_config.settings['stalled_statuses'] = ['In Progress']
+      project_config.send(:resolve_blocked_stalled_status_settings)
+
+      expect(project_config.settings['blocked_statuses']).to be_a StatusCollection
+      expect(project_config.settings['blocked_statuses'].collect(&:name)).to eq ['Review']
+      expect(project_config.settings['stalled_statuses'].collect(&:name)).to eq ['In Progress']
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'supports id-only lookup' do
+      project_config.settings['blocked_statuses'] = ['10011']
+      project_config.settings['stalled_statuses'] = []
+      project_config.send(:resolve_blocked_stalled_status_settings)
+
+      expect(project_config.settings['blocked_statuses'].collect(&:name)).to eq ['Review']
+    end
+
+    it 'supports name:id pair lookup' do
+      project_config.settings['blocked_statuses'] = ['Review:10011']
+      project_config.settings['stalled_statuses'] = []
+      project_config.send(:resolve_blocked_stalled_status_settings)
+
+      expect(project_config.settings['blocked_statuses'].collect(&:name)).to eq ['Review']
+    end
+
+    it 'warns and skips statuses that cannot be found' do
+      project_config.settings['blocked_statuses'] = ['NonExistent']
+      project_config.settings['stalled_statuses'] = []
+      project_config.send(:resolve_blocked_stalled_status_settings)
+
+      expect(project_config.settings['blocked_statuses']).to be_empty
+      expect(exporter.file_system.log_messages).to eq [
+        'Warning: Status "NonExistent" in blocked_statuses not found. Ignoring.'
+      ]
+    end
+
+    it 'processes remaining statuses after a not-found one' do
+      project_config.settings['blocked_statuses'] = ['NonExistent', 'Review']
+      project_config.settings['stalled_statuses'] = []
+      project_config.send(:resolve_blocked_stalled_status_settings)
+
+      expect(project_config.settings['blocked_statuses'].collect(&:name)).to eq ['Review']
+    end
+  end
 end
