@@ -179,10 +179,19 @@ describe JiraGateway do
       )
       expect(file_system.log_messages).to eq([
         'foo',
-        'Failed call with exit status 1!',
-        'Returned (stdout): "stdout"',
-        'Returned (stderr): "stderr"'
+        'Error: Failed call with exit status 1!',
+        'Error: Returned (stdout): "stdout"',
+        'Error: Returned (stderr): "stderr"'
       ])
+    end
+
+    it 'raises a friendly message on HTTP 401' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['', 'curl: (22) The requested URL returned error: 401', MockStatus.new(exitstatus: 22)]
+      )
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error "The request was not authorized. Verify that your authentication token hasn't expired"
+      )
     end
 
     it 'execs successfully' do

@@ -28,9 +28,12 @@ class JiraGateway
 
     stdout, stderr, status = capture3(command, stdin_data: stdin_data)
     unless status.success?
-      @file_system.log "Failed call with exit status #{status.exitstatus}!"
-      @file_system.log "Returned (stdout): #{stdout.inspect}"
-      @file_system.log "Returned (stderr): #{stderr.inspect}"
+      @file_system.error "Failed call with exit status #{status.exitstatus}!"
+      @file_system.error "Returned (stdout): #{stdout.inspect}"
+      @file_system.error "Returned (stderr): #{stderr.inspect}"
+      if stderr.include?('401')
+        raise 'The request was not authorized. Verify that your authentication token hasn\'t expired'
+      end
       raise "Failed call with exit status #{status.exitstatus}. " \
         "See #{@file_system.logfile_name} for details"
     end
