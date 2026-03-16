@@ -713,4 +713,33 @@ describe ProjectConfig do
       expect(project_config.settings['blocked_statuses'].collect(&:name)).to eq ['Review']
     end
   end
+
+  context 'stringify_keys' do
+    it 'converts symbol keys to strings at the top level' do
+      expect(project_config.send(:stringify_keys, { foo: 1, bar: 2 })).to eq({ 'foo' => 1, 'bar' => 2 })
+    end
+
+    it 'converts symbol keys inside nested hashes' do
+      input = { outer: { inner: 'value' } }
+      expect(project_config.send(:stringify_keys, input)).to eq({ 'outer' => { 'inner' => 'value' } })
+    end
+
+    it 'converts symbol keys inside hashes nested in arrays' do
+      input = { annotations: [{ date: '2026-01-01', label: 'Jan' }] }
+      expect(project_config.send(:stringify_keys, input)).to eq(
+        { 'annotations' => [{ 'date' => '2026-01-01', 'label' => 'Jan' }] }
+      )
+    end
+
+    it 'leaves non-hash, non-array values untouched' do
+      expect(project_config.send(:stringify_keys, 'hello')).to eq('hello')
+      expect(project_config.send(:stringify_keys, 42)).to eq(42)
+    end
+  end
+
+  context 'load_settings' do
+    it 'returns a hash with only string keys' do
+      expect(project_config.settings.keys).to all(be_a(String))
+    end
+  end
 end

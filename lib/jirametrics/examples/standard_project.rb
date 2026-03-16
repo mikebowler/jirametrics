@@ -13,7 +13,7 @@ class Exporter
       file_prefix file_prefix
 
       self.anonymize if anonymize
-      self.settings.merge! settings
+      self.settings.merge! stringify_keys(settings)
 
       boards.each_key do |board_id|
         block = boards[board_id]

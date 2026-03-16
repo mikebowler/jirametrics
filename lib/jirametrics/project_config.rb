@@ -74,7 +74,7 @@ class ProjectConfig
     settings['blocked_statuses'] = StatusCollection.new
     settings['stalled_statuses'] = StatusCollection.new
 
-    settings
+    stringify_keys(settings)
   end
 
   def guess_project_id
@@ -640,6 +640,14 @@ class ProjectConfig
     end
 
     cycletimes_touched.each { |c| c.flush_cache }
+  end
+
+  def stringify_keys value
+    case value
+    when Hash then value.transform_keys(&:to_s).transform_values { |v| stringify_keys(v) }
+    when Array then value.map { |v| stringify_keys(v) }
+    else value
+    end
   end
 
   def resolve_blocked_stalled_status_settings

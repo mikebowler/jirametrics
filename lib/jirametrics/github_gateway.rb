@@ -93,6 +93,7 @@ class GithubGateway
   def run_command args
     stdout, stderr, status = Open3.capture3('gh', *args)
 
+    # This extra check seems to only matter on Windows. On the mac, auth failures don't pass status.success?
     if stderr.include?('SAML enforcement')
       raise "GitHub CLI is not authorized to access #{@repo}. " \
             "Run: gh auth refresh -h github.com -s read:org"

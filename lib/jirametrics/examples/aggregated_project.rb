@@ -12,7 +12,7 @@ class Exporter
     project name: name do
       puts name
       file_prefix name
-      self.settings.merge! settings
+      self.settings.merge! stringify_keys(settings)
 
       aggregate do
         project_names.each do |project_name|
