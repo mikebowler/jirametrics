@@ -407,7 +407,7 @@ describe DailyView do
       parent.subtasks << issue2
 
       expect(view.make_child_lines parent).to eq [
-          '<section><div class="foldable">Child issues</div>',
+          '<section><div class="foldable startFolded">Child issues (2)</div>',
           issue1,
           issue2,
           '</section>'

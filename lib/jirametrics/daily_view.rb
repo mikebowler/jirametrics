@@ -9,7 +9,8 @@ class DailyView < ChartBase
     header_text 'Daily View'
     description_text <<-HTML
       <div class="p">
-        This view shows all the items you'll want to discuss during your daily coordination meeting
+        This view shows all the items (<%= aging_issues.count %>) you'll want to discuss during your daily
+        coordination meeting
         (aka daily scrum, standup), in the order that you should be discussing them. The most important
         items are at the top, and the least at the bottom.
       </div>
@@ -166,7 +167,7 @@ class DailyView < ChartBase
 
     return lines if subtasks.empty?
 
-    lines << '<section><div class="foldable">Child issues</div>'
+    lines << "<section><div class=\"foldable startFolded\">Child issues (#{subtasks.count})</div>"
     lines += subtasks
     lines << '</section>'
 
