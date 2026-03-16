@@ -30,7 +30,7 @@ class EstimateAccuracyChart < ChartBase
     HTML
 
     @x_axis_title = 'Cycletime (days)'
-    @y_axis_title = 'Count of items'
+    @y_axis_title = 'Estimate'
 
     @y_axis_type = 'linear'
     @y_axis_block = ->(issue, start_time) { estimate_at(issue: issue, start_time: start_time)&.to_f }
