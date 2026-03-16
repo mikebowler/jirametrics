@@ -83,6 +83,8 @@ global.simulateDOMReady = () => {
 // Clean up after each test
 afterEach(() => {
   document.body.innerHTML = '';
+  document.documentElement.removeAttribute('data-theme');
+  localStorage.clear();
   // Reset mocks
   window.location.reload.mockClear();
   window.matchMedia.mockClear();

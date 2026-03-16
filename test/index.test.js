@@ -3,6 +3,126 @@
  * Tests the makeFoldable functionality and DOM manipulation
  */
 
+describe('initThemeToggle functionality', () => {
+  // Loads the JS and immediately calls initThemeToggle() within the same eval scope.
+  // DOM and localStorage must be set up before calling this.
+  function loadAndInitToggle() {
+    const fs = require('fs');
+    const path = require('path');
+    const jsCode = fs.readFileSync(path.join(__dirname, '../lib/jirametrics/html/index.js'), 'utf8');
+    eval(jsCode);
+    initThemeToggle();
+  }
+
+  function setupToggleButtons() {
+    document.body.innerHTML = `
+      <button id="theme-btn-system">⊙</button>
+      <button id="theme-btn-light">☀</button>
+      <button id="theme-btn-dark">☾</button>
+    `;
+  }
+
+  test('applies saved theme from localStorage synchronously on script load (before DOMContentLoaded)', () => {
+    localStorage.setItem('jirametrics:theme', 'dark');
+    // eval the script without calling initThemeToggle — the IIFE should apply the theme immediately
+    const fs = require('fs');
+    const path = require('path');
+    const jsCode = fs.readFileSync(path.join(__dirname, '../lib/jirametrics/html/index.js'), 'utf8');
+    eval(jsCode);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  test('applies saved theme from localStorage on init', () => {
+    setupToggleButtons();
+    localStorage.setItem('jirametrics:theme', 'dark');
+    loadAndInitToggle();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  test('does not set data-theme when no saved preference', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+  });
+
+  test('sets dark theme and saves to localStorage on dark button click', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    document.getElementById('theme-btn-dark').click();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(localStorage.getItem('jirametrics:theme')).toBe('dark');
+  });
+
+  test('sets light theme and saves to localStorage on light button click', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    document.getElementById('theme-btn-light').click();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('jirametrics:theme')).toBe('light');
+  });
+
+  test('removes data-theme and clears localStorage on system button click', () => {
+    setupToggleButtons();
+    localStorage.setItem('jirametrics:theme', 'dark');
+    loadAndInitToggle();
+    document.getElementById('theme-btn-system').click();
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+    expect(localStorage.getItem('jirametrics:theme')).toBeNull();
+  });
+
+  test('marks the correct button as active on init with saved theme', () => {
+    setupToggleButtons();
+    localStorage.setItem('jirametrics:theme', 'light');
+    loadAndInitToggle();
+    expect(document.getElementById('theme-btn-light').classList.contains('active')).toBe(true);
+    expect(document.getElementById('theme-btn-dark').classList.contains('active')).toBe(false);
+    expect(document.getElementById('theme-btn-system').classList.contains('active')).toBe(false);
+  });
+
+  test('marks system button as active when no saved theme', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    expect(document.getElementById('theme-btn-system').classList.contains('active')).toBe(true);
+  });
+
+  test('updates active button when theme is changed', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    document.getElementById('theme-btn-dark').click();
+    expect(document.getElementById('theme-btn-dark').classList.contains('active')).toBe(true);
+    expect(document.getElementById('theme-btn-system').classList.contains('active')).toBe(false);
+  });
+
+  test('reloads page when theme button is clicked', () => {
+    setupToggleButtons();
+    loadAndInitToggle();
+    document.getElementById('theme-btn-dark').click();
+    expect(window.location.reload).toHaveBeenCalled();
+  });
+
+  test('works gracefully when toggle buttons are absent', () => {
+    document.body.innerHTML = '';
+    expect(() => loadAndInitToggle()).not.toThrow();
+  });
+});
+
+describe('dark mode media query change', () => {
+  test('reloads page when no manual theme is set', () => {
+    document.body.innerHTML = '';
+    loadAndExecuteJS();
+    triggerDarkModeChange();
+    expect(window.location.reload).toHaveBeenCalled();
+  });
+
+  test('does not reload when a manual theme is set', () => {
+    document.body.innerHTML = '';
+    document.documentElement.setAttribute('data-theme', 'dark');
+    loadAndExecuteJS();
+    triggerDarkModeChange();
+    expect(window.location.reload).not.toHaveBeenCalled();
+  });
+});
+
 describe('makeFoldable functionality', () => {
   beforeEach(() => {
     // Clean slate for each test
