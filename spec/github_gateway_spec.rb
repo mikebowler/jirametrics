@@ -225,4 +225,18 @@ describe GithubGateway do
       expect(gateway2).to have_received(:run_command)
     end
   end
+
+  context 'run_command' do
+    it 'raises a helpful error when the gh CLI reports a SAML enforcement error' do
+      success = instance_double(Process::Status, success?: true)
+      allow(Open3).to receive(:capture3).and_return(
+        ['[]', 'GraphQL: Resource protected by organization SAML enforcement. ' \
+               'You must grant your OAuth token access to this organization. (repository)', success]
+      )
+
+      expect { gateway.fetch_raw_pull_requests }.to raise_error(
+        RuntimeError, /not authorized.*gh auth refresh/i
+      )
+    end
+  end
 end

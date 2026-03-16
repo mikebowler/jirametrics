@@ -92,6 +92,12 @@ class GithubGateway
 
   def run_command args
     stdout, stderr, status = Open3.capture3('gh', *args)
+
+    if stderr.include?('SAML enforcement')
+      raise "GitHub CLI is not authorized to access #{@repo}. " \
+            "Run: gh auth refresh -h github.com -s read:org"
+    end
+
     raise "GitHub CLI command failed for #{@repo}: #{stderr}" unless status.success?
 
     JSON.parse(stdout)
