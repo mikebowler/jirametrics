@@ -137,7 +137,6 @@ class DailyWipChart < ChartBase
     rules = DailyGroupingRules.new
     rules.current_date = date
     @group_by_block.call issue, rules
-    @generated_colors[rules.color.name] = rules.color_pair if rules.color_pair
     rules
   end
 

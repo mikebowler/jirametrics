@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require 'digest'
-
 class GroupingRules < Rules
   attr_accessor :label, :issue_hint
-  attr_reader :color, :color_pair
+  attr_reader :color
 
   def eql? other
     other.label == @label && other.color == @color
@@ -25,13 +23,15 @@ class GroupingRules < Rules
       end
 
       light, dark = color
-      short_hash = Digest::SHA256.hexdigest("#{light}|#{dark}")[0, 8]
-      @color_pair = { light: light, dark: dark }
-      @color = CssVariable["--generated-color-#{short_hash}"]
+      @color = RawJavascript.new(
+        "(document.documentElement.dataset.theme === 'dark' || " \
+        '(!document.documentElement.dataset.theme && ' \
+        "window.matchMedia('(prefers-color-scheme: dark)').matches)) " \
+        "? #{dark.to_json} : #{light.to_json}"
+      )
     else
       color = CssVariable[color] unless color.is_a?(CssVariable)
       @color = color
-      @color_pair = nil
     end
   end
 end

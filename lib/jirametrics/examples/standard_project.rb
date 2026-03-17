@@ -79,6 +79,7 @@ class Exporter
               else
                 rules.label = status.name
               end
+              rules.color = ['orange', 'blue']
             end
           end
 

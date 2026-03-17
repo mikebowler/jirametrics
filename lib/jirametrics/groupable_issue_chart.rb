@@ -20,7 +20,6 @@ module GroupableIssueChart
     completed_issues.each do |issue|
       rules = GroupingRules.new
       @group_by_block.call(issue, rules)
-      @generated_colors[rules.color.name] = rules.color_pair if rules.color_pair
       if rules.ignored?
         ignored_issues << issue
         next

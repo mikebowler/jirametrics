@@ -15,45 +15,28 @@ describe GroupingRules do
       rules.color = '--type-story-color'
       expect(rules.color).to eq CssVariable['--type-story-color']
     end
-
-    it 'leaves color_pair nil' do
-      rules.color = '#4bc14b'
-      expect(rules.color_pair).to be_nil
-    end
-
-    it 'clears color_pair when reassigned from an array to a single color' do
-      rules.color = ['#4bc14b', '#2a7a2a']
-      rules.color = '#ff0000'
-      expect(rules.color_pair).to be_nil
-    end
   end
 
   context 'color= with a [light, dark] array' do
-    it 'sets color to a CssVariable with a deterministic generated name' do
+    it 'sets color to a RawJavascript' do
       rules.color = ['#4bc14b', '#2a7a2a']
-      expect(rules.color).to be_a CssVariable
-      expect(rules.color.name).to match(/^--generated-color-[0-9a-f]{8}$/)
+      expect(rules.color).to be_a RawJavascript
     end
 
-    it 'always produces the same variable name for the same pair' do
+    it 'always produces the same RawJavascript for the same pair' do
       rules.color = ['#4bc14b', '#2a7a2a']
-      name1 = rules.color.name
+      js1 = rules.color.to_json
 
       other = described_class.new
       other.color = ['#4bc14b', '#2a7a2a']
-      expect(other.color.name).to eq name1
+      expect(other.color.to_json).to eq js1
     end
 
-    it 'produces different variable names for different pairs' do
+    it 'produces different RawJavascripts for different pairs' do
       rules.color = ['#4bc14b', '#2a7a2a']
       other = described_class.new
       other.color = ['#ff0000', '#880000']
-      expect(rules.color.name).not_to eq other.color.name
-    end
-
-    it 'stores the pair in color_pair' do
-      rules.color = ['#4bc14b', '#2a7a2a']
-      expect(rules.color_pair).to eq({ light: '#4bc14b', dark: '#2a7a2a' })
+      expect(rules.color.to_json).not_to eq other.color.to_json
     end
 
     it 'two rules with the same pair are eql?' do

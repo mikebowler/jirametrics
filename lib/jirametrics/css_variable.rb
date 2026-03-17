@@ -16,7 +16,7 @@ class CssVariable
   end
 
   def to_json(*_args)
-    "getComputedStyle(document.body).getPropertyValue('#{@name}')"
+    "getComputedStyle(document.documentElement).getPropertyValue('#{@name}').trim()"
   end
 
   def to_s

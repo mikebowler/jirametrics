@@ -23,26 +23,15 @@ describe DailyWipChart do
     chart
   end
 
-  context 'generated_colors' do
-    it 'populates generated_colors when a color pair is used in grouping_rules' do
+  context 'configure_rule' do
+    it 'uses RawJavascript for color pairs' do
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'Group A'
         rules.color = ['#4bc14b', '#2a7a2a']
       end
-      chart.configure_rule issue: issue1, date: Date.parse('2022-01-15')
-      expect(chart.generated_colors).not_to be_empty
-      expect(chart.generated_colors.values.first).to eq({ light: '#4bc14b', dark: '#2a7a2a' })
-    end
-
-    it 'does not populate generated_colors for single colors' do
-      chart.issues = [issue1]
-      chart.grouping_rules do |_issue, rules|
-        rules.label = 'Group A'
-        rules.color = '#4bc14b'
-      end
-      chart.configure_rule issue: issue1, date: Date.parse('2022-01-15')
-      expect(chart.generated_colors).to be_empty
+      rules = chart.configure_rule issue: issue1, date: Date.parse('2022-01-15')
+      expect(rules.color).to be_a RawJavascript
     end
   end
 
