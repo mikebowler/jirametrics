@@ -41,10 +41,12 @@ class HtmlReportConfig < HtmlGenerator
     deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
 
   def initialize file_config:, block:
+    super()
     @file_config = file_config
     @block = block
     @sections = [] # Where we store the chunks of text that will be assembled into the HTML
     @charts = [] # Where we store all the charts we executed so we can assert against them.
+    @generated_colors = {} # Accumulated color pairs from all charts for CSS emission
   end
 
   def cycletime label = nil, &block
@@ -156,8 +158,10 @@ class HtmlReportConfig < HtmlGenerator
     after_init_block&.call chart
 
     @charts << chart
+    chart.generated_colors = {}
     chart.before_run
     html chart.run
+    @generated_colors.merge!(chart.generated_colors)
   end
 
   def find_board_id
@@ -196,5 +200,33 @@ class HtmlReportConfig < HtmlGenerator
       message: 'discard_changes_before is now only supported at the project level'
     )
     file_config.project_config.discard_changes_before status_becomes: status_becomes, &block
+  end
+
+  def load_css html_directory:
+    css = super
+    return css if @generated_colors.empty?
+
+    "#{css}\n#{generated_css_block}"
+  end
+
+  private
+
+  def generated_css_block
+    light_vars = @generated_colors.map { |name, pair| "  #{name}: #{pair[:light]};" }.join("\n")
+    dark_vars  = @generated_colors.map { |name, pair| "  #{name}: #{pair[:dark]};"  }.join("\n")
+
+    <<~CSS
+      :root {
+      #{light_vars}
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+      #{dark_vars}
+        }
+      }
+      html[data-theme="dark"] {
+      #{dark_vars}
+      }
+    CSS
   end
 end

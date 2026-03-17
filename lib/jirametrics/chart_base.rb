@@ -3,7 +3,8 @@
 class ChartBase
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings, :issues, :file_system,
-    :atlassian_document_format, :x_axis_title, :y_axis_title, :fix_versions
+    :atlassian_document_format, :x_axis_title, :y_axis_title, :fix_versions,
+    :generated_colors
   attr_writer :aggregated_project
   attr_reader :canvas_width, :canvas_height
 
@@ -20,6 +21,7 @@ class ChartBase
     @canvas_width = 800
     @canvas_height = 200
     @canvas_responsive = true
+    @generated_colors = {}
   end
 
   def call_before_run &proc

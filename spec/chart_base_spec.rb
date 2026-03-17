@@ -5,6 +5,12 @@ require './spec/spec_helper'
 describe ChartBase do
   let(:chart_base) { described_class.new }
 
+  context 'generated_colors' do
+    it 'returns an empty hash by default' do
+      expect(described_class.new.generated_colors).to eq({})
+    end
+  end
+
   context 'label_days' do
     it 'is singular for one' do
       expect(chart_base.label_days(1)).to eq '1 day'
