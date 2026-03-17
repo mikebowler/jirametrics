@@ -152,7 +152,18 @@ class DailyView < ChartBase
       line << "Assignee: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
     end
 
-    line << "Due: <b>#{issue.due_date}</b>" if issue.due_date
+    if issue.due_date
+      today = date_range.end
+      days = (issue.due_date - today).to_i
+      relative =
+        if days.zero? then 'today'
+        elsif days.positive? then "in #{label_days days}"
+        else "#{label_days(-days)} ago"
+        end
+      content = "#{issue.due_date} (#{relative})"
+      content = "<span style='background: var(--warning-banner)'>#{content}</span>" if days.negative?
+      line << "Due: <b>#{content}</b>"
+    end
 
     block = lambda do |collection, label|
       unless collection.empty?

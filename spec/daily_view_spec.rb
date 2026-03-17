@@ -240,7 +240,7 @@ describe DailyView do
       ]
     end
 
-    it 'has a due date' do
+    it 'has a due date in the past' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil]
       ]
@@ -253,7 +253,43 @@ describe DailyView do
           'Age: <b>(Not Started)</b>',
           "Status: <b>#{view.format_status status, board: board}</b>",
           'Column: <b>In Progress</b>',
-          'Due: <b>2024-01-10</b>'
+          "Due: <b><span style='background: var(--warning-banner)'>2024-01-10 (10 days ago)</span></b>"
+        ]
+      ]
+    end
+
+    it 'has a due date today' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+      issue1.raw['fields']['duedate'] = '2024-01-20'
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>',
+          'Due: <b>2024-01-20 (today)</b>'
+        ]
+      ]
+    end
+
+    it 'has a due date in the future' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil]
+      ]
+      issue1.raw['fields']['duedate'] = '2024-01-25'
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue: issue1, done: false).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Age: <b>(Not Started)</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>',
+          'Due: <b>2024-01-25 (in 5 days)</b>'
         ]
       ]
     end
