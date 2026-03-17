@@ -415,6 +415,68 @@ describe DailyView do
     end
   end
 
+  context 'make_not_visible_line' do
+    it 'returns nil when status is in a visible column (kanban)' do
+      # SP-1 is in 'In Progress' which is a visible column
+      expect(view.make_not_visible_line(issue1)).to be_nil
+    end
+
+    it 'returns message when status is not in any visible column (kanban)' do
+      status = board.possible_statuses.find_all_by_name('Backlog').first
+      issue1.raw['fields']['status'] = {
+        'name' => status.name,
+        'id' => status.id,
+        'statusCategory' => {
+          'id' => status.category.id,
+          'key' => status.category.key,
+          'name' => status.category.name
+        }
+      }
+      result = view.make_not_visible_line(issue1)
+      expect(result).to eq(
+        '&#x274c; Not visible on board: Status is not configured for any visible column on the board'
+      )
+    end
+
+    it 'returns nil when scrum board with active sprint and status in visible column' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      expect(view.make_not_visible_line(issue1)).to be_nil
+    end
+
+    it 'returns message when scrum board and not in any active sprint' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      result = view.make_not_visible_line(issue1)
+      expect(result).to eq(
+        '&#x274c; Not visible on board: Not in an active sprint'
+      )
+    end
+
+    it 'returns both reasons when scrum board, no active sprint, and status not in visible column' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      status = board.possible_statuses.find_all_by_name('Backlog').first
+      issue1.raw['fields']['status'] = {
+        'name' => status.name,
+        'id' => status.id,
+        'statusCategory' => {
+          'id' => status.category.id,
+          'key' => status.category.key,
+          'name' => status.category.name
+        }
+      }
+      result = view.make_not_visible_line(issue1)
+      expect(result).to eq(
+        '&#x274c; Not visible on board: Not in an active sprint, ' \
+          'Status is not configured for any visible column on the board'
+      )
+    end
+  end
+
   context 'make_sprints_lines' do
     it 'returns empty if and it is not a scrum board' do
       board.raw['type'] = 'kanban'

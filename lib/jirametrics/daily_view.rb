@@ -249,6 +249,7 @@ class DailyView < ChartBase
 
     lines = []
     lines << [make_title_line(issue: issue, done: done)]
+    lines << make_not_visible_line(issue)
     lines += make_parent_lines(issue) unless child
     lines += make_stats_lines(issue: issue, done: done)
     unless done
@@ -258,7 +259,7 @@ class DailyView < ChartBase
       lines += make_child_lines(issue)
       lines += make_history_lines(issue)
     end
-    lines
+    lines.compact
   end
 
   def render_issue issue, child:
@@ -279,5 +280,19 @@ class DailyView < ChartBase
       end
     end
     result << '</div>'
+  end
+
+  def make_not_visible_line issue
+    reasons = []
+
+    reasons << 'Not in an active sprint' if issue.board.scrum? && issue.sprints.none?(&:active?)
+
+    unless issue.board.visible_columns.any? { |c| c.status_ids.include?(issue.status.id) }
+      reasons << 'Status is not configured for any visible column on the board'
+    end
+
+    return nil if reasons.empty?
+
+    "&#x274c; Not visible on board: #{reasons.join(', ')}"
   end
 end
