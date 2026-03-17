@@ -304,7 +304,7 @@ class DataQualityReport < ChartBase
     return "#{delta} hours" if delta < 24
 
     delta /= 24
-    "#{delta} days"
+    label_days delta
   end
 
   def scan_for_incomplete_subtasks_when_issue_done entry:
