@@ -313,9 +313,11 @@ describe DailyView do
         issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
       )
 
+      marker = view.color_block '--blocked-color'
       expect(view.make_blocked_stalled_lines issue).to eq [
-        ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2"],
-        issue2
+        "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: SP-2</div>",
+        issue2,
+        '</section>'
       ]
     end
 
@@ -331,9 +333,7 @@ describe DailyView do
       )
 
       expect(view.make_blocked_stalled_lines issue).to eq [
-        [
-          "#{view.color_block '--blocked-color'} Blocked by issue: SP-2"
-        ]
+        ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2"]
       ]
     end
   end
