@@ -45,6 +45,7 @@ class DataQualityReport < ChartBase
       scan_for_completed_issues_without_a_start_time entry: entry
       scan_for_status_change_after_done entry: entry
       scan_for_backwards_movement entry: entry, backlog_statuses: backlog_statuses
+      scan_for_issue_not_in_active_sprint entry: entry
       scan_for_issues_not_created_in_a_backlog_status entry: entry, backlog_statuses: backlog_statuses
       scan_for_stopped_before_started entry: entry
       scan_for_issues_not_started_with_subtasks_that_have entry: entry
@@ -68,7 +69,7 @@ class DataQualityReport < ChartBase
     result << render_problem_type(:status_changes_after_done)
     result << render_problem_type(:backwards_through_status_categories)
     result << render_problem_type(:backwords_through_statuses)
-    result << render_problem_type(:status_not_on_board)
+    result << render_problem_type(:issue_not_visible_on_board)
     result << render_problem_type(:created_in_wrong_status)
     result << render_problem_type(:stopped_before_started)
     result << render_problem_type(:issue_not_started_but_subtasks_have)
@@ -194,7 +195,7 @@ class DataQualityReport < ChartBase
         # If it's been moved back to backlog then it's on a different report. Ignore it here.
         detail = nil if backlog_statuses.any? { |s| s.name == change.value }
 
-        entry.report(problem_key: :status_not_on_board, detail: detail) unless detail.nil?
+        entry.report(problem_key: :issue_not_visible_on_board, detail: detail) unless detail.nil?
       elsif change.old_value.nil?
         # Do nothing
       elsif index < last_index
@@ -221,6 +222,14 @@ class DataQualityReport < ChartBase
       end
       last_index = index || -1
     end
+  end
+
+  def scan_for_issue_not_in_active_sprint entry:
+    issue = entry.issue
+    return unless issue.board.scrum?
+    return if issue.sprints.any?(&:active?)
+
+    entry.report(problem_key: :issue_not_visible_on_board, detail: 'Issue is not in an active sprint')
   end
 
   def scan_for_issues_not_created_in_a_backlog_status entry:, backlog_statuses:
@@ -409,12 +418,12 @@ class DataQualityReport < ChartBase
     HTML
   end
 
-  def render_status_not_on_board problems
+  def render_issue_not_visible_on_board problems
     <<-HTML
       #{label_issues problems.size} were not visible on the board for some period of time. This may impact
-      timings as the work was likely to have been forgotten if it wasn't visible. What does "not visible"
-      mean in this context? The issue was in a status that is not mapped to any visible column on the board.
-      Look in "unmapped statuses" on your board.
+      timings as the work was likely to have been forgotten if it wasn't visible. An issue can be not visible
+      for two reasons: the issue was in a status that is not mapped to any visible column on the board
+      (look in "unmapped statuses" on your board), or for scrum boards, the issue was not in an active sprint.
     HTML
   end
 

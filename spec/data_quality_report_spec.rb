@@ -248,7 +248,7 @@ describe DataQualityReport do
 
       expect(entry.problems).to eq [
         [
-          :status_not_on_board,
+          :issue_not_visible_on_board,
           "Status #{report.format_status fake_backlog_status, board: board} is not on the board"
         ]
       ]
@@ -266,7 +266,7 @@ describe DataQualityReport do
 
       expect(entry.problems).to eq [
         [
-          :status_not_on_board,
+          :issue_not_visible_on_board,
           "Status #{report.format_status issue1.changes.first, board: board} cannot be found at all. Was it deleted?"
         ]
       ]
@@ -289,6 +289,40 @@ describe DataQualityReport do
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to be_empty
+    end
+  end
+
+  context 'scan_for_issue_not_in_active_sprint' do
+    it 'does nothing for kanban boards' do
+      board.raw['type'] = 'kanban'
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      report.scan_for_issue_not_in_active_sprint entry: entry
+      expect(entry.problems).to be_empty
+    end
+
+    it 'does nothing when issue is in an active sprint' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      report.scan_for_issue_not_in_active_sprint entry: entry
+      expect(entry.problems).to be_empty
+    end
+
+    it 'reports when scrum issue is not in any active sprint' do
+      board.raw['type'] = 'scrum'
+      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      report.scan_for_issue_not_in_active_sprint entry: entry
+      expect(entry.problems).to eq [[:issue_not_visible_on_board, 'Issue is not in an active sprint']]
+    end
+
+    it 'reports when scrum issue is in no sprints at all' do
+      board.raw['type'] = 'scrum'
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      report.scan_for_issue_not_in_active_sprint entry: entry
+      expect(entry.problems).to eq [[:issue_not_visible_on_board, 'Issue is not in an active sprint']]
     end
   end
 
