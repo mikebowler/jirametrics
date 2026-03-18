@@ -213,6 +213,19 @@ class Issue
     first_time_in_status(*board.visible_columns.collect(&:status_ids).flatten)
   end
 
+  def reasons_not_visible_on_board
+    reasons = []
+    reasons << 'Not in an active sprint' if board.scrum? && sprints.none?(&:active?)
+    unless board.visible_columns.any? { |c| c.status_ids.include?(status.id) }
+      reasons << 'Status is not configured for any visible column on the board'
+    end
+    reasons
+  end
+
+  def visible_on_board?
+    reasons_not_visible_on_board.empty?
+  end
+
   # If this issue will ever be in an active sprint then return the time that it
   # was first added to that sprint, whether or not the sprint was active at that
   # time. Although it seems like an odd thing to calculate, it's a reasonable proxy

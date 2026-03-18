@@ -41,6 +41,9 @@
                 <%= link_to_issue parent, style: "color: #{color}" %>
               </span>
               <i><%= parent.summary.strip.inspect %></i>
+              <% if parent == issue && (text = not_visible_text(issue)) %>
+                <br /><%= text %>
+              <% end %>
             </div>
           <% end %>
         </td>

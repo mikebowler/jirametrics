@@ -202,6 +202,29 @@ describe AgingWorkTable do
     end
   end
 
+  context 'not_visible_text' do
+    it 'returns nil when issue is visible on the board' do
+      expect(table.not_visible_text(issue1)).to be_nil
+    end
+
+    it 'returns text when issue is not in any visible column' do
+      invisible_issue = empty_issue created: '2021-01-01', board: board
+      expect(table.not_visible_text(invisible_issue)).to eq(
+        "<span style='background: var(--warning-banner)'>Not visible on board: " \
+          'Status is not configured for any visible column on the board</span>'
+      )
+    end
+
+    it 'returns text when scrum issue is not in an active sprint' do
+      board.raw['type'] = 'scrum'
+      in_progress = board.possible_statuses.find_by_id(3)
+      scrum_issue = empty_issue created: '2021-01-01', board: board, creation_status: in_progress
+      expect(table.not_visible_text(scrum_issue)).to eq(
+        "<span style='background: var(--warning-banner)'>Not visible on board: Not in an active sprint</span>"
+      )
+    end
+  end
+
   context 'parent_hierarchy' do
     it 'works when no parent' do
       expect(table.parent_hierarchy(issue1)).to eq [issue1]

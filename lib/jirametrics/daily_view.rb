@@ -299,16 +299,6 @@ class DailyView < ChartBase
   end
 
   def make_not_visible_line issue
-    reasons = []
-
-    reasons << 'Not in an active sprint' if issue.board.scrum? && issue.sprints.none?(&:active?)
-
-    unless issue.board.visible_columns.any? { |c| c.status_ids.include?(issue.status.id) }
-      reasons << 'Status is not configured for any visible column on the board'
-    end
-
-    return nil if reasons.empty?
-
-    "&#x274c; Not visible on board: #{reasons.join(', ')}"
+    not_visible_text issue
   end
 end

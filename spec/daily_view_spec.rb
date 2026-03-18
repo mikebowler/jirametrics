@@ -470,7 +470,8 @@ describe DailyView do
       }
       result = view.make_not_visible_line(issue1)
       expect(result).to eq(
-        '&#x274c; Not visible on board: Status is not configured for any visible column on the board'
+        "<span style='background: var(--warning-banner)'>Not visible on board: " \
+          'Status is not configured for any visible column on the board</span>'
       )
     end
 
@@ -487,7 +488,7 @@ describe DailyView do
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       result = view.make_not_visible_line(issue1)
       expect(result).to eq(
-        '&#x274c; Not visible on board: Not in an active sprint'
+        "<span style='background: var(--warning-banner)'>Not visible on board: Not in an active sprint</span>"
       )
     end
 
@@ -507,8 +508,8 @@ describe DailyView do
       }
       result = view.make_not_visible_line(issue1)
       expect(result).to eq(
-        '&#x274c; Not visible on board: Not in an active sprint, ' \
-          'Status is not configured for any visible column on the board'
+        "<span style='background: var(--warning-banner)'>Not visible on board: Not in an active sprint, " \
+          'Status is not configured for any visible column on the board</span>'
       )
     end
   end

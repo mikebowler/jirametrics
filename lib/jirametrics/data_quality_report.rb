@@ -232,6 +232,21 @@ class DataQualityReport < ChartBase
     entry.report(problem_key: :issue_not_visible_on_board, detail: 'Issue is not in an active sprint')
   end
 
+  def scan_for_issue_never_visible_on_board entry:
+    issue = entry.issue
+    ever_visible = issue.changes.any? do |change|
+      next unless change.status?
+
+      issue.board.visible_columns.any? { |col| col.status_ids.include?(change.value_id) }
+    end
+    return if ever_visible
+
+    entry.report(
+      problem_key: :issue_not_visible_on_board,
+      detail: 'Issue has never been in a status mapped to a visible column on the board'
+    )
+  end
+
   def scan_for_issues_not_created_in_a_backlog_status entry:, backlog_statuses:
     creation_change = entry.issue.changes.find { |issue| issue.status? }
 

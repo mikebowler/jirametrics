@@ -305,6 +305,13 @@ class ChartBase
     "<span title='#{title}' style='font-size: 0.8em;'>#{icon}</span>"
   end
 
+  def not_visible_text issue
+    reasons = issue.reasons_not_visible_on_board
+    return nil if reasons.empty?
+
+    "<span style='background: var(--warning-banner)'>Not visible on board: #{reasons.join(', ')}</span>"
+  end
+
   def status_category_color status
     case status.category.key
     when 'new' then CssVariable['--status-category-todo-color']
