@@ -12,9 +12,12 @@ class ThroughputChart < ChartBase
 
     header_text 'Throughput Chart'
     description_text <<-TEXT
-      <div class="p">
-        This chart shows how many items we completed per week
-        <%= @throughput_samples.inspect %>
+      <div>Throughput data is very useful for 
+        <a href="https://blog.mikebowler.ca/2024/06/02/probabilistic-forecasting/">probabilistic forecasting</a>,
+        to determine when we'll be done. Try it now with the
+        <a href="<%= throughput_forecaster_url %>" target="_blank" rel="noopener noreferrer">
+        Focused Objective throughput forecaster,</a> to see how long it would take to complete all of the
+        <%= @not_started_count %> items you currently have in your backlog.
       </div>
       #{describe_non_working_days}
     TEXT

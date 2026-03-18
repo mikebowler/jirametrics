@@ -71,9 +71,10 @@ class Exporter
               <div>Throughput data is very useful for 
                 <a href="https://blog.mikebowler.ca/2024/06/02/probabilistic-forecasting/">probabilistic forecasting</a>,
                 to determine when we'll be done. Try it now with the
-                <a href="<%= throughput_forecaster_url %>">Focused Objective throughput forecaster,</a>
-                to see how long it would take to complete all of the <%= @not_started_count %> items you currently
-                have in your backlog.
+                <a href="<%= throughput_forecaster_url %>" target="_blank" rel="noopener noreferrer">
+                Focused Objective throughput forecaster,</a> to see how long it would take to complete all of the
+                <%= @not_started_count %> items you currently have in your backlog.
+              </div>
               <h2>Number of items completed, grouped by issue type</h2>'
             TEXT
           end
