@@ -21,7 +21,7 @@ class IssuePrinter
     history = [] # time, type, detail
 
     if issue.board.cycletime
-      started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)
+      started_at, stopped_at = issue.started_stopped_times
       history << [started_at, nil, 'vvvv Started here vvvv', true] if started_at
       history << [stopped_at, nil, '^^^^ Finished here ^^^^', true] if stopped_at
     else

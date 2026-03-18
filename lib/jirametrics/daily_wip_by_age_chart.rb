@@ -49,7 +49,7 @@ class DailyWipByAgeChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    started, stopped = issue.board.cycletime.started_stopped_dates(issue)
+    started, stopped = issue.started_stopped_dates
 
     if stopped && started.nil? # We can't tell when it started
       @has_completed_but_not_started = true

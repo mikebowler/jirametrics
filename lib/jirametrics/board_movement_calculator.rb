@@ -10,7 +10,7 @@ class BoardMovementCalculator
   end
 
   def moves_backwards? issue
-    started, stopped = issue.board.cycletime.started_stopped_times(issue)
+    started, stopped = issue.started_stopped_times
     return false unless started
 
     previous_column = nil
@@ -70,7 +70,7 @@ class BoardMovementCalculator
     @issues.filter_map do |issue|
       this_column_start = issue.first_time_in_or_right_of_column(this_column.name)&.time
       next_column_start = next_column.nil? ? nil : issue.first_time_in_or_right_of_column(next_column.name)&.time
-      issue_start, issue_done = issue.board.cycletime.started_stopped_times(issue)
+      issue_start, issue_done = issue.started_stopped_times
 
       # Skip if we can't tell when it started.
       next if issue_start.nil?

@@ -231,7 +231,7 @@ class DependencyChart < ChartBase
       elsif is_done
         line2 << 'Done'
       else
-        started_at = issue.board.cycletime.started_stopped_times(issue).first
+        started_at = issue.started_stopped_times.first
         if started_at.nil?
           line2 << 'Not started'
         else

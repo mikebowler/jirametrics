@@ -40,7 +40,7 @@ class CycletimeScatterplot < TimeBasedScatterplot
   end
 
   def x_value item
-    item.board.cycletime.started_stopped_times(item).last
+    item.started_stopped_times.last
   end
 
   def y_value item

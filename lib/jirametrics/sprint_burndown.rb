@@ -134,7 +134,7 @@ class SprintBurndown < ChartBase
 
     estimate_display_name = current_board.estimation_configuration.display_name
 
-    issue_completed_time = issue.board.cycletime.started_stopped_times(issue).last
+    issue_completed_time = issue.started_stopped_times.last
     completed_has_been_tracked = false
 
     issue.changes.each do |change|

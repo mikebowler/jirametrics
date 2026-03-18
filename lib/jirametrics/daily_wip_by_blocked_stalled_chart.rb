@@ -39,7 +39,7 @@ class DailyWipByBlockedStalledChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    started, stopped = issue.board.cycletime.started_stopped_times(issue)
+    started, stopped = issue.started_stopped_times
     stopped_date = stopped&.to_date
     started_date = started&.to_date
 

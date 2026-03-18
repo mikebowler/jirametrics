@@ -36,7 +36,7 @@ class DailyView < ChartBase
 
   def select_aging_issues
     aging_issues = issues.select do |issue|
-      started_at, stopped_at = issue.board.cycletime.started_stopped_times(issue)
+      started_at, stopped_at = issue.started_stopped_times
       started_at && !stopped_at
     end
 
@@ -73,7 +73,7 @@ class DailyView < ChartBase
 
   def make_blocked_stalled_lines issue
     today = date_range.end
-    started_date = issue.board.cycletime.started_stopped_times(issue).first&.to_date
+    started_date = issue.started_stopped_times.first&.to_date
     return [] unless started_date
 
     blocked_stalled = issue.blocked_stalled_by_date(

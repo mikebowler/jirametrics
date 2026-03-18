@@ -121,7 +121,7 @@ class DataQualityReport < ChartBase
 
   def initialize_entries
     @entries = @issues.filter_map do |issue|
-      started, stopped = issue.board.cycletime.started_stopped_times(issue)
+      started, stopped = issue.started_stopped_times
       next if stopped && stopped < time_range.begin
       next if started && started > time_range.end
 
@@ -274,7 +274,7 @@ class DataQualityReport < ChartBase
 
     started_subtasks = []
     entry.issue.subtasks.each do |subtask|
-      started_subtasks << subtask if subtask.board.cycletime.started_stopped_times(subtask).first
+      started_subtasks << subtask if subtask.started_stopped_times.first
     end
 
     return if started_subtasks.empty?
@@ -293,7 +293,7 @@ class DataQualityReport < ChartBase
       next unless settings['blocked_link_text'].include?(link.label)
 
       this_active = !entry.stopped
-      other_active = !link.other_issue.board.cycletime.started_stopped_times(link.other_issue).last
+      other_active = !link.other_issue.started_stopped_times.last
       next unless this_active && !other_active
 
       entry.report(
@@ -326,7 +326,7 @@ class DataQualityReport < ChartBase
     return unless entry.stopped
 
     subtask_labels = entry.issue.subtasks.filter_map do |subtask|
-      subtask_started, subtask_stopped = subtask.board.cycletime.started_stopped_times(subtask)
+      subtask_started, subtask_stopped = subtask.started_stopped_times
 
       if !subtask_started && !subtask_stopped
         "#{subtask_label subtask} (Not even started)"

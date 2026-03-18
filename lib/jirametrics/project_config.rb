@@ -623,7 +623,7 @@ class ProjectConfig
       cutoff_time = block.call(issue)
       next if cutoff_time.nil?
 
-      original_start_time = issue.board.cycletime.started_stopped_times(issue).first
+      original_start_time = issue.started_stopped_times.first
       next if original_start_time.nil?
 
       issue.discard_changes_before cutoff_time
