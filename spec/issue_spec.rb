@@ -676,6 +676,61 @@ describe Issue do
     end
   end
 
+  context 'reasons_not_visible_on_board' do
+    let(:kanban_board) { sample_board }
+    let(:in_progress) { kanban_board.possible_statuses.find_by_id(3) }
+    let(:issue) { empty_issue created: '2021-10-01', board: kanban_board }
+
+    it 'returns empty when kanban issue is in a visible column' do
+      visible_issue = empty_issue created: '2021-10-01', board: kanban_board, creation_status: in_progress
+      expect(visible_issue.reasons_not_visible_on_board).to be_empty
+    end
+
+    it 'returns reason when status is not in any visible column' do
+      expect(issue.reasons_not_visible_on_board).to eq ['Status is not configured for any visible column on the board']
+    end
+
+    it 'returns reason when scrum board issue is not in an active sprint' do
+      scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
+      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board,
+        creation_status: scrum_board.possible_statuses.find_by_id(3)
+      expect(scrum_issue.reasons_not_visible_on_board).to eq ['Not in an active sprint']
+    end
+
+    it 'returns both reasons when scrum board issue has invisible status and no active sprint' do
+      scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
+      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board
+      expect(scrum_issue.reasons_not_visible_on_board).to match_array [
+        'Not in an active sprint',
+        'Status is not configured for any visible column on the board'
+      ]
+    end
+
+    it 'returns empty when scrum issue is in active sprint and visible status' do
+      scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
+      scrum_board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board,
+        creation_status: scrum_board.possible_statuses.find_by_id(3)
+      add_mock_change(issue: scrum_issue, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-10-03')
+      expect(scrum_issue.reasons_not_visible_on_board).to be_empty
+    end
+  end
+
+  context 'visible_on_board?' do
+    let(:kanban_board) { sample_board }
+
+    it 'returns false when issue is not visible' do
+      issue = empty_issue created: '2021-10-01', board: kanban_board
+      expect(issue.visible_on_board?).to be false
+    end
+
+    it 'returns true when issue is visible' do
+      in_progress = kanban_board.possible_statuses.find_by_id(3)
+      issue = empty_issue created: '2021-10-01', board: kanban_board, creation_status: in_progress
+      expect(issue.visible_on_board?).to be true
+    end
+  end
+
   context 'blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do

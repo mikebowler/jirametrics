@@ -326,6 +326,23 @@ describe DataQualityReport do
     end
   end
 
+  context 'scan_for_issue_never_visible_on_board' do
+    it 'does nothing when issue has been in a visible column' do
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+      report.scan_for_issue_never_visible_on_board entry: entry
+      expect(entry.problems).to be_empty
+    end
+
+    it 'reports when issue has never been in a visible column' do
+      issue = empty_issue created: '2021-10-01', board: board
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
+      report.scan_for_issue_never_visible_on_board entry: entry
+      expect(entry.problems).to eq [
+        [:issue_not_visible_on_board, 'Issue has never been in a status mapped to a visible column on the board']
+      ]
+    end
+  end
+
   context 'scan_for_issues_not_created_in_the_right_status' do
     it 'catches invalid starting status' do
       report.all_boards = { 1 => board }
