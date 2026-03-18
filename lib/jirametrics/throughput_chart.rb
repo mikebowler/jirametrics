@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 class ThroughputChart < ChartBase
   include GroupableIssueChart
 
@@ -12,12 +14,12 @@ class ThroughputChart < ChartBase
     description_text <<-TEXT
       <div class="p">
         This chart shows how many items we completed per week
+        <%= @throughput_samples.inspect %>
       </div>
       #{describe_non_working_days}
     TEXT
     @x_axis_title = nil
     @y_axis_title = 'Count of items'
-
 
     init_configuration_block(block) do
       grouping_rules do |issue, rule|
@@ -28,16 +30,21 @@ class ThroughputChart < ChartBase
   end
 
   def run
+    # This is saved as an instance variable so that it's accessible later when rendering the description text
+    @not_started_count = issues.count { |issue| issue.started_stopped_times.first.nil? }
+
     completed_issues = completed_issues_in_range include_unstarted: true
     rules_to_issues = group_issues completed_issues
     data_sets = []
+    total_data_set = weekly_throughput_dataset(
+      completed_issues: completed_issues,
+      label: 'Totals',
+      color: CssVariable['--throughput_chart_total_line_color'],
+      dashed: true
+    )
+    @throughput_samples = total_data_set[:data].collect { |d| d[:y] }
     if rules_to_issues.size > 1
-      data_sets << weekly_throughput_dataset(
-        completed_issues: completed_issues,
-        label: 'Totals',
-        color: CssVariable['--throughput_chart_total_line_color'],
-        dashed: true
-      )
+      data_sets << total_data_set
     end
 
     rules_to_issues.each_key do |rules|
@@ -82,6 +89,18 @@ class ThroughputChart < ChartBase
     result
   end
 
+  def throughput_forecaster_url
+    params = {
+      throughputMode: 'data',
+      samplesText: @throughput_samples.join(','),
+      storyLow: @not_started_count,
+      storyHigh: @not_started_count
+    }
+
+    query = params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+    "https://focusedobjective.com/throughput?#{query}"
+  end
+
   def throughput_dataset periods:, completed_issues:
     periods.collect do |period|
       closed_issues = completed_issues.filter_map do |issue|
@@ -92,7 +111,8 @@ class ThroughputChart < ChartBase
       date_label = "on #{period.end}"
       date_label = "between #{period.begin} and #{period.end}" unless period.begin == period.end
 
-      { y: closed_issues.size,
+      {
+        y: closed_issues.size,
         x: "#{period.end}T23:59:59",
         title: ["#{closed_issues.size} items completed #{date_label}"] +
           closed_issues.collect do |_stop_date, issue|

@@ -114,6 +114,31 @@ describe ThroughputChart do
     end
   end
 
+  context 'throughput_forecaster_url' do
+    it 'builds URL with samples and not-started count' do
+      chart = described_class.new empty_config_block
+      chart.instance_variable_set(:@throughput_samples, [3, 5, 2])
+      chart.instance_variable_set(:@not_started_count, 2)
+
+      url = chart.throughput_forecaster_url
+      expect(url).to start_with('https://focusedobjective.com/throughput?')
+      expect(url).to include('throughputMode=data')
+      expect(url).to include('samplesText=3%2C5%2C2')
+      expect(url).to include('storyLow=2')
+      expect(url).to include('storyHigh=2')
+    end
+
+    it 'uses zero for not-started count when all issues are started' do
+      chart = described_class.new empty_config_block
+      chart.instance_variable_set(:@throughput_samples, [1])
+      chart.instance_variable_set(:@not_started_count, 0)
+
+      url = chart.throughput_forecaster_url
+      expect(url).to include('storyLow=0')
+      expect(url).to include('storyHigh=0')
+    end
+  end
+
   context 'group_issues' do
     it 'renders when no rules specified' do
       expected_rules = GroupingRules.new
