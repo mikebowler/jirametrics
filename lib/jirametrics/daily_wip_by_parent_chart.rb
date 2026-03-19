@@ -29,7 +29,7 @@ class DailyWipByParentChart < DailyWipChart
     parent = issue.parent
     if parent
       rules.label = parent.key
-      rules.label_hint = "#{parent.key} #{parent.summary}"
+      rules.label_hint = "#{parent.key} : #{parent.summary}"
     else
       rules.label = 'No parent'
       rules.label_hint = 'No parent'

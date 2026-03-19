@@ -104,7 +104,8 @@ class DailyWipChart < ChartBase
         .select { |_issue, rules| rules.group == grouping_rule.group }
         .sort_by { |issue, _rules| issue.key_as_i }
         .collect { |issue, rules| "#{issue.key} : #{issue.summary.strip} #{rules.issue_hint}" }
-      title = ["#{display_label} (#{label_issues issue_strings.size})"] + issue_strings
+      title_label = grouping_rule.label_hint || display_label
+      title = ["#{title_label} (#{label_issues issue_strings.size})"] + issue_strings
 
       {
         x: date,
