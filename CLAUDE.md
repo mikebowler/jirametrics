@@ -114,6 +114,7 @@ After making changes to Ruby files, run `rubocop` on the modified files and fix 
 
 ## Code Conventions
 
+- If a trailing `unless` modifier would require a line continuation (`\`) to wrap, use the multiline `unless/end` block form instead
 - All Ruby files use `# frozen_string_literal: true`
 - No method definition parentheses required (RuboCop `Style/MethodDefParentheses` disabled)
 - Class variables are permitted (used for DSL patterns, e.g., `@@chart_counter` in ChartBase)
