@@ -47,7 +47,7 @@ class CycletimeScatterplot < TimeBasedScatterplot
     item.board.cycletime.cycletime(item)
   end
 
-  def title_value item
+  def title_value item, rules: nil
     hint = @issue_hints&.fetch(item, nil)
     "#{item.key} : #{item.summary} (#{label_days(y_value(item))})#{" #{hint}" if hint}"
   end

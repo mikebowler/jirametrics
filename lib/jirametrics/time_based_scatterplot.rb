@@ -30,7 +30,7 @@ class TimeBasedScatterplot < ChartBase
       label = rules.label
       color = rules.color
       percent_line = calculate_percent_line items_by_type
-      data = items_by_type.filter_map { |item| data_for_item(item) }
+      data = items_by_type.filter_map { |item| data_for_item(item, rules: rules) }
       data_sets << {
         label: "#{label} (85% at #{label_days(percent_line)})",
         data: data,
@@ -79,7 +79,7 @@ class TimeBasedScatterplot < ChartBase
     }
   end
 
-  def data_for_item item
+  def data_for_item item, rules: nil
     y = y_value(item)
     return nil if y < 1 # These will get called out on the quality report
 
@@ -88,7 +88,7 @@ class TimeBasedScatterplot < ChartBase
     {
       y: y,
       x: chart_format(x_value(item)),
-      title: [title_value(item)]
+      title: [title_value(item, rules: rules)]
     }
   end
 
