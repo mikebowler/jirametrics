@@ -25,8 +25,9 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
   end
 
   def cycletime_unit unit
-    raise ArgumentError, "cycletime_unit must be :minutes, :hours, or :days, got #{unit.inspect}" \
-      unless %i[minutes hours days].include?(unit)
+    unless %i[minutes hours days].include?(unit)
+      raise ArgumentError, "cycletime_unit must be :minutes, :hours, or :days, got #{unit.inspect}"
+    end
 
     @cycletime_unit = unit
     @y_axis_title = "Cycle time in #{unit}"
@@ -53,7 +54,7 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
 
   def label_cycletime value
     case @cycletime_unit
-    when :minutes then "#{value} minute#{'s' unless value == 1}"
+    when :minutes then label_minutes(value)
     when :hours then label_hours(value)
     when :days then label_days(value)
     end

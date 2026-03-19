@@ -86,6 +86,12 @@ class ChartBase
     "#{hours} hour#{'s' unless hours == 1}"
   end
 
+  def label_minutes minutes
+    return 'unknown' if minutes.nil?
+
+    "#{minutes} minute#{'s' unless minutes == 1}"
+  end
+
   def label_issues count
     "#{count} issue#{'s' unless count == 1}"
   end

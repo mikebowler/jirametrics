@@ -34,6 +34,7 @@ class HtmlReportConfig < HtmlGenerator
   define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
   define_chart name: 'flow_efficiency_scatterplot', classname: 'FlowEfficiencyScatterplot'
   define_chart name: 'daily_view', classname: 'DailyView'
+  define_chart name: 'pull_request_cycle_time_histogram', classname: 'PullRequestCycleTimeHistogram'
   define_chart name: 'pull_request_cycle_time_scatterplot', classname: 'PullRequestCycleTimeScatterplot'
 
   define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
