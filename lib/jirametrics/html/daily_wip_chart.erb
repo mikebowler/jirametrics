@@ -44,8 +44,14 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
     plugins: {
       tooltip: {
         callbacks: {
+          title: function(contexts) {
+            if (contexts[0]?.chart._legendHoverIndex != null) return '';
+          },
           label: function(context) {
-            return context.dataset.data[context.dataIndex].title
+            if (context.chart._legendHoverIndex != null) {
+              return context.dataset.label_hint || '';
+            }
+            return context.dataset.data[context.dataIndex].title;
           }
         }
       },
@@ -56,6 +62,24 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         }
       },
       legend: {
+        onHover: function(event, legendItem, legend) {
+          const chart = legend.chart;
+          const dataset = chart.data.datasets[legendItem.datasetIndex];
+          if (!dataset?.label_hint) return;
+          chart._legendHoverIndex = legendItem.datasetIndex;
+          const firstNonZero = dataset.data.findIndex(d => d?.y !== 0);
+          if (firstNonZero === -1) return;
+          chart.tooltip.setActiveElements(
+            [{ datasetIndex: legendItem.datasetIndex, index: firstNonZero }],
+            { x: event.x, y: event.y }
+          );
+          chart.update();
+        },
+        onLeave: function(event, legendItem, legend) {
+          legend.chart._legendHoverIndex = null;
+          legend.chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+          legend.chart.update();
+        },
         labels: {
           filter: function(item, chart) {
             // Logic to remove a particular legend item goes here

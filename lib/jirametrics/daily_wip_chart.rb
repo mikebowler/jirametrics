@@ -123,6 +123,7 @@ class DailyWipChart < ChartBase
     {
       type: 'bar',
       label: display_label,
+      label_hint: grouping_rule.label_hint,
       data: data,
       backgroundColor: background_color,
       borderColor: CssVariable['--wip-chart-border-color'],

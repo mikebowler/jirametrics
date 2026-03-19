@@ -23,6 +23,7 @@ describe DailyWipByParentChart do
       rules = DailyGroupingRules.new
       chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.label).to eq 'No parent'
+      expect(rules.label_hint).to eq 'No parent'
     end
 
     it 'detects parent' do
@@ -30,6 +31,7 @@ describe DailyWipByParentChart do
       rules = DailyGroupingRules.new
       chart.default_grouping_rules issue: issue1, rules: rules
       expect(rules.label).to eq 'SP-2'
+      expect(rules.label_hint).to eq 'SP-2 Update existing event'
     end
   end
 end

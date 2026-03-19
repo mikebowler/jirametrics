@@ -26,11 +26,13 @@ class DailyWipByParentChart < DailyWipChart
   end
 
   def default_grouping_rules issue:, rules:
-    parent = issue.parent&.key
+    parent = issue.parent
     if parent
-      rules.label = parent
+      rules.label = parent.key
+      rules.label_hint = "#{parent.key} #{parent.summary}"
     else
       rules.label = 'No parent'
+      rules.label_hint = 'No parent'
       rules.group_priority = 1000
       rules.color = '--body-background'
     end

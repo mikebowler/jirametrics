@@ -247,6 +247,7 @@ describe DailyWipChart do
           }
         ],
         label: 'foo',
+        label_hint: nil,
         type: 'bar'
       })
     end
@@ -278,6 +279,7 @@ describe DailyWipChart do
           }
         ],
         label: 'foo',
+        label_hint: nil,
         type: 'bar'
       })
     end
@@ -295,6 +297,18 @@ describe DailyWipChart do
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
       expect(data_set[:backgroundColor]).to eq RawJavascript.new('createDiagonalPattern("red")')
+    end
+
+    it 'includes label_hint from the grouping rule' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.label_hint = 'foo Full description of the group'
+
+      issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set[:label_hint]).to eq 'foo Full description of the group'
     end
 
     it 'appends * to label when label_suffix is provided' do
