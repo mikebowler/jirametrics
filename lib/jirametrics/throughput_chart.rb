@@ -52,7 +52,8 @@ class ThroughputChart < ChartBase
 
     rules_to_issues.each_key do |rules|
       data_sets << weekly_throughput_dataset(
-        completed_issues: rules_to_issues[rules], label: rules.label, color: rules.color
+        completed_issues: rules_to_issues[rules], label: rules.label, color: rules.color,
+        label_hint: rules.label_hint
       )
     end
 
@@ -78,10 +79,11 @@ class ThroughputChart < ChartBase
     end
   end
 
-  def weekly_throughput_dataset completed_issues:, label:, color:, dashed: false
+  def weekly_throughput_dataset completed_issues:, label:, color:, dashed: false, label_hint: nil
     result = {
       label: label,
-      data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues),
+      label_hint: label_hint,
+      data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues, label_hint: label_hint),
       fill: false,
       showLine: true,
       borderColor: color,
@@ -104,7 +106,7 @@ class ThroughputChart < ChartBase
     "https://focusedobjective.com/throughput?#{query}"
   end
 
-  def throughput_dataset periods:, completed_issues:
+  def throughput_dataset periods:, completed_issues:, label_hint: nil
     periods.collect do |period|
       closed_issues = completed_issues.filter_map do |issue|
         stop_date = issue.started_stopped_dates.last
@@ -114,10 +116,11 @@ class ThroughputChart < ChartBase
       date_label = "on #{period.end}"
       date_label = "between #{period.begin} and #{period.end}" unless period.begin == period.end
 
+      with_label_hint = label_hint ? " with #{label_hint}" : ''
       {
         y: closed_issues.size,
         x: "#{period.end}T23:59:59",
-        title: ["#{closed_issues.size} items completed #{date_label}"] +
+        title: ["#{closed_issues.size} items closed#{with_label_hint} #{date_label}"] +
           closed_issues.collect do |_stop_date, issue|
             hint = @issue_hints&.fetch(issue, nil)
             "#{issue.key} : #{issue.summary}#{" #{hint}" if hint}"

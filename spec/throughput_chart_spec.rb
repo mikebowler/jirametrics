@@ -67,7 +67,7 @@ describe ThroughputChart do
       expect(dataset).to eq [
         {
           title: [
-            '2 items completed between 2021-10-11 and 2021-10-17',
+            '2 items closed between 2021-10-11 and 2021-10-17',
             'SP-1 : Create new draft event',
             'SP-2 : Update existing event'
           ],
@@ -75,6 +75,22 @@ describe ThroughputChart do
           y: 2
         }
       ]
+    end
+
+    it 'includes label_hint in title when set' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1]
+      board.cycletime = default_cycletime_config
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
+        completed_issues: [issue1],
+        label_hint: 'Done'
+      )
+      expect(dataset.first[:title].first).to eq '1 items closed with Done between 2021-10-11 and 2021-10-17'
     end
 
     it 'appends issue_hint to each issue line when set' do
@@ -136,6 +152,24 @@ describe ThroughputChart do
       url = chart.throughput_forecaster_url
       expect(url).to include('storyLow=0')
       expect(url).to include('storyHigh=0')
+    end
+  end
+
+  context 'weekly_throughput_dataset' do
+    it 'includes label_hint when provided' do
+      chart = described_class.new empty_config_block
+      chart.date_range = Date.parse('2021-10-11')..Date.parse('2021-10-17')
+      result = chart.weekly_throughput_dataset(
+        completed_issues: [], label: 'Story', color: 'blue', label_hint: 'These are stories'
+      )
+      expect(result[:label_hint]).to eq 'These are stories'
+    end
+
+    it 'includes label_hint as nil when not provided' do
+      chart = described_class.new empty_config_block
+      chart.date_range = Date.parse('2021-10-11')..Date.parse('2021-10-17')
+      result = chart.weekly_throughput_dataset(completed_issues: [], label: 'Story', color: 'blue')
+      expect(result[:label_hint]).to be_nil
     end
   end
 
