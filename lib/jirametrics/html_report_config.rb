@@ -20,23 +20,6 @@ class HtmlReportConfig < HtmlGenerator
     module_eval lines.join("\n"), __FILE__, __LINE__
   end
 
-  define_chart name: 'aging_work_bar_chart', classname: 'AgingWorkBarChart'
-  define_chart name: 'aging_work_table', classname: 'AgingWorkTable'
-  define_chart name: 'cycletime_scatterplot', classname: 'CycletimeScatterplot'
-  define_chart name: 'daily_wip_chart', classname: 'DailyWipChart'
-  define_chart name: 'daily_wip_by_age_chart', classname: 'DailyWipByAgeChart'
-  define_chart name: 'daily_wip_by_blocked_stalled_chart', classname: 'DailyWipByBlockedStalledChart'
-  define_chart name: 'daily_wip_by_parent_chart', classname: 'DailyWipByParentChart'
-  define_chart name: 'throughput_chart', classname: 'ThroughputChart'
-  define_chart name: 'expedited_chart', classname: 'ExpeditedChart'
-  define_chart name: 'cycletime_histogram', classname: 'CycletimeHistogram'
-  define_chart name: 'estimate_accuracy_chart', classname: 'EstimateAccuracyChart'
-  define_chart name: 'hierarchy_table', classname: 'HierarchyTable'
-  define_chart name: 'flow_efficiency_scatterplot', classname: 'FlowEfficiencyScatterplot'
-  define_chart name: 'daily_view', classname: 'DailyView'
-  define_chart name: 'pull_request_cycle_time_histogram', classname: 'PullRequestCycleTimeHistogram'
-  define_chart name: 'pull_request_cycle_time_scatterplot', classname: 'PullRequestCycleTimeScatterplot'
-
   define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
     deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
   define_chart name: 'story_point_accuracy_chart', classname: 'EstimateAccuracyChart',
@@ -48,6 +31,25 @@ class HtmlReportConfig < HtmlGenerator
     @block = block
     @sections = [] # Where we store the chunks of text that will be assembled into the HTML
     @charts = [] # Where we store all the charts we executed so we can assert against them.
+  end
+
+  def method_missing name, &block
+    class_name = name.to_s.split('_').map(&:capitalize).join
+    klass = Object.const_get(class_name)
+    raise NameError unless klass < ChartBase
+
+    block ||= ->(_) {}
+    execute_chart klass.new(block)
+  rescue NameError
+    super
+  end
+
+  def respond_to_missing? name, include_private = false
+    class_name = name.to_s.split('_').map(&:capitalize).join
+    klass = Object.const_get(class_name)
+    klass < ChartBase
+  rescue NameError
+    super
   end
 
   def cycletime label = nil, &block

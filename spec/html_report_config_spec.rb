@@ -121,6 +121,33 @@ describe HtmlReportConfig do
     end
   end
 
+  context 'method_missing' do
+    it 'instantiates a chart class that matches the snake_case method name' do
+      config = described_class.new file_config: file_config, block: nil
+      expect { config.testable_chart }.not_to raise_error
+    end
+
+    it 'raises an error for an unknown name' do
+      config = described_class.new file_config: file_config, block: nil
+      expect { config.nonexistent_chart }.to raise_error RuntimeError
+    end
+
+    it 'raises an error when the class exists but is not a ChartBase subclass' do
+      config = described_class.new file_config: file_config, block: nil
+      expect { config.string }.to raise_error RuntimeError
+    end
+
+    it 'responds to a valid chart name' do
+      config = described_class.new file_config: file_config, block: nil
+      expect(config.respond_to?(:testable_chart)).to be true
+    end
+
+    it 'does not respond to an unknown name' do
+      config = described_class.new file_config: file_config, block: nil
+      expect(config.respond_to?(:nonexistent_chart)).to be false
+    end
+  end
+
   context 'define chart' do
     it 'Tracks deprecated warnings' do
       described_class.define_chart(
