@@ -78,18 +78,7 @@ class Exporter
               <h2>Number of items completed, grouped by issue type</h2>'
             TEXT
           end
-          throughput_chart do
-            header_text nil
-            description_text '<h2>Number of items completed, grouped by completion status and resolution</h2>'
-            grouping_rules do |issue, rules|
-              status, resolution = issue.status_resolution_at_done
-              if resolution
-                rules.label = "#{status.name}:#{resolution}"
-              else
-                rules.label = status.name
-              end
-            end
-          end
+          throughput_by_completed_resolution_chart
 
           aging_work_in_progress_chart
           aging_work_bar_chart

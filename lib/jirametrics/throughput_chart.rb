@@ -25,10 +25,7 @@ class ThroughputChart < ChartBase
     @y_axis_title = 'Count of items'
 
     init_configuration_block(block) do
-      grouping_rules do |issue, rule|
-        rule.label = issue.type
-        rule.color = color_for type: issue.type
-      end
+      grouping_rules { |issue, rule| default_grouping_rules(issue, rule) }
     end
   end
 
@@ -60,6 +57,11 @@ class ThroughputChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
+  def default_grouping_rules issue, rule
+    rule.label = issue.type
+    rule.color = color_for type: issue.type
+  end
+
   def calculate_time_periods
     first_day = @date_range.begin
     first_day = case first_day.wday
@@ -83,7 +85,9 @@ class ThroughputChart < ChartBase
     result = {
       label: label,
       label_hint: label_hint,
-      data: throughput_dataset(periods: calculate_time_periods, completed_issues: completed_issues, label_hint: label_hint),
+      data: throughput_dataset(
+        periods: calculate_time_periods, completed_issues: completed_issues, label_hint: label_hint
+      ),
       fill: false,
       showLine: true,
       borderColor: color,
