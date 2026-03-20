@@ -820,6 +820,14 @@ class Issue
       created = parse_time(history['created'])
 
       history['items']&.each do |item|
+        if item['field'] == 'status' && item['to'].nil?
+          board.project_config.file_system.log(
+            "Issue #{key} has a status change without a 'to' id " \
+            "(from #{item['fromString'].inspect} to #{item['toString'].inspect}). Using id 0."
+          )
+          item = item.merge('to' => '0')
+        end
+
         @changes << ChangeItem.new(raw: item, time: created, author_raw: history['author'])
       end
     end

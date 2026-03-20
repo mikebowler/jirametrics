@@ -170,6 +170,45 @@ describe Issue do
         Time.parse('2021-09-29T18:00:00+00:00')
       ]
     end
+
+    it 'handles a status change missing the to field' do
+      raw = {
+        'key' => 'SP-1',
+        'changelog' => {
+          'histories' => [{
+            'created' => '2021-08-29T18:00:00+00:00',
+            'items' => [{
+              'field' => 'status',
+              'fieldtype' => 'jira',
+              'fieldId' => 'status',
+              'from' => '10026',
+              'fromString' => 'To Do',
+              'toString' => 'Development'
+              # intentionally no 'to' key
+            }]
+          }]
+        },
+        'fields' => {
+          'created' => '2021-08-29T18:00:00+00:00',
+          'updated' => '2021-09-29T18:00:00+00:00',
+          'status' => {
+            'name' => 'Development',
+            'id' => '999',
+            'statusCategory' => { 'name' => 'In Progress', 'id' => 3, 'key' => 'indeterminate' }
+          },
+          'creator' => { 'displayName' => 'Tolkien' }
+        }
+      }
+      board = sample_board
+      board.project_config = project_config
+      issue = described_class.new raw: raw, board: board
+      status_change = issue.changes.reverse.find(&:status?)
+      expect(status_change.value_id).to eq 0
+      expect(status_change.value).to eq 'Development'
+      expect(exporter.file_system.log_messages).to match_strings [
+        /Issue SP-1 has a status change without a 'to' id.*To Do.*Development/
+      ]
+    end
   end
 
   context 'changes' do
