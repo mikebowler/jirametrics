@@ -477,7 +477,7 @@ describe DailyView do
 
     it 'returns nil when scrum board with active sprint and status in visible column' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00', 
+      board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       expect(view.make_not_visible_line(issue1)).to be_nil
@@ -485,7 +485,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'returns message when scrum board and not in any active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00', 
+      board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       result = view.make_not_visible_line(issue1)
@@ -496,7 +496,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
 
     it 'returns both reasons when scrum board, no active sprint, and status not in visible column' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00', 
+      board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       status = board.possible_statuses.find_all_by_name('Backlog').first

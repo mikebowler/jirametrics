@@ -184,10 +184,10 @@ describe Anonymizer do
 
     it 'anonymizes sprint names' do
       board.sprints << Sprint.new(
-raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z', 
+raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
 'endDate' => '2021-06-15T00:00:00.000Z', 'completeDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
       board.sprints << Sprint.new(
-raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' => '2021-06-16T00:00:00.000Z', 
+raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' => '2021-06-16T00:00:00.000Z',
 'endDate' => '2021-06-30T00:00:00.000Z' }, timezone_offset: '+00:00')
       anonymizer.anonymize_sprints
       expect(board.sprints.collect(&:name)).to eq ['Sprint-1', 'Sprint-2']
@@ -195,10 +195,10 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' 
 
     it 'assigns the same anonymized name to sprints with the same original name' do
       board.sprints << Sprint.new(
-raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z', 
+raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
 'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
       board.sprints << Sprint.new(
-raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z', 
+raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
 'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
       anonymizer.anonymize_sprints
       expect(board.sprints.collect(&:name)).to eq ['Sprint-1', 'Sprint-1']
@@ -210,7 +210,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
       issue1 = anonymizer.project_config.issues.first
       issue2 = anonymizer.project_config.issues[1]
       issue1.raw['fields']['fixVersions'] = [{ 'id' => '10', 'name' => 'v1.0', 'released' => false }]
-      issue2.raw['fields']['fixVersions'] = 
+      issue2.raw['fields']['fixVersions'] =
 [{ 'id' => '10', 'name' => 'v1.0', 'released' => false }, { 'id' => '20', 'name' => 'v2.0', 'released' => false }]
       anonymizer.anonymize_fix_versions
       expect(issue1.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1']

@@ -68,7 +68,7 @@ class Exporter
 
           throughput_chart do
             description_text <<~TEXT
-              <div>Throughput data is very useful for 
+              <div>Throughput data is very useful for#{' '}
                 <a href="https://blog.mikebowler.ca/2024/06/02/probabilistic-forecasting/">probabilistic forecasting</a>,
                 to determine when we'll be done. Try it now with the
                 <a href="<%= throughput_forecaster_url %>" target="_blank" rel="noopener noreferrer">

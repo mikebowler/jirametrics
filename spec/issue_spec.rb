@@ -747,7 +747,7 @@ describe Issue do
 
     it 'returns empty when scrum issue is in active sprint and visible status' do
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
-      scrum_board.sprints << Sprint.new(timezone_offset: '00:00', 
+      scrum_board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       scrum_issue = empty_issue created: '2021-10-01', board: scrum_board,
         creation_status: scrum_board.possible_statuses.find_by_id(3)
