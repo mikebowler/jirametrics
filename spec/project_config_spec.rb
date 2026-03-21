@@ -706,7 +706,7 @@ describe ProjectConfig do
     end
 
     it 'processes remaining statuses after a not-found one' do
-      project_config.settings['blocked_statuses'] = ['NonExistent', 'Review']
+      project_config.settings['blocked_statuses'] = %w[NonExistent Review]
       project_config.settings['stalled_statuses'] = []
       project_config.send(:resolve_blocked_stalled_status_settings)
 

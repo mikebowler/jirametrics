@@ -171,7 +171,7 @@ describe Anonymizer do
   context 'anonymize_labels_and_components' do
     it 'clears labels and component names' do
       issue = anonymizer.project_config.issues.first
-      issue.raw['fields']['labels'] = ['Customer-XYZ', 'Priority-1']
+      issue.raw['fields']['labels'] = %w[Customer-XYZ Priority-1]
       issue.raw['fields']['components'] = [{ 'name' => 'Backend' }, { 'name' => 'API' }]
       anonymizer.anonymize_labels_and_components
       expect(issue.labels).to be_empty
@@ -190,7 +190,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint Alpha', 'activatedDate'
 raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' => '2021-06-16T00:00:00.000Z',
 'endDate' => '2021-06-30T00:00:00.000Z' }, timezone_offset: '+00:00')
       anonymizer.anonymize_sprints
-      expect(board.sprints.collect(&:name)).to eq ['Sprint-1', 'Sprint-2']
+      expect(board.sprints.collect(&:name)).to eq %w[Sprint-1 Sprint-2]
     end
 
     it 'assigns the same anonymized name to sprints with the same original name' do
@@ -201,7 +201,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
 raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
 'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
       anonymizer.anonymize_sprints
-      expect(board.sprints.collect(&:name)).to eq ['Sprint-1', 'Sprint-1']
+      expect(board.sprints.collect(&:name)).to eq %w[Sprint-1 Sprint-1]
     end
   end
 
@@ -214,7 +214,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
 [{ 'id' => '10', 'name' => 'v1.0', 'released' => false }, { 'id' => '20', 'name' => 'v2.0', 'released' => false }]
       anonymizer.anonymize_fix_versions
       expect(issue1.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1']
-      expect(issue2.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1', 'Version-2']
+      expect(issue2.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq %w[Version-1 Version-2]
     end
   end
 
