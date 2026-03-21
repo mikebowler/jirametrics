@@ -71,9 +71,9 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
     additions = pull_request.additions || 0
     deletions = pull_request.deletions || 0
     text = +' | Lines changed: ['
-    text << "+#{to_human_readable additions}" unless additions == 0
+    text << "+#{to_human_readable additions}" unless additions.zero?
     text << ' ' if additions != 0 && deletions != 0
-    text << "-#{to_human_readable deletions}" unless deletions == 0
+    text << "-#{to_human_readable deletions}" unless deletions.zero?
     text << "], Files changed: #{to_human_readable pull_request.changed_files}"
     text
   end
