@@ -48,5 +48,49 @@ describe CumulativeFlowDiagram do
       output = chart.run
       expect(output).to include('"reverse":true').or include('reverse: true').or include('reverse:true')
     end
+
+    context 'column_rules' do
+      def chart_with_rules &block
+        c = described_class.new(block)
+        c.file_system = MockFileSystem.new
+        c.file_system.when_loading(
+          file: File.expand_path('./lib/jirametrics/html/cumulative_flow_diagram.erb'),
+          json: :not_mocked
+        )
+        c.board_id = 1
+        c.all_boards = { 1 => board }
+        c.issues = issues
+        c.date_range = Date.parse('2021-06-01')..Date.parse('2021-09-01')
+        c
+      end
+
+      it 'uses a custom colour for the named column' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.color = '#abcdef' if column.name == 'In Progress'
+          end
+        end.run
+        expect(output).to include('#abcdef')
+      end
+
+      it 'excludes an ignored column from the output' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.ignore if column.name == 'Done'
+          end
+        end.run
+        # 'Done' must not appear as a dataset label
+        expect(output).not_to include('"Done"')
+      end
+
+      it 'still includes non-ignored columns when one is ignored' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.ignore if column.name == 'Done'
+          end
+        end.run
+        expect(output).to include('In Progress')
+      end
+    end
   end
 end

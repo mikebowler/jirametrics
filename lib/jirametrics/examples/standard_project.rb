@@ -58,7 +58,11 @@ class Exporter
             html "<div><a href='#{board.url}'>#{id} #{board.name}</a> (#{board.board_type})</div>",
                  type: :header
           end
-cumulative_flow_diagram
+cumulative_flow_diagram do
+  column_rules do |column, rule|
+    rule.color = '#e03030' if column.name.downcase == 'development'
+  end
+end
           daily_view
 
           cycletime_scatterplot do

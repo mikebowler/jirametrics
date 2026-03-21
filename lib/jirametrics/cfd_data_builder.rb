@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 class CfdDataBuilder
-  def initialize board:, issues:, date_range:
+  def initialize board:, issues:, date_range:, columns: nil
     @board = board
     @issues = issues
     @date_range = date_range
+    @columns = columns || board.visible_columns
   end
 
   def run
@@ -12,7 +13,7 @@ class CfdDataBuilder
     issue_states = @issues.map { |issue| process_issue(issue, column_map) }
 
     {
-      columns: @board.visible_columns.map(&:name),
+      columns: @columns.map(&:name),
       daily_counts: build_daily_counts(issue_states),
       correction_windows: issue_states.flat_map { |s| s[:correction_windows] }
     }
@@ -22,7 +23,7 @@ class CfdDataBuilder
 
   def build_column_map
     map = {}
-    @board.visible_columns.each_with_index do |column, index|
+    @columns.each_with_index do |column, index|
       column.status_ids.each { |id| map[id] = index }
     end
     map
@@ -87,7 +88,7 @@ class CfdDataBuilder
   end
 
   def build_daily_counts issue_states
-    column_count = @board.visible_columns.size
+    column_count = @columns.size
     @date_range.each_with_object({}) do |date, result|
       counts = Array.new(column_count, 0)
       issue_states.each do |state|

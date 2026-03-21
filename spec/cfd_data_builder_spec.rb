@@ -151,4 +151,24 @@ describe CfdDataBuilder do
       expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 1, 1, 1]
     end
   end
+
+  context 'columns: override' do
+    it 'uses the provided columns instead of board.visible_columns' do
+      # Pass only the first two columns (Ready, In Progress); Done and Review are excluded
+      two_columns = board.visible_columns.first(2)
+      result = build(columns: two_columns)
+      expect(result[:columns]).to eq ['Ready', 'In Progress']
+    end
+
+    it 'does not track issues that reach an excluded column' do
+      two_columns = board.visible_columns.first(2) # Ready (10001), In Progress (3)
+      issue = empty_issue(created: '2021-07-01', key: 'SP-1')
+      # Issue goes straight to Review (10011), which is not in the two-column set
+      add_mock_change(issue: issue, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-02T10:00:00')
+      result = build(columns: two_columns, issues: [issue])
+      # Issue's status_id 10011 not in column_map → high-water-mark stays nil → not counted
+      expect(result[:daily_counts][Date.parse('2021-07-05')]).to eq [0, 0]
+    end
+  end
 end

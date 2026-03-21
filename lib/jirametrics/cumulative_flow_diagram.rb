@@ -30,6 +30,11 @@ class CumulativeFlowDiagram < ChartBase
   end
   private_constant :Segment
 
+  class CfdColumnRules < Rules
+    attr_accessor :color
+  end
+  private_constant :CfdColumnRules
+
   def initialize block
     super()
     header_text 'Cumulative Flow Diagram'
@@ -54,11 +59,28 @@ class CumulativeFlowDiagram < ChartBase
     instance_eval(&block)
   end
 
+  def column_rules &block
+    @column_rules_block = block
+  end
+
   def run
+    all_columns = current_board.visible_columns
+
+    column_rules_list = all_columns.map do |column|
+      rules = CfdColumnRules.new
+      @column_rules_block&.call(column, rules)
+      rules
+    end
+
+    active_pairs   = all_columns.zip(column_rules_list).reject { |_, rules| rules.ignored? }
+    active_columns = active_pairs.map(&:first)
+    active_rules   = active_pairs.map(&:last)
+
     cfd = CfdDataBuilder.new(
       board: current_board,
       issues: issues,
-      date_range: date_range
+      date_range: date_range,
+      columns: active_columns
     ).run
 
     columns            = cfd[:columns]
@@ -75,8 +97,15 @@ class CumulativeFlowDiagram < ChartBase
       end
     end
 
-    border_colors = columns.map { random_color }
-    fill_colors   = border_colors.map { |c| hex_to_rgba(c, 0.35) }
+    border_colors = active_rules.map { |rules| rules.color || random_color }
+
+    fill_colors = active_rules.zip(border_colors).map do |rules, border|
+      if rules.color.nil? || rules.color.match?(/\A#[0-9a-fA-F]{6}\z/)
+        hex_to_rgba(border, 0.35)
+      else
+        rules.color
+      end
+    end
 
     # Datasets in reversed order: rightmost column first (bottom of stack), leftmost last (top).
     data_sets = columns.each_with_index.map do |name, col_index|
