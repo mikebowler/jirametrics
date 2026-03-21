@@ -114,6 +114,7 @@ After making changes to Ruby files, run `rubocop` on the modified files and fix 
 
 ## Code Conventions
 
+- Any DSL method that accepts a colour must also support a `[light_color, dark_color]` two-element array for light/dark mode. Use the private `parse_theme_color` helper in `CumulativeFlowDiagram` as the reference implementation (converts the pair to a `RawJavascript` theme-detection ternary). The same pattern is also in `GroupingRules#color=`.
 - If a trailing `unless` modifier would require a line continuation (`\`) to wrap, use the multiline `unless/end` block form instead
 - All Ruby files use `# frozen_string_literal: true`
 - No method definition parentheses required (RuboCop `Style/MethodDefParentheses` disabled)

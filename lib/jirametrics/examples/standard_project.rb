@@ -60,7 +60,7 @@ class Exporter
           end
           daily_view
 cumulative_flow_diagram do
-  triangle_color 'red'
+  triangle_color ['red', 'orange']
   arrival_rate_line_color 'blue'
   departure_rate_line_color 'yellow'
   column_rules do |column, rule|

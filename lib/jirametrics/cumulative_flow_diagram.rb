@@ -73,15 +73,15 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   def triangle_color color
-    @triangle_color = color
+    @triangle_color = parse_theme_color(color)
   end
 
   def arrival_rate_line_color color
-    @arrival_rate_line_color = color
+    @arrival_rate_line_color = parse_theme_color(color)
   end
 
   def departure_rate_line_color color
-    @departure_rate_line_color = color
+    @departure_rate_line_color = parse_theme_color(color)
   end
 
   def run
@@ -155,6 +155,26 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   private
+
+  def parse_theme_color color
+    return color unless color.is_a?(Array)
+
+    raise ArgumentError, 'Color pair must have exactly two elements: [light_color, dark_color]' unless color.size == 2
+    raise ArgumentError, 'Color pair elements must be strings' unless color.all?(String)
+
+    if color.any? { |c| c.start_with?('--') }
+      raise ArgumentError,
+        'CSS variable references are not supported as color pair elements; use a literal color value instead'
+    end
+
+    light, dark = color
+    RawJavascript.new(
+      "(document.documentElement.dataset.theme === 'dark' || " \
+      '(!document.documentElement.dataset.theme && ' \
+      "window.matchMedia('(prefers-color-scheme: dark)').matches)) " \
+      "? #{dark.to_json} : #{light.to_json}"
+    )
+  end
 
   def hex_to_rgba hex, alpha
     r, g, b = hex.delete_prefix('#').scan(/../).map { |c| c.to_i(16) }

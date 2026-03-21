@@ -132,6 +132,12 @@ describe CumulativeFlowDiagram do
           output = chart_with_rules { triangle_color '#abcdef' }.run
           expect(output).to include('"#abcdef"')
         end
+
+        it 'supports a light/dark color pair' do
+          output = chart_with_rules { triangle_color ['#111111', '#eeeeee'] }.run
+          expect(output).to include('"#111111"')
+          expect(output).to include('"#eeeeee"')
+        end
       end
 
       context 'arrival_rate_line_color' do
@@ -144,6 +150,12 @@ describe CumulativeFlowDiagram do
           output = chart_with_rules { arrival_rate_line_color '#112233' }.run
           expect(output).to include('"#112233"')
         end
+
+        it 'supports a light/dark color pair' do
+          output = chart_with_rules { arrival_rate_line_color ['#112233', '#aabbcc'] }.run
+          expect(output).to include('"#112233"')
+          expect(output).to include('"#aabbcc"')
+        end
       end
 
       context 'departure_rate_line_color' do
@@ -155,6 +167,12 @@ describe CumulativeFlowDiagram do
         it 'uses the configured color' do
           output = chart_with_rules { departure_rate_line_color '#aabbcc' }.run
           expect(output).to include('"#aabbcc"')
+        end
+
+        it 'supports a light/dark color pair' do
+          output = chart_with_rules { departure_rate_line_color ['#223344', '#ddeeff'] }.run
+          expect(output).to include('"#223344"')
+          expect(output).to include('"#ddeeff"')
         end
       end
       # rubocop:enable RSpec/NestedGroups
