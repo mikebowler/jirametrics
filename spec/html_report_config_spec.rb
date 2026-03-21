@@ -162,5 +162,4 @@ describe HtmlReportConfig do
       ]
     end
   end
-
 end
