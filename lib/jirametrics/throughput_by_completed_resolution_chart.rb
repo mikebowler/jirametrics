@@ -6,7 +6,7 @@ class ThroughputByCompletedResolutionChart < ThroughputChart
   def initialize block
     super
     header_text 'Throughput, grouped by completion status and resolution'
-    description_text '<h2>Number of items completed, grouped by completion status and resolution</h2>'
+    description_text nil
   end
 
   def default_grouping_rules issue, rules

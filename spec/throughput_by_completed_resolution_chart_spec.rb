@@ -12,9 +12,9 @@ describe ThroughputByCompletedResolutionChart do
     expect(chart.header_text).to eq 'Throughput, grouped by completion status and resolution'
   end
 
-  it 'sets description_text' do
+  it 'sets description_text to nil' do
     chart = described_class.new empty_config_block
-    expect(chart.description_text).to include('grouped by completion status and resolution')
+    expect(chart.description_text).to be_nil
   end
 
   context 'default_grouping_rules' do

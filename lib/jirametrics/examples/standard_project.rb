@@ -78,7 +78,9 @@ class Exporter
               <h2>Number of items completed, grouped by issue type</h2>'
             TEXT
           end
-          throughput_by_completed_resolution_chart
+          throughput_by_completed_resolution_chart do
+            description_text '<h2>Number of items completed, grouped by completion status and resolution</h2>'
+          end
 
           aging_work_in_progress_chart
           aging_work_bar_chart
