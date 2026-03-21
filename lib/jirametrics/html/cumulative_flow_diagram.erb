@@ -1,0 +1,73 @@
+<%= seam_start %>
+<div class="chart">
+  <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
+</div>
+<script>
+(function() {
+  const hatchWindows = <%= hatch_windows.to_json %>;
+
+  // Custom plugin: draws diagonal hatching over correction windows in the affected band.
+  // Uses createDiagonalPattern() defined in index.js.
+  const cfdHatchPlugin = {
+    id: 'cfdHatch',
+    afterDraw: function(chart) {
+      const ctx = chart.ctx;
+      hatchWindows.forEach(function(win) {
+        const meta = chart.getDatasetMeta(win.dataset_index);
+        if (!meta || !meta.data.length) return;
+
+        const startX = chart.scales.x.getPixelForValue(new Date(win.start_date).getTime());
+        const endX   = chart.scales.x.getPixelForValue(new Date(win.end_date).getTime());
+
+        // Draw a vertical hatched slice at each data point within the correction window.
+        meta.data.forEach(function(point, i) {
+          if (point.x < startX || point.x > endX) return;
+          const sliceLeft  = i > 0 ? meta.data[i - 1].x : startX;
+          const top        = point.y;
+          const bottom     = point.base;
+          if (top === undefined || bottom === undefined || top >= bottom) return;
+          ctx.save();
+          ctx.fillStyle = createDiagonalPattern(win.color);
+          ctx.fillRect(sliceLeft, top, point.x - sliceLeft, bottom - top);
+          ctx.restore();
+        });
+      });
+    }
+  };
+
+  new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
+    type: 'line',
+    plugins: [cfdHatchPlugin],
+    data: {
+      datasets: <%= JSON.generate(data_sets) %>
+    },
+    options: {
+      responsive: <%= canvas_responsive? %>,
+      scales: {
+        x: {
+          type: 'time',
+          time: { format: 'YYYY-MM-DD' },
+          min: "<%= date_range.begin.to_s %>",
+          max: "<%= (date_range.end + 1).to_s %>",
+          grid: { color: <%= CssVariable['--grid-line-color'].to_json %> }
+        },
+        y: {
+          stacked: true,
+          min: 0,
+          title: { display: true, text: 'Number of items' },
+          grid: { color: <%= CssVariable['--grid-line-color'].to_json %> }
+        }
+      },
+      elements: {
+        point: { radius: 0 }
+      },
+      plugins: {
+        legend: {
+          reverse: true
+        }
+      }
+    }
+  });
+})();
+</script>
+<%= seam_end %>

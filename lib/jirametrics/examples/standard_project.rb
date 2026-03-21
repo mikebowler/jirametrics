@@ -58,7 +58,7 @@ class Exporter
             html "<div><a href='#{board.url}'>#{id} #{board.name}</a> (#{board.board_type})</div>",
                  type: :header
           end
-
+cumulative_flow_diagram
           daily_view
 
           cycletime_scatterplot do
