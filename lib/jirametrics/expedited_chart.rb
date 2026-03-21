@@ -50,7 +50,7 @@ class ExpeditedChart < ChartBase
     end
 
     if data_sets.empty?
-      '<h1 class="foldable">Expedited work</h1><p>There is no expedited work in this time period.</p>'
+      '<h1 class="foldable">Expedited work</h1><div>There is no expedited work in this time period.</div>'
     else
       wrap_and_render(binding, __FILE__)
     end
