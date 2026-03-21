@@ -91,6 +91,35 @@ describe CumulativeFlowDiagram do
         end.run
         expect(output).to include('In Progress')
       end
+
+      it 'uses the custom label in place of the column name' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.label = 'WIP' if column.name == 'In Progress'
+          end
+        end.run
+        expect(output).to include('"label":"WIP"')
+        expect(output).not_to include('"label":"In Progress"')
+      end
+
+      it 'includes label_hint in the dataset JSON when set' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.label_hint = 'Items actively being worked on' if column.name == 'In Progress'
+          end
+        end.run
+        expect(output).to include('Items actively being worked on')
+      end
+
+      it 'includes the legend hover tooltip plugin when label_hint is used' do
+        output = chart_with_rules do
+          column_rules do |column, rule|
+            rule.label_hint = 'Some hint' if column.name == 'In Progress'
+          end
+        end.run
+        expect(output).to include('onHover')
+        expect(output).to include('legendItem')
+      end
     end
   end
 end

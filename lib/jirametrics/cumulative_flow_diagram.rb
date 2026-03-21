@@ -31,7 +31,7 @@ class CumulativeFlowDiagram < ChartBase
   private_constant :Segment
 
   class CfdColumnRules < Rules
-    attr_accessor :color
+    attr_accessor :color, :label, :label_hint
   end
   private_constant :CfdColumnRules
 
@@ -99,13 +99,7 @@ class CumulativeFlowDiagram < ChartBase
 
     border_colors = active_rules.map { |rules| rules.color || random_color }
 
-    fill_colors = active_rules.zip(border_colors).map do |rules, border|
-      if rules.color.nil? || rules.color.match?(/\A#[0-9a-fA-F]{6}\z/)
-        hex_to_rgba(border, 0.35)
-      else
-        rules.color
-      end
-    end
+    fill_colors = active_rules.zip(border_colors).map { |rules, border| fill_color_for(rules, border) }
 
     # Datasets in reversed order: rightmost column first (bottom of stack), leftmost last (top).
     data_sets = columns.each_with_index.map do |name, col_index|
@@ -114,7 +108,8 @@ class CumulativeFlowDiagram < ChartBase
         .map { |w| { start_date: w[:start_date].to_s, end_date: w[:end_date].to_s } }
 
       {
-        label: name,
+        label: active_rules[col_index].label || name,
+        label_hint: active_rules[col_index].label_hint,
         data: date_range.map { |date| { x: date.to_s, y: daily_marginals[date][col_index] } },
         backgroundColor: fill_colors[col_index],
         borderColor: border_colors[col_index],
@@ -143,5 +138,13 @@ class CumulativeFlowDiagram < ChartBase
   def hex_to_rgba hex, alpha
     r, g, b = hex.delete_prefix('#').scan(/../).map { |c| c.to_i(16) }
     "rgba(#{r}, #{g}, #{b}, #{alpha})"
+  end
+
+  def fill_color_for rules, border
+    if rules.color.nil? || rules.color.match?(/\A#[0-9a-fA-F]{6}\z/)
+      hex_to_rgba(border, 0.35)
+    else
+      rules.color
+    end
   end
 end

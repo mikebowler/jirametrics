@@ -3,6 +3,11 @@
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <script>
+if (!Chart.Tooltip.positioners.legendItem) {
+  Chart.Tooltip.positioners.legendItem = function(items) {
+    return this.chart._legendHoverPosition || Chart.Tooltip.positioners.average.call(this, items);
+  };
+}
 (function() {
   const hatchWindows = <%= hatch_windows.to_json %>;
 
@@ -90,8 +95,41 @@
         point: { radius: 0 }
       },
       plugins: {
+        tooltip: {
+          position: 'legendItem',
+          callbacks: {
+            title: function(contexts) {
+              if (contexts[0]?.chart._legendHoverIndex != null) return '';
+            },
+            label: function(context) {
+              if (context.chart._legendHoverIndex != null) {
+                return context.dataset.label_hint || '';
+              }
+            }
+          }
+        },
         legend: {
-          reverse: true
+          reverse: true,
+          onHover: function(event, legendItem, legend) {
+            const chart = legend.chart;
+            const dataset = chart.data.datasets[legendItem.datasetIndex];
+            if (!dataset?.label_hint) return;
+            chart._legendHoverIndex = legendItem.datasetIndex;
+            chart._legendHoverPosition = { x: event.x, y: event.y };
+            const firstNonZero = dataset.data.findIndex(d => d?.y !== 0);
+            if (firstNonZero === -1) return;
+            chart.tooltip.setActiveElements(
+              [{ datasetIndex: legendItem.datasetIndex, index: firstNonZero }],
+              { x: event.x, y: event.y }
+            );
+            chart.update();
+          },
+          onLeave: function(event, legendItem, legend) {
+            legend.chart._legendHoverIndex = null;
+            legend.chart._legendHoverPosition = null;
+            legend.chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+            legend.chart.update();
+          }
         }
       }
     }
