@@ -33,6 +33,24 @@ class CumulativeFlowDiagram < ChartBase
   def initialize block
     super()
     header_text 'Cumulative Flow Diagram'
+    description_text <<~HTML
+      <div class="p">
+        A Cumulative Flow Diagram (CFD) shows how work accumulates across board columns over time.
+        Each coloured band represents a workflow stage. The top edge of the leftmost band shows
+        total work entered; the top edge of the rightmost band shows total work completed.
+      </div>
+      <div class="p">
+        A widening band means work is piling up in that stage — a bottleneck. Parallel top edges
+        (bands staying the same width) indicate smooth flow. Steep rises in the leftmost band
+        without corresponding rises on the right mean new work is arriving faster than it is
+        being finished.
+      </div>
+      <div class="p">
+        Dashed lines and hatched regions indicate periods where an item moved backwards through
+        the workflow (a correction). These highlight rework or process irregularities worth
+        investigating.
+      </div>
+    HTML
     instance_eval(&block)
   end
 
