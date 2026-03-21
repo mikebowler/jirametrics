@@ -43,9 +43,7 @@ class ThroughputChart < ChartBase
       dashed: true
     )
     @throughput_samples = total_data_set[:data].collect { |d| d[:y] }
-    if rules_to_issues.size > 1
-      data_sets << total_data_set
-    end
+    data_sets << total_data_set if rules_to_issues.size > 1
 
     rules_to_issues.each_key do |rules|
       data_sets << weekly_throughput_dataset(
