@@ -44,9 +44,9 @@ class AtlassianDocumentFormat
       when 'codeBlock'                 then ['<code>', '</code>']
       when 'date'
         [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
-      when 'decisionItem'              then ['<li>', '</li>']
+      when 'decisionItem', 'listItem'  then ['<li>', '</li>']
       when 'decisionList'              then ['<div>Decisions<ul>', '</ul></div>']
-      when 'emoji'                     then [node_attrs['text'], nil]
+      when 'emoji', 'status'           then [node_attrs['text'], nil]
       when 'expand'                    then ["<div>#{node_attrs['title']}</div>", nil]
       when 'hardBreak'                 then ['<br />', nil]
       when 'heading'
@@ -55,7 +55,6 @@ class AtlassianDocumentFormat
       when 'inlineCard'
         url = node_attrs['url']
         ["[Inline card]: <a href='#{url}'>#{url}</a>", nil]
-      when 'listItem'                  then ['<li>', '</li>']
       when 'media'
         text = node_attrs['alt'] || node_attrs['id']
         ["Media: #{text}", nil]
@@ -65,7 +64,6 @@ class AtlassianDocumentFormat
       when 'panel'                     then ["<div>#{node_attrs['panelType'].upcase}</div>", nil]
       when 'paragraph'                 then ['<p>', '</p>']
       when 'rule'                      then ['<hr />', nil]
-      when 'status'                    then [node_attrs['text'], nil]
       when 'table'                     then ['<table>', '</table>']
       when 'tableCell'                 then ['<td>', '</td>']
       when 'tableHeader'               then ['<th>', '</th>']
@@ -87,38 +85,29 @@ class AtlassianDocumentFormat
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']
-      when 'blockquote'                then ['', nil]
-      when 'bulletList'                then ['', nil]
-      when 'codeBlock'                 then ['', nil]
+      when 'blockquote', 'bulletList', 'codeBlock',
+           'mediaSingle', 'mediaGroup',
+           'orderedList', 'table', 'taskList'  then ['', nil]
       when 'date'
         [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
       when 'decisionItem'              then ['- ', "\n"]
       when 'decisionList'              then ["Decisions:\n", nil]
-      when 'emoji'                     then [node_attrs['text'], nil]
+      when 'emoji', 'mention', 'status' then [node_attrs['text'], nil]
       when 'expand'                    then ["#{node_attrs['title']}\n", nil]
       when 'hardBreak'                 then ["\n", nil]
-      when 'heading'                   then ['', "\n"]
+      when 'heading', 'paragraph', 'tableRow' then ['', "\n"]
       when 'inlineCard'                then [node_attrs['url'], nil]
       when 'listItem'                  then ['- ', nil]
       when 'media'
         text = node_attrs['alt'] || node_attrs['id']
         ["Media: #{text}", nil]
-      when 'mediaSingle', 'mediaGroup' then ['', nil]
-      when 'mention'                   then [node_attrs['text'], nil]
-      when 'orderedList'               then ['', nil]
       when 'panel'                     then ["#{node_attrs['panelType'].upcase}\n", nil]
-      when 'paragraph'                 then ['', "\n"]
       when 'rule'                      then ["---\n", nil]
-      when 'status'                    then [node_attrs['text'], nil]
-      when 'table'                     then ['', nil]
-      when 'tableCell'                 then ['', "\t"]
-      when 'tableHeader'               then ['', "\t"]
-      when 'tableRow'                  then ['', "\n"]
+      when 'tableCell', 'tableHeader'  then ['', "\t"]
       when 'text'                      then [n['text'], nil]
       when 'taskItem'
         state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
         ["#{state} ", "\n"]
-      when 'taskList'                  then ['', nil]
       else
         ["[Unparseable: #{n['type']}]\n", nil]
       end
