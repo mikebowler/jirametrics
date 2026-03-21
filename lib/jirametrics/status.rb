@@ -36,7 +36,7 @@ class Status
   end
 
   def self.from_raw raw
-    raise "raw cannot be nil" if raw.nil?
+    raise 'raw cannot be nil' if raw.nil?
 
     category_config = raw['statusCategory']
     raise "statusCategory can't be nil in #{category_config.inspect}" if category_config.nil?

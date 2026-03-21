@@ -96,7 +96,7 @@ class GithubGateway
     # This extra check seems to only matter on Windows. On the mac, auth failures don't pass status.success?
     if stderr.include?('SAML enforcement')
       raise "GitHub CLI is not authorized to access #{@repo}. " \
-            "Run: gh auth refresh -h github.com -s read:org"
+            'Run: gh auth refresh -h github.com -s read:org'
     end
 
     raise "GitHub CLI command failed for #{@repo}: #{stderr}" unless status.success?
