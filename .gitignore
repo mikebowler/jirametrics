@@ -14,4 +14,7 @@ node_modules/
 package-lock.json
 
 # JavaScript test coverage
-coverage/js/
+coverage/js/.superpowers/
+
+# Superpowers brainstorming session artifacts
+.superpowers/
