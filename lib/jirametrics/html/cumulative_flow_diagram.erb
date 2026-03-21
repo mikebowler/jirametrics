@@ -12,6 +12,7 @@
     id: 'cfdHatch',
     afterDraw: function(chart) {
       const ctx = chart.ctx;
+      const ca  = chart.chartArea;
       hatchWindows.forEach(function(win) {
         const meta = chart.getDatasetMeta(win.dataset_index);
         if (!meta || !meta.data.length) return;
@@ -19,16 +20,43 @@
         const startX = chart.scales.x.getPixelForValue(new Date(win.start_date).getTime());
         const endX   = chart.scales.x.getPixelForValue(new Date(win.end_date).getTime());
 
-        // Draw a vertical hatched slice at each data point within the correction window.
+        // Draw hatched slices over the correction window.
+        // For stacked line charts, PointElement has no .base — derive the band bottom from the
+        // dataset directly below in the visual stack (dataset_index - 1, since datasets are
+        // stored reversed), or chart.chartArea.bottom for the lowest dataset.
+        // Use a trapezoid clip path per slice so hatching stays within the actual band boundary
+        // even when band height changes between data points.
+        const belowMeta = win.dataset_index > 0 ? chart.getDatasetMeta(win.dataset_index - 1) : null;
         meta.data.forEach(function(point, i) {
           if (point.x < startX || point.x > endX) return;
-          const sliceLeft  = i > 0 ? meta.data[i - 1].x : startX;
-          const top        = point.y;
-          const bottom     = point.base;
-          if (top === undefined || bottom === undefined || top >= bottom) return;
+          const prev       = i > 0 ? meta.data[i - 1] : null;
+          const sliceLeft  = Math.max(prev ? prev.x : startX, startX);
+          const sliceRight = Math.min(point.x, endX);
+          if (sliceLeft >= sliceRight) return;
+
+          const topLeft    = prev ? prev.y : point.y;
+          const topRight   = point.y;
+          const bottomLeft = belowMeta && prev && belowMeta.data[i - 1]
+            ? belowMeta.data[i - 1].y : chart.chartArea.bottom;
+          const bottomRight = belowMeta && belowMeta.data[i]
+            ? belowMeta.data[i].y : chart.chartArea.bottom;
+
+          if (Math.min(topLeft, topRight) >= Math.max(bottomLeft, bottomRight)) return;
+
           ctx.save();
+          ctx.beginPath();
+          ctx.rect(ca.left, ca.top, ca.width, ca.height);
+          ctx.clip();
+          ctx.beginPath();
+          ctx.moveTo(sliceLeft,  topLeft);
+          ctx.lineTo(sliceRight, topRight);
+          ctx.lineTo(sliceRight, bottomRight);
+          ctx.lineTo(sliceLeft,  bottomLeft);
+          ctx.closePath();
+          ctx.clip();
           ctx.fillStyle = createDiagonalPattern(win.color);
-          ctx.fillRect(sliceLeft, top, point.x - sliceLeft, bottom - top);
+          ctx.fillRect(sliceLeft, Math.min(topLeft, topRight),
+            sliceRight - sliceLeft, Math.max(bottomLeft, bottomRight) - Math.min(topLeft, topRight));
           ctx.restore();
         });
       });
