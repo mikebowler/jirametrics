@@ -256,7 +256,8 @@ class DailyView < ChartBase
     description = issue.raw['fields']['description']
     return [] unless description
 
-    text = "<div class='foldable startFolded'>Description</div><div>#{atlassian_document_format.to_html(description)}</div>"
+    text = "<div class='foldable startFolded'>Description</div>" \
+           "<div>#{atlassian_document_format.to_html(description)}</div>"
     [[text]]
   end
 

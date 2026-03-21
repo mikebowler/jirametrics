@@ -302,7 +302,8 @@ describe DataQualityReport do
 
     it 'does nothing when issue is in an active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(timezone_offset: '00:00', 
+raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry
@@ -311,7 +312,8 @@ describe DataQualityReport do
 
     it 'reports when scrum issue is not in any active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(timezone_offset: '00:00', 
+raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry
