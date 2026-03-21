@@ -120,6 +120,44 @@ describe CumulativeFlowDiagram do
         expect(output).to include('onHover')
         expect(output).to include('legendItem')
       end
+
+      # rubocop:disable RSpec/NestedGroups
+      context 'triangle_color' do
+        it 'uses white by default' do
+          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          expect(output).to include('"#ffffff"')
+        end
+
+        it 'uses the configured color' do
+          output = chart_with_rules { triangle_color '#abcdef' }.run
+          expect(output).to include('"#abcdef"')
+        end
+      end
+
+      context 'arrival_rate_line_color' do
+        it 'uses the default orange when not configured' do
+          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          expect(output).to include('"rgba(255,138,101,0.85)"')
+        end
+
+        it 'uses the configured color' do
+          output = chart_with_rules { arrival_rate_line_color '#112233' }.run
+          expect(output).to include('"#112233"')
+        end
+      end
+
+      context 'departure_rate_line_color' do
+        it 'uses the default teal when not configured' do
+          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          expect(output).to include('"rgba(128,203,196,0.85)"')
+        end
+
+        it 'uses the configured color' do
+          output = chart_with_rules { departure_rate_line_color '#aabbcc' }.run
+          expect(output).to include('"#aabbcc"')
+        end
+      end
+      # rubocop:enable RSpec/NestedGroups
     end
   end
 end

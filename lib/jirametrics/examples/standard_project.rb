@@ -59,7 +59,30 @@ class Exporter
                  type: :header
           end
           daily_view
-
+cumulative_flow_diagram do
+  triangle_color 'red'
+  arrival_rate_line_color 'blue'
+  departure_rate_line_color 'yellow'
+  column_rules do |column, rule|
+    case column.name.downcase
+    when 'backlog / to do'
+      rule.color = '#C0C0C0'
+      rule.label = 'Ready'
+    when 'development'
+      rule.color = '#1E90FF'
+      rule.label = 'In dev'
+    when 'demo'
+      rule.color = '#87CEEB'
+      rule.label = 'PR review'
+    when 'po accepted'
+      rule.color = '#4682B4'
+      rule.label = 'UAT test'
+    when 'deployed'
+      rule.color = '#228B22'
+      rule.label = 'Done'
+    end
+  end
+end
           cycletime_scatterplot do
             show_trend_lines
           end

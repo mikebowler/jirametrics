@@ -63,6 +63,18 @@ class CumulativeFlowDiagram < ChartBase
     @column_rules_block = block
   end
 
+  def triangle_color color
+    @triangle_color = color
+  end
+
+  def arrival_rate_line_color color
+    @arrival_rate_line_color = color
+  end
+
+  def departure_rate_line_color color
+    @departure_rate_line_color = color
+  end
+
   def run
     all_columns = current_board.visible_columns
 

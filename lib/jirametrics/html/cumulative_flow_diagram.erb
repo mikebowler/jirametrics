@@ -1,5 +1,9 @@
 <%= seam_start %>
 <div class="chart">
+  <label style="font-size:0.85em;display:block;text-align:right;margin-bottom:2px">
+    <input type="checkbox" id="<%= chart_id %>_triangle_toggle" checked>
+    Show flow metrics triangle
+  </label>
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <script>
@@ -68,9 +72,318 @@ if (!Chart.Tooltip.positioners.legendItem) {
     }
   };
 
+  const cfdFlowMetricsPlugin = (function () {
+    const triangleColor  = <%= (@triangle_color  || '#ffffff').to_json %>;
+    const arrivalColor   = <%= (@arrival_rate_line_color   || 'rgba(255,138,101,0.85)').to_json %>;
+    const departureColor = <%= (@departure_rate_line_color || 'rgba(128,203,196,0.85)').to_json %>;
+    function buildArrays(chart) {
+      const ds = chart.data.datasets;
+      const n = ds[0].data.length;
+      const arrivals = [], departures = [];
+      for (let j = 0; j < n; j++) {
+        arrivals[j]   = ds.reduce((s, d) => s + (d.data[j]?.y || 0), 0);
+        // ds[0] is the Done (rightmost) column after dataset reversal.
+        // Its marginal equals its cumulative count (no column to its right),
+        // so this directly gives total departures. Assumes Done is not ignored via column_rules.
+        departures[j] = ds[0].data[j]?.y || 0;
+      }
+      return { arrivals, departures };
+    }
+
+    function linearRegression(yValues) {
+      const n = yValues.length;
+      const sumX  = n * (n - 1) / 2;
+      const sumX2 = n * (n - 1) * (2 * n - 1) / 6;
+      const sumY  = yValues.reduce((s, y) => s + y, 0);
+      const sumXY = yValues.reduce((s, y, i) => s + i * y, 0);
+      const denom = n * sumX2 - sumX * sumX;
+      if (denom === 0) return { slope: 0, intercept: sumY / n };
+      const slope = (n * sumXY - sumX * sumY) / denom;
+      return { slope, intercept: (sumY - slope * sumX) / n };
+    }
+
+    function trendPixelY(chart, reg, dayIndex) {
+      return chart.scales.y.getPixelForValue(reg.slope * dayIndex + reg.intercept);
+    }
+
+    function drawTrendLines(chart, fm) {
+      const ctx = chart.ctx;
+      const ca  = chart.chartArea;
+      const ds  = chart.data.datasets;
+      const n   = ds[0].data.length;
+      const x0  = chart.scales.x.getPixelForValue(new Date(ds[0].data[0].x).getTime());
+      const x1  = chart.scales.x.getPixelForValue(new Date(ds[0].data[n - 1].x).getTime());
+
+      function drawLine(reg, color) {
+        const y0 = trendPixelY(chart, reg, 0);
+        const y1 = trendPixelY(chart, reg, n - 1);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(ca.left, ca.top, ca.width, ca.height);
+        ctx.clip();
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      drawLine(fm.arrivalReg,   arrivalColor);
+      drawLine(fm.departureReg, departureColor);
+
+      // Edge labels (inside chart area, right-aligned to avoid canvas clipping)
+      ctx.save();
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      const labelX = ca.right - 4;
+      ctx.fillStyle = arrivalColor;
+      ctx.fillText('Arrivals',   labelX, trendPixelY(chart, fm.arrivalReg,   n - 1));
+      ctx.fillStyle = departureColor;
+      ctx.fillText('Departures', labelX, trendPixelY(chart, fm.departureReg, n - 1));
+      ctx.restore();
+    }
+
+    function bgLabel(ctx, text, cx, cy) {
+      ctx.save();
+      ctx.font = '11px sans-serif';
+      const w = ctx.measureText(text).width;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(cx - w / 2 - 3, cy - 9, w + 6, 14);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, cx, cy - 2);
+      ctx.restore();
+    }
+
+    function drawTriangle(ctx, chart, fm) {
+      const ca    = chart.chartArea;
+      const ds    = chart.data.datasets;
+      const n     = ds[0].data.length;
+      const { arrivals, departures, dates } = fm;
+
+      // Locate cursor data index j
+      const cursorMs = chart.scales.x.getValueForPixel(fm.mouseX);
+      const j = dates.reduce((best, t, i) =>
+        Math.abs(t - cursorMs) < Math.abs(dates[best] - cursorMs) ? i : best, 0);
+
+      const wip = arrivals[j] - departures[j];
+      if (wip === 0) return;
+
+      // Find j_c: first index > j where departures[k] >= arrivals[j] (fixed threshold)
+      const threshold = arrivals[j];
+      let j_c = -1;
+      for (let k = j + 1; k < n; k++) {
+        if (departures[k] >= threshold) { j_c = k; break; }
+      }
+
+      const xA = chart.scales.x.getPixelForValue(dates[j]);
+      const yA = chart.scales.y.getPixelForValue(arrivals[j]);
+      const yB = chart.scales.y.getPixelForValue(departures[j]);
+      const xC = j_c >= 0 ? chart.scales.x.getPixelForValue(dates[j_c]) : null;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(ca.left, ca.top, ca.width, ca.height);
+      ctx.clip();
+
+      // Triangle fill (only when C is within range)
+      if (xC !== null) {
+        ctx.beginPath();
+        ctx.moveTo(xA, yA);
+        ctx.lineTo(xA, yB);
+        ctx.lineTo(xC, yA);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fill();
+      }
+
+      // AB: vertical (WIP)
+      ctx.setLineDash([]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = triangleColor;
+      ctx.beginPath();
+      ctx.moveTo(xA, yA);
+      ctx.lineTo(xA, yB);
+      ctx.stroke();
+
+      if (xC !== null) {
+        // AC: horizontal (cycle time)
+        ctx.beginPath();
+        ctx.moveTo(xA, yA);
+        ctx.lineTo(xC, yA);
+        ctx.stroke();
+        // BC: dashed hypotenuse (throughput)
+        ctx.setLineDash([4, 2]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(xA, yB);
+        ctx.lineTo(xC, yA);
+        ctx.stroke();
+      } else {
+        // C outside range: dashed extension to right edge
+        ctx.setLineDash([4, 2]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(xA, yA);
+        ctx.lineTo(ca.right, yA);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Labels
+      const abMidY = (yA + yB) / 2;
+      // WIP: right-aligned, left of AB
+      ctx.save();
+      ctx.font = '11px sans-serif';
+      const wipText = 'WIP: ' + wip;
+      const wipW = ctx.measureText(wipText).width;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(xA - wipW - 8, abMidY - 9, wipW + 6, 14);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(wipText, xA - 5, abMidY - 2);
+      ctx.restore();
+
+      if (xC !== null) {
+        const cycleTime = j_c - j;
+        const throughput = (wip / cycleTime).toFixed(2);
+        bgLabel(ctx, 'CT: ' + cycleTime + ' days', (xA + xC) / 2, yA - 10);
+        bgLabel(ctx, 'TP: ' + throughput + '/day', (xA + xC) / 2, (yA + yB) / 2 + 12);
+      }
+    }
+
+    return {
+      id: 'cfdFlowMetrics',
+
+      afterInit(chart) {
+        const { arrivals, departures } = buildArrays(chart);
+        const dates = chart.data.datasets[0].data.map(d => new Date(d.x).getTime());
+        chart._flowMetrics = {
+          mouseX:      null,
+          arrivals,
+          departures,
+          dates,
+          arrivalReg:  linearRegression(arrivals),
+          departureReg: linearRegression(departures)
+        };
+        const fm = chart._flowMetrics;
+        const canvas = chart.canvas;
+
+        // The triangle is drawn on a separate overlay canvas using native DOM
+        // events, completely bypassing Chart.js's render/event cycle (which
+        // behaves unreliably in Safari). The triangle is hidden immediately on
+        // mouse move and redrawn after a short pause (debounce), preventing the
+        // browser from being overwhelmed by rapid redraws.
+        const dpr     = window.devicePixelRatio || 1;
+        const overlay = document.createElement('canvas');
+        overlay.width  = canvas.width;
+        overlay.height = canvas.height;
+        overlay.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;' +
+          'width:'  + (canvas.style.width  || (canvas.width  / dpr) + 'px') + ';' +
+          'height:' + (canvas.style.height || (canvas.height / dpr) + 'px') + ';';
+        const parent = canvas.parentNode;
+        if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+        parent.insertBefore(overlay, canvas.nextSibling);
+
+        const octx  = overlay.getContext('2d');
+        octx.scale(dpr, dpr);
+        const cssW = canvas.width  / dpr;
+        const cssH = canvas.height / dpr;
+        fm._overlay = overlay;
+
+        // Store overlay state on fm so afterDraw can reach it.
+        fm._overlayCtx     = octx;
+        fm._cssW           = cssW;
+        fm._cssH           = cssH;
+        fm._triangleEnabled = true;
+        fm._rafId          = null;
+
+        // Checkbox toggles between triangle mode and tooltip mode. They are
+        // mutually exclusive: in triangle mode, Chart.js event processing is
+        // disabled entirely so its internal hover/tooltip logic cannot interfere
+        // with the overlay canvas rAF (which hangs Safari at certain positions).
+        // Our native canvas mousemove handler is unaffected by this setting.
+        const defaultEvents = ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'];
+
+        function setTriangleMode(enabled) {
+          fm._triangleEnabled = enabled;
+          if (enabled) {
+            chart.options.events = [];
+            chart.options.plugins.tooltip.enabled = false;
+          } else {
+            chart.options.events = defaultEvents;
+            chart.options.plugins.tooltip.enabled = true;
+            octx.clearRect(0, 0, cssW, cssH);
+          }
+          chart.update('none');
+        }
+
+        const checkbox = document.getElementById('<%= chart_id %>_triangle_toggle');
+        if (checkbox) {
+          checkbox.addEventListener('change', function () { setTriangleMode(this.checked); });
+        }
+        // Apply initial triangle mode without triggering a redundant update
+        // (tooltip is already disabled in the chart config; just silence events).
+        chart.options.events = [];
+
+        function scheduleOverlayRedraw() {
+          if (fm._rafId !== null) return;
+          fm._rafId = requestAnimationFrame(function () {
+            fm._rafId = null;
+            if (fm._triangleEnabled) {
+              octx.clearRect(0, 0, cssW, cssH);
+              if (fm.mouseX !== null) drawTriangle(octx, chart, fm);
+            }
+          });
+        }
+
+        function onMouseMove(e) {
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const ca = chart.chartArea;
+          if (!ca) return;
+          fm.mouseX = (x >= ca.left && x <= ca.right && y >= ca.top && y <= ca.bottom) ? x : null;
+          scheduleOverlayRedraw();
+        }
+
+        function onMouseLeave() {
+          fm.mouseX = null;
+          scheduleOverlayRedraw();
+        }
+
+        canvas.addEventListener('mousemove',  onMouseMove);
+        canvas.addEventListener('mouseleave', onMouseLeave);
+        fm._onMouseMove  = onMouseMove;
+        fm._onMouseLeave = onMouseLeave;
+      },
+
+      destroy(chart) {
+        const fm = chart._flowMetrics;
+        if (!fm) return;
+        chart.canvas.removeEventListener('mousemove',  fm._onMouseMove);
+        chart.canvas.removeEventListener('mouseleave', fm._onMouseLeave);
+        if (fm._overlay && fm._overlay.parentNode) fm._overlay.parentNode.removeChild(fm._overlay);
+      },
+
+      afterDraw(chart) {
+        const fm = chart._flowMetrics;
+        drawTrendLines(chart, fm);
+        // Triangle is on the overlay canvas — no drawing needed here.
+      }
+    };
+  })();
+
   new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
     type: 'line',
-    plugins: [cfdHatchPlugin],
+    plugins: [cfdHatchPlugin, cfdFlowMetricsPlugin],
     data: {
       datasets: <%= JSON.generate(data_sets) %>
     },
@@ -96,6 +409,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
       },
       plugins: {
         tooltip: {
+          enabled: false,
           position: 'legendItem',
           callbacks: {
             title: function(contexts) {
