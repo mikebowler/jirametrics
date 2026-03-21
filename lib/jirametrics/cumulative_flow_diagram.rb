@@ -55,6 +55,15 @@ class CumulativeFlowDiagram < ChartBase
         the workflow (a correction). These highlight rework or process irregularities worth
         investigating.
       </div>
+      <div class="p">
+        The chart also overlays two trend lines and an interactive triangle. The <b>arrival rate</b>
+        trend line shows how fast work is entering the system; the <b>departure rate</b> trend line
+        shows how fast it is leaving. Move the mouse over the chart to see a Little's Law triangle
+        at that point in time, labelled with three derived metrics: <b>Work In Progress (WIP)</b> (items started
+        but not finished), <b>approximate average cycle time (CT)</b> (roughly how long an average item takes to complete), and
+        <b>average throughput (TP)</b> (items completed per day). Use the checkbox above the chart to toggle
+        between the triangle and the normal data tooltips.
+      </div>
     HTML
     instance_eval(&block)
   end
