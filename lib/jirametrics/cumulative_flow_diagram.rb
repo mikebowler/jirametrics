@@ -147,9 +147,14 @@ class CumulativeFlowDiagram < ChartBase
         dataset_index: column_count - 1 - w[:column_index],
         start_date: w[:start_date].to_s,
         end_date: w[:end_date].to_s,
-        color: border_colors[w[:column_index]]
+        color: border_colors[w[:column_index]],
+        fill_color: fill_colors[w[:column_index]]
       }
     end
+
+    @triangle_color          ||= parse_theme_color(['#333333', '#ffffff'])
+    @arrival_rate_line_color   ||= 'rgba(255,138,101,0.85)'
+    @departure_rate_line_color ||= 'rgba(128,203,196,0.85)'
 
     wrap_and_render(binding, __FILE__)
   end

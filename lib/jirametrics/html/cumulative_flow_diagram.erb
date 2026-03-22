@@ -19,6 +19,43 @@ if (!Chart.Tooltip.positioners.legendItem) {
   // Uses createDiagonalPattern() defined in index.js.
   const cfdHatchPlugin = {
     id: 'cfdHatch',
+    afterDatasetsDraw: function(chart) {
+      // Redraw each correction-window border line so that the gaps between
+      // dashes show the band fill colour rather than being transparent.
+      // Strategy: draw a solid line in the fill colour first, then the dashed
+      // border line on top. afterDraw (hatching) fires after this, so the
+      // hatch pattern still appears over both lines.
+      const ctx = chart.ctx;
+      const ca  = chart.chartArea;
+      hatchWindows.forEach(function(win) {
+        const meta = chart.getDatasetMeta(win.dataset_index);
+        if (!meta || !meta.data.length) return;
+
+        const startX = chart.scales.x.getPixelForValue(new Date(win.start_date).getTime());
+        const endX   = chart.scales.x.getPixelForValue(new Date(win.end_date).getTime());
+        const lw     = chart.data.datasets[win.dataset_index].borderWidth || 2;
+        const points = meta.data.filter(function(p) { return p.x >= startX - 1 && p.x <= endX + 1; });
+        if (points.length < 2) return;
+
+        function drawSegment(color, dash) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(ca.left, ca.top, ca.width, ca.height);
+          ctx.clip();
+          ctx.strokeStyle = color;
+          ctx.setLineDash(dash);
+          ctx.lineWidth = lw;
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        drawSegment(win.fill_color, []);      // solid fill colour fills the gaps
+        drawSegment(win.color,      [6, 4]);  // dashed border colour on top
+      });
+    },
     afterDraw: function(chart) {
       const ctx = chart.ctx;
       const ca  = chart.chartArea;
@@ -73,9 +110,9 @@ if (!Chart.Tooltip.positioners.legendItem) {
   };
 
   const cfdFlowMetricsPlugin = (function () {
-    const triangleColor  = <%= (@triangle_color  || '#ffffff').to_json %>;
-    const arrivalColor   = <%= (@arrival_rate_line_color   || 'rgba(255,138,101,0.85)').to_json %>;
-    const departureColor = <%= (@departure_rate_line_color || 'rgba(128,203,196,0.85)').to_json %>;
+    const triangleColor  = <%= @triangle_color.to_json %>;
+    const arrivalColor   = <%= @arrival_rate_line_color.to_json %>;
+    const departureColor = <%= @departure_rate_line_color.to_json %>;
     function buildArrays(chart) {
       const ds = chart.data.datasets;
       const n = ds[0].data.length;
@@ -182,8 +219,12 @@ if (!Chart.Tooltip.positioners.legendItem) {
       }
 
       const xA = chart.scales.x.getPixelForValue(dates[j]);
-      const yA = chart.scales.y.getPixelForValue(arrivals[j]);
-      const yB = chart.scales.y.getPixelForValue(departures[j]);
+      // Use Chart.js's own rendered pixel positions so the triangle edges
+      // align exactly with the drawn band edges rather than relying on
+      // getPixelForValue(arrivals/departures[j]), which can differ slightly
+      // from the internal stacked totals Chart.js uses when drawing.
+      const yA = chart.getDatasetMeta(ds.length - 1).data[j].y; // top of full stack
+      const yB = chart.getDatasetMeta(0).data[j].y;             // top of done band
       const xC = j_c >= 0 ? chart.scales.x.getPixelForValue(dates[j_c]) : null;
 
       ctx.save();
@@ -254,8 +295,8 @@ if (!Chart.Tooltip.positioners.legendItem) {
       if (xC !== null) {
         const cycleTime = j_c - j;
         const throughput = (wip / cycleTime).toFixed(2);
-        bgLabel(ctx, 'CT: ' + cycleTime + ' days', (xA + xC) / 2, yA - 10);
-        bgLabel(ctx, 'TP: ' + throughput + '/day', (xA + xC) / 2, (yA + yB) / 2 + 12);
+        bgLabel(ctx, '~CT: ' + cycleTime + ' days', (xA + xC) / 2, yA - 10);
+        bgLabel(ctx, '~TP: ' + throughput + '/day', (xA + xC) / 2, (yA + yB) / 2 + 12);
       }
     }
 
@@ -282,14 +323,18 @@ if (!Chart.Tooltip.positioners.legendItem) {
         // mouse move and redrawn after a short pause (debounce), preventing the
         // browser from being overwhelmed by rapid redraws.
         const dpr     = window.devicePixelRatio || 1;
+        const parent = canvas.parentNode;
+        if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+        // Read canvas.offsetTop/Left after parent is positioned so they are
+        // relative to parent — this accounts for the label/checkbox above the
+        // canvas that would otherwise shift the overlay upward.
         const overlay = document.createElement('canvas');
         overlay.width  = canvas.width;
         overlay.height = canvas.height;
-        overlay.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;' +
+        overlay.style.cssText = 'position:absolute;top:' + canvas.offsetTop + 'px;' +
+          'left:' + canvas.offsetLeft + 'px;pointer-events:none;' +
           'width:'  + (canvas.style.width  || (canvas.width  / dpr) + 'px') + ';' +
           'height:' + (canvas.style.height || (canvas.height / dpr) + 'px') + ';';
-        const parent = canvas.parentNode;
-        if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
         parent.insertBefore(overlay, canvas.nextSibling);
 
         const octx  = overlay.getContext('2d');

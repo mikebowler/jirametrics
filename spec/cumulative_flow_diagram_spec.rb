@@ -123,8 +123,9 @@ describe CumulativeFlowDiagram do
 
       # rubocop:disable RSpec/NestedGroups
       context 'triangle_color' do
-        it 'uses white by default' do
+        it 'uses a dark/light pair by default' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          expect(output).to include('"#333333"')
           expect(output).to include('"#ffffff"')
         end
 
