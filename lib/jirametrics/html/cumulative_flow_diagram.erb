@@ -111,8 +111,8 @@ if (!Chart.Tooltip.positioners.legendItem) {
 
   const cfdFlowMetricsPlugin = (function () {
     const triangleColor  = <%= @triangle_color.to_json %>;
-    const arrivalColor   = <%= @arrival_rate_line_color.to_json %>;
-    const departureColor = <%= @departure_rate_line_color.to_json %>;
+    const arrivalColor   = <%= @arrival_rate_line_color.nil?   ? 'null' : @arrival_rate_line_color.to_json %>;
+    const departureColor = <%= @departure_rate_line_color.nil? ? 'null' : @departure_rate_line_color.to_json %>;
     function buildArrays(chart) {
       const ds = chart.data.datasets;
       const n = ds[0].data.length;
@@ -168,20 +168,26 @@ if (!Chart.Tooltip.positioners.legendItem) {
         ctx.restore();
       }
 
-      drawLine(fm.arrivalReg,   arrivalColor);
-      drawLine(fm.departureReg, departureColor);
+      if (arrivalColor !== null)   drawLine(fm.arrivalReg,   arrivalColor);
+      if (departureColor !== null) drawLine(fm.departureReg, departureColor);
 
       // Edge labels (inside chart area, right-aligned to avoid canvas clipping)
-      ctx.save();
-      ctx.font = '10px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      const labelX = ca.right - 4;
-      ctx.fillStyle = arrivalColor;
-      ctx.fillText('Arrivals',   labelX, trendPixelY(chart, fm.arrivalReg,   n - 1));
-      ctx.fillStyle = departureColor;
-      ctx.fillText('Departures', labelX, trendPixelY(chart, fm.departureReg, n - 1));
-      ctx.restore();
+      if (arrivalColor !== null || departureColor !== null) {
+        ctx.save();
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        const labelX = ca.right - 4;
+        if (arrivalColor !== null) {
+          ctx.fillStyle = arrivalColor;
+          ctx.fillText('Arrivals',   labelX, trendPixelY(chart, fm.arrivalReg,   n - 1));
+        }
+        if (departureColor !== null) {
+          ctx.fillStyle = departureColor;
+          ctx.fillText('Departures', labelX, trendPixelY(chart, fm.departureReg, n - 1));
+        }
+        ctx.restore();
+      }
     }
 
     function bgLabel(ctx, text, cx, cy) {

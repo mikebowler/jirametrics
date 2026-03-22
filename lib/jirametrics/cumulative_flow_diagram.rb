@@ -152,9 +152,13 @@ class CumulativeFlowDiagram < ChartBase
       }
     end
 
-    @triangle_color          ||= parse_theme_color(['#333333', '#ffffff'])
-    @arrival_rate_line_color   ||= 'rgba(255,138,101,0.85)'
-    @departure_rate_line_color ||= 'rgba(128,203,196,0.85)'
+    @triangle_color = parse_theme_color(['#333333', '#ffffff']) unless instance_variable_defined?(:@triangle_color)
+    unless instance_variable_defined?(:@arrival_rate_line_color)
+      @arrival_rate_line_color = 'rgba(255,138,101,0.85)'
+    end
+    unless instance_variable_defined?(:@departure_rate_line_color)
+      @departure_rate_line_color = 'rgba(128,203,196,0.85)'
+    end
 
     wrap_and_render(binding, __FILE__)
   end
