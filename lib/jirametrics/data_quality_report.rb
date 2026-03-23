@@ -434,8 +434,10 @@ class DataQualityReport < ChartBase
   end
 
   def render_issue_not_visible_on_board problems
+    unique_issue_count = problems.map(&:first).uniq.size
     <<-HTML
-      #{label_issues problems.size} were not visible on the board for some period of time. This may impact
+      #{problems.size} #{'time'.then { |w| problems.size == 1 ? w : "#{w}s" }} across #{label_issues unique_issue_count},
+      an item was not visible on the board. This may impact
       timings as the work was likely to have been forgotten if it wasn't visible. An issue can be not visible
       for two reasons: the issue was in a status that is not mapped to any visible column on the board
       (look in "unmapped statuses" on your board), or for scrum boards, the issue was not in an active sprint.
