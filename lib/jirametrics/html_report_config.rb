@@ -78,7 +78,8 @@ class HtmlReportConfig < HtmlGenerator
 
     html create_footer
 
-    create_html output_filename: @file_config.output_filename, settings: settings
+    create_html output_filename: @file_config.output_filename, settings: settings,
+                project_name: @file_config.project_config.name
   end
 
   def file_system

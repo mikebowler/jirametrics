@@ -3,7 +3,7 @@
 class HtmlGenerator
   attr_accessor :file_system, :settings
 
-  def create_html output_filename:, settings:
+  def create_html output_filename:, settings:, project_name: ''
     @settings = settings
     html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
     css = load_css html_directory: html_directory
