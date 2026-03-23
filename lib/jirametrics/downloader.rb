@@ -74,6 +74,7 @@ class Downloader
     download_statuses
     find_board_ids.each do |id|
       board = download_board_configuration board_id: id
+      board.project_config = @download_config.project_config
       download_issues board: board
     end
     download_users

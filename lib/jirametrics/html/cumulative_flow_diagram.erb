@@ -310,6 +310,12 @@ if (!Chart.Tooltip.positioners.legendItem) {
       id: 'cfdFlowMetrics',
 
       afterInit(chart) {
+        // Guard against being applied to non-CFD charts (Chart.js may fire
+        // inline plugin hooks on other charts when plugins share an id with
+        // a cached entry).
+        const ds = chart.data.datasets;
+        if (!ds || !ds[0] || !ds[0].data || !ds[0].data.length) return;
+
         const { arrivals, departures } = buildArrays(chart);
         const dates = chart.data.datasets[0].data.map(d => new Date(d.x).getTime());
         chart._flowMetrics = {
@@ -426,6 +432,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
 
       afterDraw(chart) {
         const fm = chart._flowMetrics;
+        if (!fm) return;
         drawTrendLines(chart, fm);
         // Triangle is on the overlay canvas — no drawing needed here.
       }
