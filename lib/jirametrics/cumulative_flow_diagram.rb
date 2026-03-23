@@ -64,6 +64,11 @@ class CumulativeFlowDiagram < ChartBase
         <b>average throughput (TP)</b> (items completed per day). Use the checkbox above the chart to toggle
         between the triangle and the normal data tooltips.
       </div>
+      <div class="p">
+        CT and TP require a future point C where cumulative completions catch up to current arrivals.
+        When the cursor is near the right edge and that point falls outside the visible date range,
+        CT and TP cannot be calculated and are hidden; only WIP is shown.
+      </div>
     HTML
     instance_eval(&block)
   end

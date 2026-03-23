@@ -271,14 +271,6 @@ if (!Chart.Tooltip.positioners.legendItem) {
         ctx.moveTo(xA, yB);
         ctx.lineTo(xC, yA);
         ctx.stroke();
-      } else {
-        // C outside range: dashed extension to right edge
-        ctx.setLineDash([4, 2]);
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(xA, yA);
-        ctx.lineTo(ca.right, yA);
-        ctx.stroke();
       }
 
       ctx.restore();
