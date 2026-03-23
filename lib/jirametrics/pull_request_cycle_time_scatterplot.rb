@@ -77,5 +77,4 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
     text << "], Files changed: #{to_human_readable pull_request.changed_files}"
     text
   end
-
 end

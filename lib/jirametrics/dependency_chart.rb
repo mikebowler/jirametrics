@@ -57,7 +57,7 @@ class DependencyChart < ChartBase
     end
 
     svg = execute_graphviz(dot_graph.join("\n"))
-    "<h1>#{@header_text}</h1><div>#{@description_text}</div>#{shrink_svg svg}"
+    "<h1 class='foldable'>#{@header_text}</h1><div>#{@description_text}#{shrink_svg svg}</div>"
   end
 
   def link_rules &block
