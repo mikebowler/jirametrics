@@ -598,6 +598,16 @@ class ProjectConfig
     if status_becomes
       status_becomes = [status_becomes] unless status_becomes.is_a? Array
 
+      status_becomes.each do |status_name|
+        next if status_name == :backlog
+
+        found = possible_statuses.find_all_by_name status_name
+        if found.empty?
+          raise "discard_changes_before: Status #{status_name.inspect} not found. " \
+            "Possible statuses are: #{possible_statuses}"
+        end
+      end
+
       block = lambda do |issue|
         trigger_statuses = status_becomes.collect do |status_name|
           if status_name == :backlog

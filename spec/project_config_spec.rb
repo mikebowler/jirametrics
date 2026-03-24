@@ -189,6 +189,26 @@ describe ProjectConfig do
       expect(issue1.changes.collect(&:time)).to eq []
     end
 
+    it 'raises an error when the status name cannot be found' do
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.load_all_boards
+      project_config.issues << issue1
+
+      expect { project_config.discard_changes_before status_becomes: 'No Such Status' }
+        .to raise_error(/discard_changes_before.*No Such Status.*not found/i)
+    end
+
+    it 'raises an error when a status id cannot be found' do
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.load_all_boards
+      project_config.issues << issue1
+
+      expect { project_config.discard_changes_before status_becomes: '99999' }
+        .to raise_error(/discard_changes_before.*"99999".*not found/i)
+    end
+
     it 'expands :backlog to the backlog statuses on the board' do
       board.raw['columnConfig']['columns'] = [
         {

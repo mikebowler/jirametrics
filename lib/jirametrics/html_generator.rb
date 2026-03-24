@@ -5,6 +5,7 @@ class HtmlGenerator
 
   def create_html output_filename:, settings:, project_name: ''
     @settings = settings
+    project_name = project_name.to_s
     html_directory = "#{Pathname.new(File.realpath(__FILE__)).dirname}/html"
     css = load_css html_directory: html_directory
     javascript = file_system.load(File.join(html_directory, 'index.js'))
