@@ -88,7 +88,7 @@ class ThroughputChart < ChartBase
   end
 
   def weekly_throughput_dataset completed_issues:, label:, color:, dashed: false, label_hint: nil
-    periods = @issue_periods&.any? ? calculate_custom_periods : calculate_time_periods
+    periods = @issue_periods&.values&.any? ? calculate_custom_periods : calculate_time_periods
     result = {
       label: label,
       label_hint: label_hint,
@@ -118,7 +118,7 @@ class ThroughputChart < ChartBase
   end
 
   def throughput_dataset periods:, completed_issues:, label_hint: nil
-    custom_mode = @issue_periods&.any?
+    custom_mode = @issue_periods&.values&.any?
     periods.collect do |period|
       closed_issues = completed_issues.filter_map do |issue|
         stop_date = issue.started_stopped_dates.last
