@@ -87,6 +87,23 @@ class Downloader
     @file_system.log text, also_write_to_stderr: both
   end
 
+  def log_start text
+    @file_system.log_start text
+  end
+
+  def start_progress
+    @file_system.start_progress
+  end
+
+  def progress_dot message = nil
+    @file_system.log message if message
+    @file_system.progress_dot
+  end
+
+  def end_progress
+    @file_system.end_progress
+  end
+
   def find_board_ids
     ids = @download_config.project_config.board_configs.collect(&:id)
     raise 'Board ids must be specified' if ids.empty?

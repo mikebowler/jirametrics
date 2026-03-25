@@ -53,6 +53,7 @@ class DownloaderForCloud < Downloader
     next_page_token = nil
     issue_count = 0
 
+    start_progress
     loop do
       relative_url = +''
       relative_url << '/rest/api/3/search/jql'
@@ -75,11 +76,12 @@ class DownloaderForCloud < Downloader
         issue_count += 1
       end
 
-      message = "    Found #{issue_count} issues"
-      log message, both: true
+      progress_dot "    Found #{issue_count} issues"
 
       break unless next_page_token
     end
+    end_progress
+
     hash
   end
 
@@ -88,7 +90,7 @@ class DownloaderForCloud < Downloader
     # that only returns the "recent" changes, not all of them. So now we get the issue
     # without changes and then make a second call for that changes. Then we insert it
     # into the raw issue as if it had been there all along.
-    log "  Downloading #{issue_datas.size} issues", both: true
+    log "  Downloading #{issue_datas.size} issues"
     payload = {
       'fields' => ['*all'],
       'issueIdsOrKeys' => issue_datas.collect(&:key)
@@ -168,13 +170,12 @@ class DownloaderForCloud < Downloader
 
     loop do
       related_issue_keys = Set.new
-      issue_data_hash
-        .values
-        .reject { |data| data.up_to_date }
-        .each_slice(100) do |slice|
-          slice = bulk_fetch_issues(
-            issue_datas: slice, board: board, in_initial_query: true
-          )
+      stale = issue_data_hash.values.reject { |data| data.up_to_date }
+      unless stale.empty?
+        log_start '  Downloading more issues '
+        stale.each_slice(100) do |slice|
+          slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: true)
+          progress_dot
           slice.each do |data|
             @file_system.save_json(
               json: data.issue.raw, filename: data.cache_path
@@ -195,6 +196,8 @@ class DownloaderForCloud < Downloader
             end
           end
         end
+        end_progress
+      end
 
       # Remove all the ones we already downloaded
       related_issue_keys.reject! { |key| issue_data_hash[key] }

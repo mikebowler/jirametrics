@@ -5,7 +5,7 @@ require './spec/spec_helper'
 require 'jirametrics/cfd_data_builder'
 
 describe CfdDataBuilder do
-  let(:board) { sample_board }
+  let(:board) { sample_board.tap { |b| b.cycletime = default_cycletime_config } }
   let(:date_range) { Date.parse('2021-07-01')..Date.parse('2021-07-10') }
 
   def build(**overrides)
@@ -25,11 +25,11 @@ describe CfdDataBuilder do
     end
 
     it 'counts cumulative totals per column across all dates' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
 
-      issue2 = empty_issue(created: '2021-07-01', key: 'SP-2')
+      issue2 = empty_issue(board: board, created: '2021-07-01', key: 'SP-2')
       add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2021-07-03T10:00:00')
 
       result = build(issues: [issue1, issue2])
@@ -52,7 +52,7 @@ describe CfdDataBuilder do
 
   context 'correction_windows' do
     it 'records a window when an issue moves backwards and recovers' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       # Reaches Review (col 2), drops to In Progress (col 1), recovers to Review (col 2)
       add_mock_change(issue: issue1, field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
@@ -71,7 +71,7 @@ describe CfdDataBuilder do
     end
 
     it 'sets end_date to date_range.end when issue never recovers' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       add_mock_change(issue: issue1, field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
@@ -83,7 +83,7 @@ describe CfdDataBuilder do
     end
 
     it 'records one correction window for multiple consecutive backwards moves' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       add_mock_change(issue: issue1, field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
@@ -98,7 +98,7 @@ describe CfdDataBuilder do
     end
 
     it 'returns empty correction_windows when there are no backwards moves' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
       add_mock_change(issue: issue1, field: 'status', value: 'Done',
@@ -112,7 +112,7 @@ describe CfdDataBuilder do
 
   context 'edge cases' do
     it 'skips status changes not mapped to any board column' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       # Status ID 10000 is Backlog — not in visible_columns for this kanban board
       add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
         value_id: 10_000, time: '2021-07-02T10:00:00')
@@ -123,7 +123,7 @@ describe CfdDataBuilder do
     end
 
     it 'counts issues with changes before date_range in the initial snapshot' do
-      issue1 = empty_issue(created: '2021-06-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-06-01', key: 'SP-1')
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-06-15T10:00:00')
 
       result = build(issues: [issue1])
@@ -133,7 +133,7 @@ describe CfdDataBuilder do
     end
 
     it 'contributes 0 to all columns for an issue with no status changes' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
 
       result = build(issues: [issue1])
 
@@ -141,7 +141,7 @@ describe CfdDataBuilder do
     end
 
     it 'counts all columns when an issue skips directly to the rightmost column' do
-      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       # Jumps straight to Done (col 3), skipping Ready, In Progress, Review
       add_mock_change(issue: issue1, field: 'status', value: 'Done',
         value_id: 10_002, time: '2021-07-02T10:00:00')
@@ -149,6 +149,65 @@ describe CfdDataBuilder do
       result = build(issues: [issue1])
 
       expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 1, 1, 1]
+    end
+  end
+
+  context 'start time filtering' do
+    it 'excludes an issue that has never started' do
+      # Cycletime config that starts at a specific status the issue never reaches
+      never_started_config = CycleTimeConfig.new(
+        possible_statuses: board.possible_statuses,
+        label: 'test',
+        block: lambda { |_|
+          start_at first_time_in_status('In Progress')
+          stop_at last_resolution
+        },
+        today: Date.parse('2021-07-10'),
+        settings: load_settings
+      )
+      board.cycletime = never_started_config
+
+      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1', board: board)
+      # Only reaches Ready — never reaches In Progress, so start_time is nil
+      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+        value_id: 10_001, time: '2021-07-02T10:00:00')
+
+      result = build(issues: [issue1])
+
+      expect(result[:daily_counts][Date.parse('2021-07-05')]).to eq [0, 0, 0, 0]
+    end
+
+    it 'ignores status changes that occurred before the issue started' do
+      # Cycletime config that starts at In Progress
+      in_progress_config = CycleTimeConfig.new(
+        possible_statuses: board.possible_statuses,
+        label: 'test',
+        block: lambda { |_|
+          start_at first_time_in_status('In Progress')
+          stop_at last_resolution
+        },
+        today: Date.parse('2021-07-10'),
+        settings: load_settings
+      )
+      board.cycletime = in_progress_config
+
+      issue1 = empty_issue(created: '2021-07-01', key: 'SP-1', board: board)
+      # Enters Ready before starting, then In Progress (start), then Review
+      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+        value_id: 10_001, time: '2021-07-02T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+        value_id: 3, time: '2021-07-04T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-06T10:00:00')
+
+      result = build(issues: [issue1])
+
+      # July 2: issue entered Ready but hadn't started — should not appear
+      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [0, 0, 0, 0]
+      # July 4: issue started (entered In Progress) — appears from col 0 through col 1
+      expect(result[:daily_counts][Date.parse('2021-07-04')]).to eq [1, 1, 0, 0]
+      # July 6: issue entered Review — appears through col 2
+      expect(result[:daily_counts][Date.parse('2021-07-06')]).to eq [1, 1, 1, 0]
     end
   end
 
@@ -162,7 +221,7 @@ describe CfdDataBuilder do
 
     it 'does not track issues that reach an excluded column' do
       two_columns = board.visible_columns.first(2) # Ready (10001), In Progress (3)
-      issue = empty_issue(created: '2021-07-01', key: 'SP-1')
+      issue = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       # Issue goes straight to Review (10011), which is not in the two-column set
       add_mock_change(issue: issue, field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')

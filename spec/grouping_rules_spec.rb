@@ -17,6 +17,18 @@ describe GroupingRules do
     end
   end
 
+  context 'last_day_of_period=' do
+    it 'accepts a Date directly' do
+      rules.last_day_of_period = Date.parse('2026-01-31')
+      expect(rules.last_day_of_period).to eq Date.parse('2026-01-31')
+    end
+
+    it 'coerces a String to Date' do
+      rules.last_day_of_period = '2026-01-31'
+      expect(rules.last_day_of_period).to eq Date.parse('2026-01-31')
+    end
+  end
+
   context 'color= with a [light, dark] array' do
     it 'sets color to a RawJavascript' do
       rules.color = ['#4bc14b', '#2a7a2a']

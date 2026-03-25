@@ -4,7 +4,7 @@ require './spec/spec_helper'
 require 'jirametrics/cumulative_flow_diagram'
 
 describe CumulativeFlowDiagram do
-  let(:board) { load_complete_sample_board }
+  let(:board) { load_complete_sample_board.tap { |b| b.cycletime = default_cycletime_config } }
   let(:issues) { load_complete_sample_issues board: board }
 
   let(:chart) do

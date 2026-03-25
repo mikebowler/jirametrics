@@ -108,6 +108,57 @@ describe ThroughputChart do
       )
       expect(dataset.first[:title][1]).to eq 'SP-1 : Create new draft event (priority: high)'
     end
+
+    context 'custom mode via @issue_periods' do
+      it 'groups issues by last_day_of_period instead of stop date range' do
+        issue1.changes.clear
+        add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+        issue2.changes.clear
+        add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-11-05T01:00:00')
+
+        subject = described_class.new empty_config_block
+        subject.issues = [issue1, issue2]
+        board.cycletime = default_cycletime_config
+        jan31 = Date.parse('2026-01-31')
+        feb28 = Date.parse('2026-02-28')
+        subject.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => feb28 })
+        subject.instance_variable_set(:@issue_hints, {})
+
+        dataset = subject.throughput_dataset(
+          periods: [Date.parse('2026-01-01')..jan31, Date.parse('2026-02-01')..feb28],
+          completed_issues: [issue1, issue2]
+        )
+        expect(dataset[0][:y]).to eq 1
+        expect(dataset[0][:x]).to eq '2026-01-31T23:59:59'
+        expect(dataset[1][:y]).to eq 1
+        expect(dataset[1][:x]).to eq '2026-02-28T23:59:59'
+      end
+    end
+  end
+
+  context 'calculate_custom_periods' do
+    it 'builds ranges from unique last_day_of_period values' do
+      chart = described_class.new empty_config_block
+      chart.date_range = Date.parse('2026-01-01')..Date.parse('2026-03-31')
+      jan31 = Date.parse('2026-01-31')
+      feb28 = Date.parse('2026-02-28')
+      chart.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => feb28 })
+
+      expect(chart.calculate_custom_periods).to eq [
+        Date.parse('2026-01-01')..jan31,
+        Date.parse('2026-02-01')..feb28
+      ]
+    end
+
+    it 'deduplicates and sorts periods' do
+      chart = described_class.new empty_config_block
+      chart.date_range = Date.parse('2026-01-01')..Date.parse('2026-03-31')
+      jan31 = Date.parse('2026-01-31')
+      chart.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => jan31 })
+
+      expect(chart.calculate_custom_periods).to eq [Date.parse('2026-01-01')..jan31]
+    end
   end
 
   context 'run' do

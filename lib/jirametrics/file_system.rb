@@ -68,6 +68,28 @@ class FileSystem
     $stderr.puts message # rubocop:disable Style/StderrPuts
   end
 
+  def log_start message
+    logfile.puts message
+    return if logfile == $stdout
+
+    $stderr.print message
+    $stderr.flush
+  end
+
+  def start_progress
+    $stderr.print '  '
+    $stderr.flush
+  end
+
+  def progress_dot
+    $stderr.print '.'
+    $stderr.flush
+  end
+
+  def end_progress
+    $stderr.puts '' # rubocop:disable Style/StderrPuts
+  end
+
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
   # cases where this simple compression will drop the filesize by half.
   def compress node
