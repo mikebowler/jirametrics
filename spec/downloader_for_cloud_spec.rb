@@ -76,52 +76,6 @@ describe DownloaderForCloud do
   end
 
   context 'load_metadata' do
-    it 'forces a full download when rolling_date_count has changed' do
-      file_system.when_loading(
-        file: 'spec/testdata/sample_meta.json',
-        json: {
-          'version' => Downloader::CURRENT_METADATA_VERSION,
-          'rolling_date_count' => 90,
-          'date_end' => '2021-08-01'
-        }
-      )
-      download_config.rolling_date_count 60
-
-      downloader.load_metadata
-
-      expect(downloader.metadata['date_end']).to be_nil
-      expect(file_system.log_messages).to include 'rolling_date_count has changed. Forcing a full download.'
-    end
-
-    it 'does not force a full download when rolling_date_count is unchanged' do
-      file_system.when_loading(
-        file: 'spec/testdata/sample_meta.json',
-        json: {
-          'version' => Downloader::CURRENT_METADATA_VERSION,
-          'rolling_date_count' => 90,
-          'date_end' => '2021-08-01'
-        }
-      )
-      download_config.rolling_date_count 90
-
-      downloader.load_metadata
-
-      expect(downloader.metadata['date_end']).to eq(Date.parse('2021-08-01'))
-    end
-
-    it 'does not force a full download when neither old nor new config has rolling_date_count' do
-      file_system.when_loading(
-        file: 'spec/testdata/sample_meta.json',
-        json: {
-          'version' => Downloader::CURRENT_METADATA_VERSION,
-          'date_end' => '2021-08-01'
-        }
-      )
-
-      downloader.load_metadata
-
-      expect(downloader.metadata['date_end']).to eq(Date.parse('2021-08-01'))
-    end
   end
 
   context 'extract_project_keys_from_downloaded_issues' do

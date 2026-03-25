@@ -250,13 +250,6 @@ class Downloader
         @metadata[key] = value
       end
 
-      # If rolling_date_count has changed, we may be missing data outside the previous range,
-      # so force a full re-download.
-      if @metadata['rolling_date_count'] != @download_config.rolling_date_count
-        log '  rolling_date_count has changed. Forcing a full download.', both: true
-        @cached_data_format_is_current = false
-        @metadata = {}
-      end
     end
 
     # Even if this is the old format, we want to obey this one tag
