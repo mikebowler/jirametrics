@@ -15,7 +15,7 @@ class AgingWorkBarChart < ChartBase
         newest at the bottom.
       </p>
       <p>
-        There are <%= current_board.scrum? ? 'four' : 'three' %> bars for each issue, and hovering over any of the bars will provide more details.
+        There are <%= (current_board.scrum? || aggregated_project?) ? 'four' : 'three' %> bars for each issue, and hovering over any of the bars will provide more details.
         <ol>
           <li>Status: The status the issue was in at any time. The colour indicates the
           status category, which will be one of #{color_block '--status-category-todo-color'} To Do,
@@ -25,7 +25,7 @@ class AgingWorkBarChart < ChartBase
           or #{color_block '--stalled-color'} stalled.</li>
           <li>Priority: This shows the priority over time. If one of these priorities is considered expedited
           then it will be drawn with diagonal lines.</li>
-          <% if current_board.scrum? %>
+          <% if current_board.scrum? || aggregated_project? %>
             <li>Sprints: The sprints that the issue was in.</li>
           <% end %>
         </ol>
@@ -84,7 +84,7 @@ class AgingWorkBarChart < ChartBase
       ['blocked', collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue_start_time)],
       ['priority', collect_priority_ranges(issue: issue)]
     ]
-    bar_data << ['sprints', collect_sprint_ranges(issue: issue)] if current_board.scrum?
+    bar_data << ['sprints', collect_sprint_ranges(issue: issue)] if current_board.scrum? || aggregated_project?
 
     bar_data.each { |entry| clip_ranges_to_start_time(ranges: entry.last, issue_start_time: issue_start_time) }
 
@@ -113,7 +113,7 @@ class AgingWorkBarChart < ChartBase
   def grow_chart_height_if_too_many_issues aging_issue_count:
     px_per_bar = 10
     bars_per_issue = 3
-    bars_per_issue += 1 if current_board.scrum?
+    bars_per_issue += 1 if current_board.scrum? || aggregated_project?
 
     preferred_height = aging_issue_count * px_per_bar * bars_per_issue
     @canvas_height = preferred_height if @canvas_height.nil? || @canvas_height < preferred_height
