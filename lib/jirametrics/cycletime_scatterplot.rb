@@ -35,6 +35,10 @@ class CycletimeScatterplot < TimeBasedScatterplot
     end
   end
 
+  def minimum_y_value
+    1 # Values under 1 day are data quality problems; they're flagged in the quality report instead
+  end
+
   def all_items
     completed_issues_in_range include_unstarted: false
   end

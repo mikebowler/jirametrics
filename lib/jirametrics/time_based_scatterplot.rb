@@ -79,9 +79,14 @@ class TimeBasedScatterplot < ChartBase
     }
   end
 
+  def minimum_y_value
+    nil
+  end
+
   def data_for_item item, rules: nil
     y = y_value(item)
-    return nil if y < 1 # These will get called out on the quality report
+    min = minimum_y_value
+    return nil if min && y < min
 
     @highest_y_value = y if @highest_y_value < y
 
@@ -93,7 +98,9 @@ class TimeBasedScatterplot < ChartBase
   end
 
   def calculate_percent_line items
+    min = minimum_y_value
     times = items.collect { |item| y_value(item) }
+    times.reject! { |y| min && y < min }
     index = times.size * 85 / 100
     times.sort[index]
   end

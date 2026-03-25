@@ -2,7 +2,11 @@
 
 class GroupingRules < Rules
   attr_accessor :label, :issue_hint, :label_hint
-  attr_reader :color
+  attr_reader :color, :last_day_of_period
+
+  def last_day_of_period= value
+    @last_day_of_period = value.is_a?(String) ? Date.parse(value) : value
+  end
 
   def eql? other
     other.label == @label && other.color == @color

@@ -79,12 +79,21 @@ class ThroughputChart < ChartBase
     end
   end
 
+  def calculate_custom_periods
+    last_days = @issue_periods.values.compact.uniq.sort
+    last_days.each_with_index.map do |last_day, i|
+      first_day = i.zero? ? @date_range.begin : last_days[i - 1] + 1
+      first_day..last_day
+    end
+  end
+
   def weekly_throughput_dataset completed_issues:, label:, color:, dashed: false, label_hint: nil
+    periods = @issue_periods&.any? ? calculate_custom_periods : calculate_time_periods
     result = {
       label: label,
       label_hint: label_hint,
       data: throughput_dataset(
-        periods: calculate_time_periods, completed_issues: completed_issues, label_hint: label_hint
+        periods: periods, completed_issues: completed_issues, label_hint: label_hint
       ),
       fill: false,
       showLine: true,
@@ -109,10 +118,17 @@ class ThroughputChart < ChartBase
   end
 
   def throughput_dataset periods:, completed_issues:, label_hint: nil
+    custom_mode = @issue_periods&.any?
     periods.collect do |period|
       closed_issues = completed_issues.filter_map do |issue|
         stop_date = issue.started_stopped_dates.last
-        [stop_date, issue] if stop_date && period.include?(stop_date)
+        next unless stop_date
+
+        if custom_mode
+          [stop_date, issue] if @issue_periods[issue] == period.end
+        elsif period.include?(stop_date)
+          [stop_date, issue]
+        end
       end
 
       date_label = "on #{period.end}"

@@ -17,6 +17,7 @@ module GroupableIssueChart
     result = {}
     ignored_issues = []
     @issue_hints = {}
+    @issue_periods = {}
     completed_issues.each do |issue|
       rules = GroupingRules.new
       @group_by_block.call(issue, rules)
@@ -26,6 +27,7 @@ module GroupableIssueChart
       end
 
       @issue_hints[issue] = rules.issue_hint
+      @issue_periods[issue] = rules.last_day_of_period
       (result[rules] ||= []) << issue
     end
 

@@ -31,12 +31,17 @@ class CfdDataBuilder
 
   # Returns { hwm_timeline: [[date, hwm_value], ...], correction_windows: [...] }
   def process_issue issue, column_map
+    start_time = issue.started_stopped_times.first
+    return { hwm_timeline: [], correction_windows: [] } if start_time.nil?
+
     high_water_mark = nil
     correction_open_since = nil
     correction_windows = []
     hwm_timeline = [] # sorted chronologically by date
 
     issue.status_changes.each do |change|
+      next if change.time < start_time
+
       col_index = column_map[change.value_id]
       next if col_index.nil?
 
