@@ -150,6 +150,17 @@ class ProjectConfig
     @file_prefix
   end
 
+  def validate_discard_status status_name
+    return if status_name == :backlog
+    return if possible_statuses.empty? # not yet downloaded; skip validation
+
+    found = possible_statuses.find_all_by_name status_name
+    return unless found.empty?
+
+    raise "discard_changes_before: Status #{status_name.inspect} not found. " \
+      "Possible statuses are: #{possible_statuses}"
+  end
+
   def raise_if_prefix_already_used prefix
     @exporter.project_configs.each do |project|
       next unless project.get_file_prefix(raise_if_not_set: false) == prefix && project.target_path == target_path
@@ -598,15 +609,7 @@ class ProjectConfig
     if status_becomes
       status_becomes = [status_becomes] unless status_becomes.is_a? Array
 
-      status_becomes.each do |status_name|
-        next if status_name == :backlog
-
-        found = possible_statuses.find_all_by_name status_name
-        if found.empty?
-          raise "discard_changes_before: Status #{status_name.inspect} not found. " \
-            "Possible statuses are: #{possible_statuses}"
-        end
-      end
+      status_becomes.each { |status_name| validate_discard_status status_name }
 
       block = lambda do |issue|
         trigger_statuses = status_becomes.collect do |status_name|
