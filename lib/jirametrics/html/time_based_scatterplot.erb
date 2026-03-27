@@ -28,15 +28,20 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         max: "<%= (date_range.end + 1).to_s %>"
       },
       y: {
+        min: 0,
+        max: <%= (@highest_y_value * 1.1).ceil %>,
         scaleLabel: {
-          display: true,
-          min: 0,
-          max: <%= @highest_y_value %>
+          display: true
         },
         <%= render_axis_title :y %>
         grid: {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
+        ticks: {
+          callback: function(value, index, ticks) {
+            return index === ticks.length - 1 ? null : value;
+          }
+        }
       }
     },
     plugins: {
