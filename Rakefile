@@ -47,3 +47,14 @@ desc 'Run JavaScript tests'
 task :test_js do
   sh 'npm test'
 end
+
+desc 'Run mutation tests (pass CLASS=ClassName to test a single class)'
+task :mutant do
+  subject = ENV['CLASS'] || '.mutant.yml subjects'
+  puts "Running mutation tests against: #{subject}"
+  if ENV['CLASS']
+    sh "bundle exec mutant run --integration rspec -- '#{ENV['CLASS']}'"
+  else
+    sh 'bundle exec mutant run'
+  end
+end

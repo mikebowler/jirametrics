@@ -1,0 +1,15 @@
+---
+usage: opensource
+integration: rspec
+requires:
+  - mutant_helper
+includes:
+  - lib
+  - spec
+matcher:
+  subjects:
+    - ChartBase
+    - CfdDataBuilder
+    - CycleTimeConfig
+    - GroupingRules
+    - ThroughputChart
