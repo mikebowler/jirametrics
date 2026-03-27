@@ -377,7 +377,7 @@ class ChartBase
   end
 
   def seam_start type = 'chart'
-    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->"
+    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->\n"
   end
 
   def seam_end type = 'chart'
