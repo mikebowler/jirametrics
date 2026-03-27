@@ -49,6 +49,11 @@ describe GithubGateway do
       expect(gateway.extract_issue_keys(pr)).to be_empty
     end
 
+    it 'extracts a key when the issue number is followed by an underscore' do
+      pr = { 'headRefName' => 'fix/SP-112_fix-validation', 'title' => '', 'body' => nil }
+      expect(gateway.extract_issue_keys(pr)).to eq ['SP-112']
+    end
+
     it 'returns empty when no project keys are configured' do
       gateway = described_class.new(repo: 'owner/repo', project_keys: [], file_system: file_system)
       pr = { 'headRefName' => 'SP-112-fix', 'title' => '', 'body' => nil }

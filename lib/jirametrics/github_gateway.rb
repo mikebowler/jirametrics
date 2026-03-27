@@ -87,7 +87,7 @@ class GithubGateway
     return nil if @project_keys.empty?
 
     keys_pattern = @project_keys.map { |k| Regexp.escape(k) }.join('|')
-    Regexp.new("\\b(?:#{keys_pattern})-\\d+\\b")
+    Regexp.new("\\b(?:#{keys_pattern})-\\d+(?![A-Za-z0-9])")
   end
 
   def run_command args
