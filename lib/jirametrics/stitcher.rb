@@ -60,6 +60,11 @@ class Stitcher < HtmlGenerator
         if matches[:seam] == 'start'
           content = +''
         else
+          if content.nil? || content.strip.empty?
+            file_system.warning "Seam found with no content in #{filename.inspect}: " \
+              "id=#{matches[:id].strip.inspect}, class=#{matches[:clazz].strip.inspect}, " \
+              "title=#{matches[:title].strip.inspect}"
+          end
           @all_stitches << Stitcher::StitchContent.new(
             file: filename, title: matches[:title], type: matches[:type], content: content
           )
