@@ -69,6 +69,9 @@ class CumulativeFlowDiagram < ChartBase
         When the cursor is near the right edge and that point falls outside the visible date range,
         CT and TP cannot be calculated and are hidden; only WIP is shown.
       </div>
+      <div class="p">
+        See also: This article on [how to read a CFD](https://blog.mikebowler.ca/2026/03/27/cumulative-flow-diagram/).
+      </div>      
     HTML
     instance_eval(&block)
   end
