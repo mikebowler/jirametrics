@@ -86,6 +86,23 @@ class MockFileSystem < FileSystem
     @log_messages << (more.nil? ? message : [message, more])
   end
 
+  def log_start message
+    @log_messages << message.strip
+  end
+
+  def start_progress
+    @progress_dot_count = 0
+  end
+
+  def progress_dot
+    @progress_dot_count = (@progress_dot_count || 0) + 1
+  end
+
+  def end_progress
+    @log_messages << "[Progress] #{@progress_dot_count} dots" if @progress_dot_count
+    @progress_dot_count = nil
+  end
+
   def saved_json_expanded
     saved_json.transform_values do |value|
       JSON.parse(value)

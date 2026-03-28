@@ -71,7 +71,7 @@ describe DownloaderForCloud do
     it 'skips the download when no-download specified' do
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
-      expect(file_system.log_messages).to include 'Skipping download. Found no-download in meta file'
+      expect(file_system.log_messages).to eq(['Skipping download. Found no-download in meta file'])
     end
   end
 
@@ -118,8 +118,8 @@ describe DownloaderForCloud do
       downloader.download_github_prs
 
       expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
-      expect(file_system.log_messages).to include(
-        'No project keys found in downloaded issues, skipping GitHub PR download'
+      expect(file_system.log_messages).to eq(
+        ['No project keys found in downloaded issues, skipping GitHub PR download']
       )
     end
 
@@ -604,7 +604,9 @@ describe DownloaderForCloud do
         'Downloading primary issues for board 2 from Jira Cloud',
         'Creating path spec/testdata/sample_issues/',
         '[Debug] mkdir spec/testdata/sample_issues/',
-        '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json'
+        'Downloading more issues',
+        '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json',
+        '[Progress] 1 dots'
       ])
       expect(file_system.saved_json).to eq({
         'foo.json' => JSON.generate(issue.raw)
