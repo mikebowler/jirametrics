@@ -19,8 +19,8 @@ class PullRequestCycleTimeHistogram < TimeBasedHistogram
     HTML
 
     init_configuration_block(block) do
-      grouping_rules do |pull_request, _rule|
-        rules.label = pull_request.repo
+      grouping_rules do |pull_request, rule|
+        rule.label = pull_request.repo
       end
     end
   end
