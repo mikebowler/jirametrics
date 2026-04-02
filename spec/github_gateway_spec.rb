@@ -41,11 +41,13 @@ describe GithubGateway do
 
     it 'ignores keys for unknown projects' do
       pr = { 'headRefName' => 'UNKNOWN-99-fix', 'title' => '', 'body' => nil }
+      allow(gateway).to receive(:commit_messages_for).and_return([])
       expect(gateway.extract_issue_keys(pr)).to be_empty
     end
 
     it 'does not match a project key embedded in a longer word' do
       pr = { 'headRefName' => 'NOTSP-112-fix', 'title' => '', 'body' => nil }
+      allow(gateway).to receive(:commit_messages_for).and_return([])
       expect(gateway.extract_issue_keys(pr)).to be_empty
     end
 
@@ -63,6 +65,39 @@ describe GithubGateway do
     it 'handles nil body gracefully' do
       pr = { 'headRefName' => 'SP-112-fix', 'title' => 'Title', 'body' => nil }
       expect { gateway.extract_issue_keys(pr) }.not_to raise_error
+    end
+
+    context 'commit message fallback' do
+      let(:pr_no_keys) { { 'number' => 99, 'headRefName' => 'fix-stuff', 'title' => 'Stuff', 'body' => nil } }
+
+      it 'finds a key in a commit message headline when not in branch, title, or body' do
+        allow(gateway).to receive(:commit_messages_for).with(99).and_return(['SP-112 fix stuff', ''])
+        expect(gateway.extract_issue_keys(pr_no_keys)).to eq ['SP-112']
+      end
+
+      it 'finds a key buried in a commit message body' do
+        allow(gateway).to receive(:commit_messages_for).with(99).and_return(
+          ['refactor stuff', "This addresses SP-112\nSome other text"]
+        )
+        expect(gateway.extract_issue_keys(pr_no_keys)).to eq ['SP-112']
+      end
+
+      it 'does not call commit_messages_for when keys are already found' do
+        pr = { 'number' => 99, 'headRefName' => 'SP-112-fix', 'title' => '', 'body' => nil }
+        allow(gateway).to receive(:commit_messages_for)
+        gateway.extract_issue_keys(pr)
+        expect(gateway).not_to have_received(:commit_messages_for)
+      end
+
+      it 'returns empty when commit messages also contain no keys' do
+        allow(gateway).to receive(:commit_messages_for).with(99).and_return(['unrelated commit', 'another one'])
+        expect(gateway.extract_issue_keys(pr_no_keys)).to be_empty
+      end
+
+      it 'deduplicates keys found across multiple commit messages' do
+        allow(gateway).to receive(:commit_messages_for).with(99).and_return(['SP-112 first', 'SP-112 second'])
+        expect(gateway.extract_issue_keys(pr_no_keys)).to eq ['SP-112']
+      end
     end
   end
 
@@ -137,6 +172,7 @@ describe GithubGateway do
     it 'returns nil when no issue keys can be found' do
       raw_pr['headRefName'] = 'unrelated-branch'
       raw_pr['title'] = 'Unrelated change'
+      allow(gateway).to receive(:commit_messages_for).and_return([])
       expect(gateway.build_pr_data(raw_pr)).to be_nil
     end
 
@@ -172,7 +208,7 @@ describe GithubGateway do
     end
 
     it 'returns only PRs that reference known project keys' do
-      allow(gateway).to receive(:run_command).and_return(raw_prs)
+      allow(gateway).to receive_messages(run_command: raw_prs, commit_messages_for: [])
       results = gateway.fetch_pull_requests
       expect(results.size).to eq 1
       expect(results.first.number).to eq 42

@@ -64,9 +64,10 @@ class GithubGateway
       raw_pr['body']
     ]
 
-    sources.compact
-           .flat_map { |s| s.scan(@issue_key_pattern) }
-           .uniq
+    keys = sources.compact.flat_map { |s| s.scan(@issue_key_pattern) }.uniq
+    return keys unless keys.empty?
+
+    commit_messages_for(raw_pr['number']).flat_map { |msg| msg.scan(@issue_key_pattern) }.uniq
   end
 
   def extract_reviews raw_reviews
@@ -82,6 +83,14 @@ class GithubGateway
   end
 
   private
+
+  def commit_messages_for pr_number
+    args = ['pr', 'view', pr_number.to_s, '--json', 'commits', '--repo', @repo]
+    result = run_command(args)
+    (result['commits'] || []).flat_map do |commit|
+      [commit['messageHeadline'], commit['messageBody']].compact
+    end
+  end
 
   def build_issue_key_pattern
     return nil if @project_keys.empty?
