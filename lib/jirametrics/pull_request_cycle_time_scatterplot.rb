@@ -18,8 +18,8 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
     HTML
 
     init_configuration_block(block) do
-      grouping_rules do |pull_request, _rule|
-        rules.label = pull_request.repo
+      grouping_rules do |pull_request, rule|
+        rule.label = pull_request.repo
       end
     end
   end
@@ -48,8 +48,15 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
   end
 
   def y_value pull_request
-    divisor = { minutes: 60, hours: 3600, days: 86_400 }[@cycletime_unit]
-    ((pull_request.closed_at - pull_request.opened_at) / divisor).round
+    if @cycletime_unit == :days
+      tz = timezone_offset || '+00:00'
+      opened = pull_request.opened_at.getlocal(tz).to_date
+      closed = pull_request.closed_at.getlocal(tz).to_date
+      (closed - opened).to_i + 1
+    else
+      divisor = { minutes: 60, hours: 3600 }[@cycletime_unit]
+      ((pull_request.closed_at - pull_request.opened_at) / divisor).round
+    end
   end
 
   def label_cycletime value
@@ -62,7 +69,8 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
 
   def title_value pull_request, rules: nil
     age_label = label_cycletime y_value(pull_request)
-    "#{pull_request.title} | #{rules.label} | Age:#{age_label}#{lines_changed_text(pull_request)}"
+    keys = pull_request.issue_keys.join(', ')
+    "#{keys} | #{pull_request.title} | #{rules.label} | Age:#{age_label}#{lines_changed_text(pull_request)}"
   end
 
   def lines_changed_text pull_request

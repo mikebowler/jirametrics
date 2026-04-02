@@ -9,6 +9,7 @@ describe PullRequestCycleTimeScatterplot do
     PullRequest.new(raw: {
       'title' => 'Fix the bug',
       'repo' => 'my-repo',
+      'issue_keys' => ['SP-42'],
       'opened_at' => '2024-01-01T00:00:00Z',
       'closed_at' => '2024-01-03T12:00:00Z' # 2.5 days = 60 hours = 3600 minutes
     })
@@ -53,8 +54,18 @@ describe PullRequestCycleTimeScatterplot do
   end
 
   context 'y_value' do
+    before { chart.timezone_offset = '+00:00' }
+
     it 'returns days by default' do
       expect(chart.y_value(pull_request)).to eq 3
+    end
+
+    it 'counts same-day open and close as 1 day' do
+      pr = PullRequest.new(raw: {
+        'opened_at' => '2024-01-01T09:00:00Z',
+        'closed_at' => '2024-01-01T09:00:09Z'
+      })
+      expect(chart.y_value(pr)).to eq 1
     end
 
     it 'returns hours when unit is :hours' do
@@ -95,17 +106,17 @@ describe PullRequestCycleTimeScatterplot do
 
   context 'title_value' do
     it 'uses days by default' do
-      expect(chart.title_value(pull_request, rules: rules)).to eq 'Fix the bug | my-repo | Age:3 days'
+      expect(chart.title_value(pull_request, rules: rules)).to eq 'SP-42 | Fix the bug | my-repo | Age:3 days'
     end
 
     it 'uses hours when unit is :hours' do
       chart.cycletime_unit :hours
-      expect(chart.title_value(pull_request, rules: rules)).to eq 'Fix the bug | my-repo | Age:60 hours'
+      expect(chart.title_value(pull_request, rules: rules)).to eq 'SP-42 | Fix the bug | my-repo | Age:60 hours'
     end
 
     it 'uses minutes when unit is :minutes' do
       chart.cycletime_unit :minutes
-      expect(chart.title_value(pull_request, rules: rules)).to eq 'Fix the bug | my-repo | Age:3600 minutes'
+      expect(chart.title_value(pull_request, rules: rules)).to eq 'SP-42 | Fix the bug | my-repo | Age:3600 minutes'
     end
   end
 end
