@@ -35,7 +35,7 @@ class Exporter
       download do
         self.rolling_date_count(rolling_date_count) if rolling_date_count
         self.no_earlier_than(no_earlier_than) if no_earlier_than
-        github_repo github_repos if github_repos
+        github_repo *github_repos if github_repos
       end
 
       issues.reject! do |issue|
