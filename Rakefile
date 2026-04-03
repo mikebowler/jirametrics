@@ -2,6 +2,8 @@
 
 require 'rspec/core/rake_task'
 
+Dir.glob('tasks/*.rake').each { |f| load f }
+
 task default: %i[test_js spec]
 task test: %i[test_js spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
 
