@@ -127,7 +127,7 @@ class GemDeployer
   end
 
   def prompt_otp
-    print "\nEnter OTP code: "
+    print "\nEnter OTP code for rubygems.org: "
     $stdin.gets.strip
   end
 
