@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name        = 'jirametrics'
-  spec.version     = '2.26.2pre1'
+  spec.version     = '2.27'
   spec.summary     = 'Extract Jira metrics'
   spec.description = 'Extract metrics from Jira and export to either a report or to CSV files'
   spec.authors     = ['Mike Bowler']
