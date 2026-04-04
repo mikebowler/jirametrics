@@ -65,17 +65,17 @@ class JiraMetrics < Thor
     Exporter.instance.each_project_config(name_filter: options[:name] || '*') do |project|
       project.evaluate_next_level
       project.run load_only: true
-      projects[project.name || 'default'] = { issues: project.issues, today: project.time_range.end.to_date }
+      projects[project.name || 'default'] = {
+        issues: project.issues,
+        today: project.time_range.end.to_date,
+        end_time: project.time_range.end
+      }
     rescue StandardError => e
       next if e.message.start_with? 'This is an aggregated project'
       next if e.message.start_with? 'No data found'
 
       raise
     end
-
-    # Use the latest end date across all projects, matching how aggregated reports compute today
-    global_today = projects.values.map { |p| p[:today] }.max
-    projects.each_value { |p| p[:today] = global_today }
 
     McpServer.new(projects: projects, timezone_offset: Exporter.instance.timezone_offset).run
   end
