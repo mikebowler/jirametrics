@@ -15,4 +15,5 @@ gem 'rubocop-rake', require: false
 gem 'rubocop-rspec', require: false
 gem 'mutant-rspec', require: false
 gem 'simplecov'
+gem 'mcp'
 gem 'thor'

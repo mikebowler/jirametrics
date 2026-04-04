@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name        = 'jirametrics'
-  spec.version     = '2.26.1'
+  spec.version     = '2.26.2pre1'
   spec.summary     = 'Extract Jira metrics'
   spec.description = 'Extract metrics from Jira and export to either a report or to CSV files'
   spec.authors     = ['Mike Bowler']
@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.license     = 'Apache-2.0'
   spec.required_ruby_version = '>= 3.0.0'
   spec.add_development_dependency 'mutant-rspec'
+  spec.add_dependency 'mcp'
   spec.add_dependency 'random-word', '~> 2.1.1'
   spec.add_dependency 'require_all', '~> 3.0.0'
   spec.add_dependency 'thor', '~> 1.2.2'

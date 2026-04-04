@@ -53,6 +53,34 @@ class JiraMetrics < Thor
   end
 
   option :config
+  option :name
+  desc 'mcp', 'Start in MCP (Model Context Protocol) server mode'
+  def mcp
+    load_config options[:config]
+    require 'jirametrics/mcp_server'
+
+    Exporter.instance.file_system.log_only = true
+
+    projects = {}
+    Exporter.instance.each_project_config(name_filter: options[:name] || '*') do |project|
+      project.evaluate_next_level
+      project.run load_only: true
+      projects[project.name || 'default'] = { issues: project.issues, today: project.time_range.end.to_date }
+    rescue StandardError => e
+      next if e.message.start_with? 'This is an aggregated project'
+      next if e.message.start_with? 'No data found'
+
+      raise
+    end
+
+    # Use the latest end date across all projects, matching how aggregated reports compute today
+    global_today = projects.values.map { |p| p[:today] }.max
+    projects.each_value { |p| p[:today] = global_today }
+
+    McpServer.new(projects: projects, timezone_offset: Exporter.instance.timezone_offset).run
+  end
+
+  option :config
   desc 'stitch', 'Dump information about one issue'
   def stitch stitch_file = 'stitcher.erb'
     load_config options[:config]

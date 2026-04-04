@@ -3,13 +3,14 @@
 require 'json'
 
 class FileSystem
-  attr_accessor :logfile, :logfile_name
+  attr_accessor :logfile, :logfile_name, :log_only
 
   def initialize
     # In almost all cases, this will be immediately replaced in the Exporter
     # but if we fail before we get that far, this will at least let a useful
     # error show up on the console.
     @logfile = $stdout
+    @log_only = false
   end
 
   # Effectively the same as File.read except it forces the encoding to UTF-8
@@ -59,7 +60,7 @@ class FileSystem
 
     logfile.puts message
     logfile.puts more if more
-    return unless also_write_to_stderr
+    return if log_only || !also_write_to_stderr
 
     # Obscure edge-case where we're trying to log something before logging is even
     # set up. Quick escape here so that we don't dump the error twice.
@@ -70,23 +71,29 @@ class FileSystem
 
   def log_start message
     logfile.puts message
-    return if logfile == $stdout
+    return if log_only || logfile == $stdout
 
     $stderr.print message
     $stderr.flush
   end
 
   def start_progress
+    return if log_only
+
     $stderr.print '  '
     $stderr.flush
   end
 
   def progress_dot
+    return if log_only
+
     $stderr.print '.'
     $stderr.flush
   end
 
   def end_progress
+    return if log_only
+
     $stderr.puts '' # rubocop:disable Style/StderrPuts
   end
 

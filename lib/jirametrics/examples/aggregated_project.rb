@@ -10,7 +10,7 @@
 class Exporter
   def aggregated_project name:, project_names:, settings: {}
     project name: name do
-      puts name
+      file_system.log name
       file_prefix name
       self.settings.merge! stringify_keys(settings)
 

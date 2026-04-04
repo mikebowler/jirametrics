@@ -9,7 +9,7 @@ class Exporter
       show_experimental_charts: false, github_repos: nil
     exporter = self
     project name: name do
-      puts name
+      file_system.log name
       file_prefix file_prefix
 
       self.anonymize if anonymize
