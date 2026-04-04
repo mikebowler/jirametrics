@@ -40,6 +40,14 @@ class McpServer
       type: 'boolean',
       description: 'When true, only return issues that were ever stalled. Stalled means the issue sat ' \
                    'inactive for longer than the stalled threshold, or entered a stalled status.'
+    },
+    currently_blocked: {
+      type: 'boolean',
+      description: 'When true, only return issues that are currently blocked (as of the data end date).'
+    },
+    currently_stalled: {
+      type: 'boolean',
+      description: 'When true, only return issues that are currently stalled (as of the data end date).'
     }
   }.freeze
 
@@ -48,14 +56,24 @@ class McpServer
     total_time.positive? ? (active_time / total_time * 100).round(1) : nil
   end
 
-  def self.matches_history?(issue, end_time, history_field, history_value, ever_blocked, ever_stalled)
+  def self.matches_blocked_stalled?(bsc, ever_blocked, ever_stalled, currently_blocked, currently_stalled)
+    return false if ever_blocked && bsc.none?(&:blocked?)
+    return false if ever_stalled && bsc.none?(&:stalled?)
+    return false if currently_blocked && !bsc.last&.blocked?
+    return false if currently_stalled && !bsc.last&.stalled?
+
+    true
+  end
+
+  def self.matches_history?(issue, end_time, history_field, history_value,
+                            ever_blocked, ever_stalled, currently_blocked, currently_stalled)
     return false if history_field && history_value &&
                     issue.changes.none? { |c| c.field == history_field && c.value == history_value }
 
-    if ever_blocked || ever_stalled
+    if ever_blocked || ever_stalled || currently_blocked || currently_stalled
       bsc = issue.blocked_stalled_changes(end_time: end_time)
-      return false if ever_blocked && bsc.none?(&:blocked?)
-      return false if ever_stalled && bsc.none?(&:stalled?)
+      return false unless matches_blocked_stalled?(bsc, ever_blocked, ever_stalled,
+                                                   currently_blocked, currently_stalled)
     end
 
     true
@@ -82,7 +100,8 @@ class McpServer
     )
 
     def self.call(server_context:, min_age_days: nil, project: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil)
+                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
+                  currently_blocked: nil, currently_stalled: nil)
       rows = []
 
       server_context[:projects].each do |project_name, project_data|
@@ -96,7 +115,8 @@ class McpServer
           age = (today - started.to_date).to_i + 1
           next if min_age_days && age < min_age_days
           unless McpServer.matches_history?(issue, project_data[:end_time],
-                                            history_field, history_value, ever_blocked, ever_stalled)
+                                            history_field, history_value, ever_blocked, ever_stalled,
+                                            currently_blocked, currently_stalled)
             next
           end
 
@@ -157,7 +177,8 @@ class McpServer
     )
 
     def self.build_row issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                       end_time, history_field, history_value, ever_blocked, ever_stalled
+                       end_time, history_field, history_value, ever_blocked, ever_stalled,
+                       currently_blocked, currently_stalled
       completed_date = stopped.to_date
       return nil if cutoff && completed_date < cutoff
 
@@ -165,7 +186,8 @@ class McpServer
       return nil if completed_status && status_at_done&.name != completed_status
       return nil if completed_resolution && completed_resolution != resolution_at_done
       return nil unless McpServer.matches_history?(issue, end_time,
-                                                   history_field, history_value, ever_blocked, ever_stalled)
+                                                   history_field, history_value, ever_blocked, ever_stalled,
+                                                   currently_blocked, currently_stalled)
 
       cycle_time = started ? (completed_date - started.to_date).to_i + 1 : nil
       {
@@ -183,7 +205,8 @@ class McpServer
 
     def self.call(server_context:, days_back: nil, project: nil,
                   completed_status: nil, completed_resolution: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil)
+                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
+                  currently_blocked: nil, currently_stalled: nil)
       rows = []
 
       server_context[:projects].each do |project_name, project_data|
@@ -197,7 +220,8 @@ class McpServer
           next unless stopped
 
           row = build_row(issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                          project_data[:end_time], history_field, history_value, ever_blocked, ever_stalled)
+                          project_data[:end_time], history_field, history_value, ever_blocked, ever_stalled,
+                          currently_blocked, currently_stalled)
           rows << row if row
         end
       end
@@ -237,7 +261,8 @@ class McpServer
     )
 
     def self.call(server_context:, project: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil)
+                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
+                  currently_blocked: nil, currently_stalled: nil)
       rows = []
 
       server_context[:projects].each do |project_name, project_data|
@@ -247,7 +272,8 @@ class McpServer
           started, stopped = issue.started_stopped_times
           next if started || stopped
           unless McpServer.matches_history?(issue, project_data[:end_time],
-                                            history_field, history_value, ever_blocked, ever_stalled)
+                                            history_field, history_value, ever_blocked, ever_stalled,
+                                            currently_blocked, currently_stalled)
             next
           end
 
