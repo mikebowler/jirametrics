@@ -428,9 +428,10 @@ class McpServer
 
   class StatusTimeAnalysisTool < MCP::Tool
     tool_name 'status_time_analysis'
-    description 'Aggregates the time issues spend in each status, ranked by average days. ' \
-                'Useful for identifying bottlenecks and answering questions like ' \
-                '"where do issues spend the most time?"'
+    description 'Aggregates the time issues spend in each status or column, ranked by average days. ' \
+                'Useful for identifying bottlenecks. Before calling this tool, always ask the user ' \
+                'which issues they want to include: aging (in progress), completed, not yet started, ' \
+                'or all. Do not assume — the answer changes the result significantly.'
 
     input_schema(
       type: 'object',
