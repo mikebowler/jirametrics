@@ -82,6 +82,7 @@ class GemDeployer
       .select { |v| v[:prerelease] }
       .map { |v| v[:version] }
       .select { |v| previous_stable.nil? || v > previous_stable }
+      .reject { |v| v == current_version }
   end
 
   private
