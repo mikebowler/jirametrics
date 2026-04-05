@@ -37,6 +37,24 @@ class GemDeployer
     puts "Release #{current_version} complete!"
   end
 
+  def run_prerelease
+    puts "Deploying jirametrics #{current_version} (pre-release)..."
+    puts ''
+
+    verify_no_uncommitted_changes
+    verify_prerelease_version
+
+    gem_file = build_gem
+    otp = prompt_otp
+    push_gem gem_file, otp
+    File.delete gem_file
+
+    yank_prereleases otp
+
+    puts ''
+    puts "Pre-release #{current_version} complete!"
+  end
+
   def current_version
     @current_version ||= Gem::Specification.load(@gemspec_path).version
   end
@@ -86,12 +104,19 @@ class GemDeployer
   end
 
   def verify_git_clean
-    print 'Checking git status... '
-    uncommitted = `git status --porcelain`.strip
-    raise "\nUncommitted changes exist. Please commit and push first." unless uncommitted.empty?
+    verify_no_uncommitted_changes
 
+    print 'Checking for unpushed commits... '
     unpushed = `git log origin/main..HEAD --oneline`.strip
     raise "\nUnpushed commits exist. Please push first." unless unpushed.empty?
+
+    puts 'OK'
+  end
+
+  def verify_no_uncommitted_changes
+    print 'Checking for uncommitted changes... '
+    uncommitted = `git status --porcelain`.strip
+    raise "\nUncommitted changes exist. Please commit first." unless uncommitted.empty?
 
     puts 'OK'
   end
@@ -99,6 +124,15 @@ class GemDeployer
   def verify_stable_version
     print "Checking version #{current_version} is a stable release... "
     raise "\n#{current_version} is a pre-release. This task is for stable releases only." if current_version.prerelease?
+
+    puts 'OK'
+  end
+
+  def verify_prerelease_version
+    print "Checking version #{current_version} is a pre-release... "
+    unless current_version.prerelease?
+      raise "\n#{current_version} is a stable release. This task is for pre-releases only."
+    end
 
     puts 'OK'
   end
