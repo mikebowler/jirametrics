@@ -56,6 +56,12 @@ class JiraMetrics < Thor
   option :name
   desc 'mcp', 'Start in MCP (Model Context Protocol) server mode'
   def mcp
+    # Redirect stdout to stderr for the entire startup phase so that any
+    # incidental output (from config files, gem loading, etc.) does not
+    # corrupt the JSON-RPC channel before the MCP transport takes over.
+    original_stdout = $stdout.dup
+    $stdout.reopen($stderr)
+
     load_config options[:config]
     require 'jirametrics/mcp_server'
 
@@ -82,6 +88,8 @@ class JiraMetrics < Thor
       raise
     end
 
+    $stdout.reopen(original_stdout)
+    original_stdout.close
     McpServer.new(projects: projects, aggregates: aggregates, timezone_offset: Exporter.instance.timezone_offset).run
   end
 

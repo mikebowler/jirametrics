@@ -11,10 +11,19 @@ class McpServer
   end
 
   def run
+    canonical_tools = [ListProjectsTool, AgingWorkTool, CompletedWorkTool, NotYetStartedTool, StatusTimeAnalysisTool]
+    alias_tools = ALIASES.map do |alias_name, canonical|
+      schema = canonical.input_schema
+      Class.new(canonical) do
+        tool_name alias_name
+        input_schema schema
+      end
+    end
+
     server = MCP::Server.new(
       name: 'jirametrics',
       version: Gem.loaded_specs['jirametrics']&.version&.to_s || '0.0.0',
-      tools: [ListProjectsTool, AgingWorkTool, CompletedWorkTool, NotYetStartedTool, StatusTimeAnalysisTool],
+      tools: canonical_tools + alias_tools,
       server_context: { projects: @projects, aggregates: @aggregates, timezone_offset: @timezone_offset }
     )
 
@@ -161,7 +170,7 @@ class McpServer
 
     input_schema(type: 'object', properties: {})
 
-    def self.call(server_context:)
+    def self.call(server_context:, **)
       lines = server_context[:projects].map do |project_name, project_data|
         "#{project_name} | #{project_data[:issues].size} issues | Data through: #{project_data[:today]}"
       end
@@ -209,7 +218,7 @@ class McpServer
 
     def self.call(server_context:, min_age_days: nil, project: nil, current_status: nil, current_column: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil)
+                  currently_blocked: nil, currently_stalled: nil, **)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -317,7 +326,7 @@ class McpServer
     def self.call(server_context:, days_back: nil, project: nil,
                   completed_status: nil, completed_resolution: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil)
+                  currently_blocked: nil, currently_stalled: nil, **)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -382,7 +391,7 @@ class McpServer
 
     def self.call(server_context:, project: nil, current_status: nil, current_column: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil)
+                  currently_blocked: nil, currently_stalled: nil, **)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -464,7 +473,7 @@ class McpServer
       end
     end
 
-    def self.call(server_context:, project: nil, issue_state: 'all', group_by: 'status')
+    def self.call(server_context:, project: nil, issue_state: 'all', group_by: 'status', **)
       totals = Hash.new { |h, k| h[k] = { total_seconds: 0.0, visit_count: 0 } }
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -503,4 +512,12 @@ class McpServer
       MCP::Tool::Response.new([{ type: 'text', text: lines.join("\n") }])
     end
   end
+
+  # Alternative tool names used by AI agents other than Claude.
+  # Each entry maps an alias name to the canonical tool class it delegates to.
+  # The alias inherits the canonical tool's schema and call behaviour automatically.
+  # To add a new alias, append one line: 'alias_name' => CanonicalToolClass
+  ALIASES = {
+    'board_list' => ListProjectsTool
+  }.freeze
 end
