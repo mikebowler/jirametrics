@@ -62,6 +62,7 @@ class JiraMetrics < Thor
     Exporter.instance.file_system.log_only = true
 
     projects = {}
+    aggregates = {}
     Exporter.instance.each_project_config(name_filter: options[:name] || '*') do |project|
       project.evaluate_next_level
       project.run load_only: true
@@ -71,13 +72,17 @@ class JiraMetrics < Thor
         end_time: project.time_range.end
       }
     rescue StandardError => e
-      next if e.message.start_with? 'This is an aggregated project'
+      if e.message.start_with? 'This is an aggregated project'
+        names = project.aggregate_project_names
+        aggregates[project.name] = names if names.any?
+        next
+      end
       next if e.message.start_with? 'No data found'
 
       raise
     end
 
-    McpServer.new(projects: projects, timezone_offset: Exporter.instance.timezone_offset).run
+    McpServer.new(projects: projects, aggregates: aggregates, timezone_offset: Exporter.instance.timezone_offset).run
   end
 
   option :config

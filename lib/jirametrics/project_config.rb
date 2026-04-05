@@ -98,6 +98,12 @@ class ProjectConfig
     !!@aggregate_config
   end
 
+  def aggregate_project_names
+    return [] unless aggregated_project?
+
+    @aggregate_config.included_projects.filter_map(&:name)
+  end
+
   def download &block
     raise 'Not allowed to have multiple download blocks in one project' if @download_config
     raise 'Not allowed to have both an aggregate and a download section. Pick only one.' if @aggregate_config
