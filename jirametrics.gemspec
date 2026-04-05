@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'thor', '~> 1.2.2'
   spec.bindir = 'bin'
   spec.executables << 'jirametrics'
+  spec.executables << 'jirametrics-mcp'
   spec.metadata = {
     'rubygems_mfa_required' => 'true',
     'bug_tracker_uri'       => 'https://github.com/mikebowler/jirametrics/issues',
