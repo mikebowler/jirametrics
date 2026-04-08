@@ -70,7 +70,7 @@ class CumulativeFlowDiagram < ChartBase
         CT and TP cannot be calculated and are hidden; only WIP is shown.
       </div>
       <div class="p">
-        See also: This article on [how to read a CFD](https://blog.mikebowler.ca/2026/03/27/cumulative-flow-diagram/).
+        See also: This article on <a href="https://blog.mikebowler.ca/2026/03/27/cumulative-flow-diagram/">how to read a CFD</a>.
       </div>      
     HTML
     instance_eval(&block)
