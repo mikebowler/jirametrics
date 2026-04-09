@@ -182,12 +182,13 @@ class DownloaderForCloud < Downloader
     issue_data_hash = search_for_issues jql: jql, board_id: board.id, path: path
 
     checked_for_related = Set.new
+    in_related_phase = false
 
     loop do
       related_issue_keys = Set.new
       stale = issue_data_hash.values.reject { |data| data.up_to_date }
       unless stale.empty?
-        log_start '  Downloading more issues '
+        log_start '  Downloading more issues ' unless in_related_phase
         stale.each_slice(100) do |slice|
           slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: true)
           progress_dot
@@ -205,7 +206,7 @@ class DownloaderForCloud < Downloader
             checked_for_related << data.key
           end
         end
-        end_progress
+        end_progress unless in_related_phase
       end
 
       # Also scan up-to-date cached issues we haven't checked yet — they may reference
@@ -231,8 +232,14 @@ class DownloaderForCloud < Downloader
       end
       break if related_issue_keys.empty?
 
-      log "  Downloading related issues (parents, subtasks, links) for board #{board.id}", both: true
+      unless in_related_phase
+        in_related_phase = true
+        log "  Identifying related issues (parents, subtasks, links) for board #{board.id}", both: true
+        log_start '  Downloading more issues '
+      end
     end
+
+    end_progress if in_related_phase
 
     delete_issues_from_cache_that_are_not_in_server(
       issue_data_hash: issue_data_hash, path: path
