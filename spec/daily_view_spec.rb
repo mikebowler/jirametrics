@@ -351,7 +351,10 @@ describe DailyView do
 
       marker = view.color_block '--blocked-color'
       expect(view.make_blocked_stalled_lines issue).to eq [
-        "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: SP-2 \"Update existing event\"</div>",
+        "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: " \
+          "<img src='https://improvingflow.atlassian.net/secure/viewavatar?size=medium&avatarId=10315&avatarType=issuetype' " \
+          "title='Story' class='icon' /> <b><a href='https://improvingflow.atlassian.net/browse/SP-2'>SP-2</a></b> " \
+          "&nbsp;<i>Update existing event</i></div>",
         issue2,
         '</section>'
       ]

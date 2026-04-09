@@ -89,7 +89,8 @@ class DailyView < ChartBase
       blocked_stalled.blocking_issue_keys&.each do |key|
         blocking_issue = issues.find_by_key key: key, include_hidden: true
         if blocking_issue
-          lines << "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: #{key} #{blocking_issue.summary.inspect}</div>"
+          lines << "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: " \
+            "#{make_issue_label issue: blocking_issue, done: blocking_issue.done?}</div>"
           lines << blocking_issue
           lines << '</section>'
         else
