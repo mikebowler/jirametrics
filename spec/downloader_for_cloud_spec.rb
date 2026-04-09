@@ -612,6 +612,74 @@ describe DownloaderForCloud do
         'foo.json' => JSON.generate(issue.raw)
       })
     end
+
+    it 'follows non-cloner linked issues' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+
+      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } },
+        { 'type' => { 'name' => 'Cloners' }, 'outwardIssue' => { 'key' => 'ABC-CLONE' } }
+      ]
+      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc123.json')
+      )
+
+      call_count = 0
+      received_keys = []
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        call_count += 1
+        received_keys << issue_datas.map(&:key)
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = (d.key == 'ABC-123') ? primary_issue : linked_issue
+        end
+        issue_datas
+      end
+
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(call_count).to eq(2)
+      expect(received_keys[1]).to contain_exactly('ABC-LINKED')
+    end
+
+    it 'follows linked issues from up-to-date cached issues' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+
+      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
+      ]
+      cache_path = 'spec/testdata/sample_issues/ABC-123-2.json'
+
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: true, cache_path: cache_path)
+      )
+      file_system.when_loading file: cache_path, json: primary_issue.raw
+
+      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = linked_issue
+        end
+        issue_datas
+      end
+
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(downloader).to have_received(:bulk_fetch_issues).once
+    end
   end
 
   context 'bulk_fetch_issues' do
@@ -748,6 +816,26 @@ describe DownloaderForCloud do
           time: '2025-09-28T17:36:33'
         )
      ])
+    end
+
+    it 'skips issues returned by Jira with a key not in the request (moved issues)' do
+      moved_raw = empty_issue(created: '2025-01-01').raw
+      moved_raw['changelog'] = nil
+      moved_raw['id'] = '999'
+      moved_raw['key'] = 'OTHER-999'  # Jira returned a different key than we requested
+
+      jira_gateway.when url: '/rest/api/3/issue/bulkfetch', response: { 'issues' => [moved_raw] }
+      jira_gateway.when url: '/rest/api/3/changelog/bulkfetch', response: {
+        'issueChangeLogs' => [{ 'issueId' => '999', 'changeHistories' => [] }]
+      }
+
+      issue_data = DownloadIssueData.new key: 'SP-1', cache_path: 'SP-1.json'
+      downloader.bulk_fetch_issues(issue_datas: [issue_data], board: sample_board, in_initial_query: false)
+
+      expect(issue_data.issue).to be_nil
+      expect(file_system.log_messages).to include(
+        'Skipping OTHER-999: returned by Jira but key not in request (issue may have been moved)'
+      )
     end
   end
 end

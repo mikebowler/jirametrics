@@ -108,9 +108,22 @@ class DownloaderForCloud < Downloader
       }
       issue = Issue.new(raw: issue_json, board: board)
       data = issue_datas.find { |d| d.key == issue.key }
+      unless data
+        log "  Skipping #{issue.key}: returned by Jira but key not in request (issue may have been moved)"
+        next
+      end
       data.up_to_date = true
       data.last_modified = issue.updated
       data.issue = issue
+    end
+
+    # Mark any unmatched requests as up_to_date to prevent infinite re-fetching.
+    # This happens when Jira returns a different key (moved issue) leaving the original unmatched.
+    issue_datas.each do |data|
+      next if data.up_to_date
+
+      log "  Skipping #{data.key}: not returned by Jira (issue may have been deleted or moved)"
+      data.up_to_date = true
     end
 
     issue_datas
@@ -168,6 +181,8 @@ class DownloaderForCloud < Downloader
 
     issue_data_hash = search_for_issues jql: jql, board_id: board.id, path: path
 
+    checked_for_related = Set.new
+
     loop do
       related_issue_keys = Set.new
       stale = issue_data_hash.values.reject { |data| data.up_to_date }
@@ -177,6 +192,8 @@ class DownloaderForCloud < Downloader
           slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: true)
           progress_dot
           slice.each do |data|
+            next unless data.issue
+
             @file_system.save_json(
               json: data.issue.raw, filename: data.cache_path
             )
@@ -184,22 +201,25 @@ class DownloaderForCloud < Downloader
             # to parse the file just to find the timestamp
             @file_system.utime time: data.issue.updated, file: data.cache_path
 
-            issue = data.issue
-            next unless issue
-
-            parent_key = issue.parent_key(project_config: @download_config.project_config)
-            related_issue_keys << parent_key if parent_key
-
-            # Sub-tasks
-            issue.raw['fields']['subtasks']&.each do |raw_subtask|
-              related_issue_keys << raw_subtask['key']
-            end
+            collect_related_issue_keys issue: data.issue, related_issue_keys: related_issue_keys
+            checked_for_related << data.key
           end
         end
         end_progress
       end
 
-      # Remove all the ones we already downloaded
+      # Also scan up-to-date cached issues we haven't checked yet — they may reference
+      # related issues that are not in the primary query result.
+      issue_data_hash.each_value do |data|
+        next if checked_for_related.include?(data.key)
+        next unless @file_system.file_exist?(data.cache_path)
+
+        checked_for_related << data.key
+        raw = @file_system.load_json(data.cache_path)
+        collect_related_issue_keys issue: Issue.new(raw: raw, board: board), related_issue_keys: related_issue_keys
+      end
+
+      # Remove all the ones we already have
       related_issue_keys.reject! { |key| issue_data_hash[key] }
 
       related_issue_keys.each do |key|
@@ -211,7 +231,7 @@ class DownloaderForCloud < Downloader
       end
       break if related_issue_keys.empty?
 
-      log "  Downloading linked issues for board #{board.id}", both: true
+      log "  Downloading related issues (parents, subtasks, links) for board #{board.id}", both: true
     end
 
     delete_issues_from_cache_that_are_not_in_server(
@@ -235,6 +255,22 @@ class DownloaderForCloud < Downloader
       file_to_delete = File.join(path, file)
       log "  Removing #{file_to_delete} from local cache"
       file_system.unlink file_to_delete
+    end
+  end
+
+  def collect_related_issue_keys issue:, related_issue_keys:
+    parent_key = issue.parent_key(project_config: @download_config.project_config)
+    related_issue_keys << parent_key if parent_key
+
+    issue.raw['fields']['subtasks']&.each do |raw_subtask|
+      related_issue_keys << raw_subtask['key']
+    end
+
+    issue.raw['fields']['issuelinks']&.each do |link|
+      next if link['type']['name'] == 'Cloners'
+
+      linked = link['inwardIssue'] || link['outwardIssue']
+      related_issue_keys << linked['key'] if linked
     end
   end
 
