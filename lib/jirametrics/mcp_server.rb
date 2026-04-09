@@ -216,9 +216,11 @@ class McpServer
       }
     )
 
-    def self.call(server_context:, min_age_days: nil, project: nil, current_status: nil, current_column: nil,
+    def self.call(server_context:, min_age_days: nil, project: nil, project_name: nil,
+                  current_status: nil, current_column: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
                   currently_blocked: nil, currently_stalled: nil, **)
+      project ||= project_name
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -323,10 +325,11 @@ class McpServer
       }
     end
 
-    def self.call(server_context:, days_back: nil, project: nil,
+    def self.call(server_context:, days_back: nil, project: nil, project_name: nil,
                   completed_status: nil, completed_resolution: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
                   currently_blocked: nil, currently_stalled: nil, **)
+      project ||= project_name
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -389,9 +392,10 @@ class McpServer
       }
     )
 
-    def self.call(server_context:, project: nil, current_status: nil, current_column: nil,
+    def self.call(server_context:, project: nil, project_name: nil, current_status: nil, current_column: nil,
                   history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
                   currently_blocked: nil, currently_stalled: nil, **)
+      project ||= project_name
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -473,7 +477,11 @@ class McpServer
       end
     end
 
-    def self.call(server_context:, project: nil, issue_state: 'all', group_by: 'status', **)
+    def self.call(server_context:, project: nil, project_name: nil, issue_state: 'all', group_by: 'status',
+                  column: nil, **)
+      project ||= project_name
+      group_by = 'column' if column
+
       totals = Hash.new { |h, k| h[k] = { total_seconds: 0.0, visit_count: 0 } }
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
