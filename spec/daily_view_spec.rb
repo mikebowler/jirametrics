@@ -344,14 +344,14 @@ describe DailyView do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      view.issues = [issue, issue2]
+      view.issues = IssueCollection[issue, issue2]
       add_mock_change(
         issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
       )
 
       marker = view.color_block '--blocked-color'
       expect(view.make_blocked_stalled_lines issue).to eq [
-        "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: SP-2</div>",
+        "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: SP-2 \"Update existing event\"</div>",
         issue2,
         '</section>'
       ]
@@ -363,13 +363,13 @@ describe DailyView do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      view.issues = [issue]
+      view.issues = IssueCollection[issue]
       add_mock_change(
         issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
       )
 
       expect(view.make_blocked_stalled_lines issue).to eq [
-        ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2"]
+        ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2 (no description found)"]
       ]
     end
   end

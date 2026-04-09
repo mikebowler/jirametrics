@@ -87,13 +87,13 @@ class DailyView < ChartBase
       lines << ["#{marker} Blocked by flag"] if blocked_stalled.flag
       lines << ["#{marker} Blocked by status: #{blocked_stalled.status}"] if blocked_stalled.blocked_by_status?
       blocked_stalled.blocking_issue_keys&.each do |key|
-        blocking_issue = issues.find { |i| i.key == key }
+        blocking_issue = issues.find_by_key key: key, include_hidden: true
         if blocking_issue
-          lines << "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: #{key}</div>"
+          lines << "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: #{key} #{blocking_issue.summary.inspect}</div>"
           lines << blocking_issue
           lines << '</section>'
         else
-          lines << ["#{marker} Blocked by issue: #{key}"]
+          lines << ["#{marker} Blocked by issue: #{key} (no description found)"]
         end
       end
     elsif blocked_stalled.stalled_by_status?
