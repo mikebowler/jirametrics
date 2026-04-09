@@ -210,7 +210,25 @@ class Issue
   end
 
   def first_time_visible_on_board
-    first_time_in_status(*board.visible_columns.collect(&:status_ids).flatten)
+    visible_status_ids = board.visible_columns.collect(&:status_ids).flatten
+    return first_time_in_status(*visible_status_ids) unless board.scrum?
+
+    # For scrum boards, an issue is only visible when BOTH conditions are true simultaneously:
+    # 1. Its status is in a visible column
+    # 2. It is in an active sprint
+    # At each moment one condition becomes true, check if the other is already true.
+    candidates = []
+
+    status_changes.each do |change|
+      next unless visible_status_ids.include?(change.value_id)
+      candidates << change if in_active_sprint_at?(change.time)
+    end
+
+    sprint_entry_events.each do |effective_time, representative_change|
+      candidates << representative_change if in_visible_status_at?(effective_time, visible_status_ids)
+    end
+
+    candidates.min_by(&:time)
   end
 
   def reasons_not_visible_on_board
@@ -814,6 +832,72 @@ class Issue
   end
 
   private
+
+  # Returns [[effective_time, change_item]] for each moment the issue entered an active sprint.
+  # Skips sprints that were removed before they activated.
+  def sprint_entry_events
+    data_clazz = Struct.new(:sprint_id, :sprint_start, :add_time, :change)
+    events = []
+    in_sprint = []
+
+    @changes.each do |change|
+      next unless change.sprint?
+
+      (change.value_id - change.old_value_id).each do |sprint_id|
+        sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
+        in_sprint << data_clazz.new(sprint_id, sprint_start, change.time, change) if sprint_start
+      end
+
+      (change.old_value_id - change.value_id).each do |sprint_id|
+        data = in_sprint.find { |d| d.sprint_id == sprint_id }
+        next unless data
+
+        in_sprint.delete(data)
+        next if data.sprint_start >= change.time # sprint hadn't activated before removal
+
+        effective_time = [data.add_time, data.sprint_start].max
+        events << [effective_time, sprint_change_at(effective_time, data.change)]
+      end
+    end
+
+    in_sprint.each do |data|
+      effective_time = [data.add_time, data.sprint_start].max
+      events << [effective_time, sprint_change_at(effective_time, data.change)]
+    end
+
+    events
+  end
+
+  def sprint_change_at effective_time, change
+    return change if effective_time == change.time
+
+    ChangeItem.new(
+      raw: { 'field' => 'Sprint', 'toString' => 'Sprint activated', 'to' => '0', 'from' => nil, 'fromString' => nil },
+      author_raw: nil,
+      time: effective_time,
+      artificial: true
+    )
+  end
+
+  def in_active_sprint_at? time
+    active_ids = []
+    @changes.each do |change|
+      break if change.time > time
+      next unless change.sprint?
+
+      (change.value_id - change.old_value_id).each do |sprint_id|
+        sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
+        active_ids << sprint_id if sprint_start && sprint_start <= time
+      end
+      (change.old_value_id - change.value_id).each { |id| active_ids.delete(id) }
+    end
+    active_ids.any?
+  end
+
+  def in_visible_status_at? time, visible_status_ids
+    last = status_changes.reverse.find { |c| c.time <= time }
+    last && visible_status_ids.include?(last.value_id)
+  end
 
   def load_history_into_changes
     @raw['changelog']['histories']&.each do |history|

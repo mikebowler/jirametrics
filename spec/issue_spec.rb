@@ -533,6 +533,71 @@ describe Issue do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-10-03')
       expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-03')
     end
+
+    context 'scrum board' do
+      let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
+      let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
+
+      def add_active_sprint id:, start_date:
+        issue.board.sprints << Sprint.new(raw: {
+          'id' => id,
+          'state' => 'active',
+          'name' => "Sprint #{id}",
+          'startDate' => "#{start_date}T00:00:00.000Z",
+          'originBoardId' => scrum_board.id
+        }, timezone_offset: '+00:00')
+      end
+
+      it 'returns nil when in visible status but no sprint' do
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-03')
+        expect(issue.first_time_visible_on_board).to be_nil
+      end
+
+      it 'returns nil when in active sprint but no visible status' do
+        add_active_sprint id: 10, start_date: '2021-10-02'
+        add_mock_change(
+          issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
+          time: '2021-10-02', field_id: 'customfield_10020'
+        )
+        expect(issue.first_time_visible_on_board).to be_nil
+      end
+
+      it 'returns the status time when status change is later than sprint add' do
+        add_active_sprint id: 10, start_date: '2021-10-02'
+        add_mock_change(
+          issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
+          time: '2021-10-02', field_id: 'customfield_10020'
+        )
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-05')
+        expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-05')
+      end
+
+      it 'returns the sprint add time when sprint add is later than status change' do
+        add_active_sprint id: 10, start_date: '2021-10-02'
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
+        add_mock_change(
+          issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
+          time: '2021-10-05', field_id: 'customfield_10020'
+        )
+        expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-05')
+      end
+
+      it 'returns the sprint start time when issue was added to a future sprint before it activated' do
+        issue.board.sprints << Sprint.new(raw: {
+          'id' => 10,
+          'state' => 'active',
+          'name' => 'Sprint 10',
+          'startDate' => '2021-10-06T00:00:00.000Z',
+          'originBoardId' => scrum_board.id
+        }, timezone_offset: '+00:00')
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
+        add_mock_change(
+          issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
+          time: '2021-10-03', field_id: 'customfield_10020'
+        )
+        expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-06')
+      end
+    end
   end
 
   context 'first_time_added_to_active_sprint' do
