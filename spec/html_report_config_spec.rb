@@ -14,6 +14,18 @@ class TestableChart < ChartBase
   end
 end
 
+class TestableBoardChart < ChartBase
+  attr_accessor :board_id
+
+  def initialize _block
+    super()
+  end
+
+  def run
+    'running'
+  end
+end
+
 describe HtmlReportConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:project_config) do
@@ -145,6 +157,29 @@ describe HtmlReportConfig do
     it 'does not respond to an unknown name' do
       config = described_class.new file_config: file_config, block: nil
       expect(config.respond_to?(:nonexistent_chart)).to be false
+    end
+
+    context 'when the chart class re-declares board_id=' do
+      let(:board) { project_config.all_boards[1] }
+
+      it 'creates one chart for the given board_id' do
+        config = described_class.new file_config: file_config, block: nil
+        config.testable_board_chart board_id: 1
+
+        expect(config.charts.length).to eq 1
+        expect(config.charts.first.board_id).to eq 1
+      end
+
+      it 'creates one chart per board when no board_id is given' do
+        issue = empty_issue created: '2022-01-01', board: board
+        config = described_class.new file_config: file_config, block: nil
+        allow(config).to receive(:issues).and_return([issue])
+
+        config.testable_board_chart
+
+        expect(config.charts.length).to eq 1
+        expect(config.charts.first.board_id).to eq 1
+      end
     end
   end
 

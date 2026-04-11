@@ -1,0 +1,183 @@
+<%= seam_start %>
+<div class="chart" style="position:relative;">
+  <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
+  <div id="<%= chart_id %>-tooltip" style="
+    display:none; position:absolute; pointer-events:none;
+    background:rgba(0,0,0,0.75); color:#fff; border-radius:4px;
+    padding:4px 8px; font:12px sans-serif; white-space:nowrap;
+  "></div>
+</div>
+<script>
+(function() {
+  var wipData   = <%= @wip_data.to_json %>;
+  var wipLimits = <%= @wip_limits.to_json %>;
+  var tooltipEl = document.getElementById(<%= "#{chart_id}-tooltip".inspect %>);
+
+  // Each entry: { x1, y1, x2, y2, label }  — populated in afterDraw
+  var hitAreas = [];
+
+  var rectPlugin = {
+    id: 'wipRects',
+    afterDraw: function(chart) {
+      var ctx = chart.ctx;
+      var xScale = chart.scales['x'];
+      var yScale = chart.scales['y'];
+      var slotWidth = xScale.width / Math.max(xScale.ticks.length, 1);
+
+      hitAreas = [];
+
+      // Draw WIP limit lines behind the rectangles
+      wipLimits.forEach(function(limits, colIndex) {
+        var xCenter  = xScale.getPixelForValue(colIndex);
+        var halfSlot = slotWidth * 0.45;
+
+        [['min', 'bottom'], ['max', 'top']].forEach(function(pair) {
+          var type     = pair[0];
+          var baseline = pair[1];
+          var val      = limits[type];
+          if (val === null || val === undefined) return;
+
+          var y = yScale.getPixelForValue(val);
+
+          ctx.save();
+          ctx.strokeStyle = 'rgba(220, 50, 50, 0.9)';
+          ctx.lineWidth   = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xCenter - halfSlot, y);
+          ctx.lineTo(xCenter + halfSlot, y);
+          ctx.stroke();
+
+          ctx.fillStyle    = 'rgba(180, 30, 30, 0.9)';
+          ctx.font         = 'bold 10px sans-serif';
+          ctx.textAlign    = 'right';
+          ctx.textBaseline = baseline;
+          ctx.setLineDash([]);
+          ctx.fillText(type + ': ' + val, xCenter + halfSlot, baseline === 'bottom' ? y - 2 : y + 2);
+          ctx.restore();
+        });
+      });
+
+      wipData.forEach(function(colData, colIndex) {
+        var xCenter = xScale.getPixelForValue(colIndex);
+        var yStep = Math.abs(yScale.getPixelForValue(0) - yScale.getPixelForValue(1));
+
+        colData.forEach(function(entry) {
+          var wip = entry['wip'];
+          var pct = entry['pct'];
+          var rectWidth = slotWidth * pct / 100;
+          var rectHeight = yStep * 0.8;
+          var yCenter = yScale.getPixelForValue(wip);
+          var x1 = xCenter - rectWidth / 2;
+          var y1 = yCenter - rectHeight / 2;
+
+          ctx.save();
+          ctx.fillStyle = 'rgba(54, 162, 235, 1.0)';
+          ctx.strokeStyle = 'rgba(54, 162, 235, 1.0)';
+          ctx.lineWidth = 1;
+          ctx.fillRect(x1, y1, rectWidth, rectHeight);
+          ctx.strokeRect(x1, y1, rectWidth, rectHeight);
+
+          ctx.fillStyle = 'rgba(0,0,0,0.8)';
+          ctx.font = '11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          if (rectWidth > 25) {
+            ctx.fillText(pct + '%', xCenter, yCenter);
+          }
+          ctx.restore();
+
+          var hitWidth = Math.max(rectWidth, slotWidth);
+          hitAreas.push({
+            x1: xCenter - hitWidth / 2, y1: y1,
+            x2: xCenter + hitWidth / 2, y2: y1 + rectHeight,
+            label: 'WIP ' + wip + ': ' + pct + '%'
+          });
+        });
+      });
+
+    }
+  };
+
+  var canvas = document.getElementById(<%= chart_id.inspect %>);
+
+  canvas.addEventListener('mousemove', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+
+    var hit = null;
+    for (var i = 0; i < hitAreas.length; i++) {
+      var a = hitAreas[i];
+      if (mx >= a.x1 && mx <= a.x2 && my >= a.y1 && my <= a.y2) {
+        hit = a;
+        break;
+      }
+    }
+
+    if (hit) {
+      tooltipEl.textContent = hit.label;
+      tooltipEl.style.display = 'block';
+      tooltipEl.style.left = (mx + 10) + 'px';
+      tooltipEl.style.top  = (my - 20) + 'px';
+    } else {
+      tooltipEl.style.display = 'none';
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    tooltipEl.style.display = 'none';
+  });
+
+  new Chart(canvas.getContext('2d'),
+  {
+    type: 'bar',
+    plugins: [rectPlugin],
+    data: {
+      labels: <%= @column_names.to_json %>,
+      datasets: [{
+        data: [],
+        backgroundColor: 'transparent'
+      }]
+    },
+    options: {
+      responsive: <%= canvas_responsive? %>,
+      scales: {
+        x: {
+          grid: {
+            color: <%= CssVariable['--grid-line-color'].to_json %>,
+            z: 1
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'WIP'
+          },
+          grid: {
+            color: <%= CssVariable['--grid-line-color'].to_json %>,
+            z: 1
+          },
+          min: -0.5,
+          max: <%= @max_wip + 1 %>,
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return value >= 0 && Number.isInteger(value) ? value : null;
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          enabled: false
+        }
+      }
+    }
+  });
+})();
+</script>
+<%= seam_end %>

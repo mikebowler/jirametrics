@@ -33,13 +33,23 @@ class HtmlReportConfig < HtmlGenerator
     @charts = [] # Where we store all the charts we executed so we can assert against them.
   end
 
-  def method_missing name, &block
+  def method_missing name, *_args, board_id: nil, **_kwargs, &block
     class_name = name.to_s.split('_').map(&:capitalize).join
     klass = Object.const_get(class_name)
     raise NameError unless klass < ChartBase
 
     block ||= ->(_) {}
-    execute_chart klass.new(block)
+
+    if klass.instance_method(:board_id=).owner == klass
+      ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq.sort
+      ids.each do |id|
+        execute_chart(klass.new(block)) do |chart|
+          chart.board_id = id
+        end
+      end
+    else
+      execute_chart klass.new(block)
+    end
   rescue NameError
     super
   end
@@ -96,22 +106,6 @@ class HtmlReportConfig < HtmlGenerator
 
   def timezone_offset
     @file_config.project_config.exporter.timezone_offset
-  end
-
-  def aging_work_in_progress_chart board_id: nil, &block
-    block ||= ->(_) {}
-
-    if board_id.nil?
-      ids = issues.collect { |i| i.board.id }.uniq.sort
-    else
-      ids = [board_id]
-    end
-
-    ids.each do |id|
-      execute_chart(AgingWorkInProgressChart.new(block)) do |chart|
-        chart.board_id = id
-      end
-    end
   end
 
   def random_color
