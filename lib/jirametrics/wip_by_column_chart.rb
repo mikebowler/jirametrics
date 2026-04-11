@@ -21,8 +21,15 @@ class WipByColumnChart < ChartBase
         a wider bar means more time was spent there.
       </p>
       <p>
-        A column whose widest bar is at WIP&nbsp;1 was almost always working on one item at a time.
-        A column with wide bars at high WIP levels was frequently overloaded.
+        A column whose widest bar is at WIP&nbsp;1 was almost always working on one item at a time, often called
+        single-piece-flow. This team is likely collaborating very well and might have been
+        <a href="https://blog.mikebowler.ca/2021/06/19/pair-programming/">pairing</a> or
+        <a href="https://blog.mikebowler.ca/2023/04/22/ensemble-programming/">mobbing/ensembling</a>
+        and these teams tend to be very effective.
+      </p>
+      <p>
+        A column with wide bars at high WIP levels usually indicates a team that is highly siloed. Where each person
+        is working by themselves.
       </p>
       <p>
         The dashed lines show the minimum and maximum WIP limits configured on the board.
@@ -49,6 +56,8 @@ class WipByColumnChart < ChartBase
     @max_wip = stats.flat_map { |s| s.wip_history.collect { |wip, _| wip } }.max || 0
     @wip_limits = stats.collect { |s| { 'min' => s.min_wip_limit, 'max' => s.max_wip_limit } }
 
+    trim_zero_end_columns
+
     wrap_and_render(binding, __FILE__)
   end
 
@@ -73,6 +82,18 @@ class WipByColumnChart < ChartBase
   end
 
   private
+
+  def trim_zero_end_columns
+    all_zero = @wip_data.map { |col| col.none? { |e| e['wip'].positive? } }
+    first = all_zero.index(false)
+    return unless first
+
+    last = all_zero.rindex(false)
+    @column_names = @column_names[first..last]
+    @wip_data     = @wip_data[first..last]
+    @wip_limits   = @wip_limits[first..last]
+    @max_wip      = @wip_data.flat_map { |col| col.map { |e| e['wip'] } }.max || 0
+  end
 
   def format_pct seconds, total
     raw = seconds / total * 100.0

@@ -17,6 +17,11 @@ describe WipByColumnChart do
 
   let(:chart) do
     chart = described_class.new(empty_config_block)
+    chart.file_system = MockFileSystem.new
+    chart.file_system.when_loading(
+      file: File.expand_path('./lib/jirametrics/html/wip_by_column_chart.erb'),
+      json: :not_mocked
+    )
     chart.board_id = 1
     chart.all_boards = { 1 => board }
     # 1000-second window for clean arithmetic
@@ -123,6 +128,51 @@ describe WipByColumnChart do
       expect(stats[0].wip_history).to eq [[0, 500], [2, 500]]
       # In Progress: WIP=0 for 500s, WIP=2 for 500s
       expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
+    end
+
+    context 'trim_zero_end_columns' do
+      it 'removes a leading all-zero column' do
+        # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window
+        issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+        add_mock_change issue: issue, field: 'status',
+          value: 'In Progress', value_id: 3,
+          time: to_time('2021-05-31T12:00:00')
+
+        chart.issues = [issue]
+        output = chart.run
+
+        expect(output).not_to include('"Ready"')
+        expect(output).to include('"In Progress"')
+      end
+
+      it 'removes a trailing all-zero column' do
+        # Issue stays in Ready the whole window — Done (index 3) stays at WIP=0
+        issue = issue_in_ready key: 'SP-1'
+
+        chart.issues = [issue]
+        output = chart.run
+
+        expect(output).not_to include('"Done"')
+        expect(output).to include('"Ready"')
+      end
+
+      it 'keeps an all-zero column in the middle' do
+        # Issues in Ready and Review but nothing in In Progress (index 1)
+        issue_a = issue_in_ready key: 'SP-1'
+
+        issue_b = empty_issue created: '2021-05-31', board: board, key: 'SP-2'
+        add_mock_change issue: issue_b, field: 'status',
+          value: 'Review', value_id: 10_011,
+          time: to_time('2021-05-31T12:00:00')
+
+        chart.issues = [issue_a, issue_b]
+        output = chart.run
+
+        expect(output).to include('"Ready"')
+        expect(output).to include('"In Progress"')
+        expect(output).to include('"Review"')
+        expect(output).not_to include('"Done"')
+      end
     end
 
     context 'respects started and stopped times from the cycletime config' do
