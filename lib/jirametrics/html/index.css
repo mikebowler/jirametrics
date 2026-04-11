@@ -50,6 +50,10 @@
   --wip-chart-active-color: #326cff;
   --wip-chart-border-color: gray;
 
+  --wip-by-column-chart-bar-fill-color: #0072B2;  /* Okabe-Ito blue */
+  --wip-by-column-chart-bar-text-color: #ffffff;
+  --wip-by-column-chart-limit-line-color: #D55E00; /* Okabe-Ito vermilion */
+
   --estimate-accuracy-chart-completed-fill-color: #00ff00;
   --estimate-accuracy-chart-completed-border-color: green;
   --estimate-accuracy-chart-active-fill-color: #FFCCCB;
@@ -233,6 +237,9 @@ html[data-theme="dark"] {
   --wip-chart-active-color: #2551c1;
   --status-category-inprogress-color: #1c49bb;
   --hierarchy-table-inactive-item-text-color: #939393;
+  --wip-by-column-chart-bar-fill-color: #56B4E9;  /* Okabe-Ito sky blue */
+  --wip-by-column-chart-bar-text-color: #000000;
+  --wip-by-column-chart-limit-line-color: #E69F00; /* Okabe-Ito orange */
   --wip-chart-completed-color: #03cb03;
   --wip-chart-duration-less-than-day-color: #d2d988;
   --wip-chart-duration-week-or-less-color: #dfcd00;
@@ -274,6 +281,9 @@ html[data-theme="light"] {
   --wip-chart-active-color: #326cff;
   --status-category-inprogress-color: #2663ff;
   --hierarchy-table-inactive-item-text-color: gray;
+  --wip-by-column-chart-bar-fill-color: #0072B2;
+  --wip-by-column-chart-bar-text-color: #ffffff;
+  --wip-by-column-chart-limit-line-color: #D55E00;
   --wip-chart-completed-color: #00ff00;
   --wip-chart-duration-less-than-day-color: #ffef41;
   --wip-chart-duration-week-or-less-color: #dcc900;
@@ -351,6 +361,10 @@ html[data-theme="light"] {
     --wip-chart-active-color: #2551c1;
 
     --status-category-inprogress-color: #1c49bb;
+
+    --wip-by-column-chart-bar-fill-color: #56B4E9;
+    --wip-by-column-chart-bar-text-color: #000000;
+    --wip-by-column-chart-limit-line-color: #E69F00;
 
     --cycletime-scatterplot-overall-trendline-color: gray;
 

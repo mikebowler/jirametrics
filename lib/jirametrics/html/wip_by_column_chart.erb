@@ -9,24 +9,45 @@
 </div>
 <script>
 (function() {
-  var wipData   = <%= @wip_data.to_json %>;
-  var wipLimits = <%= @wip_limits.to_json %>;
-  var tooltipEl = document.getElementById(<%= "#{chart_id}-tooltip".inspect %>);
+  var wipData      = <%= @wip_data.to_json %>;
+  var wipLimits    = <%= @wip_limits.to_json %>;
+  var maxWip       = <%= @max_wip %>;
+  var gridColor    = <%= CssVariable['--grid-line-color'].to_json %>;
+  var barFillColor = <%= CssVariable['--wip-by-column-chart-bar-fill-color'].to_json %>;
+  var barTextColor = <%= CssVariable['--wip-by-column-chart-bar-text-color'].to_json %>;
+  var limitColor   = <%= CssVariable['--wip-by-column-chart-limit-line-color'].to_json %>;
+  var tooltipEl    = document.getElementById(<%= "#{chart_id}-tooltip".inspect %>);
 
-  // Each entry: { x1, y1, x2, y2, label }  — populated in afterDraw
   var hitAreas = [];
 
   var rectPlugin = {
     id: 'wipRects',
     afterDraw: function(chart) {
-      var ctx = chart.ctx;
+      var ctx    = chart.ctx;
       var xScale = chart.scales['x'];
       var yScale = chart.scales['y'];
       var slotWidth = xScale.width / Math.max(xScale.ticks.length, 1);
 
       hitAreas = [];
 
-      // Draw WIP limit lines behind the rectangles
+      // 1. Draw y-axis gridlines at integer band boundaries
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(xScale.left, yScale.top, xScale.right - xScale.left, yScale.bottom - yScale.top);
+      ctx.clip();
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([]);
+      for (var gi = 0; gi <= maxWip + 1; gi++) {
+        var gy = yScale.getPixelForValue(gi);
+        ctx.beginPath();
+        ctx.moveTo(xScale.left, gy);
+        ctx.lineTo(xScale.right, gy);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 2. Draw WIP limit lines (behind rectangles)
       wipLimits.forEach(function(limits, colIndex) {
         var xCenter  = xScale.getPixelForValue(colIndex);
         var halfSlot = slotWidth * 0.45;
@@ -37,50 +58,53 @@
           var val      = limits[type];
           if (val === null || val === undefined) return;
 
-          var y = yScale.getPixelForValue(val);
+          var y = yScale.getPixelForValue(val + 0.5);
 
           ctx.save();
-          ctx.strokeStyle = 'rgba(220, 50, 50, 0.9)';
+          ctx.strokeStyle = limitColor;
           ctx.lineWidth   = 2;
           ctx.setLineDash([5, 3]);
           ctx.beginPath();
           ctx.moveTo(xCenter - halfSlot, y);
           ctx.lineTo(xCenter + halfSlot, y);
           ctx.stroke();
+          ctx.restore();
 
-          ctx.fillStyle    = 'rgba(180, 30, 30, 0.9)';
+          ctx.save();
+          ctx.fillStyle    = limitColor;
           ctx.font         = 'bold 10px sans-serif';
           ctx.textAlign    = 'right';
           ctx.textBaseline = baseline;
-          ctx.setLineDash([]);
           ctx.fillText(type + ': ' + val, xCenter + halfSlot, baseline === 'bottom' ? y - 2 : y + 2);
           ctx.restore();
         });
       });
 
+      // 3. Draw WIP rectangles centered in their bands (wip + 0.5)
+      var yStep = Math.abs(yScale.getPixelForValue(0.5) - yScale.getPixelForValue(1.5));
+
       wipData.forEach(function(colData, colIndex) {
         var xCenter = xScale.getPixelForValue(colIndex);
-        var yStep = Math.abs(yScale.getPixelForValue(0) - yScale.getPixelForValue(1));
 
         colData.forEach(function(entry) {
-          var wip = entry['wip'];
-          var pct = entry['pct'];
-          var rectWidth = slotWidth * pct / 100;
+          var wip       = entry['wip'];
+          var pct       = entry['pct'];
+          var rectWidth  = slotWidth * pct / 100;
           var rectHeight = yStep * 0.8;
-          var yCenter = yScale.getPixelForValue(wip);
+          var yCenter   = yScale.getPixelForValue(wip + 0.5);
           var x1 = xCenter - rectWidth / 2;
           var y1 = yCenter - rectHeight / 2;
 
           ctx.save();
-          ctx.fillStyle = 'rgba(54, 162, 235, 1.0)';
-          ctx.strokeStyle = 'rgba(54, 162, 235, 1.0)';
-          ctx.lineWidth = 1;
+          ctx.fillStyle   = barFillColor;
+          ctx.strokeStyle = barFillColor;
+          ctx.lineWidth   = 1;
           ctx.fillRect(x1, y1, rectWidth, rectHeight);
           ctx.strokeRect(x1, y1, rectWidth, rectHeight);
 
-          ctx.fillStyle = 'rgba(0,0,0,0.8)';
-          ctx.font = '11px sans-serif';
-          ctx.textAlign = 'center';
+          ctx.fillStyle    = barTextColor;
+          ctx.font         = '11px sans-serif';
+          ctx.textAlign    = 'center';
           ctx.textBaseline = 'middle';
           if (rectWidth > 25) {
             ctx.fillText(pct + '%', xCenter, yCenter);
@@ -95,7 +119,6 @@
           });
         });
       });
-
     }
   };
 
@@ -145,7 +168,7 @@
       scales: {
         x: {
           grid: {
-            color: <%= CssVariable['--grid-line-color'].to_json %>,
+            color: gridColor,
             z: 1
           }
         },
@@ -155,15 +178,19 @@
             text: 'WIP'
           },
           grid: {
-            color: <%= CssVariable['--grid-line-color'].to_json %>,
-            z: 1
+            display: false
           },
-          min: -0.5,
+          min: 0,
           max: <%= @max_wip + 1 %>,
+          afterBuildTicks: function(scale) {
+            scale.ticks = [];
+            for (var i = 0; i <= maxWip; i++) {
+              scale.ticks.push({ value: i + 0.5 });
+            }
+          },
           ticks: {
-            stepSize: 1,
             callback: function(value) {
-              return value >= 0 && Number.isInteger(value) ? value : null;
+              return Math.round(value - 0.5);
             }
           }
         }

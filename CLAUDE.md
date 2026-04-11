@@ -112,6 +112,33 @@ Always run `rake spec` rather than individual spec files — running a single fi
 
 After making changes to Ruby files, run `rubocop` on the modified files and fix any offenses before finishing. RuboCop warnings about `plugins:` vs `require:` in `.rubocop.yml` are pre-existing and can be ignored — only fix actual code offenses.
 
+## Colours
+
+### Colour-blind accessibility
+All chart colours must be chosen from the **Okabe-Ito palette**, which is safe for all common forms of colour blindness (deuteranopia, protanopia, tritanopia):
+
+| Name | Hex |
+|---|---|
+| Blue | `#0072B2` |
+| Sky blue | `#56B4E9` |
+| Bluish green | `#009E73` |
+| Vermilion | `#D55E00` |
+| Orange | `#E69F00` |
+| Yellow | `#F0E442` |
+| Reddish purple | `#CC79A7` |
+| Black | `#000000` |
+
+Blue and vermilion/orange are safe pairings because they differ in brightness as well as hue. Avoid red/green pairings.
+
+### CSS variables and light/dark mode
+All chart colours must be defined as CSS variables in `lib/jirametrics/html/index.css`. Every variable must appear in **four** places:
+1. `:root` — light mode defaults
+2. `html[data-theme="dark"]` — forced dark mode
+3. `html[data-theme="light"]` — forced light mode
+4. `@media screen and (prefers-color-scheme: dark) :root` — system dark mode
+
+In ERB templates, reference colours via `CssVariable['--my-variable'].to_json`, which emits a `getComputedStyle(...)` call resolved at browser runtime so dark/light switching works live. Typically use lighter Okabe-Ito variants (e.g. sky blue `#56B4E9`) for dark mode and darker variants (e.g. blue `#0072B2`) for light mode to maintain contrast.
+
 ## Code Conventions
 
 - Any DSL method that accepts a colour must also support a `[light_color, dark_color]` two-element array for light/dark mode. Use the private `parse_theme_color` helper in `CumulativeFlowDiagram` as the reference implementation (converts the pair to a `RawJavascript` theme-detection ternary). The same pattern is also in `GroupingRules#color=`.

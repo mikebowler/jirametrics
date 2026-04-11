@@ -12,7 +12,25 @@ class WipByColumnChart < ChartBase
     header_text 'WIP by column'
     description_text <<-HTML
       <p>
-        WIP by column
+        This chart shows how much time each board column has spent at different WIP (Work in Progress) levels.
+      </p>
+      <p>
+        Each row on the Y axis is a WIP level (the number of items in that column at the same time).
+        Each column on the X axis is a board column.
+        The horizontal bars show what percentage of the total time that column spent at that WIP level —
+        a wider bar means more time was spent there.
+      </p>
+      <p>
+        A column whose widest bar is at WIP&nbsp;1 was almost always working on one item at a time.
+        A column with wide bars at high WIP levels was frequently overloaded.
+      </p>
+      <p>
+        The dashed lines show the minimum and maximum WIP limits configured on the board.
+        If the widest bar sits well above the maximum limit, the limit may be set too low or not being respected.
+        If the widest bar sits below the minimum limit, consider whether that limit is still meaningful.
+      </p>
+      <p>
+        Hover over any bar to see the exact percentage.
       </p>
     HTML
 
@@ -26,7 +44,7 @@ class WipByColumnChart < ChartBase
       total = stat.wip_history.sum { |_wip, seconds| seconds }.to_f
       next [] if total.zero?
 
-      stat.wip_history.collect { |wip, seconds| { 'wip' => wip, 'pct' => (seconds / total * 100).round(1) } }
+      stat.wip_history.collect { |wip, seconds| { 'wip' => wip, 'pct' => format_pct(seconds, total) } }
     end
     @max_wip = stats.flat_map { |s| s.wip_history.collect { |wip, _| wip } }.max || 0
     @wip_limits = stats.collect { |s| { 'min' => s.min_wip_limit, 'max' => s.max_wip_limit } }
@@ -55,6 +73,18 @@ class WipByColumnChart < ChartBase
   end
 
   private
+
+  def format_pct seconds, total
+    raw = seconds / total * 100.0
+    (1..10).each do |decimals|
+      rounded = raw.round(decimals)
+      next if rounded.zero? && raw.positive?
+      next if rounded >= 100.0 && raw < 100.0
+
+      return rounded
+    end
+    raw
+  end
 
   def build_status_to_column_map columns
     columns.each_with_object({}).with_index do |(column, map), index|
