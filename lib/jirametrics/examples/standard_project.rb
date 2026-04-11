@@ -9,7 +9,7 @@ class Exporter
       show_experimental_charts: false, github_repos: nil
     exporter = self
     project name: name do
-      file_system.log name
+      file_system.log name, also_write_to_stderr: true
       file_prefix file_prefix
 
       self.anonymize if anonymize
@@ -82,6 +82,9 @@ class Exporter
           end
 
           aging_work_in_progress_chart
+          wip_by_column_chart do
+            show_recommendations
+          end
           aging_work_bar_chart
           aging_work_table
           daily_wip_by_age_chart
