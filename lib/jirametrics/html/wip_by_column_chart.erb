@@ -9,14 +9,16 @@
 </div>
 <script>
 (function() {
-  var wipData      = <%= @wip_data.to_json %>;
-  var wipLimits    = <%= @wip_limits.to_json %>;
-  var maxWip       = <%= @max_wip %>;
-  var gridColor    = <%= CssVariable['--grid-line-color'].to_json %>;
-  var barFillColor = <%= CssVariable['--wip-by-column-chart-bar-fill-color'].to_json %>;
-  var barTextColor = <%= CssVariable['--wip-by-column-chart-bar-text-color'].to_json %>;
-  var limitColor   = <%= CssVariable['--wip-by-column-chart-limit-line-color'].to_json %>;
-  var tooltipEl    = document.getElementById(<%= "#{chart_id}-tooltip".inspect %>);
+  var wipData         = <%= @wip_data.to_json %>;
+  var wipLimits       = <%= @wip_limits.to_json %>;
+  var recommendations = <%= @recommendations.to_json %>;
+  var maxWip          = <%= @max_wip %>;
+  var gridColor       = <%= CssVariable['--grid-line-color'].to_json %>;
+  var barFillColor    = <%= CssVariable['--wip-by-column-chart-bar-fill-color'].to_json %>;
+  var barTextColor    = <%= CssVariable['--wip-by-column-chart-bar-text-color'].to_json %>;
+  var limitColor      = <%= CssVariable['--wip-by-column-chart-limit-line-color'].to_json %>;
+  var recColor        = <%= CssVariable['--wip-by-column-chart-recommendation-color'].to_json %>;
+  var tooltipEl       = document.getElementById(<%= "#{chart_id}-tooltip".inspect %>);
 
   var hitAreas = [];
 
@@ -80,7 +82,35 @@
         });
       });
 
-      // 3. Draw WIP rectangles centered in their bands (wip + 0.5)
+      <% if @show_recommendations %>
+      // 3. Draw recommendation lines (behind rectangles, label on left)
+      recommendations.forEach(function(rec, colIndex) {
+        if (rec === null || rec === undefined || rec === 0) return;
+        var xCenter  = xScale.getPixelForValue(colIndex);
+        var halfSlot = slotWidth * 0.45;
+        var y = yScale.getPixelForValue(rec + 0.5);
+
+        ctx.save();
+        ctx.strokeStyle = recColor;
+        ctx.lineWidth   = 2;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        ctx.moveTo(xCenter - halfSlot, y);
+        ctx.lineTo(xCenter + halfSlot, y);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle    = recColor;
+        ctx.font         = 'bold 10px sans-serif';
+        ctx.textAlign    = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('rec: ' + rec, xCenter - halfSlot, y + 2);
+        ctx.restore();
+      });
+      <% end %>
+
+      // 4. Draw WIP rectangles centered in their bands (wip + 0.5)
       var yStep = Math.abs(yScale.getPixelForValue(0.5) - yScale.getPixelForValue(1.5));
 
       wipData.forEach(function(colData, colIndex) {
@@ -208,3 +238,13 @@
 })();
 </script>
 <%= seam_end %>
+<% unless @recommendation_texts.empty? %>
+<div style="margin-top: 0.5em;">
+  <strong>WIP limit recommendations</strong>
+  <ul style="margin: 0.3em 0 0 0; padding-left: 1.5em;">
+    <% @recommendation_texts.each do |text| %>
+      <li><%= text %></li>
+    <% end %>
+  </ul>
+</div>
+<% end %>

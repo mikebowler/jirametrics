@@ -130,6 +130,100 @@ describe WipByColumnChart do
       expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
     end
 
+    context 'show_recommendations' do
+      # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
+      # Issue B is in Ready for 600s then moves to In Progress for 400s.
+      # Ready column: WIP=1 for 400s (40%), WIP=2 for 600s (60%) — total 1000s
+      #   sorted: [[1,400],[2,600]]
+      #   cumulative: WIP=1 → 400/1000=40%, WIP=2 → 1000/1000=100%
+      #   85th percentile lands at WIP=2  → recommended max = 2
+      # In Progress: WIP=0 for 600s, WIP=1 for 400s
+      #   85th percentile → cumulative WIP=0: 60%, WIP=1: 100% → recommended = 1
+
+      def two_issue_setup
+        issue_a = issue_in_ready key: 'SP-1' # stays in Ready all 1000s
+
+        issue_b = issue_in_ready key: 'SP-2'
+        add_mock_change issue: issue_b, field: 'status',
+          value: 'In Progress', value_id: 3,
+          time: to_time('2021-06-01T00:06:40') # 400s in
+        [issue_a, issue_b]
+      end
+
+      it 'recommendations are not shown by default' do
+        chart.issues = two_issue_setup
+        output = chart.run
+        expect(output).not_to include('rec: ')
+        expect(output).not_to include('WIP limit recommendations')
+      end
+
+      it 'computes the 85th-percentile WIP per column' do
+        chart.issues = two_issue_setup
+        stats = chart.column_stats
+
+        recs = chart.send(:compute_recommendations, stats)
+
+        # Ready: WIP=1 for 400s (40%), WIP=2 for 600s (60%); 85% reached at WIP=2
+        expect(recs[0]).to eq 2
+        # In Progress: WIP=0 for 600s (60%), WIP=1 for 400s (40%); 85% reached at WIP=1
+        expect(recs[1]).to eq 1
+      end
+
+      it 'draws recommendation lines and texts when enabled' do
+        chart.issues = two_issue_setup
+        chart.show_recommendations
+        output = chart.run
+
+        expect(output).to include('rec: ')
+        expect(output).to include('WIP limit recommendations')
+      end
+
+      it 'suggests adding a limit when none exists' do
+        chart.issues = two_issue_setup
+        chart.show_recommendations
+        output = chart.run
+
+        # In Progress has max=3 so rec=1 < 3 → lower; Ready has max=4 so rec=2 < 4 → lower
+        # Done has no non-zero WIP so it's trimmed
+        expect(output).to include("Lower the WIP limit for 'Ready' from 4 to 2")
+        expect(output).to include("Lower the WIP limit for 'In Progress' from 3 to 1")
+      end
+
+      it 'recommends removing a column when 85% of time is at WIP=0' do
+        # Issue passes through In Progress briefly (100s) but Ready is empty for 900s
+        # Ready: WIP=0 for 900s (90%), WIP=1 for 100s (10%) → 85th pct at WIP=0
+        issue = issue_in_ready key: 'SP-1'
+        add_mock_change issue: issue, field: 'status',
+          value: 'In Progress', value_id: 3,
+          time: to_time('2021-06-01T00:15:20') # 920s into the 1000s window
+
+        chart.issues = [issue]
+        chart.show_recommendations
+        output = chart.run
+
+        expect(output).to include("Almost nothing passes through column 'In Progress'")
+        expect(output).not_to include("Lower the WIP limit for 'In Progress'")
+        expect(output).not_to include("Add a WIP limit to column 'In Progress'")
+      end
+
+      it 'suggests adding a limit when there is no existing limit' do
+        # Done has min=nil, max=nil — use mock cycletime so the issue counts as in-WIP
+        issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+        add_mock_change issue: issue, field: 'status',
+          value: 'Done', value_id: 10_002,
+          time: to_time('2021-05-31T12:00:00')
+        board.cycletime = mock_cycletime_config stub_values: [
+          ['SP-1', '2021-05-31T12:00:00', nil]
+        ]
+
+        chart.issues = [issue]
+        chart.show_recommendations
+        output = chart.run
+
+        expect(output).to include("Add a WIP limit to column 'Done'")
+      end
+    end
+
     context 'trim_zero_end_columns' do
       it 'removes a leading all-zero column' do
         # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window

@@ -52,6 +52,10 @@ class WipByColumnChart < ChartBase
     instance_eval(&block)
   end
 
+  def show_recommendations
+    @show_recommendations = true
+  end
+
   def run
     stats = column_stats
     @column_names = stats.collect(&:name)
@@ -63,8 +67,10 @@ class WipByColumnChart < ChartBase
     end
     @max_wip = stats.flat_map { |s| s.wip_history.collect { |wip, _| wip } }.max || 0
     @wip_limits = stats.collect { |s| { 'min' => s.min_wip_limit, 'max' => s.max_wip_limit } }
+    @recommendations = @show_recommendations ? compute_recommendations(stats) : Array.new(stats.size)
 
     trim_zero_end_columns
+    @recommendation_texts = @show_recommendations ? build_recommendation_texts : []
 
     wrap_and_render(binding, __FILE__)
   end
@@ -97,10 +103,46 @@ class WipByColumnChart < ChartBase
     return unless first
 
     last = all_zero.rindex(false)
-    @column_names = @column_names[first..last]
-    @wip_data     = @wip_data[first..last]
-    @wip_limits   = @wip_limits[first..last]
-    @max_wip      = @wip_data.flat_map { |col| col.map { |e| e['wip'] } }.max || 0
+    @column_names    = @column_names[first..last]
+    @wip_data        = @wip_data[first..last]
+    @wip_limits      = @wip_limits[first..last]
+    @recommendations = @recommendations[first..last]
+    @max_wip         = @wip_data.flat_map { |col| col.map { |e| e['wip'] } }.max || 0
+  end
+
+  def compute_recommendations stats
+    stats.collect do |stat|
+      next nil if stat.wip_history.empty?
+
+      total = stat.wip_history.sum { |_wip, seconds| seconds }.to_f
+      next nil if total.zero?
+
+      cumulative = 0
+      stat.wip_history.sort.find do |_wip, seconds|
+        cumulative += seconds
+        cumulative / total >= 0.85
+      end&.first
+    end
+  end
+
+  def build_recommendation_texts
+    @column_names.each_with_index.filter_map do |name, i|
+      rec = @recommendations[i]
+      next if rec.nil?
+
+      if rec.zero?
+        next "Almost nothing passes through column '#{name}'. Do we still need it?"
+      end
+
+      max = @wip_limits[i]['max']
+      if max.nil?
+        "Add a WIP limit to column '#{name}' — suggested maximum: #{rec}"
+      elsif rec < max
+        "Lower the WIP limit for '#{name}' from #{max} to #{rec}"
+      elsif rec > max
+        "Raise the WIP limit for '#{name}' from #{max} to #{rec}"
+      end
+    end
   end
 
   def format_pct seconds, total
