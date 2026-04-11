@@ -118,6 +118,11 @@ class AgingWorkInProgressChart < ChartBase
     unless @show_all_columns
       column_indexes_to_remove = indexes_of_leading_and_trailing_zeros(calculator.age_data_for(percentage: 100))
 
+      columns_with_aging_items = data_sets.flat_map do |set|
+        set['data'].filter_map { |d| d['x'] if d.is_a? Hash }
+      end.uniq
+      column_indexes_to_remove.reject! { |index| columns_with_aging_items.include?(@board_columns[index].name) }
+
       column_indexes_to_remove.reverse_each do |index|
         @board_columns.delete_at index
       end

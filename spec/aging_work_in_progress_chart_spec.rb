@@ -147,6 +147,42 @@ describe AgingWorkInProgressChart do
     end
   end
 
+  context 'show_all_columns is false (default)' do
+    it 'keeps columns that have active aging items even when they have no historical data' do
+      # Board columns: [Ready, In Progress, Review, Done]
+      # Completed issue skips Ready -> Ready has zero historical data
+      # Active issue IS in Ready -> Ready must still appear first, not last
+      completed_issue = create_issue_from_aging_data(
+        board: board, ages_by_column: [0, 2, 3, 7], today: today.to_s, key: 'SP-200'
+      )
+      active_issue = create_issue_from_aging_data(
+        board: board, ages_by_column: [5], today: today.to_s, key: 'SP-201'
+      )
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed_issue, '2021-06-15', '2021-06-26'],
+        [active_issue, '2021-06-23', nil]
+      ]
+
+      new_chart = described_class.new(empty_config_block)
+      new_chart.file_system = MockFileSystem.new
+      html_path = File.expand_path('./lib/jirametrics/html/')
+      new_chart.file_system.when_loading(
+        file: "#{html_path}/aging_work_in_progress_chart.erb",
+        json: :not_mocked
+      )
+      new_chart.board_id = 1
+      new_chart.all_boards = { 1 => board }
+      new_chart.issues = [completed_issue, active_issue]
+      new_chart.date_range = to_date('2021-06-18')..today
+      new_chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
+      # Deliberately NOT calling show_all_columns, so leading/trailing zero trimming is active
+
+      new_chart.run
+
+      expect(new_chart.board_columns.first.name).to eq 'Ready'
+    end
+  end
+
   context 'indexes_of_leading_and_trailing_zeros' do
     it 'handles empty' do
       expect(chart.indexes_of_leading_and_trailing_zeros []).to be_empty
