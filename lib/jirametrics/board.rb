@@ -72,7 +72,7 @@ class Board
     return true if board_type == 'scrum'
     return false unless board_type == 'simple'
 
-    @features.any? { |f| f.name == 'jsw.agility.sprints' && f.enabled? }
+    has_sprints_feature?
   end
 
   def kanban?
@@ -80,6 +80,14 @@ class Board
     return false unless board_type == 'simple'
 
     !scrum?
+  end
+
+  def team_managed_kanban?
+    board_type == 'simple' && !has_sprints_feature?
+  end
+
+  def has_sprints_feature?
+    @features.any? { |f| f.name == 'jsw.agility.sprints' && f.enabled? }
   end
 
   def id

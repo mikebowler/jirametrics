@@ -39,6 +39,14 @@ class WipByColumnChart < ChartBase
       <p>
         Hover over any bar to see the exact percentage.
       </p>
+      <% if @all_boards[@board_id].team_managed_kanban? %>
+        <p>
+          If the data looks a bit off then that's probably because you're using a Team Managed project in "kanban mode".
+          For this specific case, we are unable to tell if an item is actually visible on the board and so we may
+          be reporting more items started than you actually see on the board. See
+          <a href="https://jirametrics.org/faq/#team-managed-kanban-backlog">the FAQ</a>.
+        </p>
+      <% end %>
     HTML
 
     instance_eval(&block)
