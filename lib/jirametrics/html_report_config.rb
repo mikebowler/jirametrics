@@ -41,20 +41,25 @@ class HtmlReportConfig < HtmlGenerator
     block ||= ->(_) {}
 
     if klass.instance_method(:board_id=).owner == klass
-      all_boards = @file_config.project_config.all_boards
-      ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq
-      ids = ids.sort_by { |id| all_boards[id]&.name || '' }
-      ids.each_with_index do |id, index|
-        execute_chart(klass.new(block)) do |chart|
-          chart.board_id = id
-          chart.description_text nil if index.positive?
-        end
-      end
+      execute_chart_per_board klass: klass, block: block, board_id: board_id
     else
       execute_chart klass.new(block)
     end
   rescue NameError
     super
+  end
+
+  def execute_chart_per_board klass:, block:, board_id:
+    all_boards = @file_config.project_config.all_boards
+    ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq
+    ids = ids.sort_by { |id| all_boards[id]&.name || '' }
+    ids.each_with_index do |id, index|
+      execute_chart(klass.new(block)) do |chart|
+        chart.board_id = id
+        # We're showing the description only on the first one in order to reduce noise on the report
+        chart.description_text nil unless index.zero?
+      end
+    end
   end
 
   def respond_to_missing? name, include_private = false
