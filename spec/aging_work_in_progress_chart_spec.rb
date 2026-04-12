@@ -148,6 +148,78 @@ describe AgingWorkInProgressChart do
   end
 
   context 'show_all_columns is false (default)' do
+    def make_trimming_chart board:, issues:
+      c = described_class.new(empty_config_block)
+      c.file_system = MockFileSystem.new
+      c.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_in_progress_chart.erb'),
+        json: :not_mocked
+      )
+      c.board_id = 1
+      c.all_boards = { 1 => board }
+      c.issues = issues
+      c.date_range = to_date('2021-06-18')..to_date('2021-06-28')
+      c.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
+      c
+    end
+
+    it 'removes a trailing done column with age data when @fake_column is also visible' do
+      # Bug: Done has non-zero age data (completed issue passed through it), so
+      # indexes_of_leading_and_trailing_zeros never flagged it. With @fake_column also
+      # present it is not a trailing zero from age_data's perspective, so it stayed.
+      completed = create_issue_from_aging_data(
+        board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
+      )
+      active = empty_issue created: '2021-06-20', board: board, key: 'SP-201'
+      active.raw['fields']['status'] = {
+        'name' => 'FakeBacklog', 'id' => '10012',
+        'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
+      }
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed, '2021-06-15', '2021-06-26'],
+        [active,    '2021-06-20', nil]
+      ]
+
+      c = make_trimming_chart board: board, issues: [completed, active]
+      c.run
+
+      names = c.board_columns.map(&:name)
+      expect(names).to include('[Unmapped Statuses]')
+      expect(names).not_to include('Done')
+    end
+
+    it 'keeps intermediate columns with completion history even when no aging items are currently there' do
+      # Board columns: [Ready, In Progress, Review, Done]
+      # Completed issue passes through In Progress, Review, and Done.
+      # Done is the last visible column: BoardMovementCalculator uses today as end_date for
+      # the last column, so its age_data is always inflated — it can never be a trailing zero
+      # and the original algorithm therefore could not remove it.
+      # The fix excludes the last visible column from the age_data right-boundary calculation,
+      # making right_bound = Review.  In Progress and Review are kept; Done is removed.
+      # Active issue is in @fake_column to trigger the scenario.
+      completed = create_issue_from_aging_data(
+        board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
+      )
+      active = empty_issue created: '2021-06-20', board: board, key: 'SP-201'
+      active.raw['fields']['status'] = {
+        'name' => 'FakeBacklog', 'id' => '10012',
+        'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
+      }
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed, '2021-06-15', '2021-06-27'],
+        [active,    '2021-06-20', nil]
+      ]
+
+      c = make_trimming_chart board: board, issues: [completed, active]
+      c.run
+
+      names = c.board_columns.map(&:name)
+      expect(names).to include('In Progress')
+      expect(names).to include('Review')
+      expect(names).to include('[Unmapped Statuses]')
+      expect(names).not_to include('Done')
+    end
+
     it 'keeps columns that have active aging items even when they have no historical data' do
       # Board columns: [Ready, In Progress, Review, Done]
       # Completed issue skips Ready -> Ready has zero historical data

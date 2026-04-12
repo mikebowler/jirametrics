@@ -6,6 +6,7 @@ require 'jirametrics/board_movement_calculator'
 
 class AgingWorkInProgressChart < ChartBase
   include GroupableIssueChart
+
   attr_accessor :possible_statuses, :board_id
   attr_reader :board_columns
 
@@ -76,7 +77,7 @@ class AgingWorkInProgressChart < ChartBase
 
     @fake_column = BoardColumn.new({
       'name' => '[Unmapped Statuses]',
-      'statuses' => unmapped_statuses.collect { |id| { 'id' => id.to_s } }.uniq # rubocop:disable Performance/ChainArrayAllocation
+      'statuses' => unmapped_statuses.collect { |id| { 'id' => id.to_s } }.uniq
     })
     @board_columns = columns + [@fake_column]
   end
@@ -114,19 +115,7 @@ class AgingWorkInProgressChart < ChartBase
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues, today: date_range.end
 
-    column_indexes_to_remove = []
-    unless @show_all_columns
-      column_indexes_to_remove = indexes_of_leading_and_trailing_zeros(calculator.age_data_for(percentage: 100))
-
-      columns_with_aging_items = data_sets.flat_map do |set|
-        set['data'].filter_map { |d| d['x'] if d.is_a? Hash }
-      end.uniq
-      column_indexes_to_remove.reject! { |index| columns_with_aging_items.include?(@board_columns[index].name) }
-
-      column_indexes_to_remove.reverse_each do |index|
-        @board_columns.delete_at index
-      end
-    end
+    column_indexes_to_remove = trim_board_columns data_sets: data_sets, calculator: calculator
 
     @row_index_offset = data_sets.size
 
@@ -180,6 +169,44 @@ class AgingWorkInProgressChart < ChartBase
       result << index if list[index].zero?
     end
     result
+  end
+
+  def trim_board_columns data_sets:, calculator:
+    return [] if @show_all_columns
+
+    columns_with_aging_items = data_sets.flat_map do |set|
+      set['data'].filter_map { |d| d['x'] if d.is_a? Hash }
+    end.uniq
+
+    # @fake_column is always the last element and is handled separately.
+    real_column_count = @board_columns.size - 1
+
+    # The last visible column always has artificially inflated age_data because
+    # ages_of_issues_when_leaving_column uses `today` as end_date when there is no
+    # next column. Exclude it from the right-boundary search so it is only kept when
+    # it has current aging items (handled by the last_aging fallback below).
+    age_data = calculator.age_data_for(percentage: 100)
+    last_data = (0...(real_column_count - 1)).to_a.reverse.find { |i| !age_data[i].zero? }
+
+    in_current = ->(i) { columns_with_aging_items.include?(@board_columns[i].name) }
+    first_aging = (0...real_column_count).find(&in_current)
+    last_aging  = (0...real_column_count).to_a.reverse.find(&in_current)
+
+    # Combine: include any column with age_data (up to but not including the last visible
+    # column) and any column with current aging items.
+    first_data = (0...real_column_count).find { |i| !age_data[i].zero? }
+    left_bound  = [first_data, first_aging].compact.min
+    right_bound = [last_data, last_aging].compact.max
+
+    indexes_to_remove =
+      if left_bound && right_bound
+        (0...left_bound).to_a + ((right_bound + 1)...real_column_count).to_a
+      else
+        (0...real_column_count).to_a
+      end
+
+    indexes_to_remove.reverse_each { |index| @board_columns.delete_at index }
+    indexes_to_remove
   end
 
   def column_for issue:
