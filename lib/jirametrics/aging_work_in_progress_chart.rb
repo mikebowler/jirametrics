@@ -56,7 +56,7 @@ class AgingWorkInProgressChart < ChartBase
   def run
     determine_board_columns
 
-    @header_text += " on board: #{@all_boards[@board_id].name}"
+    @header_text += " on board: #{current_board.name}"
     data_sets = make_data_sets
 
     adjust_visibility_of_unmapped_status_column data_sets: data_sets
@@ -224,7 +224,7 @@ class AgingWorkInProgressChart < ChartBase
       end
     end
 
-    if has_unmapped
+    if has_unmapped && @description_text
       @description_text += "<p>The items shown in #{column_name.inspect} are not visible on the " \
         'board but are still active. Most likely everyone has forgotten about them.</p>'
     else

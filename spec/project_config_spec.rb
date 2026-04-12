@@ -328,6 +328,22 @@ describe ProjectConfig do
       expect(project_config.all_boards.collect { |id, b| [id, b.id] }).to eql([[1, 1]])
       expect(project_config.issues).to eql([issue])
     end
+
+    it 'accumulates boards across multiple calls' do
+      issue1 = load_issue('SP-1', board: board)
+
+      raw = JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json'))
+      raw['id'] = 2
+      board2 = Board.new(raw: raw, possible_statuses: load_statuses('./spec/testdata/sample_statuses.json'))
+      board2.project_config = project_config
+      issue2 = empty_issue created: '2021-01-01', board: board2, key: 'SP-999'
+
+      project_config.add_issues([issue1])
+      project_config.add_issues([issue2])
+
+      expect(project_config.all_boards.keys.sort).to eq [1, 2]
+      expect(project_config.issues).to include(issue1, issue2)
+    end
   end
 
   context 'status_category_mapping' do

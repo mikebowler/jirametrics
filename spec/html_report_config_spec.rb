@@ -19,6 +19,7 @@ class TestableBoardChart < ChartBase
 
   def initialize _block
     super()
+    description_text 'test description'
   end
 
   def run
@@ -180,6 +181,50 @@ describe HtmlReportConfig do
         expect(config.charts.length).to eq 1
         expect(config.charts.first.board_id).to eq 1
       end
+    end
+  end
+
+  context 'method_missing with board-specific charts across multiple boards' do
+    let(:board) { project_config.all_boards[1] }
+    let(:board2) do
+      raw = JSON.parse(file_read('spec/complete_sample/sample_board_1_configuration.json'))
+      raw['id'] = 2
+      raw['name'] = 'Aardvark Board' # sorts before "SP board"
+      Board.new(raw: raw, possible_statuses: load_complete_sample_statuses).tap do |b|
+        project_config.add_issues([empty_issue(created: '2022-01-01', board: b, key: 'SP-99')])
+      end
+    end
+    let(:two_board_issues) do
+      [
+        empty_issue(created: '2022-01-01', board: board),
+        empty_issue(created: '2022-01-01', board: board2, key: 'SP-99')
+      ]
+    end
+
+    # guess_board_id raises for non-aggregated projects with multiple boards; the real
+    # aggregated code path has aggregated_project? == true so guess_board_id returns nil.
+    before { allow(project_config).to receive(:aggregated_project?).and_return(true) }
+
+    it 'orders charts alphabetically by board name' do
+      config = described_class.new file_config: file_config, block: nil
+      allow(config).to receive(:issues).and_return(two_board_issues)
+
+      config.testable_board_chart
+
+      expect(config.charts.length).to eq 2
+      board_names = config.charts.map { |c| project_config.all_boards[c.board_id].name }
+      expect(board_names).to eq ['Aardvark Board', 'SP board']
+    end
+
+    it 'sets description_text to nil for all but the first chart' do
+      config = described_class.new file_config: file_config, block: nil
+      allow(config).to receive(:issues).and_return(two_board_issues)
+
+      config.testable_board_chart
+
+      expect(config.charts.length).to eq 2
+      expect(config.charts[0].description_text).not_to be_nil
+      expect(config.charts[1].description_text).to be_nil
     end
   end
 

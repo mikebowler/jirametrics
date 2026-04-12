@@ -453,7 +453,7 @@ class ProjectConfig
   # To be used by the aggregate_config only. Not intended to be part of the public API
   def add_issues issues_list
     @issues = IssueCollection.new if @issues.nil?
-    @all_boards = {}
+    @all_boards ||= {}
 
     issues_list.each do |issue|
       @issues << issue

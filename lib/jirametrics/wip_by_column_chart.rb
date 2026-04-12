@@ -57,6 +57,7 @@ class WipByColumnChart < ChartBase
   end
 
   def run
+    @header_text += " on board: #{current_board.name}"
     stats = column_stats
     @column_names = stats.collect(&:name)
     @wip_data = stats.collect do |stat|
@@ -76,7 +77,7 @@ class WipByColumnChart < ChartBase
   end
 
   def column_stats
-    board = @all_boards[@board_id]
+    board = current_board
     columns = board.visible_columns
     status_to_column = build_status_to_column_map(columns)
     relevant_issues = @issues.select { |issue| issue.board.id == @board_id }
@@ -130,9 +131,7 @@ class WipByColumnChart < ChartBase
       rec = @recommendations[i]
       next if rec.nil?
 
-      if rec.zero?
-        next "Almost nothing passes through column '#{name}'. Do we still need it?"
-      end
+      next "Almost nothing passes through column '#{name}'. Do we still need it?" if rec.zero?
 
       max = @wip_limits[i]['max']
       if max.nil?

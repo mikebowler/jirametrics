@@ -41,10 +41,13 @@ class HtmlReportConfig < HtmlGenerator
     block ||= ->(_) {}
 
     if klass.instance_method(:board_id=).owner == klass
-      ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq.sort
-      ids.each do |id|
+      all_boards = @file_config.project_config.all_boards
+      ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq
+      ids = ids.sort_by { |id| all_boards[id]&.name || '' }
+      ids.each_with_index do |id, index|
         execute_chart(klass.new(block)) do |chart|
           chart.board_id = id
+          chart.description_text nil if index.positive?
         end
       end
     else

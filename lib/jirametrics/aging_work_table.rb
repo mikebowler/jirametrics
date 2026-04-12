@@ -45,7 +45,9 @@ class AgingWorkTable < ChartBase
   # This is its own method simply so the tests can initialize the calculator without doing a full run.
   def initialize_calculator
     @today = date_range.end
-    @calculator = BoardMovementCalculator.new board: current_board, issues: issues, today: @today
+    @calculators = @all_boards.transform_values do |board|
+      BoardMovementCalculator.new board: board, issues: issues, today: @today
+    end
   end
 
   def expedited_but_not_started
@@ -123,7 +125,8 @@ class AgingWorkTable < ChartBase
     due = issue.due_date
     message = nil
 
-    days_remaining, error = @calculator.forecasted_days_remaining_and_message issue: issue, today: @today
+    calculator = @calculators[issue.board.id]
+    days_remaining, error = calculator.forecasted_days_remaining_and_message issue: issue, today: @today
 
     unless error
       if due
