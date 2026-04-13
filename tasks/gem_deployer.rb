@@ -28,6 +28,7 @@ class GemDeployer
     gem_file = build_gem
     otp = prompt_otp
     push_gem gem_file, otp
+    install_gem gem_file
     File.delete gem_file
 
     otp = yank_prereleases otp
@@ -47,6 +48,7 @@ class GemDeployer
     gem_file = build_gem
     otp = prompt_otp
     push_gem gem_file, otp
+    install_gem gem_file
     File.delete gem_file
 
     yank_prereleases otp
@@ -171,6 +173,11 @@ class GemDeployer
     stdout, stderr, status = Open3.capture3("gem push #{gem_file} --otp #{otp}")
     print stdout
     raise "gem push failed:\n#{stderr}" unless status.success?
+  end
+
+  def install_gem gem_file
+    puts "Installing #{gem_file} locally..."
+    system("gem install #{gem_file}") || raise('gem install failed')
   end
 
   def yank_prereleases otp
