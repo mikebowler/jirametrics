@@ -1460,6 +1460,22 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  context 'priority_name and priority_url' do
+    let(:issue) { empty_issue created: '2020-01-01', board: board }
+
+    it 'returns nil when priority field is absent' do
+      issue.raw['fields']['priority'] = nil
+      expect(issue.priority_name).to be_nil
+      expect(issue.priority_url).to be_nil
+    end
+
+    it 'returns the name and url when priority is set' do
+      issue.raw['fields']['priority'] = { 'name' => 'High', 'iconUrl' => 'http://example.com/icon.png' }
+      expect(issue.priority_name).to eq 'High'
+      expect(issue.priority_url).to eq 'http://example.com/icon.png'
+    end
+  end
+
   context 'expedited_on_date?' do
     it 'works when expedited turns on and off on same day' do
       issue = empty_issue created: '2021-10-01', board: board

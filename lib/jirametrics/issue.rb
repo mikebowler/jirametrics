@@ -48,8 +48,8 @@ class Issue
   def type = @raw['fields']['issuetype']['name']
   def type_icon_url = @raw['fields']['issuetype']['iconUrl']
 
-  def priority_name = @raw['fields']['priority']['name']
-  def priority_url = @raw['fields']['priority']['iconUrl']
+  def priority_name = @raw.dig('fields', 'priority', 'name')
+  def priority_url = @raw.dig('fields', 'priority', 'iconUrl')
 
   def summary = @raw['fields']['summary']
 
