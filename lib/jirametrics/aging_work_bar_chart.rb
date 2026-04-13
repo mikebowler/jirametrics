@@ -235,10 +235,12 @@ class AgingWorkBarChart < ChartBase
       previous_change = change
     end
 
-    results << create_range_for_priority(
-      previous_change: previous_change, stop_time: time_range.end,
-      expedited_priority_names: expedited_priority_names
-    )
+    if previous_change
+      results << create_range_for_priority(
+        previous_change: previous_change, stop_time: time_range.end,
+        expedited_priority_names: expedited_priority_names
+      )
+    end
     results
   end
 
