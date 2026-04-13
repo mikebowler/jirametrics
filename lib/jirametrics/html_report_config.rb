@@ -35,8 +35,8 @@ class HtmlReportConfig < HtmlGenerator
 
   def method_missing name, *_args, board_id: nil, **_kwargs, &block
     class_name = name.to_s.split('_').map(&:capitalize).join
-    klass = Object.const_get(class_name)
-    raise NameError unless klass < ChartBase
+    klass = resolve_chart_class(class_name)
+    return super if klass.nil?
 
     block ||= ->(_) {}
 
@@ -45,8 +45,13 @@ class HtmlReportConfig < HtmlGenerator
     else
       execute_chart klass.new(block)
     end
+  end
+
+  def resolve_chart_class class_name
+    klass = Object.const_get(class_name)
+    klass < ChartBase ? klass : nil
   rescue NameError
-    super
+    nil
   end
 
   def execute_chart_per_board klass:, block:, board_id:
@@ -64,10 +69,7 @@ class HtmlReportConfig < HtmlGenerator
 
   def respond_to_missing? name, include_private = false
     class_name = name.to_s.split('_').map(&:capitalize).join
-    klass = Object.const_get(class_name)
-    klass < ChartBase
-  rescue NameError
-    super
+    !resolve_chart_class(class_name).nil? || super
   end
 
   def cycletime label = nil, &block

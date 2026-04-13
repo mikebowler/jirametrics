@@ -140,6 +140,13 @@ describe HtmlReportConfig do
       expect { config.testable_chart }.not_to raise_error
     end
 
+    it 'routes aging_work_bar_chart through method_missing without swallowing errors' do
+      config = described_class.new file_config: file_config, block: nil
+      config.board_id 1
+      allow(config).to receive(:issues).and_return([])
+      expect { config.aging_work_bar_chart }.not_to raise_error
+    end
+
     it 'raises an error for an unknown name' do
       config = described_class.new file_config: file_config, block: nil
       expect { config.nonexistent_chart }.to raise_error RuntimeError

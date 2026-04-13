@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'English'
 require 'thor'
 require 'require_all'
 
@@ -99,6 +100,22 @@ class JiraMetrics < Thor
     load_config options[:config]
     Exporter.instance.stitch stitch_file
   end
+
+  def self.log_uncaught_exception exception, file_system: nil
+    return unless exception && !exception.is_a?(SystemExit)
+
+    begin
+      file_system ||= Exporter.instance.file_system
+      return if file_system.logfile == $stdout
+
+      file_system.logfile.puts "#{exception.class}: #{exception.message}"
+      exception.backtrace&.each { |line| file_system.logfile.puts "\t#{line}" }
+    rescue StandardError
+      # Exporter may not be initialized, or the logfile may already be closed
+    end
+  end
+
+  at_exit { JiraMetrics.log_uncaught_exception $ERROR_INFO }
 
   no_commands do
     def load_config config_file, file_system: FileSystem.new
