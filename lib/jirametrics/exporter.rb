@@ -8,7 +8,12 @@ class Exporter
 
   def self.configure &block
     logfile_name = 'jirametrics.log'
-    logfile = File.open logfile_name, 'w'
+    logfile = File.open(logfile_name, 'w')
+  rescue Errno::EACCES
+    warn "Error: Cannot write to #{File.expand_path(logfile_name)}. " \
+      'Please ensure the current directory is writable.'
+    exit 1
+  else
     file_system = FileSystem.new
     file_system.logfile = logfile
     file_system.logfile_name = logfile_name

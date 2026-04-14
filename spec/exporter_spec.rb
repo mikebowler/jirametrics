@@ -12,6 +12,13 @@ describe Exporter do
   end
   let(:exporter) { described_class.new file_system: file_system }
 
+  context 'configure' do
+    it 'prints a friendly error and exits when the log file cannot be written' do
+      allow(File).to receive(:open).with('jirametrics.log', 'w').and_raise(Errno::EACCES)
+      expect { described_class.configure { nil } }.to raise_error(SystemExit)
+    end
+  end
+
   context 'target_path' do
     it 'works with no file separator at end' do
       Dir.rmdir TARGET_PATH if File.exist? TARGET_PATH
