@@ -31,7 +31,11 @@ task go: %i[initialize_config download export]
 
 desc 'info'
 task info: [:initialize_config] do
-  JiraMetrics.start %w[info SP-109]
+  key = ARGV[1]
+  raise 'Usage: rake info ISSUE_KEY  e.g. rake info SP-10' unless key
+
+  ARGV[1..].each { |a| task(a.to_sym) {} } # rubocop:disable Rake/Desc
+  JiraMetrics.start ['info', key]
 end
 
 desc 'stitch'
