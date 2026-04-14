@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "jirametrics",
+  "project_id": "8750a488-7fd3-4dcf-8d95-0d55362e65e8"
+}
