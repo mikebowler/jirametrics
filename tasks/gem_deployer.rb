@@ -38,6 +38,12 @@ class GemDeployer
     puts "Release #{current_version} complete!"
   end
 
+  def build_and_install
+    gem_file = build_gem
+    install_gem gem_file
+    puts gem_file
+  end
+
   def run_prerelease
     puts "Deploying jirametrics #{current_version} (pre-release)..."
     puts ''

@@ -2,6 +2,11 @@
 
 require_relative 'gem_deployer'
 
+desc 'Build the gem and install it locally'
+task 'build-gem' do
+  GemDeployer.new.build_and_install
+end
+
 desc 'Deploy a stable release to RubyGems and GitHub'
 task :release do
   GemDeployer.new.run
