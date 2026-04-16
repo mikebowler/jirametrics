@@ -3,7 +3,7 @@
 require_relative 'gem_deployer'
 
 desc 'Build the gem and install it locally'
-task 'build-gem' do
+task :install do
   GemDeployer.new.build_and_install
 end
 
