@@ -72,6 +72,7 @@ class Exporter
 
   def info key, name_filter:
     selected = []
+    file_system.log_only = true
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
 
@@ -84,6 +85,7 @@ class Exporter
       # properly initialized. Since we don't care about aggregated projects, we just ignore it.
       raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'
     end
+    file_system.log_only = false
 
     if selected.empty?
       file_system.log "No issues found to match #{key.inspect}"
