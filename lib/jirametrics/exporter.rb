@@ -79,6 +79,9 @@ class Exporter
       project.run load_only: true
       project.issues.each do |issue|
         selected << [project, issue] if key == issue.key
+        issue.subtasks.each do |subtask|
+          selected << [project, subtask] if key == subtask.key
+        end
       end
     rescue => e # rubocop:disable Style/RescueStandardError
       # This happens when we're attempting to load an aggregated project because it hasn't been
