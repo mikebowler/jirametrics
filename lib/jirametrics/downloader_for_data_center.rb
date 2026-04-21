@@ -25,7 +25,7 @@ class DownloaderForDataCenter < Downloader
       keys_to_request = @issue_keys_pending_download[0..99]
       @issue_keys_pending_download.reject! { |key| keys_to_request.include? key }
       jql = "key in (#{keys_to_request.join(', ')})"
-      jira_search_by_jql(jql: jql, initial_query: false, board: board, path: path)
+      jira_search_by_jql(jql: jql, initial_query: true, board: board, path: path)
     end
   end
 
