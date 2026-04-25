@@ -1,0 +1,10 @@
+.git
+.beads
+.claude
+coverage
+tmp
+vendor/bundle
+node_modules
+output
+*.log
+.DS_Store

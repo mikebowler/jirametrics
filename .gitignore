@@ -9,6 +9,7 @@ spec/tmp/
 *.gem
 *.log
 extra.css
+.idea
 
 # Node.js dependencies
 node_modules/
