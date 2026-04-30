@@ -19,6 +19,7 @@ require 'require_all'
 require_all 'lib'
 require 'match_strings'
 require 'mock_cycle_time_config'
+require 'mock_file_system'
 
 def file_read filename
   File.read filename, encoding: 'UTF-8'
