@@ -15,7 +15,9 @@ describe Exporter do
   context 'configure' do
     it 'prints a friendly error and exits when the log file cannot be written' do
       allow(File).to receive(:open).with('jirametrics.log', 'w').and_raise(Errno::EACCES)
-      expect { described_class.configure { nil } }.to raise_error(SystemExit)
+      expect { described_class.configure { nil } }
+        .to output(/Cannot write to.*jirametrics\.log/).to_stderr
+        .and raise_error(SystemExit)
     end
   end
 

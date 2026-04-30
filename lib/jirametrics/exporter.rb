@@ -10,6 +10,7 @@ class Exporter
     logfile_name = 'jirametrics.log'
     logfile = File.open(logfile_name, 'w')
   rescue Errno::EACCES
+    # FileSystem can't be used here — it hasn't been created yet (it depends on this logfile).
     warn "Error: Cannot write to #{File.expand_path(logfile_name)}. " \
       'Please ensure the current directory is writable.'
     exit 1
