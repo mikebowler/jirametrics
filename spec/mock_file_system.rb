@@ -48,7 +48,7 @@ class MockFileSystem < FileSystem
   end
 
   def utime file:, time:
-    @log_messages << "[Debug] utime #{time} #{file}"
+    @log_messages << "[Debug] utime #{time.strftime('%Y-%m-%d %H:%M:%S %z')} #{file}"
   end
 
   def unlink filename

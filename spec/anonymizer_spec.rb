@@ -251,7 +251,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
   context 'shift_all_dates' do
     it 'changes nothing when shift is zero' do
       issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
-      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time}" }
+      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 0
       expect(changes).to eq [
@@ -262,7 +262,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
         'Flagged  2021-08-29 18:04:39 +0000',
         'status  2021-12-14 00:30:15 +0000'
       ]
-      expect(issue1.updated.to_s).to eql '2021-12-14 00:30:15 +0000'
+      expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-14 00:30:15 +0000'
       expect(exporter.file_system.log_messages).to eq [
         'Shifting all dates by 0 days'
       ]
@@ -270,7 +270,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
 
     it 'shifts everything by one day' do
       issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
-      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time}" }
+      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 1
       expect(changes).to eq [
@@ -281,7 +281,7 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
         'Flagged  2021-08-29 18:04:39 +0000',
         'status  2021-12-14 00:30:15 +0000'
       ]
-      expect(issue1.updated.to_s).to eql '2021-12-15 00:30:15 +0000'
+      expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-15 00:30:15 +0000'
       expect(exporter.file_system.log_messages).to eq [
         'Shifting all dates by 1 day'
       ]

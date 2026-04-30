@@ -6,12 +6,15 @@
 
 ENV['RACK_ENV'] = 'test'
 
-require 'simplecov'
-SimpleCov.start do
-  enable_coverage :branch
-  add_filter '/spec/'
-  SimpleCov.add_filter do |src_file|
-    File.basename(src_file.filename) == 'config.rb'
+# simplecov depends on date_core, a C extension that JRuby cannot load.
+if RUBY_ENGINE == 'ruby'
+  require 'simplecov'
+  SimpleCov.start do
+    enable_coverage :branch
+    add_filter '/spec/'
+    SimpleCov.add_filter do |src_file|
+      File.basename(src_file.filename) == 'config.rb'
+    end
   end
 end
 

@@ -1788,13 +1788,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   context 'parse_time' do
     it 'parses string' do
-      expect(issue1.parse_time('2021-01-13T14:13:42.257-0500').to_s).to eq(
+      expect(issue1.parse_time('2021-01-13T14:13:42.257-0500').strftime('%Y-%m-%d %H:%M:%S %z')).to eq(
         '2021-01-13 19:13:42 +0000'
       )
     end
 
     it 'parses int' do
-      expect(issue1.parse_time(1_759_080_993_142).to_s).to eq(
+      expect(issue1.parse_time(1_759_080_993_142).strftime('%Y-%m-%d %H:%M:%S %z')).to eq(
         '2025-09-28 17:36:33 +0000'
       )
     end
