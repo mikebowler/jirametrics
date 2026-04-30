@@ -905,11 +905,20 @@ class Issue
 
       history['items']&.each do |item|
         if item['field'] == 'status' && item['to'].nil?
-          board.project_config.file_system.log(
+          to_name = item['toString']
+          matches = board.possible_statuses.find_all_by_name(to_name)
+          guessed_id, id_note = if matches.length == 1
+            [matches.first.id.to_s, "Guessed id #{matches.first.id} from status name."]
+          elsif matches.length > 1
+            ['0', "Multiple statuses named #{to_name.inspect} exist (ids: #{matches.map(&:id).join(', ')}); cannot disambiguate. Using id 0."]
+          else
+            ['0', "No known status named #{to_name.inspect}. Using id 0."]
+          end
+          board.project_config.file_system.warning(
             "Issue #{key} has a status change without a 'to' id " \
-            "(from #{item['fromString'].inspect} to #{item['toString'].inspect}). Using id 0."
+            "(from #{item['fromString'].inspect} to #{to_name.inspect}). #{id_note}"
           )
-          item = item.merge('to' => '0')
+          item = item.merge('to' => guessed_id)
         end
 
         @changes << ChangeItem.new(raw: item, time: created, author_raw: history['author'])
