@@ -28,6 +28,14 @@ describe Board do
   end
 
   context 'project_id' do
+    it 'returns nil when no location key is present' do
+      board = described_class.new raw: {
+        'id' => 3,
+        'columnConfig' => { 'columns' => [] }
+      }, possible_statuses: StatusCollection.new
+      expect(board.project_id).to be_nil
+    end
+
     it 'ignores locations that are not project' do
       board = described_class.new raw: {
         'id' => 3,
@@ -54,6 +62,128 @@ describe Board do
         }
       }, possible_statuses: StatusCollection.new
       expect(board.project_id).to eq 2
+    end
+  end
+
+  context 'status_ids_from_column' do
+    it 'returns empty array when statuses key is absent' do
+      board = load_complete_sample_board
+      expect(board.status_ids_from_column({})).to eq []
+    end
+
+    it 'returns integer ids when statuses are present' do
+      board = load_complete_sample_board
+      column = { 'statuses' => [{ 'id' => '5' }, { 'id' => '10' }] }
+      expect(board.status_ids_from_column(column)).to eq [5, 10]
+    end
+  end
+
+  context 'status_ids_in_or_right_of_column' do
+    it 'returns ids from the named column and all columns to its right' do
+      board = load_complete_sample_board
+      expect(board.status_ids_in_or_right_of_column('In Progress')).to eq [3, 10_011, 10_002]
+    end
+
+    it 'returns all visible column ids when given the leftmost column' do
+      board = load_complete_sample_board
+      expect(board.status_ids_in_or_right_of_column('Ready')).to eq [10_001, 3, 10_011, 10_002]
+    end
+
+    it 'returns only that column\'s ids when given the rightmost column' do
+      board = load_complete_sample_board
+      expect(board.status_ids_in_or_right_of_column('Done')).to eq [10_002]
+    end
+
+    it 'raises when column name is not found' do
+      board = load_complete_sample_board
+      expect { board.status_ids_in_or_right_of_column('Nonexistent') }.to raise_error(
+        /No visible column with name: "Nonexistent"/
+      )
+    end
+
+    it 'includes the column names in the error message' do
+      board = load_complete_sample_board
+      expect { board.status_ids_in_or_right_of_column('Nonexistent') }.to raise_error(
+        /"Ready".*"In Progress".*"Review".*"Done"/
+      )
+    end
+  end
+
+  context 'backlog_statuses' do
+    it 'returns statuses from the first column for a kanban board' do
+      board = load_complete_sample_board
+      expect(board.backlog_statuses.map(&:id)).to eq [10_000]
+    end
+
+    it 'returns empty for a non-kanban board' do
+      board = described_class.new raw: {
+        'id' => 1,
+        'type' => 'scrum',
+        'columnConfig' => { 'columns' => [] }
+      }, possible_statuses: StatusCollection.new
+      expect(board.backlog_statuses).to be_empty
+    end
+  end
+
+  context 'scrum? and kanban? for natively typed boards' do
+    it 'is scrum for a board with type scrum' do
+      board = described_class.new raw: {
+        'id' => 1,
+        'type' => 'scrum',
+        'columnConfig' => { 'columns' => [] }
+      }, possible_statuses: StatusCollection.new
+      expect(board.scrum?).to be true
+      expect(board.kanban?).to be false
+    end
+
+    it 'is kanban for a board with type kanban' do
+      board = load_complete_sample_board
+      expect(board.scrum?).to be false
+      expect(board.kanban?).to be true
+    end
+  end
+
+  context 'team_managed_kanban?' do
+    let(:simple_raw) { { 'id' => 1, 'type' => 'simple', 'columnConfig' => { 'columns' => [] } } }
+    let(:sprints_enabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' })] }
+    let(:sprints_disabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' })] }
+
+    it 'is true for a simple board without sprints' do
+      board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
+                                  features: sprints_disabled
+      expect(board.team_managed_kanban?).to be true
+    end
+
+    it 'is false for a simple board with sprints enabled' do
+      board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
+                                  features: sprints_enabled
+      expect(board.team_managed_kanban?).to be false
+    end
+
+    it 'is false for a non-simple board' do
+      board = load_complete_sample_board
+      expect(board.team_managed_kanban?).to be false
+    end
+  end
+
+  context 'estimation_configuration' do
+    it 'returns story points defaults when estimation section is absent' do
+      board = load_complete_sample_board
+      config = board.estimation_configuration
+      expect(config.units).to eq :story_points
+      expect(config.display_name).to eq 'Story Points'
+    end
+
+    it 'returns issue count configuration' do
+      board = described_class.new raw: {
+        'id' => 1,
+        'type' => 'kanban',
+        'columnConfig' => { 'columns' => [] },
+        'estimation' => { 'type' => 'issueCount' }
+      }, possible_statuses: StatusCollection.new
+      config = board.estimation_configuration
+      expect(config.units).to eq :issue_count
+      expect(config.display_name).to eq 'Issue Count'
     end
   end
 
