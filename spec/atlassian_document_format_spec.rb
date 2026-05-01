@@ -58,6 +58,10 @@ describe AtlassianDocumentFormat do
         "foo <span class='account_id'>abcdef</span> bar"
       )
     end
+
+    it 'converts newlines to br tags' do
+      expect(format.to_html "line one\nline two").to eq 'line one<br />line two'
+    end
   end
 
   context 'v3 to_html' do
@@ -179,6 +183,10 @@ describe AtlassianDocumentFormat do
       }
       expect(format.to_text input).to eq "paragraph 1\nparagraph 2\n"
     end
+
+    it 'returns empty string for nil' do
+      expect(format.to_text(nil)).to be_empty
+    end
   end
 
   context 'adf_node_to_text' do
@@ -226,6 +234,214 @@ describe AtlassianDocumentFormat do
         ]
       }
       expect(format.adf_node_to_text input).to eq "☑ Done thing\n☐ Todo thing\n"
+    end
+
+    it 'renders blockquote transparently' do
+      input = { 'type' => 'blockquote', 'content' => [{ 'type' => 'text', 'text' => 'quoted' }] }
+      expect(format.adf_node_to_text input).to eq 'quoted'
+    end
+
+    it 'renders codeBlock transparently' do
+      input = { 'type' => 'codeBlock', 'attrs' => { 'language' => 'ruby' },
+                'content' => [{ 'type' => 'text', 'text' => 'puts "hi"' }] }
+      expect(format.adf_node_to_text input).to eq 'puts "hi"'
+    end
+
+    it 'renders mediaSingle transparently' do
+      input = {
+        'type' => 'mediaSingle',
+        'content' => [{ 'type' => 'media', 'attrs' => { 'id' => 'abc123', 'type' => 'file', 'collection' => 'x' } }]
+      }
+      expect(format.adf_node_to_text input).to eq 'Media: abc123'
+    end
+
+    it 'renders mediaGroup transparently' do
+      input = {
+        'type' => 'mediaGroup',
+        'content' => [{ 'type' => 'media', 'attrs' => { 'id' => 'abc123', 'type' => 'file', 'collection' => 'x' } }]
+      }
+      expect(format.adf_node_to_text input).to eq 'Media: abc123'
+    end
+
+    it 'renders orderedList transparently' do
+      input = {
+        'type' => 'orderedList',
+        'content' => [
+          { 'type' => 'listItem', 'content' => [{ 'type' => 'text', 'text' => 'first' }] }
+        ]
+      }
+      expect(format.adf_node_to_text input).to eq '- first'
+    end
+
+    it 'renders table transparently' do
+      input = {
+        'type' => 'table',
+        'content' => [
+          { 'type' => 'tableRow',
+            'content' => [{ 'type' => 'tableCell', 'content' => [{ 'type' => 'text', 'text' => 'cell' }] }] }
+        ]
+      }
+      expect(format.adf_node_to_text input).to eq "cell\t\n"
+    end
+
+    it 'renders date as formatted date string' do
+      input = { 'type' => 'date', 'attrs' => { 'timestamp' => '1753142400000' } }
+      expect(format.adf_node_to_text input).to eq '2025-07-22'
+    end
+
+    it 'renders decisionItem with dash and newline' do
+      input = {
+        'type' => 'decisionItem',
+        'attrs' => { 'localId' => 'abc', 'state' => 'DECIDED' },
+        'content' => [{ 'type' => 'text', 'text' => 'We decided' }]
+      }
+      expect(format.adf_node_to_text input).to eq "- We decided\n"
+    end
+
+    it 'renders decisionList with Decisions header' do
+      input = {
+        'type' => 'decisionList',
+        'content' => [
+          { 'type' => 'decisionItem', 'attrs' => { 'localId' => '1', 'state' => 'DECIDED' },
+            'content' => [{ 'type' => 'text', 'text' => 'A decision' }] }
+        ],
+        'attrs' => { 'localId' => 'dl1' }
+      }
+      expect(format.adf_node_to_text input).to eq "Decisions:\n- A decision\n"
+    end
+
+    it 'renders emoji text attribute' do
+      input = { 'type' => 'emoji', 'attrs' => { 'shortName' => ':grinning:', 'text' => '😀' } }
+      expect(format.adf_node_to_text input).to eq '😀'
+    end
+
+    it 'renders mention text attribute' do
+      input = { 'type' => 'mention', 'attrs' => { 'id' => 'abc', 'text' => '@Alice' } }
+      expect(format.adf_node_to_text input).to eq '@Alice'
+    end
+
+    it 'renders status text attribute' do
+      input = { 'type' => 'status', 'attrs' => { 'text' => 'In Progress', 'color' => 'yellow', 'localId' => 'x' } }
+      expect(format.adf_node_to_text input).to eq 'In Progress'
+    end
+
+    it 'renders expand with title and newline' do
+      input = {
+        'type' => 'expand',
+        'attrs' => { 'title' => 'Details' },
+        'content' => [{ 'type' => 'text', 'text' => 'body' }]
+      }
+      expect(format.adf_node_to_text input).to eq "Details\nbody"
+    end
+
+    it 'renders heading with trailing newline' do
+      input = {
+        'type' => 'heading',
+        'attrs' => { 'level' => 1 },
+        'content' => [{ 'type' => 'text', 'text' => 'Title' }]
+      }
+      expect(format.adf_node_to_text input).to eq "Title\n"
+    end
+
+    it 'renders paragraph with trailing newline' do
+      input = { 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'Hello' }] }
+      expect(format.adf_node_to_text input).to eq "Hello\n"
+    end
+
+    it 'renders tableRow with trailing newline' do
+      input = {
+        'type' => 'tableRow',
+        'content' => [
+          { 'type' => 'tableCell', 'content' => [{ 'type' => 'text', 'text' => 'A' }] },
+          { 'type' => 'tableCell', 'content' => [{ 'type' => 'text', 'text' => 'B' }] }
+        ]
+      }
+      expect(format.adf_node_to_text input).to eq "A\tB\t\n"
+    end
+
+    it 'renders tableCell with tab separator' do
+      input = { 'type' => 'tableCell', 'content' => [{ 'type' => 'text', 'text' => 'data' }] }
+      expect(format.adf_node_to_text input).to eq "data\t"
+    end
+
+    it 'renders tableHeader with tab separator' do
+      input = { 'type' => 'tableHeader', 'content' => [{ 'type' => 'text', 'text' => 'header' }] }
+      expect(format.adf_node_to_text input).to eq "header\t"
+    end
+
+    it 'renders inlineCard as URL' do
+      input = { 'type' => 'inlineCard', 'attrs' => { 'url' => 'https://example.com/ticket/1' } }
+      expect(format.adf_node_to_text input).to eq 'https://example.com/ticket/1'
+    end
+
+    it 'renders media with alt text' do
+      input = { 'type' => 'media', 'attrs' => { 'id' => 'file-id', 'alt' => 'image.png', 'type' => 'file', 'collection' => 'x' } }
+      expect(format.adf_node_to_text input).to eq 'Media: image.png'
+    end
+
+    it 'renders media with id when no alt' do
+      input = { 'type' => 'media', 'attrs' => { 'id' => 'file-uuid-abc', 'type' => 'file', 'collection' => 'x' } }
+      expect(format.adf_node_to_text input).to eq 'Media: file-uuid-abc'
+    end
+
+    it 'renders panel with type in uppercase and newline' do
+      input = {
+        'type' => 'panel',
+        'attrs' => { 'panelType' => 'warning' },
+        'content' => [{ 'type' => 'text', 'text' => 'Watch out' }]
+      }
+      expect(format.adf_node_to_text input).to eq "WARNING\nWatch out"
+    end
+
+    it 'renders rule as dashes' do
+      input = { 'type' => 'rule' }
+      expect(format.adf_node_to_text input).to eq "---\n"
+    end
+
+    it 'renders unknown type as unparseable bracket notation' do
+      input = { 'type' => 'unknownWidget' }
+      expect(format.adf_node_to_text input).to eq "[Unparseable: unknownWidget]\n"
+    end
+  end
+
+  context 'adf_marks_to_html' do
+    it 'returns empty array for nil' do
+      expect(format.adf_marks_to_html(nil)).to eq []
+    end
+
+    it 'wraps code mark' do
+      result = format.adf_marks_to_html([{ 'type' => 'code' }])
+      expect(result).to eq [['<code>', '</code>']]
+    end
+
+    it 'wraps em mark' do
+      result = format.adf_marks_to_html([{ 'type' => 'em' }])
+      expect(result).to eq [['<em>', '</em>']]
+    end
+
+    it 'wraps strike mark' do
+      result = format.adf_marks_to_html([{ 'type' => 'strike' }])
+      expect(result).to eq [['<s>', '</s>']]
+    end
+
+    it 'wraps underline mark' do
+      result = format.adf_marks_to_html([{ 'type' => 'underline' }])
+      expect(result).to eq [['<u>', '</u>']]
+    end
+
+    it 'wraps strong mark' do
+      result = format.adf_marks_to_html([{ 'type' => 'strong' }])
+      expect(result).to eq [['<b>', '</b>']]
+    end
+
+    it 'filters out unknown marks' do
+      result = format.adf_marks_to_html([{ 'type' => 'unknownMark' }])
+      expect(result).to eq []
+    end
+
+    it 'handles multiple marks in order' do
+      result = format.adf_marks_to_html([{ 'type' => 'strong' }, { 'type' => 'em' }])
+      expect(result).to eq [['<b>', '</b>'], ['<em>', '</em>']]
     end
   end
 
@@ -387,6 +603,40 @@ describe AtlassianDocumentFormat do
       expect(format.adf_node_to_html input).to eq(
         '<table><tr><td><p> Row one, cell one</p></td><td><p>Row one, cell two</p></td></tr></table>'
       )
+    end
+
+    it 'renders tableHeader with th tags' do
+      input = {
+        'type' => 'tableHeader',
+        'attrs' => {},
+        'content' => [{ 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'Col A' }] }]
+      }
+      expect(format.adf_node_to_html input).to eq '<th><p>Col A</p></th>'
+    end
+
+    it 'renders unknown node type as paragraph with unparseable message' do
+      input = { 'type' => 'unknownWidget' }
+      expect(format.adf_node_to_html input).to eq '<p>Unparseable section: unknownWidget</p>'
+    end
+
+    it 'renders text with code mark' do
+      input = { 'type' => 'text', 'text' => 'some_code', 'marks' => [{ 'type' => 'code' }] }
+      expect(format.adf_node_to_html input).to eq '<code>some_code</code>'
+    end
+
+    it 'renders text with em mark' do
+      input = { 'type' => 'text', 'text' => 'italic', 'marks' => [{ 'type' => 'em' }] }
+      expect(format.adf_node_to_html input).to eq '<em>italic</em>'
+    end
+
+    it 'renders text with strike mark' do
+      input = { 'type' => 'text', 'text' => 'deleted', 'marks' => [{ 'type' => 'strike' }] }
+      expect(format.adf_node_to_html input).to eq '<s>deleted</s>'
+    end
+
+    it 'renders text with underline mark' do
+      input = { 'type' => 'text', 'text' => 'underlined', 'marks' => [{ 'type' => 'underline' }] }
+      expect(format.adf_node_to_html input).to eq '<u>underlined</u>'
     end
   end
 
