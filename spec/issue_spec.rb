@@ -1867,4 +1867,177 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       expect(resolution).to eq 'Fixed'
     end
   end
+
+  context 'in_initial_query?' do
+    it 'returns true when exporter is nil (artificial issue)' do
+      issue = empty_issue created: '2021-01-01', board: board
+      expect(issue.in_initial_query?).to be true
+    end
+
+    it 'returns true when exporter marks it as in the initial query' do
+      issue1.raw['exporter'] = { 'in_initial_query' => true }
+      expect(issue1.in_initial_query?).to be true
+    end
+
+    it 'returns false when exporter marks it as not in the initial query' do
+      issue1.raw['exporter'] = { 'in_initial_query' => false }
+      expect(issue1.in_initial_query?).to be false
+    end
+  end
+
+  context 'done?' do
+    it 'returns true for an artificial issue in a done status category' do
+      issue = empty_issue created: '2021-01-01', board: board
+      # Doing (id: 12) has category_key: 'done'; set directly since empty_issue hardcodes statusCategory
+      issue.status = board.possible_statuses.find_by_id(12)
+      expect(issue.done?).to be true
+    end
+
+    it 'returns false for an artificial issue not in a done status category' do
+      issue = empty_issue created: '2021-01-01', board: board
+      expect(issue.done?).to be false
+    end
+
+    it 'uses status category when cycletime is nil' do
+      board.cycletime = nil
+      # issue1 is real (has exporter) but cycletime is nil, so falls back to status category
+      expect(issue1.done?).to be false
+    end
+
+    it 'delegates to cycletime when set and issue is stopped' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', '2021-12-01']]
+      expect(issue1.done?).to be_truthy
+    end
+
+    it 'delegates to cycletime when set and issue is not stopped' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
+      expect(issue1.done?).to be_falsey
+    end
+  end
+
+  context 'discard_changes_before' do
+    # Use the actual change time from the fixture to avoid millisecond precision surprises
+    let(:real_status_change) { issue2.changes.find { |c| c.status? && !c.artificial? } }
+
+    it 'removes a real status change at the cutoff time' do
+      issue2.discard_changes_before(real_status_change.time)
+      expect(issue2.changes.map(&:value)).not_to include('Selected for Development')
+    end
+
+    it 'keeps a real status change after the cutoff time' do
+      issue2.discard_changes_before(real_status_change.time - 1)
+      expect(issue2.changes.map(&:value)).to include('Selected for Development')
+    end
+
+    it 'keeps artificial status changes regardless of time' do
+      issue2.discard_changes_before(real_status_change.time)
+      # The fabricated initial Backlog status change is artificial and must be retained
+      expect(issue2.changes.any? { |c| c.status? && c.artificial? }).to be true
+    end
+
+    it 'keeps non-status changes regardless of time' do
+      issue2.discard_changes_before(real_status_change.time)
+      expect(issue2.changes.any?(&:priority?)).to be true
+    end
+
+    it 'populates discarded_changes with removed changes' do
+      issue2.discard_changes_before(real_status_change.time)
+      expect(issue2.discarded_changes.map(&:value)).to eq ['Selected for Development']
+    end
+
+    it 'records the cutoff time in discarded_change_times when changes are discarded' do
+      cutoff = real_status_change.time
+      issue2.discard_changes_before(cutoff)
+      expect(issue2.discarded_change_times).to eq [cutoff]
+    end
+
+    it 'does not populate discarded_change_times when nothing is discarded' do
+      issue2.discard_changes_before(real_status_change.time - 1)
+      expect(issue2.discarded_change_times).to be_nil
+    end
+  end
+
+  context 'load_comments_into_changes' do
+    let(:issue_with_comments) do
+      raw = {
+        'key' => 'SP-99',
+        'changelog' => { 'histories' => [] },
+        'fields' => {
+          'created' => '2021-01-01T00:00:00.000+0000',
+          'updated' => '2021-01-02T00:00:00.000+0000',
+          'status' => {
+            'name' => 'Backlog', 'id' => '1',
+            'statusCategory' => { 'name' => 'To Do', 'id' => 2, 'key' => 'new' }
+          },
+          'priority' => { 'name' => 'Medium', 'id' => '3' },
+          'issuetype' => { 'name' => 'Bug' },
+          'creator' => { 'displayName' => 'Tolkien' },
+          'summary' => 'Test issue',
+          'comment' => {
+            'comments' => [
+              {
+                'id' => '42',
+                'body' => 'First comment',
+                'created' => '2021-01-01T10:00:00.000+0000',
+                'author' => { 'displayName' => 'Alice' }
+              },
+              {
+                'id' => '43',
+                'body' => 'Second comment',
+                'created' => '2021-01-01T11:00:00.000+0000',
+                'author' => { 'displayName' => 'Bob' }
+              }
+            ]
+          }
+        }
+      }
+      Issue.new raw: raw, board: board
+    end
+
+    it 'loads comments as change items' do
+      comment_changes = issue_with_comments.changes.select(&:comment?)
+      expect(comment_changes.length).to eq 2
+    end
+
+    it 'sets comment body as the value' do
+      comment_changes = issue_with_comments.changes.select(&:comment?)
+      expect(comment_changes.map(&:value)).to eq ['First comment', 'Second comment']
+    end
+
+    it 'sets comment id as the value_id' do
+      comment_changes = issue_with_comments.changes.select(&:comment?)
+      expect(comment_changes.map(&:value_id)).to eq [42, 43]
+    end
+
+    it 'marks comment changes as artificial' do
+      comment_changes = issue_with_comments.changes.select(&:comment?)
+      expect(comment_changes).to all(be_artificial)
+    end
+
+    it 'handles an issue with no comments gracefully' do
+      issue = empty_issue created: '2021-01-01', board: board
+      expect(issue.changes.select(&:comment?)).to be_empty
+    end
+  end
+
+  context 'in_visible_status_at?' do
+    # Private method tested via send; only called from first_time_visible_on_board (scrum path)
+    let(:real_status_change) { issue2.changes.find { |c| c.status? && !c.artificial? } }
+
+    it 'returns true when queried at exactly the status change time' do
+      # Tests the <= boundary: a change at exactly the query time must count
+      result = issue2.send(:in_visible_status_at?, real_status_change.time, [real_status_change.value_id])
+      expect(result).to be true
+    end
+
+    it 'returns false when the only matching change is strictly after the query time' do
+      result = issue2.send(:in_visible_status_at?, real_status_change.time - 1, [real_status_change.value_id])
+      expect(result).to be false
+    end
+
+    it 'returns false when the status id is not in the visible list' do
+      result = issue2.send(:in_visible_status_at?, real_status_change.time, [999])
+      expect(result).to be false
+    end
+  end
 end
