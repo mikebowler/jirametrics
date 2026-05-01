@@ -3,6 +3,7 @@ target/
 jira_config*.json
 config.rb
 coverage/
+.mutant/
 .DS_Store
 Gemfile.lock
 spec/tmp/
