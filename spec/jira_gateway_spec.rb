@@ -205,5 +205,40 @@ describe JiraGateway do
         'Returned (stderr): "stderr"'
       ])
     end
+
+    it 'retries on transient network error and succeeds' do
+      allow(gateway).to receive(:sleep_between_retries)
+      allow(gateway).to receive(:capture3).and_return(
+        ['', '', MockStatus.new(exitstatus: 56)],
+        ['{"a":1}', '', MockStatus.new(exitstatus: 0)]
+      )
+      result = gateway.exec_and_parse_response command: 'foo', stdin_data: nil
+      expect(result).to eq({ 'a' => 1 })
+      expect(file_system.log_messages).to include(
+        'Transient network error (exit 56), retrying in 5s (attempt 1/3)...'
+      )
+    end
+
+    it 'raises after exhausting retries on persistent transient error' do
+      allow(gateway).to receive(:sleep_between_retries)
+      allow(gateway).to receive(:capture3).and_return(
+        ['', '', MockStatus.new(exitstatus: 56)]
+      )
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error 'Failed call with exit status 56. See mock_logfile for details'
+      )
+      retry_messages = file_system.log_messages.grep(/retrying/)
+      expect(retry_messages.length).to eq(3)
+    end
+
+    it 'does not retry on non-transient errors' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['stdout', 'stderr', MockStatus.new(exitstatus: 22)]
+      )
+      expect(gateway).not_to receive(:sleep_between_retries)
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error 'Failed call with exit status 22. See mock_logfile for details'
+      )
+    end
   end
 end

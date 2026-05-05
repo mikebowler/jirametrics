@@ -9,6 +9,10 @@ class JiraGateway
   attr_accessor :ignore_ssl_errors
   attr_reader :jira_url, :settings, :file_system
 
+  RETRYABLE_EXIT_CODES = [7, 28, 35, 56].freeze
+  MAX_RETRIES = 3
+  RETRY_DELAY_SECONDS = 5
+
   def initialize file_system:, jira_config:, settings:
     @file_system = file_system
     load_jira_config(jira_config)
@@ -26,8 +30,23 @@ class JiraGateway
     log_entry = sanitize_message log_entry
     @file_system.log log_entry
 
-    stdout, stderr, status = capture3(command, stdin_data: stdin_data)
-    unless status.success?
+    retries = 0
+    loop do
+      stdout, stderr, status = capture3(command, stdin_data: stdin_data)
+
+      if status.success?
+        @file_system.log "Returned (stderr): #{stderr.inspect}" unless stderr == ''
+        raise 'no response from curl on stdout' if stdout == ''
+        return parse_response(command: command, result: stdout)
+      end
+
+      if RETRYABLE_EXIT_CODES.include?(status.exitstatus) && retries < MAX_RETRIES
+        retries += 1
+        @file_system.log "Transient network error (exit #{status.exitstatus}), retrying in #{RETRY_DELAY_SECONDS}s (attempt #{retries}/#{MAX_RETRIES})..."
+        sleep_between_retries
+        next
+      end
+
       @file_system.error "Failed call with exit status #{status.exitstatus}!"
       @file_system.error "Returned (stdout): #{stdout.inspect}"
       @file_system.error "Returned (stderr): #{stderr.inspect}"
@@ -37,16 +56,16 @@ class JiraGateway
       raise "Failed call with exit status #{status.exitstatus}. " \
         "See #{@file_system.logfile_name} for details"
     end
-
-    @file_system.log "Returned (stderr): #{stderr.inspect}" unless stderr == ''
-    raise 'no response from curl on stdout' if stdout == ''
-
-    parse_response(command: command, result: stdout)
   end
 
   def capture3 command, stdin_data:
     # In it's own method so we can mock it out in tests
     Open3.capture3(command, stdin_data: stdin_data)
+  end
+
+  def sleep_between_retries
+    # In its own method so we can mock it out in tests
+    sleep RETRY_DELAY_SECONDS
   end
 
   def call_url relative_url:
