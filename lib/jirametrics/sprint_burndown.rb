@@ -66,7 +66,7 @@ class SprintBurndown < ChartBase
     result = +''
     result << render_top_text(binding)
 
-    possible_colours = (1..5).collect { |i| CssVariable["--sprint-burndown-sprint-color-#{i}"] }
+    possible_colours = (1..ChartBase::OKABE_ITO_PALETTE.size).collect { |i| CssVariable["--sprint-burndown-sprint-color-#{i}"] }
     charts_to_generate = []
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts

@@ -1,6 +1,17 @@
 # frozen_string_literal: true
 
 class ChartBase
+  # Okabe-Ito palette — perceptually distinct under the most common forms of colour blindness.
+  # Ordered from most- to least-commonly useful for chart series.
+  OKABE_ITO_PALETTE = %w[
+    #0072B2
+    #E69F00
+    #009E73
+    #56B4E9
+    #D55E00
+    #CC79A7
+    #F0E442
+  ].freeze
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings, :issues, :file_system,
     :atlassian_document_format, :x_axis_title, :y_axis_title, :fix_versions
@@ -328,7 +339,8 @@ class ChartBase
   end
 
   def random_color
-    "##{Random.bytes(3).unpack1('H*')}"
+    @palette_index = (@palette_index || -1) + 1
+    OKABE_ITO_PALETTE[@palette_index % OKABE_ITO_PALETTE.size]
   end
 
   def canvas width:, height:, responsive: true

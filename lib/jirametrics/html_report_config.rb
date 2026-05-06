@@ -119,7 +119,8 @@ class HtmlReportConfig < HtmlGenerator
   end
 
   def random_color
-    "##{Random.bytes(3).unpack1('H*')}"
+    @palette_index = (@palette_index || -1) + 1
+    ChartBase::OKABE_ITO_PALETTE[@palette_index % ChartBase::OKABE_ITO_PALETTE.size]
   end
 
   def html string, type: :body

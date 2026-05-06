@@ -407,8 +407,7 @@ describe ChartBase do
   end
 
   it 'returns reasonable random color' do
-    # Since it's random, all we can verify is the format.
-    expect(chart_base.random_color).to match(/^#[0-9a-f]{6}$/)
+    expect(chart_base.random_color).to match(/^#[0-9a-fA-F]{6}$/)
   end
 
   context 'to_human_readable' do

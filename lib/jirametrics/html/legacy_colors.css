@@ -1,0 +1,174 @@
+/* Legacy color scheme for jirametrics
+ *
+ * The default colors were updated to improve accessibility for people with
+ * color vision deficiencies. If you prefer the original colors, add this to
+ * your project config:
+ *
+ *   setting['include_css'] = './legacy_colors.css'
+ *
+ * and copy this file to the same directory as your config file.
+ */
+
+/* Light mode */
+:root,
+html[data-theme="light"] {
+  --body-background: white;
+  --default-text-color: black;
+  --grid-line-color: lightgray;
+  --warning-banner: yellow;
+
+  --cycletime-scatterplot-overall-trendline-color: gray;
+
+  --non-working-days-color: #F0F0F0;
+  --expedited-color: red;
+  --blocked-color: #FF7400;
+  --stalled-color: orange;
+  --dead-color: black;
+
+  --type-story-color: #4bc14b;
+  --type-task-color: blue;
+  --type-bug-color: orange;
+  --type-spike-color: #9400D3;
+
+  --status-category-todo-color: gray;
+  --status-category-inprogress-color: #2663ff;
+  --status-category-done-color: #00ff00;
+  --status-category-unknown-color: black;
+
+  --aging-work-bar-chart-percentage-line-color: red;
+  --aging-work-bar-chart-separator-color: white;
+
+  --throughput_chart_total_line_color: gray;
+
+  --aging-work-in-progress-chart-shading-color: lightgray;
+  --aging-work-in-progress-chart-shading-50-color: #2E8BC0;
+  --aging-work-in-progress-chart-shading-85-color: #ADD8E6;
+  --aging-work-in-progress-chart-shading-98-color: #FF8A8A;
+  --aging-work-in-progress-chart-shading-100-color: #FF2E2E;
+
+  --aging-work-in-progress-by-age-trend-line-color: gray;
+
+  --aging-work-table-date-in-jeopardy: yellow;
+  --aging-work-table-date-overdue: red;
+
+  --hierarchy-table-inactive-item-text-color: gray;
+
+  --wip-chart-completed-color: #00ff00;
+  --wip-chart-completed-but-not-started-color: #99FF99;
+  --wip-chart-duration-less-than-day-color: #ffef41;
+  --wip-chart-duration-week-or-less-color: #dcc900;
+  --wip-chart-duration-two-weeks-or-less-color: #dfa000;
+  --wip-chart-duration-four-weeks-or-less-color: #eb7200;
+  --wip-chart-duration-more-than-four-weeks-color: #e70000;
+  --wip-chart-active-color: #326cff;
+  --wip-chart-border-color: gray;
+
+  --wip-by-column-chart-bar-fill-color: #0072B2;
+  --wip-by-column-chart-bar-text-color: #ffffff;
+  --wip-by-column-chart-limit-line-color: #D55E00;
+  --wip-by-column-chart-recommendation-color: #009E73;
+
+  --estimate-accuracy-chart-completed-fill-color: #00ff00;
+  --estimate-accuracy-chart-completed-border-color: green;
+  --estimate-accuracy-chart-active-fill-color: #FFCCCB;
+  --estimate-accuracy-chart-active-border-color: red;
+
+  --expedited-chart-no-longer-expedited: gray;
+  --expedited-chart-dot-issue-started-color: orange;
+  --expedited-chart-dot-issue-stopped-color: green;
+  --expedited-chart-dot-expedite-started-color: red;
+  --expedited-chart-dot-expedite-stopped-color: green;
+
+  --sprint-burndown-sprint-color-1: blue;
+  --sprint-burndown-sprint-color-2: orange;
+  --sprint-burndown-sprint-color-3: green;
+  --sprint-burndown-sprint-color-4: red;
+  --sprint-burndown-sprint-color-5: brown;
+  --sprint-burndown-sprint-color-6: blue;    /* wraps back to color-1 (legacy had only 5) */
+  --sprint-burndown-sprint-color-7: orange;  /* wraps back to color-2 (legacy had only 5) */
+
+  --sprint-color: lightblue;
+
+  --daily-view-selected-issue-background: lightgray;
+  --daily-view-issue-border: green;
+  --daily-view-selected-issue-border: red;
+
+  --priority-color-highest: #dc2626;
+  --priority-color-high: #ea580c;
+  --priority-color-medium: #9ca3af;
+  --priority-color-low: #0891b2;
+  --priority-color-lowest: #64748b;
+  --priority-color-notset: gray;
+  --priority-color-critical: red;
+}
+
+/* Dark mode */
+html[data-theme="dark"] {
+  --warning-banner: #9F2B00;
+  --non-working-days-color: #2f2f2f;
+  --type-story-color: #6fb86f;
+  --type-task-color: #0021b3;
+  --type-bug-color: #bb5603;
+  --body-background: #343434;
+  --default-text-color: #aaa;
+  --grid-line-color: #424242;
+  --expedited-color: #b90000;
+  --blocked-color: #c75b02;
+  --stalled-color: #ae7202;
+  --wip-chart-active-color: #2551c1;
+  --status-category-inprogress-color: #1c49bb;
+  --hierarchy-table-inactive-item-text-color: #939393;
+  --wip-by-column-chart-bar-fill-color: #56B4E9;
+  --wip-by-column-chart-bar-text-color: #000000;
+  --wip-by-column-chart-limit-line-color: #E69F00;
+  --wip-by-column-chart-recommendation-color: #2DCB9A;
+  --wip-chart-completed-color: #03cb03;
+  --wip-chart-duration-less-than-day-color: #d2d988;
+  --wip-chart-duration-week-or-less-color: #dfcd00;
+  --wip-chart-duration-two-weeks-or-less-color: #cf9400;
+  --wip-chart-duration-four-weeks-or-less-color: #c25e00;
+  --wip-chart-duration-more-than-four-weeks-color: #8e0000;
+  --daily-view-selected-issue-background: #474747;
+  --priority-color-highest: #ef4444;
+  --priority-color-high: #f97316;
+  --priority-color-low: #06b6d4;
+  --priority-color-lowest: #94a3b8;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --warning-banner: #9F2B00;
+    --non-working-days-color: #2f2f2f;
+    --type-story-color: #6fb86f;
+    --type-task-color: #0021b3;
+    --type-bug-color: #bb5603;
+    --body-background: #343434;
+    --default-text-color: #aaa;
+    --grid-line-color: #424242;
+    --expedited-color: #b90000;
+    --blocked-color: #c75b02;
+    --stalled-color: #ae7202;
+    --dead-color: black;
+    --wip-chart-active-color: #2551c1;
+    --status-category-inprogress-color: #1c49bb;
+    --cycletime-scatterplot-overall-trendline-color: gray;
+    --hierarchy-table-inactive-item-text-color: #939393;
+    --wip-by-column-chart-bar-fill-color: #56B4E9;
+    --wip-by-column-chart-bar-text-color: #000000;
+    --wip-by-column-chart-limit-line-color: #E69F00;
+    --wip-by-column-chart-recommendation-color: #2DCB9A;
+    --wip-chart-completed-color: #03cb03;
+    --wip-chart-completed-but-not-started-color: #99FF99;
+    --wip-chart-duration-less-than-day-color: #d2d988;
+    --wip-chart-duration-week-or-less-color: #dfcd00;
+    --wip-chart-duration-two-weeks-or-less-color: #cf9400;
+    --wip-chart-duration-four-weeks-or-less-color: #c25e00;
+    --wip-chart-duration-more-than-four-weeks-color: #8e0000;
+    --daily-view-selected-issue-background: #474747;
+    --priority-color-highest: #ef4444;
+    --priority-color-high: #f97316;
+    --priority-color-medium: #9ca3af;
+    --priority-color-low: #06b6d4;
+    --priority-color-lowest: #94a3b8;
+  }
+}
