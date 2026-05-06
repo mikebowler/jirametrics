@@ -2,6 +2,10 @@
 
 require 'mcp'
 require 'mcp/server/transports/stdio_transport'
+require 'json-schema'
+# Suppress the MultiJSON deprecation warning. json-schema enables MultiJSON by default if the
+# gem is present anywhere in the environment, but we don't use it.
+JSON::Validator.use_multi_json = false
 
 class McpServer
   def initialize projects:, aggregates: {}, timezone_offset: '+00:00'
