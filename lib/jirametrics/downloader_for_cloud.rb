@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class DownloaderForCloud < Downloader
+  include WorklogHelper
+
   def jira_instance_type
     'Jira Cloud'
   end
@@ -101,6 +103,7 @@ class DownloaderForCloud < Downloader
     )
 
     attach_changelog_to_issues issue_datas: issue_datas, issue_jsons: response['issues']
+    attach_worklogs_to_issues issue_datas: issue_datas, issue_jsons: response['issues']
 
     response['issues'].each do |issue_json|
       issue_json['exporter'] = {
