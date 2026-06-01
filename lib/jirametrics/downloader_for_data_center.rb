@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class DownloaderForDataCenter < Downloader
+  include WorklogHelper
+
   def jira_instance_type
     'Jira DataCenter'
   end
@@ -49,8 +51,12 @@ class DownloaderForDataCenter < Downloader
         }
         identify_other_issues_to_be_downloaded raw_issue: issue_json, board: board
         file = "#{issue_json['key']}-#{board.id}.json"
+        issue_path = File.join(path, file)
 
-        @file_system.save_json(json: issue_json, filename: File.join(path, file))
+        @file_system.save_json(json: issue_json, filename: issue_path)
+
+        # Fetch complete worklog data for this issue
+        enhance_issue_with_worklogs(issue_key: issue_json['key'], issue_path: issue_path)
       end
 
       total = json['total'].to_i
