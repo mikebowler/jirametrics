@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'worklog_helper'
+
 class DownloaderForDataCenter < Downloader
   include WorklogHelper
 

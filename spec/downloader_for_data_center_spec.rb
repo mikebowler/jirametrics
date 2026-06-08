@@ -70,6 +70,11 @@ describe DownloaderForDataCenter do
           'issues' => [raw_issue]
         }
       )
+      jira_gateway.when(
+        url: "/rest/api/2/issue/#{raw_issue['key']}/worklog?startAt=0&maxResults=100",
+        response: { 'total' => 0, 'worklogs' => [] }
+      )
+      file_system.when_loading(file: "spec/testdata/sample_issues/#{raw_issue['key']}-1.json", json: raw_issue)
       board = sample_board
       downloader.board_id_to_filter_id[board.id] = 3
       downloader.download_issues board: board

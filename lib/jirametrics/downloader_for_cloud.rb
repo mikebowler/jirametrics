@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class DownloaderForCloud < Downloader
-  include WorklogHelper
-
   def jira_instance_type
     'Jira Cloud'
   end
@@ -130,6 +128,44 @@ class DownloaderForCloud < Downloader
     end
 
     issue_datas
+  end
+
+  def attach_worklogs_to_issues issue_datas:, issue_jsons:
+    max_results = 100
+
+    issue_jsons.each do |issue_json|
+      worklog = issue_json['fields']['worklog']
+      next unless worklog
+
+      total = worklog['total'].to_i
+      all_worklogs = worklog['worklogs'] || []
+      next if all_worklogs.size >= total
+
+      key = issue_json['key']
+      start_at = all_worklogs.size
+
+      loop do
+        response = @jira_gateway.call_url(
+          relative_url: "/rest/api/3/issue/#{CGI.escape(key)}/worklog?startAt=#{start_at}&maxResults=#{max_results}"
+        )
+
+        worklogs = response['worklogs'] || []
+        all_worklogs.concat(worklogs)
+
+        break if all_worklogs.size >= response['total'].to_i
+
+        start_at += worklogs.size
+      end
+
+      issue_json['fields']['worklog'] = {
+        'startAt' => 0,
+        'maxResults' => all_worklogs.size,
+        'total' => all_worklogs.size,
+        'worklogs' => all_worklogs
+      }
+
+      log "      Enhanced #{key} with #{all_worklogs.size} worklogs"
+    end
   end
 
   def attach_changelog_to_issues issue_datas:, issue_jsons:
