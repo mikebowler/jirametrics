@@ -279,5 +279,34 @@ describe GithubGateway do
         RuntimeError, /not authorized.*gh auth refresh/i
       )
     end
+
+    it 'retries on transient HTTP 504 errors and succeeds' do
+      failure = instance_double(Process::Status, success?: false)
+      success = instance_double(Process::Status, success?: true)
+      allow(gateway).to receive(:sleep)
+      allow(Open3).to receive(:capture3)
+        .and_return(['', 'HTTP 504: We could not respond in time.', failure],
+                    ['[]', '', success])
+
+      expect { gateway.fetch_raw_pull_requests }.not_to raise_error
+      expect(Open3).to have_received(:capture3).twice
+    end
+
+    it 'raises after exhausting all retries on persistent transient errors' do
+      failure = instance_double(Process::Status, success?: false)
+      allow(gateway).to receive(:sleep)
+      allow(Open3).to receive(:capture3).and_return(['', 'HTTP 504: timed out', failure])
+
+      expect { gateway.fetch_raw_pull_requests }.to raise_error(RuntimeError, /GitHub CLI command failed/)
+      expect(Open3).to have_received(:capture3).exactly(GithubGateway::MAX_RETRIES).times
+    end
+
+    it 'does not retry on non-transient errors' do
+      failure = instance_double(Process::Status, success?: false)
+      allow(Open3).to receive(:capture3).and_return(['', 'HTTP 404: Not Found', failure])
+
+      expect { gateway.fetch_raw_pull_requests }.to raise_error(RuntimeError, /GitHub CLI command failed/)
+      expect(Open3).to have_received(:capture3).once
+    end
   end
 end

@@ -99,21 +99,36 @@ class GithubGateway
     Regexp.new("\\b(?:#{keys_pattern})-\\d+(?![A-Za-z0-9])")
   end
 
+  TRANSIENT_HTTP_ERRORS = [429, 500, 502, 503, 504].freeze
+  MAX_RETRIES = 3
+
   def run_command args
-    stdout, stderr, status = Open3.capture3('gh', *args)
+    attempts = 0
+    loop do
+      attempts += 1
+      stdout, stderr, status = Open3.capture3('gh', *args)
 
-    # This extra check seems to only matter on Windows. On the mac, auth failures don't pass status.success?
-    if stderr.include?('SAML enforcement')
-      raise "GitHub CLI is not authorized to access #{@repo}. " \
-            'Run: gh auth refresh -h github.com -s read:org'
+      # This extra check seems to only matter on Windows. On the mac, auth failures don't pass status.success?
+      if stderr.include?('SAML enforcement')
+        raise "GitHub CLI is not authorized to access #{@repo}. " \
+              'Run: gh auth refresh -h github.com -s read:org'
+      end
+
+      unless status.success?
+        if attempts < MAX_RETRIES && TRANSIENT_HTTP_ERRORS.any? { |code| stderr.include?("HTTP #{code}") }
+          delay = 2**attempts
+          @file_system.log "  GitHub returned transient error for #{@repo}: #{stderr.strip}. Retrying in #{delay}s (attempt #{attempts}/#{MAX_RETRIES})...", also_write_to_stderr: true
+          sleep delay
+          next
+        end
+        raise "GitHub CLI command failed for #{@repo}: #{stderr}"
+      end
+
+      result = JSON.parse(stdout)
+      if result.nil? || (result.is_a?(Array) && result.empty?)
+        @file_system.warning "No data was found in GitHub for #{@repo}. Is that what you expected?"
+      end
+      return result
     end
-
-    raise "GitHub CLI command failed for #{@repo}: #{stderr}" unless status.success?
-
-    result = JSON.parse(stdout)
-    if result.nil? || (result.is_a?(Array) && result.empty?)
-      @file_system.warn "No data was found in GitHub for #{@repo}. Is that what you expected?"
-    end
-    result
   end
 end
