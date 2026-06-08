@@ -229,7 +229,7 @@ class DownloaderForCloud < Downloader
       unless stale.empty?
         log_start '  Downloading more issues ' unless in_related_phase
         stale.each_slice(100) do |slice|
-          slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: true)
+          slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: !in_related_phase)
           progress_dot
           slice.each do |data|
             next unless data.issue
