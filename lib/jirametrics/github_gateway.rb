@@ -110,6 +110,10 @@ class GithubGateway
 
     raise "GitHub CLI command failed for #{@repo}: #{stderr}" unless status.success?
 
-    JSON.parse(stdout)
+    result = JSON.parse(stdout)
+    if result.nil? || (result.is_a?(Array) && result.empty?)
+      @file_system.warn "No data was found in GitHub for #{@repo}. Is that what you expected?"
+    end
+    result
   end
 end
