@@ -30,7 +30,7 @@ class DownloadConfig
   end
 
   def github_repo *repos
-    github_repos.concat(repos.map { |r| normalize_github_repo(r) })
+    github_repos.concat(repos)
   end
 
   def start_date today:
@@ -42,8 +42,4 @@ class DownloadConfig
 
   private
 
-  def normalize_github_repo repo
-    match = repo.match(%r{github\.com/([^/]+/[^/]+?)/?$})
-    match ? match[1] : repo
-  end
 end

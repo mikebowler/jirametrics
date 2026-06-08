@@ -18,19 +18,14 @@ describe DownloadConfig do
       expect(config.github_repos).to eq ['mikebowler/jirametrics-dev-playground']
     end
 
-    it 'extracts owner/repo from a full GitHub URL' do
+    it 'stores a full GitHub URL as-is' do
       config.github_repo 'https://github.com/mikebowler/jirametrics-dev-playground'
-      expect(config.github_repos).to eq ['mikebowler/jirametrics-dev-playground']
-    end
-
-    it 'handles a trailing slash in the URL' do
-      config.github_repo 'https://github.com/mikebowler/jirametrics-dev-playground/'
-      expect(config.github_repos).to eq ['mikebowler/jirametrics-dev-playground']
+      expect(config.github_repos).to eq ['https://github.com/mikebowler/jirametrics-dev-playground']
     end
 
     it 'accepts multiple repos in one call' do
       config.github_repo 'owner/repo1', 'https://github.com/owner/repo2'
-      expect(config.github_repos).to eq %w[owner/repo1 owner/repo2]
+      expect(config.github_repos).to eq ['owner/repo1', 'https://github.com/owner/repo2']
     end
 
     it 'accumulates repos across multiple calls' do
