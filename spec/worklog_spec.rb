@@ -4,7 +4,7 @@ require './spec/spec_helper'
 require './spec/mock_file_system'
 require './spec/mock_jira_gateway'
 
-describe 'WorklogHelper' do
+describe 'Worklog' do
   let(:file_system) { MockFileSystem.new }
   let(:exporter) { Exporter.new }
   let(:jira_config) { { 'url' => 'https://example.atlassian.com', 'email' => 'test@example.com', 'api_token' => 'token' } }
