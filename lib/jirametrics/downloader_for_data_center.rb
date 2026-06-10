@@ -82,7 +82,7 @@ class DownloaderForDataCenter < Downloader
       total = response['total'].to_i
       break if start_at + worklogs.size >= total
 
-      start_at += max_results
+      start_at += worklogs.size
     end
 
     issue_json = @file_system.load_json(issue_path)

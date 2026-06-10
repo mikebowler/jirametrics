@@ -167,6 +167,32 @@ describe 'Worklog' do
       expect(saved_issue['worklog']['worklogs'].size).to eq(150)
     end
 
+    it 'advances startAt by actual items received, not max_results' do
+      issue_path = 'spec/testdata/TEST-3-1.json'
+      original_issue = { 'key' => 'TEST-3', 'id' => '125', 'fields' => { 'summary' => 'Test' } }
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-3/worklog?startAt=0&maxResults=100',
+        response: {
+          'total' => 150,
+          'worklogs' => (1..80).map { |i| { 'id' => i.to_s } }
+        }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-3/worklog?startAt=80&maxResults=100',
+        response: {
+          'total' => 150,
+          'worklogs' => (81..150).map { |i| { 'id' => i.to_s } }
+        }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-3', issue_path: issue_path)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      expect(saved_issue['worklog']['worklogs'].size).to eq(150)
+    end
+
     it 'handles issues with no worklogs' do
       issue_path = 'spec/testdata/TEST-2-1.json'
       original_issue = {
