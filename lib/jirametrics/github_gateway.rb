@@ -6,6 +6,10 @@ require 'json'
 class GithubGateway
   attr_reader :repo
 
+  TRANSIENT_HTTP_ERRORS = [429, 500, 502, 503, 504].freeze
+  MAX_RETRIES = 3
+  REVIEW_STATES = %w[APPROVED CHANGES_REQUESTED].freeze
+
   def initialize repo:, project_keys:, file_system:, raw_pr_cache: {}
     @repo = repo
     @project_keys = project_keys
@@ -20,7 +24,7 @@ class GithubGateway
   end
 
   def fetch_raw_pull_requests since: nil
-    # Note: 'commits' is intentionally excluded — including it triggers GitHub's GraphQL node
+    # NOTE: 'commits' is intentionally excluded — including it triggers GitHub's GraphQL node
     # limit (authors sub-connection × PRs × commits exceeds 500,000 nodes). Branch name,
     # title, and body are sufficient for issue key extraction in the vast majority of cases.
     json_fields = %w[number title body headRefName createdAt closedAt mergedAt
@@ -72,7 +76,7 @@ class GithubGateway
 
   def extract_reviews raw_reviews
     raw_reviews
-      .select { |r| %w[APPROVED CHANGES_REQUESTED].include?(r['state']) }
+      .select { |r| REVIEW_STATES.include?(r['state']) }
       .map do |r|
         {
           'author'       => r.dig('author', 'login'),
@@ -99,9 +103,6 @@ class GithubGateway
     Regexp.new("\\b(?:#{keys_pattern})-\\d+(?![A-Za-z0-9])")
   end
 
-  TRANSIENT_HTTP_ERRORS = [429, 500, 502, 503, 504].freeze
-  MAX_RETRIES = 3
-
   def run_command args
     attempts = 0
     loop do
@@ -115,9 +116,11 @@ class GithubGateway
       end
 
       unless status.success?
+        @file_system.warning "  GitHub CLI command failed for #{@repo} " \
+                             "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
         if attempts < MAX_RETRIES && TRANSIENT_HTTP_ERRORS.any? { |code| stderr.include?("HTTP #{code}") }
           delay = 2**attempts
-          @file_system.log "  GitHub returned transient error for #{@repo}: #{stderr.strip}. Retrying in #{delay}s (attempt #{attempts}/#{MAX_RETRIES})...", also_write_to_stderr: true
+          @file_system.warning "  Transient error detected. Retrying in #{delay}s..."
           sleep delay
           next
         end
