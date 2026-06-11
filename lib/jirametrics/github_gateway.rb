@@ -6,7 +6,10 @@ require 'json'
 class GithubGateway
   attr_reader :repo
 
-  TRANSIENT_HTTP_ERRORS = [429, 500, 502, 503, 504].freeze
+  TRANSIENT_ERROR_PATTERNS = (
+    [429, 500, 502, 503, 504].map { |code| "HTTP #{code}" } +
+    ['stream error:']
+  ).freeze
   MAX_RETRIES = 3
   REVIEW_STATES = %w[APPROVED CHANGES_REQUESTED].freeze
 
@@ -118,7 +121,7 @@ class GithubGateway
       unless status.success?
         @file_system.warning "  GitHub CLI command failed for #{@repo} " \
                              "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
-        if attempts < MAX_RETRIES && TRANSIENT_HTTP_ERRORS.any? { |code| stderr.include?("HTTP #{code}") }
+        if attempts < MAX_RETRIES && TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) }
           delay = 2**attempts
           @file_system.warning "  Transient error detected. Retrying in #{delay}s..."
           sleep delay
