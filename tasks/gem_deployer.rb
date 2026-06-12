@@ -45,10 +45,22 @@ class GemDeployer
   end
 
   def run_prerelease
+    verify_no_uncommitted_changes
+
+    new_version_str = calculate_prerelease_version
+
+    print "New version is #{new_version_str}. Proceed? (y/n): "
+    answer = $stdin.gets.strip.downcase
+    raise 'Aborted.' unless answer == 'y'
+
+    if new_version_str != gemspec_version_string
+      update_gemspec_version(new_version_str)
+      commit_and_push_version(new_version_str)
+    end
+
     puts "Deploying jirametrics #{current_version} (pre-release)..."
     puts ''
 
-    verify_no_uncommitted_changes
     verify_prerelease_version
 
     gem_file = build_gem
@@ -228,5 +240,66 @@ class GemDeployer
       system("gh release create #{tag} --title #{tag} --notes-file #{f.path}") ||
         raise('gh release create failed')
     end
+  end
+
+  def gemspec_version_string
+    content = File.read(@gemspec_path)
+    raise "Could not parse version from #{@gemspec_path}" unless content =~ /spec\.version\s*=\s*['"]([^'"]*)['"]/
+
+    $1
+  end
+
+  def latest_released_version
+    print 'Fetching versions from RubyGems... '
+    result = rubygems_versions.map { |v| v[:version] }.max
+    puts "latest is #{result || 'none'}"
+    result
+  end
+
+  def calculate_prerelease_version
+    released = latest_released_version
+    gemspec_v = current_version
+    gemspec_str = gemspec_version_string
+
+    if released.nil? || gemspec_v != released
+      gemspec_str
+    elsif gemspec_v.prerelease?
+      increment_prerelease(gemspec_str)
+    else
+      increment_stable_to_prerelease(gemspec_str)
+    end
+  end
+
+  def increment_prerelease version_str
+    raise "Cannot parse prerelease version: #{version_str}" unless version_str =~ /^(.*?)pre(\d+)$/
+
+    "#{$1}pre#{$2.to_i + 1}"
+  end
+
+  def increment_stable_to_prerelease version_str
+    parts = version_str.split('.')
+    if parts.length < 3
+      parts << '1'
+    else
+      parts[2] = (parts[2].to_i + 1).to_s
+    end
+    "#{parts[0..2].join('.')}pre1"
+  end
+
+  def update_gemspec_version new_version
+    content = File.read(@gemspec_path)
+    updated = content.sub(/(spec\.version\s*=\s*['"])[^'"]*(['"])/, "\\1#{new_version}\\2")
+    raise "Could not find version line in #{@gemspec_path}" if content == updated
+
+    File.write(@gemspec_path, updated)
+    @current_version = nil
+  end
+
+  def commit_and_push_version new_version
+    puts "Committing version bump to #{new_version}..."
+    system("git add #{@gemspec_path}") || raise('git add failed')
+    system("git commit -m 'Bump version to #{new_version}'") || raise('git commit failed')
+    puts 'Pushing to remote...'
+    system('git push') || raise('git push failed')
   end
 end

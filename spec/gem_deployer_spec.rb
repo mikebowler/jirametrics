@@ -73,6 +73,79 @@ describe GemDeployer do
     end
   end
 
+  context 'increment_prerelease' do
+    it 'increments the pre number' do
+      expect(deployer.send(:increment_prerelease, '2.30.1pre4')).to eq '2.30.1pre5'
+    end
+
+    it 'works starting from pre1' do
+      expect(deployer.send(:increment_prerelease, '1.0pre1')).to eq '1.0pre2'
+    end
+
+    it 'raises for a non-prerelease version string' do
+      expect { deployer.send(:increment_prerelease, '2.30.1') }.to raise_error(RuntimeError, /Cannot parse/)
+    end
+  end
+
+  context 'increment_stable_to_prerelease' do
+    it 'increments the patch component for a three-part version' do
+      expect(deployer.send(:increment_stable_to_prerelease, '2.30.1')).to eq '2.30.2pre1'
+    end
+
+    it 'adds a patch component for a two-part version' do
+      expect(deployer.send(:increment_stable_to_prerelease, '1.0')).to eq '1.0.1pre1'
+    end
+  end
+
+  context 'calculate_prerelease_version' do
+    before do
+      allow(deployer).to receive_messages(
+        gemspec_version_string: gemspec_str,
+        current_version: Gem::Version.new(gemspec_str)
+      )
+    end
+
+    context 'when no versions have been released yet' do
+      let(:gemspec_str) { '2.30.1pre4' }
+
+      before { allow(deployer).to receive(:latest_released_version).and_return(nil) }
+
+      it 'returns the gemspec version unchanged' do
+        expect(deployer.send(:calculate_prerelease_version)).to eq '2.30.1pre4'
+      end
+    end
+
+    context 'when gemspec version differs from latest released (local testing)' do
+      let(:gemspec_str) { '2.30.1pre5' }
+
+      before { allow(deployer).to receive(:latest_released_version).and_return(Gem::Version.new('2.30.1pre4')) }
+
+      it 'returns the gemspec version unchanged' do
+        expect(deployer.send(:calculate_prerelease_version)).to eq '2.30.1pre5'
+      end
+    end
+
+    context 'when gemspec matches the latest released prerelease' do
+      let(:gemspec_str) { '2.30.1pre4' }
+
+      before { allow(deployer).to receive(:latest_released_version).and_return(Gem::Version.new('2.30.1pre4')) }
+
+      it 'increments the pre number' do
+        expect(deployer.send(:calculate_prerelease_version)).to eq '2.30.1pre5'
+      end
+    end
+
+    context 'when gemspec matches the latest released stable version' do
+      let(:gemspec_str) { '2.30.1' }
+
+      before { allow(deployer).to receive(:latest_released_version).and_return(Gem::Version.new('2.30.1')) }
+
+      it 'increments the patch and adds pre1' do
+        expect(deployer.send(:calculate_prerelease_version)).to eq '2.30.2pre1'
+      end
+    end
+  end
+
   context 'prereleases_to_yank' do
     let(:all_versions) do
       [
