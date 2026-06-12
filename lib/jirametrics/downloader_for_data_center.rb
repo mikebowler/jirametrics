@@ -67,10 +67,9 @@ class DownloaderForDataCenter < Downloader
     end
   end
 
-  def enhance_issue_with_worklogs issue_key:, issue_path:
+  def enhance_issue_with_worklogs issue_key:, issue_path:, max_results: 100
     all_worklogs = []
     start_at = 0
-    max_results = 100
 
     loop do
       url = "/rest/api/2/issue/#{CGI.escape(issue_key)}/worklog?startAt=#{start_at}&maxResults=#{max_results}"

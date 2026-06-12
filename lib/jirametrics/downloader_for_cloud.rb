@@ -130,9 +130,7 @@ class DownloaderForCloud < Downloader
     issue_datas
   end
 
-  def attach_worklogs_to_issues issue_datas:, issue_jsons:
-    max_results = 100
-
+  def attach_worklogs_to_issues issue_datas:, issue_jsons:, max_results: 100 # rubocop:disable Lint/UnusedMethodArgument
     issue_jsons.each do |issue_json|
       worklog = issue_json['fields']['worklog']
       next unless worklog
@@ -271,11 +269,11 @@ class DownloaderForCloud < Downloader
       end
       break if related_issue_keys.empty?
 
-      unless in_related_phase
-        in_related_phase = true
-        log "  Identifying related issues (parents, subtasks, links) for board #{board.id}", both: true
-        log_start '  Downloading more issues '
-      end
+      next if in_related_phase
+
+      in_related_phase = true
+      log "  Identifying related issues (parents, subtasks, links) for board #{board.id}", both: true
+      log_start '  Downloading more issues '
     end
 
     end_progress if in_related_phase
