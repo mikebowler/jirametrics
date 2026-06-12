@@ -32,7 +32,8 @@ describe 'Worklog' do
 
     it 'skips issues whose worklogs are already complete' do
       issue_jsons = [
-        { 'id' => '1', 'key' => 'TEST-1', 'fields' => { 'worklog' => { 'total' => 2, 'worklogs' => [{ 'id' => '100' }, { 'id' => '101' }] } } }
+        { 'id' => '1', 'key' => 'TEST-1',
+          'fields' => { 'worklog' => { 'total' => 2, 'worklogs' => [{ 'id' => '100' }, { 'id' => '101' }] } } }
       ]
 
       downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
@@ -99,6 +100,34 @@ describe 'Worklog' do
       worklog = issue_jsons[0]['fields']['worklog']
       expect(worklog['total']).to eq(250)
       expect(worklog['worklogs'].size).to eq(250)
+    end
+
+    it 'paginates correctly when server caps page size below requested max' do
+      issue_jsons = [
+        {
+          'id' => '1', 'key' => 'TEST-1',
+          'fields' => { 'worklog' => { 'total' => 62, 'worklogs' => (1..20).map { |i| { 'id' => i.to_s } } } }
+        }
+      ]
+
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=20&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (21..40).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=40&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (41..60).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=60&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (61..62).map { |i| { 'id' => i.to_s } } }
+      )
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      worklog = issue_jsons[0]['fields']['worklog']
+      expect(worklog['total']).to eq(62)
+      expect(worklog['worklogs'].size).to eq(62)
     end
 
     it 'skips issues with no worklog field' do
@@ -191,6 +220,38 @@ describe 'Worklog' do
 
       saved_issue = file_system.saved_json_expanded[issue_path]
       expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
+    end
+
+    it 'paginates correctly when server caps page size below requested max' do
+      issue_path = 'spec/testdata/TEST-4-1.json'
+      original_issue = {
+        'key' => 'TEST-4', 'id' => '126',
+        'fields' => { 'worklog' => { 'total' => 62, 'maxResults' => 20, 'worklogs' => [] } }
+      }
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=0&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (1..20).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=20&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (21..40).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=40&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (41..60).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=60&maxResults=100',
+        response: { 'total' => 62, 'worklogs' => (61..62).map { |i| { 'id' => i.to_s } } }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-4', issue_path: issue_path)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      expect(saved_issue['fields']['worklog']['total']).to eq(62)
+      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(62)
     end
 
     it 'handles issues with no worklogs' do
