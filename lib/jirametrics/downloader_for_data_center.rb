@@ -79,6 +79,8 @@ class DownloaderForDataCenter < Downloader
       all_worklogs.concat(worklogs)
 
       total = response['total'].to_i
+      log "        #{issue_key} worklogs: page startAt=#{start_at}, " \
+          "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
       break if start_at + worklogs.size >= total
 
       start_at += worklogs.size

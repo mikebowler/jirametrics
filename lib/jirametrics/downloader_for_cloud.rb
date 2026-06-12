@@ -150,7 +150,10 @@ class DownloaderForCloud < Downloader
         worklogs = response['worklogs'] || []
         all_worklogs.concat(worklogs)
 
-        break if all_worklogs.size >= response['total'].to_i
+        total = response['total'].to_i
+        log "        #{key} worklogs: page startAt=#{start_at}, " \
+            "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
+        break if all_worklogs.size >= total
 
         start_at += worklogs.size
       end
