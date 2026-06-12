@@ -163,8 +163,8 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-1', issue_path: issue_path)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['worklog']['total']).to eq(150)
-      expect(saved_issue['worklog']['worklogs'].size).to eq(150)
+      expect(saved_issue['fields']['worklog']['total']).to eq(150)
+      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
     end
 
     it 'advances startAt by actual items received, not max_results' do
@@ -190,7 +190,7 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-3', issue_path: issue_path)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['worklog']['worklogs'].size).to eq(150)
+      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
     end
 
     it 'handles issues with no worklogs' do
@@ -216,8 +216,8 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-2', issue_path: issue_path)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['worklog']['total']).to eq(0)
-      expect(saved_issue['worklog']['worklogs']).to be_empty
+      expect(saved_issue['fields']['worklog']['total']).to eq(0)
+      expect(saved_issue['fields']['worklog']['worklogs']).to be_empty
     end
   end
 end

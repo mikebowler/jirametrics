@@ -86,7 +86,8 @@ class DownloaderForDataCenter < Downloader
     end
 
     issue_json = @file_system.load_json(issue_path)
-    issue_json['worklog'] = {
+    issue_json['fields'] ||= {}
+    issue_json['fields']['worklog'] = {
       'startAt' => 0,
       'maxResults' => all_worklogs.size,
       'total' => all_worklogs.size,
