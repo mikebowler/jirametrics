@@ -292,7 +292,7 @@ class GemDeployer
     raise "Could not find version line in #{@gemspec_path}" if content == updated
 
     File.write(@gemspec_path, updated)
-    @current_version = nil
+    @current_version = Gem::Version.new(new_version)
   end
 
   def commit_and_push_version new_version
