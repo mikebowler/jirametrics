@@ -119,14 +119,16 @@ class GithubGateway
       end
 
       unless status.success?
-        @file_system.warning "  GitHub CLI command failed for #{@repo} " \
-                             "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
+        error_message = "  GitHub CLI command failed for #{@repo} " \
+                        "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
         if attempts < MAX_RETRIES && TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) }
           delay = 2**attempts
-          @file_system.warning "  Transient error detected. Retrying in #{delay}s..."
+          @file_system.log error_message
+          @file_system.log "  Transient error detected. Retrying in #{delay}s..."
           sleep delay
           next
         end
+        @file_system.warning error_message
         raise "GitHub CLI command failed for #{@repo}: #{stderr}"
       end
 
