@@ -154,6 +154,10 @@ class DownloaderForCloud < Downloader
         log "        #{key} worklogs: page startAt=#{start_at}, " \
             "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
         break if all_worklogs.size >= total
+        # Guard against Jira reporting a higher total than it will actually return — seen when
+        # worklogs are deleted or access-restricted after the initial fetch. Without this,
+        # start_at never advances and we loop forever requesting the same empty page.
+        break if worklogs.empty?
 
         start_at += worklogs.size
       end
