@@ -485,10 +485,11 @@ class ProjectConfig
       end
 
       # Attach related issues
+      issues_by_key = issues.to_h { |i| [i.key, i] }
       issues.each do |i|
-        attach_subtasks issue: i, all_issues: issues
-        attach_parent issue: i, all_issues: issues
-        attach_linked_issues issue: i, all_issues: issues
+        attach_subtasks issue: i, issues_by_key: issues_by_key
+        attach_parent issue: i, issues_by_key: issues_by_key
+        attach_linked_issues issue: i, issues_by_key: issues_by_key
       end
 
       # We'll have some issues that are in the list that weren't part of the initial query. Once we've
@@ -501,24 +502,22 @@ class ProjectConfig
     @issues
   end
 
-  def attach_subtasks issue:, all_issues:
+  def attach_subtasks issue:, issues_by_key:
     issue.raw['fields']['subtasks']&.each do |subtask_element|
-      subtask_key = subtask_element['key']
-      subtask = all_issues.find { |i| i.key == subtask_key }
+      subtask = issues_by_key[subtask_element['key']]
       issue.subtasks << subtask if subtask
     end
   end
 
-  def attach_parent issue:, all_issues:
+  def attach_parent issue:, issues_by_key:
     parent_key = issue.parent_key
-    parent = all_issues.find { |i| i.key == parent_key }
-    issue.parent = parent if parent
+    issue.parent = issues_by_key[parent_key] if parent_key
   end
 
-  def attach_linked_issues issue:, all_issues:
+  def attach_linked_issues issue:, issues_by_key:
     issue.issue_links.each do |link|
       if link.other_issue.artificial?
-        other = all_issues.find { |i| i.key == link.other_issue.key }
+        other = issues_by_key[link.other_issue.key]
         link.other_issue = other if other
       end
     end
