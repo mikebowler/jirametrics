@@ -478,23 +478,28 @@ class ProjectConfig
 
       issues_path = File.join @target_path, "#{get_file_prefix}_issues"
       if File.exist?(issues_path) && File.directory?(issues_path)
+        file_system.log "  [diag] Loading issues from #{issues_path}"
         issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
+        file_system.log "  [diag] Loaded #{issues.size} issues from disk"
       else
         file_system.log "Can't find directory #{issues_path}. Has a download been done?", also_write_to_stderr: true
         return IssueCollection.new
       end
 
       # Attach related issues
+      file_system.log '  [diag] Starting attach phase'
       issues_by_key = issues.to_h { |i| [i.key, i] }
       issues.each do |i|
         attach_subtasks issue: i, issues_by_key: issues_by_key
         attach_parent issue: i, issues_by_key: issues_by_key
         attach_linked_issues issue: i, issues_by_key: issues_by_key
       end
+      file_system.log '  [diag] Attach phase complete'
 
       # We'll have some issues that are in the list that weren't part of the initial query. Once we've
       # attached them in the appropriate places, remove any that aren't part of that initial set.
       issues.reject! { |i| !i.in_initial_query? } # rubocop:disable Style/InverseMethods
+      file_system.log "  [diag] Retained #{issues.size} primary issues"
       @issues = issues
       attach_github_prs
     end
@@ -637,6 +642,7 @@ class ProjectConfig
       end
     end
 
+    file_system.log "  [diag] discard_changes_before: processing #{issues.size} issues"
     issues.each do |issue|
       cutoff_time = block.call(issue)
       next if cutoff_time.nil?

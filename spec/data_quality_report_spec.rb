@@ -675,7 +675,8 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       html_report = file_config.children.first
       data_quality_report = html_report.charts.find { |c| c.is_a? described_class }
 
-      expect(exporter.file_system.log_messages).to be_empty
+      non_diag_messages = exporter.file_system.log_messages.reject { |m| m.include?('[diag]') }
+      expect(non_diag_messages).to be_empty
 
       actual = data_quality_report.problems_for(:discarded_changes).collect do |issue, message, key|
         [issue.key, message, key]

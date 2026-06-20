@@ -263,7 +263,8 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
         'status  2021-12-14 00:30:15 +0000'
       ]
       expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-14 00:30:15 +0000'
-      expect(exporter.file_system.log_messages).to eq [
+      non_diag_messages = exporter.file_system.log_messages.reject { |m| m.include?('[diag]') }
+      expect(non_diag_messages).to eq [
         'Shifting all dates by 0 days'
       ]
     end
@@ -282,7 +283,8 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
         'status  2021-12-14 00:30:15 +0000'
       ]
       expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-15 00:30:15 +0000'
-      expect(exporter.file_system.log_messages).to eq [
+      non_diag_messages = exporter.file_system.log_messages.reject { |m| m.include?('[diag]') }
+      expect(non_diag_messages).to eq [
         'Shifting all dates by 1 day'
       ]
     end
