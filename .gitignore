@@ -25,3 +25,9 @@ coverage/js/.superpowers/
 .dolt/
 *.db
 .beads-credential-key
+
+# Beads issue data must NOT go to this public repo. It lives in the private
+# repo github.com/mikebowler/jirametrics-beads instead. See CLAUDE.md.
+.beads/issues.jsonl
+.beads/events.jsonl
+.beads/interactions.jsonl

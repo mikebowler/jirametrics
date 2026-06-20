@@ -2,6 +2,20 @@
 
 This file provides Claude Code-specific guidance. All general project guidance is in AGENTS.md.
 
+## ⚠️ Beads data must stay OUT of this public repo
+
+This repository (`github.com/mikebowler/jirametrics`) is **public**. Beads issue
+content can contain client-sensitive material (logs, project keys, customer data
+pasted from support cases) and must **never** be committed or pushed here.
+
+- Beads issue data lives in the **private** repo `github.com/mikebowler/jirametrics-beads`.
+- `.beads/issues.jsonl` (and `events.jsonl`/`interactions.jsonl`) are gitignored in
+  this repo — do **not** force-add them or remove those `.gitignore` entries.
+- `bd dolt push` is configured to push to the private repo's Dolt remote, NOT here.
+- In the session-close workflow below, `git push` sends **code only** to the public
+  repo; `bd dolt push` sends **beads data only** to the private repo. Keep them separate.
+- If you ever see `.beads/issues.jsonl` staged for the public repo, stop and unstage it.
+
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker

@@ -54,3 +54,5 @@
 # - github.repo
 
 sync.remote: "git+ssh://git@github.com/mikebowler/jirametrics-beads.git"
+
+export.git-add: false
