@@ -250,23 +250,20 @@ class DownloaderForCloud < Downloader
             # to parse the file just to find the timestamp
             @file_system.utime time: data.issue.updated, file: data.cache_path
 
-            collect_related_issue_keys issue: data.issue, related_issue_keys: related_issue_keys
+            collect_or_log_related(
+              issue: data.issue, found_in_primary_query: data.found_in_primary_query,
+              related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash
+            )
             checked_for_related << data.key
           end
         end
         end_progress unless in_related_phase
       end
 
-      # Also scan up-to-date cached issues we haven't checked yet — they may reference
-      # related issues that are not in the primary query result.
-      issue_data_hash.each_value do |data|
-        next if checked_for_related.include?(data.key)
-        next unless @file_system.file_exist?(data.cache_path)
-
-        checked_for_related << data.key
-        raw = @file_system.load_json(data.cache_path)
-        collect_related_issue_keys issue: Issue.new(raw: raw, board: board), related_issue_keys: related_issue_keys
-      end
+      scan_cached_issues_for_related(
+        issue_data_hash: issue_data_hash, board: board,
+        checked_for_related: checked_for_related, related_issue_keys: related_issue_keys
+      )
 
       # Remove all the ones we already have
       related_issue_keys.reject! { |key| issue_data_hash[key] }
@@ -313,20 +310,68 @@ class DownloaderForCloud < Downloader
     end
   end
 
+  # Scan up-to-date cached primary issues we haven't checked yet — they may reference related
+  # issues that are not in the primary query result. We only follow links one hop out from the
+  # primary issues, so related (non-primary) cached issues are not followed (just logged).
+  def scan_cached_issues_for_related issue_data_hash:, board:, checked_for_related:, related_issue_keys:
+    issue_data_hash.each_value do |data|
+      next if checked_for_related.include?(data.key)
+      next unless @file_system.file_exist?(data.cache_path)
+
+      checked_for_related << data.key
+      issue = Issue.new(raw: @file_system.load_json(data.cache_path), board: board)
+      collect_or_log_related(
+        issue: issue, found_in_primary_query: data.found_in_primary_query,
+        related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash
+      )
+    end
+  end
+
+  # Follow links one hop out from primary issues; for related (non-primary) issues, log the
+  # onward links we are deliberately not following rather than recursing into them.
+  def collect_or_log_related issue:, found_in_primary_query:, related_issue_keys:, issue_data_hash:
+    if found_in_primary_query
+      collect_related_issue_keys issue: issue, related_issue_keys: related_issue_keys
+    else
+      log_unfollowed_related_keys issue: issue, issue_data_hash: issue_data_hash
+    end
+  end
+
   def collect_related_issue_keys issue:, related_issue_keys:
+    related_issue_keys.merge related_keys_for(issue)
+  end
+
+  # The parents, subtasks, and (non-cloner) linked issues that this issue references.
+  def related_keys_for issue
+    keys = Set.new
+
     parent_key = issue.parent_key(project_config: @download_config.project_config)
-    related_issue_keys << parent_key if parent_key
+    keys << parent_key if parent_key
 
     issue.raw['fields']['subtasks']&.each do |raw_subtask|
-      related_issue_keys << raw_subtask['key']
+      keys << raw_subtask['key']
     end
 
     issue.raw['fields']['issuelinks']&.each do |link|
       next if link['type']['name'] == 'Cloners'
 
       linked = link['inwardIssue'] || link['outwardIssue']
-      related_issue_keys << linked['key'] if linked
+      keys << linked['key'] if linked
     end
+
+    keys
+  end
+
+  # We only follow links one hop out from the primary (board) issues. If a related issue
+  # itself references further issues we haven't already downloaded, we deliberately don't
+  # follow them — but log it so we can diagnose later if an export fails because a
+  # second-hop issue was missing. See GitHub #72.
+  def log_unfollowed_related_keys issue:, issue_data_hash:
+    onward = related_keys_for(issue).reject { |key| issue_data_hash[key] }
+    return if onward.empty?
+
+    log "  [diag] One-hop limit: not following #{onward.size} onward link(s) from related " \
+        "issue #{issue.key}: #{onward.to_a.sort.join(', ')}"
   end
 
   def last_modified filename:

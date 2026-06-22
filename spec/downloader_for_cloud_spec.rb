@@ -649,6 +649,45 @@ describe DownloaderForCloud do
       expect(received_keys[1]).to contain_exactly('ABC-LINKED')
     end
 
+    it 'only follows links one hop out from primary issues and logs what it skips' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+
+      # ABC-123 (primary) -> ABC-LINKED (one hop, followed) -> ABC-SECOND (second hop, NOT followed)
+      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
+      ]
+      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+      linked_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-SECOND' } }
+      ]
+
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc123.json')
+      )
+
+      fetched_keys = []
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        fetched_keys.concat issue_datas.map(&:key)
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = d.key == 'ABC-123' ? primary_issue : linked_issue
+        end
+        issue_datas
+      end
+
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(fetched_keys).to contain_exactly('ABC-123', 'ABC-LINKED')
+      expect(file_system.log_messages).to include(
+        '[diag] One-hop limit: not following 1 onward link(s) from related issue ABC-LINKED: ABC-SECOND'
+      )
+    end
+
     it 'follows linked issues from up-to-date cached issues' do
       board = sample_board
       board.raw['id'] = 2
