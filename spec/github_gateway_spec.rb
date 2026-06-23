@@ -313,6 +313,18 @@ describe GithubGateway do
       expect(Open3).to have_received(:capture3).twice
     end
 
+    it 'retries on unexpected end of JSON input and succeeds' do
+      failure = instance_double(Process::Status, success?: false)
+      success = instance_double(Process::Status, success?: true)
+      allow(gateway).to receive(:sleep)
+      allow(Open3).to receive(:capture3)
+        .and_return(['', 'unexpected end of JSON input', failure],
+                    ['[]', '', success])
+
+      expect { gateway.fetch_raw_pull_requests }.not_to raise_error
+      expect(Open3).to have_received(:capture3).twice
+    end
+
     it 'does not retry on non-transient errors' do
       failure = instance_double(Process::Status, success?: false)
       allow(Open3).to receive(:capture3).and_return(['', 'HTTP 404: Not Found', failure])

@@ -8,7 +8,7 @@ class GithubGateway
 
   TRANSIENT_ERROR_PATTERNS = (
     [429, 500, 502, 503, 504].map { |code| "HTTP #{code}" } +
-    ['stream error:']
+    ['stream error:', 'unexpected end of JSON input']
   ).freeze
   MAX_RETRIES = 3
   REVIEW_STATES = %w[APPROVED CHANGES_REQUESTED].freeze
