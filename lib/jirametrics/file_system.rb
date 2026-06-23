@@ -55,6 +55,10 @@ class FileSystem
     log "Error: #{message}", more: more, also_write_to_stderr: true
   end
 
+  def diagnostic message, more: nil
+    log "  [diag] #{message}", more: more
+  end
+
   def log message, more: nil, also_write_to_stderr: false
     message += " See #{logfile_name} for more details about this message." if more
 

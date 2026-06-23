@@ -325,6 +325,15 @@ describe GithubGateway do
       expect(Open3).to have_received(:capture3).twice
     end
 
+    it 'logs elapsed time for the call' do
+      success = instance_double(Process::Status, success?: true)
+      allow(gateway).to receive(:monotonic_time).and_return(10.0, 12.34)
+      allow(Open3).to receive(:capture3).and_return(['[]', '', success])
+
+      gateway.fetch_raw_pull_requests
+      expect(file_system.log_messages).to include('[diag] gh pr list call took 2.34s')
+    end
+
     it 'does not retry on non-transient errors' do
       failure = instance_double(Process::Status, success?: false)
       allow(Open3).to receive(:capture3).and_return(['', 'HTTP 404: Not Found', failure])

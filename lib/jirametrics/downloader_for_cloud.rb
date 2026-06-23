@@ -232,8 +232,8 @@ class DownloaderForCloud < Downloader
       related_issue_keys = Set.new
       stale = issue_data_hash.values.reject { |data| data.up_to_date }
       if in_related_phase
-        log "  [diag] Download loop: #{issue_data_hash.size} total known, " \
-            "#{stale.size} stale, #{checked_for_related.size} link-scanned"
+        @file_system.diagnostic "Download loop: #{issue_data_hash.size} total known, " \
+                                "#{stale.size} stale, #{checked_for_related.size} link-scanned"
       end
       unless stale.empty?
         log_start '  Downloading more issues ' unless in_related_phase
@@ -370,8 +370,8 @@ class DownloaderForCloud < Downloader
     onward = related_keys_for(issue).reject { |key| issue_data_hash[key] }
     return if onward.empty?
 
-    log "  [diag] One-hop limit: not following #{onward.size} onward link(s) from related " \
-        "issue #{issue.key}: #{onward.to_a.sort.join(', ')}"
+    @file_system.diagnostic "One-hop limit: not following #{onward.size} onward link(s) from related " \
+                            "issue #{issue.key}: #{onward.to_a.sort.join(', ')}"
   end
 
   def last_modified filename:

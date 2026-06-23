@@ -106,11 +106,18 @@ class GithubGateway
     Regexp.new("\\b(?:#{keys_pattern})-\\d+(?![A-Za-z0-9])")
   end
 
+  def monotonic_time
+    # In its own method so we can mock it out in tests
+    Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  end
+
   def run_command args
     attempts = 0
     loop do
       attempts += 1
+      started = monotonic_time
       stdout, stderr, status = Open3.capture3('gh', *args)
+      @file_system.diagnostic "gh #{args.first(2).join(' ')} call took #{format('%.2f', monotonic_time - started)}s"
 
       # This extra check seems to only matter on Windows. On the mac, auth failures don't pass status.success?
       if stderr.include?('SAML enforcement')

@@ -174,11 +174,13 @@ describe JiraGateway do
       allow(gateway).to receive(:capture3).and_return(
         ['stdout', 'stderr', MockStatus.new(exitstatus: 1)]
       )
+      allow(gateway).to receive(:monotonic_time).and_return(10.0, 10.42)
       expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
         raise_error 'Failed call with exit status 1. See mock_logfile for details'
       )
       expect(file_system.log_messages).to eq([
         'foo',
+        '[diag] Jira call took 0.42s',
         'Error: Failed call with exit status 1!',
         'Error: Returned (stdout): "stdout"',
         'Error: Returned (stderr): "stderr"'
@@ -198,11 +200,28 @@ describe JiraGateway do
       allow(gateway).to receive(:capture3).and_return(
         ['{"a":1}', 'stderr', MockStatus.new(exitstatus: 0)]
       )
+      allow(gateway).to receive(:monotonic_time).and_return(10.0, 10.42)
       result = gateway.exec_and_parse_response command: 'foo', stdin_data: nil
       expect(result).to eq({ 'a' => 1 })
       expect(file_system.log_messages).to eq([
         'foo',
+        '[diag] Jira call took 0.42s',
         'Returned (stderr): "stderr"'
+      ])
+    end
+
+    it 'logs elapsed time for each call attempt' do
+      allow(gateway).to receive(:sleep_between_retries)
+      allow(gateway).to receive(:capture3).and_return(
+        ['', '', MockStatus.new(exitstatus: 56)],
+        ['{"a":1}', '', MockStatus.new(exitstatus: 0)]
+      )
+      allow(gateway).to receive(:monotonic_time).and_return(10.0, 11.5, 20.0, 20.25)
+      gateway.exec_and_parse_response command: 'foo', stdin_data: nil
+      timing_messages = file_system.log_messages.grep(/Jira call took/)
+      expect(timing_messages).to eq([
+        '[diag] Jira call took 1.50s',
+        '[diag] Jira call took 0.25s'
       ])
     end
 
@@ -235,10 +254,11 @@ describe JiraGateway do
       allow(gateway).to receive(:capture3).and_return(
         ['stdout', 'stderr', MockStatus.new(exitstatus: 22)]
       )
-      expect(gateway).not_to receive(:sleep_between_retries)
+      allow(gateway).to receive(:sleep_between_retries)
       expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
         raise_error 'Failed call with exit status 22. See mock_logfile for details'
       )
+      expect(gateway).not_to have_received(:sleep_between_retries)
     end
   end
 end

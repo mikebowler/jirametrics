@@ -32,17 +32,21 @@ class JiraGateway
 
     retries = 0
     loop do
+      started = monotonic_time
       stdout, stderr, status = capture3(command, stdin_data: stdin_data)
+      @file_system.diagnostic format('Jira call took %.2fs', monotonic_time - started)
 
       if status.success?
         @file_system.log "Returned (stderr): #{stderr.inspect}" unless stderr == ''
         raise 'no response from curl on stdout' if stdout == ''
+
         return parse_response(command: command, result: stdout)
       end
 
       if RETRYABLE_EXIT_CODES.include?(status.exitstatus) && retries < MAX_RETRIES && !stderr.include?('503')
         retries += 1
-        @file_system.log "Transient network error (exit #{status.exitstatus}), retrying in #{RETRY_DELAY_SECONDS}s (attempt #{retries}/#{MAX_RETRIES})..."
+        @file_system.log "Transient network error (exit #{status.exitstatus}), retrying in " \
+                         "#{RETRY_DELAY_SECONDS}s (attempt #{retries}/#{MAX_RETRIES})..."
         sleep_between_retries
         next
       end
@@ -71,6 +75,11 @@ class JiraGateway
   def sleep_between_retries
     # In its own method so we can mock it out in tests
     sleep RETRY_DELAY_SECONDS
+  end
+
+  def monotonic_time
+    # In its own method so we can mock it out in tests
+    Process.clock_gettime(Process::CLOCK_MONOTONIC)
   end
 
   def call_url relative_url:

@@ -23,6 +23,19 @@ describe FileSystem do
       .to raise_error Errno::ENOENT
   end
 
+  context 'diagnostic' do
+    it 'prefixes the message and writes only to the logfile' do
+      file_system = described_class.new
+      output = StringIO.new
+      file_system.logfile = output
+      file_system.logfile_name = 'unused'
+
+      file_system.diagnostic 'something happened'
+
+      expect(output.string).to eq "  [diag] something happened\n"
+    end
+  end
+
   context 'compress' do
     it "doesn't change structures that are full" do
       input    = { a: 1, b: { d: 5, e: [4, 5, 6] } }
