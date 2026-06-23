@@ -13,6 +13,11 @@ class GithubGateway
   MAX_RETRIES = 3
   REVIEW_STATES = %w[APPROVED CHANGES_REQUESTED].freeze
 
+  # How many keyless PRs to request commits for in a single graphql call, and how many commits
+  # to pull per PR. Kept bounded so node counts stay well under GitHub's graphql node limit.
+  COMMIT_FETCH_BATCH_SIZE = 30
+  MAX_COMMITS_PER_PR = 100
+
   def initialize repo:, project_keys:, file_system:, raw_pr_cache: {}
     @repo = repo
     @project_keys = project_keys
@@ -23,6 +28,7 @@ class GithubGateway
 
   def fetch_pull_requests since: nil
     raw_prs = @raw_pr_cache[[@repo, since]] ||= fetch_raw_pull_requests(since: since)
+    prefetch_commit_messages(raw_prs)
     raw_prs.filter_map { |pr| build_pr_data(pr) }
   end
 
@@ -65,16 +71,15 @@ class GithubGateway
   def extract_issue_keys raw_pr
     return [] if @issue_key_pattern.nil?
 
-    sources = [
-      raw_pr['headRefName'],
-      raw_pr['title'],
-      raw_pr['body']
-    ]
-
-    keys = sources.compact.flat_map { |s| s.scan(@issue_key_pattern) }.uniq
+    keys = keys_from_text_fields(raw_pr)
     return keys unless keys.empty?
 
     commit_messages_for(raw_pr['number']).flat_map { |msg| msg.scan(@issue_key_pattern) }.uniq
+  end
+
+  def keys_from_text_fields raw_pr
+    sources = [raw_pr['headRefName'], raw_pr['title'], raw_pr['body']]
+    sources.compact.flat_map { |s| s.scan(@issue_key_pattern) }.uniq
   end
 
   def extract_reviews raw_reviews
@@ -91,10 +96,67 @@ class GithubGateway
 
   private
 
+  # Pre-populate the shared commit cache for every PR with no key in its branch/title/body, using
+  # batched graphql requests instead of one "gh pr view" per PR. build_pr_data -> commit_messages_for
+  # then reads straight from the cache for those PRs (no per-PR network call). Any PR the batch can't
+  # fully cover (more commits than one page, or absent from the response) is left uncached so the
+  # single-PR fallback in commit_messages_for fills it in.
+  def prefetch_commit_messages raw_prs
+    return if @issue_key_pattern.nil?
+
+    numbers = raw_prs
+      .select { |raw_pr| keys_from_text_fields(raw_pr).empty? }
+      .map { |raw_pr| raw_pr['number'] }
+      .reject { |number| @raw_pr_cache.key?([@repo, :commits, number]) }
+
+    numbers.each_slice(COMMIT_FETCH_BATCH_SIZE) do |batch|
+      fetch_commits_batch(batch).each do |number, messages|
+        @raw_pr_cache[[@repo, :commits, number]] = messages
+      end
+    end
+  end
+
+  def fetch_commits_batch numbers
+    owner, name = owner_and_name
+    aliases = numbers.each_with_index.map do |number, index|
+      "pr#{index}: pullRequest(number: #{number}) " \
+        "{ commits(first: #{MAX_COMMITS_PER_PR}) { totalCount nodes { commit { messageHeadline messageBody } } } }"
+    end
+    query = %(query { repository(owner: "#{owner}", name: "#{name}") { #{aliases.join(' ')} } })
+    result = run_command(['api', 'graphql', '-f', "query=#{query}"])
+    parse_commits_batch result: result, numbers: numbers
+  end
+
+  def parse_commits_batch result:, numbers:
+    repository = result.dig('data', 'repository') || {}
+    messages_by_number = {}
+    numbers.each_with_index do |number, index|
+      commits = repository.dig("pr#{index}", 'commits')
+      next if commits.nil?
+
+      nodes = commits['nodes'] || []
+      # Skip caching when the PR has more commits than this page covers, so the single-PR
+      # fallback fetches the complete set rather than us caching a partial answer.
+      next if commits['totalCount'] && commits['totalCount'] > nodes.size
+
+      messages_by_number[number] = nodes.flat_map do |node|
+        commit = node['commit'] || {}
+        [commit['messageHeadline'], commit['messageBody']].compact
+      end
+    end
+    messages_by_number
+  end
+
+  def owner_and_name
+    # @repo may be a full URL (https://github.com/owner/name.git) or an owner/name slug.
+    @repo.sub(%r{\Ahttps?://[^/]+/}, '').delete_suffix('.git').split('/', 2)
+  end
+
   def commit_messages_for pr_number
     # Cached in the shared per-run cache (keyed by repo + PR) so the fallback isn't re-fetched
     # when the same repo is downloaded by more than one project. Commit text doesn't depend on
-    # project_keys, so it's safe to share across projects with different keys.
+    # project_keys, so it's safe to share across projects with different keys. prefetch_commit_messages
+    # normally fills this in via a batched request; this single-PR path is the fallback.
     @raw_pr_cache[[@repo, :commits, pr_number]] ||= begin
       args = ['pr', 'view', pr_number.to_s, '--json', 'commits', '--repo', @repo]
       result = run_command(args)

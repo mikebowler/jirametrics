@@ -209,6 +209,7 @@ describe GithubGateway do
 
     it 'returns only PRs that reference known project keys' do
       allow(gateway).to receive_messages(run_command: raw_prs, commit_messages_for: [])
+      allow(gateway).to receive(:fetch_commits_batch).and_return({})
       results = gateway.fetch_pull_requests
       expect(results.size).to eq 1
       expect(results.first.number).to eq 42
@@ -300,6 +301,109 @@ describe GithubGateway do
       gateway2.send(:commit_messages_for, 99)
 
       expect(gateway2).to have_received(:run_command)
+    end
+  end
+
+  context 'batched commit-message fallback' do
+    def raw_pr number:, title: 'Unrelated', branch: 'misc-branch', body: nil
+      {
+        'number' => number, 'url' => "https://github.com/owner/repo/pull/#{number}",
+        'title' => title, 'headRefName' => branch, 'body' => body,
+        'createdAt' => '2026-01-10T09:00:00Z', 'closedAt' => nil, 'mergedAt' => nil,
+        'state' => 'OPEN', 'reviews' => [], 'additions' => 0, 'deletions' => 0, 'changedFiles' => 0
+      }
+    end
+
+    def graphql_pr index:, headline:, total_count: nil
+      nodes = [{ 'commit' => { 'messageHeadline' => headline, 'messageBody' => nil } }]
+      ["pr#{index}", { 'commits' => { 'totalCount' => total_count || nodes.size, 'nodes' => nodes } }]
+    end
+
+    it 'fetches commits for all keyless PRs in a single graphql request, not one gh pr view each' do
+      list = [raw_pr(number: 42, title: 'Fix SP-1', branch: 'SP-1'), raw_pr(number: 43), raw_pr(number: 44)]
+      graphql = { 'data' => { 'repository' => [
+        graphql_pr(index: 0, headline: 'SP-99 in commit'),
+        graphql_pr(index: 1, headline: 'no key here')
+      ].to_h } }
+      allow(gateway).to receive(:run_command) do |args|
+        args.first(2) == %w[api graphql] ? graphql : list
+      end
+
+      results = gateway.fetch_pull_requests
+
+      expect(results.map(&:number)).to contain_exactly(42, 43)
+      expect(gateway).to have_received(:run_command).with(array_including('api', 'graphql')).once
+      expect(gateway).not_to have_received(:run_command).with(array_including('view'))
+    end
+
+    it 'does not issue a graphql request when every PR already has keys in its fields' do
+      allow(gateway).to receive(:run_command).and_return([raw_pr(number: 42, title: 'Fix SP-1', branch: 'SP-1')])
+
+      gateway.fetch_pull_requests
+
+      expect(gateway).not_to have_received(:run_command).with(array_including('graphql'))
+    end
+
+    it 'falls back to a single gh pr view when a PR has more commits than one page' do
+      list = [raw_pr(number: 43)]
+      graphql = { 'data' => { 'repository' => [
+        graphql_pr(index: 0, headline: 'no key in first page', total_count: 5000)
+      ].to_h } }
+      allow(gateway).to receive(:run_command) do |args|
+        if args.first(2) == %w[api graphql]
+          graphql
+        elsif args.first(2) == %w[pr view]
+          { 'commits' => [{ 'messageHeadline' => 'SP-77 buried deep', 'messageBody' => nil }] }
+        else
+          list
+        end
+      end
+
+      results = gateway.fetch_pull_requests
+
+      expect(results.map(&:number)).to eq [43]
+      expect(gateway).to have_received(:run_command).with(array_including('pr', 'view'))
+    end
+
+    it 'builds the graphql query from a full repo URL' do
+      url_gateway = described_class.new(
+        repo: 'https://github.com/JANA-Technology/Lighthouse-TIMP-Backend.git',
+        project_keys: %w[SP], file_system: file_system
+      )
+      captured = nil
+      allow(url_gateway).to receive(:run_command) do |args|
+        if args.first(2) == %w[api graphql]
+          captured = args.last
+          { 'data' => { 'repository' => {} } }
+        else
+          [raw_pr(number: 43)]
+        end
+      end
+      allow(url_gateway).to receive(:commit_messages_for).and_return([])
+
+      url_gateway.fetch_pull_requests
+
+      expect(captured).to include('owner: "JANA-Technology"', 'name: "Lighthouse-TIMP-Backend"')
+      expect(captured).to include('pr0: pullRequest(number: 43)')
+    end
+
+    it 'splits large keyless sets into batches' do
+      list = (1..65).map { |n| raw_pr(number: n) }
+      graphql = { 'data' => { 'repository' => {} } }
+      allow(gateway).to receive(:run_command) do |args|
+        if args.first(2) == %w[api graphql]
+          graphql
+        elsif args.first(2) == %w[pr view]
+          { 'commits' => [] }
+        else
+          list
+        end
+      end
+
+      gateway.fetch_pull_requests
+
+      expect(gateway).to have_received(:run_command).with(array_including('api', 'graphql'))
+        .exactly((65.0 / GithubGateway::COMMIT_FETCH_BATCH_SIZE).ceil).times
     end
   end
 
