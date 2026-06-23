@@ -265,6 +265,42 @@ describe GithubGateway do
 
       expect(gateway2).to have_received(:run_command)
     end
+
+    it 'caches commit-message fallback lookups across gateways sharing a cache for the same repo and PR' do
+      cache = {}
+      commits = { 'commits' => [{ 'messageHeadline' => 'SP-112 fix', 'messageBody' => '' }] }
+      gateway1 = described_class.new(
+        repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+      gateway2 = described_class.new(
+        repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+
+      allow(gateway1).to receive(:run_command).and_return(commits)
+      allow(gateway2).to receive(:run_command)
+
+      expect(gateway1.send(:commit_messages_for, 99)).to eq ['SP-112 fix', '']
+      expect(gateway2.send(:commit_messages_for, 99)).to eq ['SP-112 fix', '']
+      expect(gateway2).not_to have_received(:run_command)
+    end
+
+    it 'does not let a cached commit lookup leak across different repos' do
+      cache = {}
+      gateway1 = described_class.new(
+        repo: 'owner/repo1', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+      gateway2 = described_class.new(
+        repo: 'owner/repo2', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+      )
+
+      allow(gateway1).to receive(:run_command).and_return({ 'commits' => [] })
+      allow(gateway2).to receive(:run_command).and_return({ 'commits' => [] })
+
+      gateway1.send(:commit_messages_for, 99)
+      gateway2.send(:commit_messages_for, 99)
+
+      expect(gateway2).to have_received(:run_command)
+    end
   end
 
   context 'run_command' do

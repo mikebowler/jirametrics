@@ -92,10 +92,15 @@ class GithubGateway
   private
 
   def commit_messages_for pr_number
-    args = ['pr', 'view', pr_number.to_s, '--json', 'commits', '--repo', @repo]
-    result = run_command(args)
-    (result['commits'] || []).flat_map do |commit|
-      [commit['messageHeadline'], commit['messageBody']].compact
+    # Cached in the shared per-run cache (keyed by repo + PR) so the fallback isn't re-fetched
+    # when the same repo is downloaded by more than one project. Commit text doesn't depend on
+    # project_keys, so it's safe to share across projects with different keys.
+    @raw_pr_cache[[@repo, :commits, pr_number]] ||= begin
+      args = ['pr', 'view', pr_number.to_s, '--json', 'commits', '--repo', @repo]
+      result = run_command(args)
+      (result['commits'] || []).flat_map do |commit|
+        [commit['messageHeadline'], commit['messageBody']].compact
+      end
     end
   end
 
