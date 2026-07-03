@@ -5,7 +5,6 @@ config.rb
 coverage/
 .mutant/
 .DS_Store
-Gemfile.lock
 spec/tmp/
 *.gem
 *.log

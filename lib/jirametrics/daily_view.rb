@@ -24,7 +24,9 @@ class DailyView < ChartBase
   def run
     aging_issues = select_aging_issues
 
-    return "<h1 class='foldable'>#{@header_text}</h1><div>There are no items currently in progress</div>" if aging_issues.empty?
+    if aging_issues.empty?
+      return "<h1 class='foldable'>#{@header_text}</h1><div>There are no items currently in progress</div>"
+    end
 
     result = +''
     result << render_top_text(binding)

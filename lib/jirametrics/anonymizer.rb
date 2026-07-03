@@ -35,14 +35,14 @@ class Anonymizer < ChartBase
     # cautious and try five times.
     5.times do |i|
       return RandomWord.phrases.next.tr('_', ' ')
-    rescue # rubocop:disable Style/RescueStandardError We don't care what exception was thrown.
+    rescue # rubocop:disable Style/RescueStandardError -- We don't care what exception was thrown.
       @file_system.log "Random word blew up on attempt #{i + 1}"
     end
   end
 
   def anonymize_issue_keys_and_titles issues: @issues
     counter = 0
-    seen_author_raws = {}
+    seen_author_raws = {}.compare_by_identity
     issues.each do |issue|
       new_key = "ANON-#{counter += 1}"
 
@@ -250,9 +250,9 @@ class Anonymizer < ChartBase
 
   def anonymize_author_raw author_raw, seen
     return unless author_raw
-    return if seen[author_raw.object_id]
+    return if seen[author_raw]
 
-    seen[author_raw.object_id] = true
+    seen[author_raw] = true
     name = random_name
     author_raw['displayName'] = name
     author_raw['name'] = name

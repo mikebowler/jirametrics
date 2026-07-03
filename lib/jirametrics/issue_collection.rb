@@ -27,6 +27,7 @@ class IssueCollection < Array
     issue = hidden.find(&block) if issue.nil? && include_hidden
     issue
   end
+
   def clone
     raise 'baboom'
   end

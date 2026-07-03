@@ -4,6 +4,7 @@ require 'jirametrics/value_equality'
 
 class BlockedStalledChange
   include ValueEquality
+
   attr_reader :time, :blocking_issue_keys, :flag, :flag_reason, :status, :stalled_days, :status_is_blocking
 
   def initialize time:, flagged: nil, flag_reason: nil, status: nil, status_is_blocking: true,

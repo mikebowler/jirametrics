@@ -39,7 +39,4 @@ class DownloadConfig
     date = @no_earlier_than if date.nil? && @no_earlier_than
     date
   end
-
-  private
-
 end

@@ -209,7 +209,7 @@ describe AgingWorkBarChart do
       expect(chart.select_aging_issues issues: [issue1, issue2, issue3]).to eq [issue2]
     end
 
-    it 'excludes any that were ignored in the grouping rules', :focus do
+    it 'excludes any that were ignored in the grouping rules' do
       chart = described_class.new ->(_) { age_cutoff 3 }
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       board.cycletime = mock_cycletime_config stub_values: [

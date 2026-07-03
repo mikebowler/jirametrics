@@ -67,13 +67,13 @@ class FileConfig
   def sort_output all_lines
     all_lines.each_with_index.sort do |(a, a_idx), (b, b_idx)|
       result = if a[0] == b[0]
-        a[1..] <=> b[1..]
-      elsif a[0].nil?
-        1
-      elsif b[0].nil?
-        -1
-      else
-        a[0] <=> b[0]
+                 a[1..] <=> b[1..]
+               elsif a[0].nil?
+                 1
+               elsif b[0].nil?
+                 -1
+               else
+                 a[0] <=> b[0]
       end
 
       # When objects aren't comparable, preserve original order for a stable sort.

@@ -139,8 +139,9 @@ describe Anonymizer do
         raw: { 'field' => 'priority', 'to' => '2', 'toString' => 'High', 'from' => '3', 'fromString' => 'Medium' },
         time: to_time('2021-07-02'), author_raw: author
       )
-      expect(anonymizer).to receive(:random_name).once.and_return('random_name')
+      allow(anonymizer).to receive(:random_name).and_return('random_name')
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
+      expect(anonymizer).to have_received(:random_name).once
     end
 
     it 'clears comment text in change history' do
@@ -184,22 +185,27 @@ describe Anonymizer do
 
     it 'anonymizes sprint names' do
       board.sprints << Sprint.new(
-raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
-'endDate' => '2021-06-15T00:00:00.000Z', 'completeDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
+        raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
+        'endDate' => '2021-06-15T00:00:00.000Z', 'completeDate' => '2021-06-15T00:00:00.000Z' },
+        timezone_offset: '+00:00'
+      )
       board.sprints << Sprint.new(
-raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' => '2021-06-16T00:00:00.000Z',
-'endDate' => '2021-06-30T00:00:00.000Z' }, timezone_offset: '+00:00')
+        raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Beta', 'activatedDate' => '2021-06-16T00:00:00.000Z',
+        'endDate' => '2021-06-30T00:00:00.000Z' }, timezone_offset: '+00:00'
+      )
       anonymizer.anonymize_sprints
       expect(board.sprints.collect(&:name)).to eq %w[Sprint-1 Sprint-2]
     end
 
     it 'assigns the same anonymized name to sprints with the same original name' do
       board.sprints << Sprint.new(
-raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
-'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
+        raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
+        'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00'
+      )
       board.sprints << Sprint.new(
-raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
-'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00')
+        raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate' => '2021-06-01T00:00:00.000Z',
+        'endDate' => '2021-06-15T00:00:00.000Z' }, timezone_offset: '+00:00'
+      )
       anonymizer.anonymize_sprints
       expect(board.sprints.collect(&:name)).to eq %w[Sprint-1 Sprint-1]
     end
@@ -211,7 +217,8 @@ raw: { 'id' => 2, 'state' => 'active', 'name' => 'Sprint Alpha', 'activatedDate'
       issue2 = anonymizer.project_config.issues[1]
       issue1.raw['fields']['fixVersions'] = [{ 'id' => '10', 'name' => 'v1.0', 'released' => false }]
       issue2.raw['fields']['fixVersions'] =
-[{ 'id' => '10', 'name' => 'v1.0', 'released' => false }, { 'id' => '20', 'name' => 'v2.0', 'released' => false }]
+        [{ 'id' => '10', 'name' => 'v1.0', 'released' => false },
+{ 'id' => '20', 'name' => 'v2.0', 'released' => false }]
       anonymizer.anonymize_fix_versions
       expect(issue1.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1']
       expect(issue2.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq %w[Version-1 Version-2]

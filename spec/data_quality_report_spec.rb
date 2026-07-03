@@ -77,7 +77,7 @@ describe DataQualityReport do
     it 'runs all the templates and verifies that they don\'t blow up' do
       html_path = File.expand_path('./lib/jirametrics/html/')
       report.file_system.when_loading file: "#{html_path}/collapsible_issues_panel.erb", json: :not_mocked
-      expect(report.run).to match(/SP-1/)
+      expect(report.run).to include('SP-1')
       expect(report.file_system.log_messages).to be_empty
     end
 

@@ -147,7 +147,7 @@ describe FileConfig do
         html '<h1>Hello World</h1>'
       end
       file_config.run
-      expect(exporter.file_system.saved_files['spec/testdata/sample.html']).to match(/Hello World/)
+      expect(exporter.file_system.saved_files['spec/testdata/sample.html']).to include('Hello World')
     end
   end
 end

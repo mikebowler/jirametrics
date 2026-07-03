@@ -45,7 +45,7 @@ describe IssuePrinter do
     it 'includes the author for non-artificial changes' do
       change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false,
                            issue: issue1)
-      expect(printer.create_change_message(change: change, issue: issue1)).to match(/\(Author: /)
+      expect(printer.create_change_message(change: change, issue: issue1)).to include('(Author: ')
     end
 
     context 'sprint changes' do

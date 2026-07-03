@@ -91,8 +91,8 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
           RbConfig.ruby, Gem.bin_path('rspec-core', 'rspec'), leak, '--seed', '0'
         )
 
-        expect(out).to match(/2 examples, 1 failure/)
-        expect(out).to match(/SystemExit/)
+        expect(out).to include('2 examples, 1 failure')
+        expect(out).to include('SystemExit')
       end
     end
   end

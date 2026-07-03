@@ -375,7 +375,8 @@ describe AtlassianDocumentFormat do
     end
 
     it 'renders media with alt text' do
-      input = { 'type' => 'media', 'attrs' => { 'id' => 'file-id', 'alt' => 'image.png', 'type' => 'file', 'collection' => 'x' } }
+      input = { 'type' => 'media',
+'attrs' => { 'id' => 'file-id', 'alt' => 'image.png', 'type' => 'file', 'collection' => 'x' } }
       expect(format.adf_node_to_text input).to eq 'Media: image.png'
     end
 

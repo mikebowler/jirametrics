@@ -74,20 +74,20 @@ class AtlassianDocumentFormat
       when 'taskItem'
         state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
         ["<li>#{state} ", '</li>']
-      when 'taskList'                  then ["<ul class='taskList'>", '</ul>']
+      when 'taskList' then ["<ul class='taskList'>", '</ul>']
       else
         ["<p>Unparseable section: #{n['type']}</p>", nil]
       end
     end
   end
 
-  def adf_node_to_text node # rubocop:disable Metrics/CyclomaticComplexity
+  def adf_node_to_text node
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']
       when 'blockquote', 'bulletList', 'codeBlock',
            'mediaSingle', 'mediaGroup',
-           'orderedList', 'table', 'taskList'  then ['', nil]
+           'orderedList', 'table', 'taskList' then ['', nil]
       when 'date'
         [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
       when 'decisionItem'              then ['- ', "\n"]
@@ -151,7 +151,7 @@ class AtlassianDocumentFormat
   private
 
   def adf_node_render node, &render_node
-    prefix, suffix = render_node.call(node)
+    prefix, suffix = yield(node)
     result = +(prefix || '')
     node['content']&.each { |child| result << adf_node_render(child, &render_node) }
     result << suffix if suffix

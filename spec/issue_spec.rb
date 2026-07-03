@@ -585,7 +585,8 @@ describe Issue do
       end
 
       it 'returns nil when in visible status but no sprint' do
-        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-03')
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+time: '2021-10-03')
         expect(issue.first_time_visible_on_board).to be_nil
       end
 
@@ -604,13 +605,15 @@ describe Issue do
           issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-02', field_id: 'customfield_10020'
         )
-        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-05')
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+time: '2021-10-05')
         expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-05')
       end
 
       it 'returns the sprint add time when sprint add is later than status change' do
         add_active_sprint id: 10, start_date: '2021-10-02'
-        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+time: '2021-10-02')
         add_mock_change(
           issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-05', field_id: 'customfield_10020'
@@ -626,7 +629,8 @@ describe Issue do
           'startDate' => '2021-10-06T00:00:00.000Z',
           'originBoardId' => scrum_board.id
         }, timezone_offset: '+00:00')
-        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+time: '2021-10-02')
         add_mock_change(
           issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-03', field_id: 'customfield_10020'
@@ -840,10 +844,8 @@ describe Issue do
     it 'returns both reasons when scrum board issue has invisible status and no active sprint' do
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
       scrum_issue = empty_issue created: '2021-10-01', board: scrum_board
-      expect(scrum_issue.reasons_not_visible_on_board).to match_array [
-        'Not in an active sprint',
-        'Status is not configured for any visible column on the board'
-      ]
+      expect(scrum_issue.reasons_not_visible_on_board).to contain_exactly('Not in an active sprint',
+'Status is not configured for any visible column on the board')
     end
 
     it 'returns empty when scrum issue is in active sprint and visible status' do
@@ -1942,12 +1944,12 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'delegates to cycletime when set and issue is stopped' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', '2021-12-01']]
-      expect(issue1.done?).to be_truthy
+      expect(issue1).to be_done
     end
 
     it 'delegates to cycletime when set and issue is not stopped' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
-      expect(issue1.done?).to be_falsey
+      expect(issue1).not_to be_done
     end
   end
 
@@ -2027,7 +2029,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
           }
         }
       }
-      Issue.new raw: raw, board: board
+      described_class.new raw: raw, board: board
     end
 
     it 'loads comments as change items' do

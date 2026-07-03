@@ -10,7 +10,7 @@ class BoardMovementCalculator
   end
 
   def moves_backwards? issue
-    started, stopped = issue.started_stopped_times
+    started, = issue.started_stopped_times
     return false unless started
 
     previous_column = nil

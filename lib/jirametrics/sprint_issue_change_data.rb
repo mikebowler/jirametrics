@@ -4,6 +4,7 @@ require 'jirametrics/value_equality'
 
 class SprintIssueChangeData
   include ValueEquality
+
   attr_reader :time, :action, :value, :issue, :estimate
 
   def initialize time:, action:, value:, issue:, estimate:

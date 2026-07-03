@@ -97,7 +97,8 @@ describe ChangeItem do
 
   context 'author' do
     it 'returns displayName when present' do
-      change = described_class.new time: time, author_raw: { 'displayName' => 'Alice', 'name' => 'alice' }, raw: status_raw
+      change = described_class.new time: time, author_raw: { 'displayName' => 'Alice', 'name' => 'alice' },
+raw: status_raw
       expect(change.author).to eq 'Alice'
     end
 
@@ -113,7 +114,8 @@ describe ChangeItem do
 
   context 'author_icon_url' do
     it 'returns the 16x16 avatar URL when present' do
-      change = described_class.new time: time, author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, raw: status_raw
+      change = described_class.new time: time,
+author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, raw: status_raw
       expect(change.author_icon_url).to eq 'https://example.com/icon.png'
     end
 

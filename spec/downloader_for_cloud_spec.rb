@@ -75,9 +75,6 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'load_metadata' do
-  end
-
   context 'extract_project_keys_from_downloaded_issues' do
     it 'returns project keys from issue filenames' do
       file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
@@ -636,7 +633,7 @@ describe DownloaderForCloud do
         received_keys << issue_datas.map(&:key)
         issue_datas.each do |d|
           d.up_to_date = true
-          d.issue = (d.key == 'ABC-123') ? primary_issue : linked_issue
+          d.issue = d.key == 'ABC-123' ? primary_issue : linked_issue
         end
         issue_datas
       end
@@ -861,7 +858,7 @@ describe DownloaderForCloud do
       moved_raw = empty_issue(created: '2025-01-01').raw
       moved_raw['changelog'] = nil
       moved_raw['id'] = '999'
-      moved_raw['key'] = 'OTHER-999'  # Jira returned a different key than we requested
+      moved_raw['key'] = 'OTHER-999' # Jira returned a different key than we requested
 
       jira_gateway.when url: '/rest/api/3/issue/bulkfetch', response: { 'issues' => [moved_raw] }
       jira_gateway.when url: '/rest/api/3/changelog/bulkfetch', response: {

@@ -60,13 +60,11 @@ class Issue
   def resolution = @raw['fields']['resolution']&.[]('name')
 
   def status
-    @status = Status.from_raw(@raw['fields']['status']) unless @status
+    @status ||= Status.from_raw(@raw['fields']['status'])
     @status
   end
 
-  def status= status
-    @status = status
-  end
+  attr_writer :status
 
   def due_date
     text = @raw['fields']['duedate']
@@ -221,6 +219,7 @@ class Issue
 
     status_changes.each do |change|
       next unless visible_status_ids.include?(change.value_id)
+
       candidates << change if in_active_sprint_at?(change.time)
     end
 
@@ -536,7 +535,7 @@ class Issue
       flag_reason = comment_change && @board.project_config.atlassian_document_format.to_text(comment_change.value)
       # Newer Jira instances may add this extra text but older instances did not. Strip it out if found.
       flag_reason = flag_reason&.sub(/\A:flag_on: Flag added\s*/m, '')&.strip
-      flag_reason = nil if flag_reason&.empty?
+      flag_reason = nil if flag_reason && flag_reason.empty?
     else
       flag_reason = nil
     end
@@ -554,7 +553,7 @@ class Issue
 
     list = [previous_change_time..change_time]
     all_subtask_activity_times.each do |time|
-      matching_range = list.find { |range| time >= range.begin && time <= range.end }
+      matching_range = list.find { |range| time.between?(range.begin, range.end) }
       next unless matching_range
 
       list.delete matching_range
@@ -821,11 +820,7 @@ class Issue
   def compact_text text, max: 60
     return '' if text.nil?
 
-    text = if text.is_a? Hash
-             @board.project_config.atlassian_document_format.to_text(text)
-           else
-             text
-           end
+    text = @board.project_config.atlassian_document_format.to_text(text) if text.is_a? Hash
     text = text.gsub(/\s+/, ' ').strip
     text = "#{text[0...max]}..." if text.length > max
     text
@@ -908,11 +903,13 @@ class Issue
           to_name = item['toString']
           matches = board.possible_statuses.find_all_by_name(to_name)
           guessed_id, id_note = if matches.length == 1
-            [matches.first.id.to_s, "Guessed id #{matches.first.id} from status name."]
-          elsif matches.length > 1
-            ['0', "Multiple statuses named #{to_name.inspect} exist (ids: #{matches.map(&:id).join(', ')}); cannot disambiguate. Using id 0."]
-          else
-            ['0', "No known status named #{to_name.inspect}. Using id 0."]
+                                  [matches.first.id.to_s, "Guessed id #{matches.first.id} from status name."]
+                                elsif matches.length > 1
+                                  ['0',
+                                   "Multiple statuses named #{to_name.inspect} exist " \
+                                   "(ids: #{matches.map(&:id).join(', ')}); cannot disambiguate. Using id 0."]
+                                else
+                                  ['0', "No known status named #{to_name.inspect}. Using id 0."]
           end
           board.project_config.file_system.warning(
             "Issue #{key} has a status change without a 'to' id " \
