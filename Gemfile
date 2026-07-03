@@ -15,5 +15,6 @@ gem 'rubocop-rake', require: false
 gem 'rubocop-rspec', require: false
 gem 'mutant-rspec', require: false
 gem 'simplecov'
+gem 'json-schema' # Required directly by lib/jirametrics/mcp_server.rb (was only pulled in transitively by old mcp)
 gem 'mcp'
 gem 'thor'
