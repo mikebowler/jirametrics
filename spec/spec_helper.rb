@@ -7,7 +7,9 @@
 ENV['RACK_ENV'] = 'test'
 
 # simplecov depends on date_core, a C extension that JRuby cannot load.
-if RUBY_ENGINE == 'ruby'
+# Skip it in subprocess spec runs (see the leaked-SystemExit regression test) so the
+# child process doesn't restart coverage and pollute its output.
+if RUBY_ENGINE == 'ruby' && !ENV['JIRAMETRICS_SUBPROCESS_SPEC']
   require 'simplecov'
   SimpleCov.start do
     enable_coverage :branch
@@ -23,6 +25,27 @@ require_all 'lib'
 require 'match_strings'
 require 'mock_cycle_time_config'
 require 'mock_file_system'
+
+RSpec.configure do |config|
+  # Run examples in a random order and seed the global RNG from the same seed so runs
+  # are reproducible with --seed. Random ordering surfaces order-dependent test pollution.
+  config.order = :random
+  Kernel.srand config.seed
+
+  # Guard against a production exit()/abort() call leaking out of an example. RSpec doesn't
+  # rescue SystemExit, so a leaked exit terminates the whole run early with a misleading
+  # partial "0 failures" summary. Convert it into a normal, localized failure so the suite
+  # keeps running and names the culprit. Tests that intentionally exercise an exit path still
+  # pass — their `expect { ... }.to raise_error(SystemExit)` rescues the exit before this hook.
+  config.around do |example|
+    example.run
+  rescue SystemExit => e
+    raise "Example leaked a SystemExit (exit status #{e.status}). A production " \
+          'exit()/abort() call escaped the example and would otherwise terminate the whole ' \
+          'suite early. Wrap the code under test in `expect { ... }.to raise_error(SystemExit)`, ' \
+          'or stop it reaching the exit.'
+  end
+end
 
 def file_read filename
   File.read filename, encoding: 'UTF-8'

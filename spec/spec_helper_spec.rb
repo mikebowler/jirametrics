@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
+require 'open3'
+require 'tmpdir'
 
 describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
   context 'to_time' do
@@ -60,6 +62,38 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
         ['In Progress', to_time('2024-10-24T01:00:00')],
         ['Review', to_time('2024-10-28T02:00:00')]
       ]
+    end
+  end
+
+  # RSpec doesn't rescue SystemExit, so a production exit()/abort() that leaks out of an example
+  # terminates the whole run early with a misleading partial "0 failures" summary. The guard in
+  # spec_helper.rb converts a leaked exit into a normal failure so the suite keeps running. This
+  # shells out to a subprocess rspec on a fixture that leaks exit and asserts the run survives.
+  # Without the guard the child truncates at the leak and reports "2 examples, 0 failures".
+  context 'leaked SystemExit guard' do
+    it 'converts a leaked exit into a failure instead of terminating the run' do
+      Dir.mktmpdir do |dir|
+        leak = File.join(dir, 'leak_spec.rb')
+        File.write(leak, <<~RUBY)
+          require './spec/spec_helper'
+          RSpec.configure { |c| c.example_status_persistence_file_path = nil }
+          describe 'leaker' do
+            it('a leaks an exit') { exit 1 }
+            it('b still runs after the leak') { expect(true).to be(true) }
+          end
+        RUBY
+
+        # Reuse the exact interpreter and rspec running this suite rather than a bare
+        # `bundle exec rspec`, whose `bundle` resolves off PATH — under JRuby/RVM that can
+        # pick a different Ruby and fail to find the gem, which has nothing to do with the guard.
+        out, = Open3.capture2e(
+          { 'JIRAMETRICS_SUBPROCESS_SPEC' => '1' },
+          RbConfig.ruby, Gem.bin_path('rspec-core', 'rspec'), leak, '--seed', '0'
+        )
+
+        expect(out).to match(/2 examples, 1 failure/)
+        expect(out).to match(/SystemExit/)
+      end
     end
   end
 end
