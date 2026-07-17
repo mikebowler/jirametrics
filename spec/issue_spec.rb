@@ -1297,7 +1297,9 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  describe '#flow_efficiency_numbers' do # part of a flow efficiency calculation
+  describe '#flow_efficiency_numbers' do
+    # Behaviour is covered in flow_efficiency_calculator_spec. Here we only confirm that Issue
+    # delegates and resolves the calculator's inputs (start/stop, the capped window, the stream).
     let(:settings) do
       {
         'blocked_statuses' => status_collection_for(board: board, names: %w[Blocked Blocked2]),
@@ -1307,101 +1309,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
     let(:seconds_per_day) { (60 * 60 * 24).to_f }
 
-    it 'returns zeros when issue never started' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, nil, nil]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
-        .to eq [0, 0]
-    end
-
-    it 'is created in active status and never changed' do
-      issue = empty_issue created: '2000-01-01', board: sample_board
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, issue.created, nil]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
-        .to eq [seconds_per_day, seconds_per_day]
-    end
-
-    it 'becomes blocked before issue starts and stays that way' do
-      issue = empty_issue created: '2000-01-01', board: board
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-02'), nil]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-03'), settings: settings))
-        .to eq [seconds_per_day, seconds_per_day]
-    end
-
-    it 'becomes blocked but issue does not start before end_time' do
-      issue = empty_issue created: '2000-01-01', board: board
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-04'), nil]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-03'), settings: settings))
-        .to eq [0.0, 0.0]
-    end
-
-    it 'becomes blocked after done' do
-      issue = empty_issue created: '2000-01-01', board: board
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-03')
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), to_time('2000-01-02')]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-04'), settings: settings))
-        .to eq [seconds_per_day, seconds_per_day]
-    end
-
-    it 'becomes blocked and then unblocked before start' do
+    it 'delegates to FlowEfficiencyCalculator' do
       issue = empty_issue created: '2000-01-01', board: board
       add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
-      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-03')
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-04'), nil]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
-        .to eq [seconds_per_day, seconds_per_day]
-    end
-
-    it 'was created in blocked status' do
-      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Blocked', 10]
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), nil]
       ]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
-        .to eq [0.0, seconds_per_day]
-    end
-
-    it 'was created in done status' do
-      issue = empty_issue created: '2000-01-01', board: board, creation_status: ['Done', 1]
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), to_time('2000-01-01')]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
-        .to eq [0.0, 0.0]
-    end
-
-    it 'handles complex case with multiple block/unblock' do
-      issue = empty_issue created: '2000-01-01', board: board
-      # active for a day here
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
-      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-03')
-      # active for a day here
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-04')
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-05') # 2nd blocked
-      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-06')
-      # active for a day here, then issue finishes. The last two blocked should be ignored
-      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-09')
-      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-10')
-
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), to_time('2000-01-08')]
-      ]
-      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-07'), settings: settings))
-        .to eq [seconds_per_day * 3, seconds_per_day * 6]
+        .to eq [seconds_per_day, seconds_per_day]
     end
   end
 

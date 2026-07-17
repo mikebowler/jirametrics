@@ -405,37 +405,13 @@ class Issue
     issue_start, issue_stop = started_stopped_times
     return [0.0, 0.0] if !issue_start || issue_start > end_time
 
-    value_add_time = 0.0
+    # Nothing after the issue finishes counts, so cap the window before we build the stream.
     end_time = issue_stop if issue_stop && issue_stop < end_time
-
-    active_start = nil
-    blocked_stalled_changes(end_time: end_time, settings: settings).each_with_index do |change, index|
-      break if change.time > end_time
-
-      if index.zero?
-        active_start = change.time if change.active?
-        next
-      end
-
-      # Already active and we just got another active.
-      next if active_start && change.active?
-
-      if change.active?
-        active_start = change.time
-      elsif active_start && change.time >= issue_start
-        # Not active now but we have been. Record the active time.
-        change_delta = change.time - [issue_start, active_start].max
-        value_add_time += change_delta
-        active_start = nil
-      end
-    end
-
-    if active_start
-      change_delta = end_time - [issue_start, active_start].max
-      value_add_time += change_delta if change_delta.positive?
-    end
-
-    [value_add_time, end_time - issue_start]
+    FlowEfficiencyCalculator.new(
+      blocked_stalled_changes: blocked_stalled_changes(end_time: end_time, settings: settings),
+      issue_start: issue_start,
+      end_time: end_time
+    ).calculate
   end
 
   def all_subtask_activity_times
