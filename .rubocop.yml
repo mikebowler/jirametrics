@@ -104,6 +104,8 @@ Layout/LineContinuationLeadingSpace:
 Lint/NonAtomicFileOperation:
   Enabled: false
 
+# Numbered lets are intentional: the digit maps to the Jira fixture key
+# (issue1 -> SP-1, issue10 -> SP-10), so the name identifies specific test data.
 RSpec/IndexedLet:
   Enabled: false
 
