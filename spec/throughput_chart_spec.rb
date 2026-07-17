@@ -100,7 +100,7 @@ describe ThroughputChart do
       subject = described_class.new empty_config_block
       subject.issues = [issue1]
       board.cycletime = default_cycletime_config
-      subject.instance_variable_set(:@issue_hints, { issue1 => '(priority: high)' })
+      subject.issue_hints = { issue1 => '(priority: high)' }
 
       dataset = subject.throughput_dataset(
         periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
@@ -122,8 +122,8 @@ describe ThroughputChart do
         board.cycletime = default_cycletime_config
         jan31 = Date.parse('2026-01-31')
         feb28 = Date.parse('2026-02-28')
-        subject.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => feb28 })
-        subject.instance_variable_set(:@issue_hints, {})
+        subject.issue_periods = { issue1 => jan31, issue2 => feb28 }
+        subject.issue_hints = {}
 
         dataset = subject.throughput_dataset(
           periods: [Date.parse('2026-01-01')..jan31, Date.parse('2026-02-01')..feb28],
@@ -145,7 +145,7 @@ describe ThroughputChart do
       chart.date_range = Date.parse('2026-01-01')..Date.parse('2026-03-31')
       jan31 = Date.parse('2026-01-31')
       feb28 = Date.parse('2026-02-28')
-      chart.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => feb28 })
+      chart.issue_periods = { issue1 => jan31, issue2 => feb28 }
 
       expect(chart.calculate_custom_periods).to eq [
         Date.parse('2026-01-01')..jan31,
@@ -157,7 +157,7 @@ describe ThroughputChart do
       chart = described_class.new empty_config_block
       chart.date_range = Date.parse('2026-01-01')..Date.parse('2026-03-31')
       jan31 = Date.parse('2026-01-31')
-      chart.instance_variable_set(:@issue_periods, { issue1 => jan31, issue2 => jan31 })
+      chart.issue_periods = { issue1 => jan31, issue2 => jan31 }
 
       expect(chart.calculate_custom_periods).to eq [Date.parse('2026-01-01')..jan31]
     end

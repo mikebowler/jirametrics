@@ -140,7 +140,7 @@ describe CycletimeHistogram do
 
     it 'appends issue_hint to each issue line when set' do
       board.cycletime = default_cycletime_config
-      chart.instance_variable_set(:@issue_hints, { issue1 => '(hint for issue1)' })
+      chart.issue_hints = { issue1 => '(hint for issue1)' }
       result = chart.data_set_for histogram_data: { 4 => [issue1] }, label: 'foo', color: 'red'
       expect(result[:data].first[:title][1]).to eq "#{issue1.key} : #{issue1.summary} (hint for issue1)"
     end
