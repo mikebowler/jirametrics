@@ -5,7 +5,7 @@ require './spec/spec_helper'
 describe AtlassianDocumentFormat do
   let(:format) { described_class.new users: [], timezone_offset: '+00:00' }
 
-  context 'expand_account_id' do
+  describe '#expand_account_id' do
     it 'handles no matches' do
       expect(format.expand_account_id 'no-match').to eq "<span class='account_id'>no-match</span>"
     end
@@ -156,7 +156,7 @@ describe AtlassianDocumentFormat do
     end
   end
 
-  context 'to_text' do
+  describe '#to_text' do
     it 'returns plain string as-is' do
       expect(format.to_text 'foobar').to eq 'foobar'
     end
@@ -191,7 +191,7 @@ describe AtlassianDocumentFormat do
     end
   end
 
-  context 'adf_node_to_text' do
+  describe '#adf_node_to_text' do
     it 'renders plain text' do
       input = { 'type' => 'text', 'text' => 'Hello world' }
       expect(format.adf_node_to_text input).to eq 'Hello world'
@@ -407,7 +407,7 @@ describe AtlassianDocumentFormat do
     end
   end
 
-  context 'adf_marks_to_html' do
+  describe '#adf_marks_to_html' do
     it 'returns empty array for nil' do
       expect(format.adf_marks_to_html(nil)).to eq []
     end
@@ -448,7 +448,7 @@ describe AtlassianDocumentFormat do
     end
   end
 
-  context 'adf_node_to_html' do
+  describe '#adf_node_to_html' do
     it 'is simple list' do
       input = {
         'type' => 'bulletList',

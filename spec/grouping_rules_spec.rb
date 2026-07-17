@@ -70,7 +70,7 @@ describe GroupingRules do
     end
   end
 
-  context 'last_day_of_period=' do
+  describe '#last_day_of_period=' do
     it 'accepts a Date directly' do
       rules.last_day_of_period = Date.parse('2026-01-31')
       expect(rules.last_day_of_period).to eq Date.parse('2026-01-31')
