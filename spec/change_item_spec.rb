@@ -9,6 +9,15 @@ describe ChangeItem do
     { 'field' => 'status', 'to' => '5', 'from' => '3', 'toString' => 'In Progress', 'fromString' => 'To Do' }
   end
   let(:status_change) { described_class.new time: time, author_raw: nil, raw: status_raw }
+  let(:status_change_item) do
+    described_class.new time: time, author_raw: nil, raw: {
+      'field' => 'status',
+      'from' => 1,
+      'fromString' => 'To Do',
+      'to' => 2,
+      'toString' => 'In Progress'
+    }
+  end
 
   def change_for(field, to: nil, to_string: 'x', from_string: nil)
     described_class.new time: time, author_raw: nil, raw: {
@@ -214,65 +223,53 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
     end
   end
 
-  context 'status_matches' do
-    let(:change_item) do
-      described_class.new time: time, author_raw: nil, raw: {
-        'field' => 'status',
-        'from' => 1,
-        'fromString' => 'To Do',
-        'to' => 2,
-        'toString' => 'In Progress'
-      }
+  describe '#current_status_matches' do
+    it 'matches on id' do
+      expect(status_change_item.current_status_matches 2).to be_truthy
     end
 
-    describe '#current_status_matches' do
-      it 'matches on id' do
-        expect(change_item.current_status_matches 2).to be_truthy
-      end
-
-      it 'matches on String' do
-        expect(change_item.current_status_matches 'In Progress').to be_truthy
-      end
-
-      it 'matches on Status' do
-        status = Status.new(
-          name: 'In Progress', id: 2, category_name: 'one', category_id: 3, category_key: 'indeterminate'
-        )
-        expect(change_item.current_status_matches status).to be_truthy
-      end
-
-      it 'returns false when value does not match' do
-        expect(change_item.current_status_matches 'Done').to be false
-      end
-
-      it 'returns false when field is not status' do
-        expect(change_for('priority', to: '2', to_string: 'High').current_status_matches 'High').to be false
-      end
+    it 'matches on String' do
+      expect(status_change_item.current_status_matches 'In Progress').to be_truthy
     end
 
-    describe '#old_status_matches' do
-      it 'matches on id' do
-        expect(change_item.old_status_matches 1).to be_truthy
-      end
+    it 'matches on Status' do
+      status = Status.new(
+        name: 'In Progress', id: 2, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+      )
+      expect(status_change_item.current_status_matches status).to be_truthy
+    end
 
-      it 'matches on String' do
-        expect(change_item.old_status_matches 'To Do').to be_truthy
-      end
+    it 'returns false when value does not match' do
+      expect(status_change_item.current_status_matches 'Done').to be false
+    end
 
-      it 'matches on Status' do
-        status = Status.new(
-          name: 'In Progress', id: 1, category_name: 'one', category_id: 3, category_key: 'indeterminate'
-        )
-        expect(change_item.old_status_matches status).to be_truthy
-      end
+    it 'returns false when field is not status' do
+      expect(change_for('priority', to: '2', to_string: 'High').current_status_matches 'High').to be false
+    end
+  end
 
-      it 'returns false when old value does not match' do
-        expect(change_item.old_status_matches 'Done').to be false
-      end
+  describe '#old_status_matches' do
+    it 'matches on id' do
+      expect(status_change_item.old_status_matches 1).to be_truthy
+    end
 
-      it 'returns false when field is not status' do
-        expect(change_for('priority', to: '1', to_string: 'High').old_status_matches 'To Do').to be false
-      end
+    it 'matches on String' do
+      expect(status_change_item.old_status_matches 'To Do').to be_truthy
+    end
+
+    it 'matches on Status' do
+      status = Status.new(
+        name: 'In Progress', id: 1, category_name: 'one', category_id: 3, category_key: 'indeterminate'
+      )
+      expect(status_change_item.old_status_matches status).to be_truthy
+    end
+
+    it 'returns false when old value does not match' do
+      expect(status_change_item.old_status_matches 'Done').to be false
+    end
+
+    it 'returns false when field is not status' do
+      expect(change_for('priority', to: '1', to_string: 'High').old_status_matches 'To Do').to be false
     end
   end
 end
