@@ -149,7 +149,7 @@ describe ChangeItem do
     end
   end
 
-  context 'field type predicates' do
+  describe 'field type predicates' do
     {
       'assignee'     => :assignee?,
       'comment'      => :comment?,

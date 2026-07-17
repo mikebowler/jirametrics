@@ -44,7 +44,7 @@ describe HtmlReportConfig do
   end
   let(:file_config) { FileConfig.new project_config: project_config, block: nil }
 
-  context 'no injectable dependencies' do
+  context 'with no injectable dependencies' do
     it 'still passes if no dependencies supported' do
       config = described_class.new file_config: file_config, block: nil
       config.board_id 1

@@ -43,7 +43,7 @@ describe Stitcher do
     end
   end
 
-  context 'grab by title' do
+  describe '#grab_by_title' do
     it 'logs an error if title not found' do
       file_system.when_loading file: 'foo.html', json: 'foo'
       stitcher.grab_by_title 'missing-chart', from_file: 'foo.html'

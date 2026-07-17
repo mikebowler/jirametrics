@@ -48,7 +48,7 @@ describe IssuePrinter do
       expect(printer.create_change_message(change: change, issue: issue1)).to include('(Author: ')
     end
 
-    context 'sprint changes' do
+    context 'with sprint changes' do
       it 'shows added sprint id when added to a new sprint' do
         change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
                              old_value: '', old_value_id: '', time: '2021-01-01', artificial: false, issue: issue1)

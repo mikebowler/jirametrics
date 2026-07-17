@@ -65,7 +65,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'download/aggregate config' do
+  describe '#download' do
     it 'fails if a second download is set' do
       project_config.download do
         file_suffix 'a'

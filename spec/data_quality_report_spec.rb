@@ -72,7 +72,7 @@ describe DataQualityReport do
     expect(report.file_system.log_messages).to be_empty
   end
 
-  context 'templates' do
+  describe 'templates' do
     # These aren't incredibly useful tests but there is value in ensuring that the templates do execute
     # without blowing up.
 
@@ -172,7 +172,7 @@ describe DataQualityReport do
     end
   end
 
-  context 'backwards movement' do
+  context 'when an issue moves backwards' do
     it 'detects backwards status' do
       report.all_boards = { 1 => board }
       report.initialize_entries

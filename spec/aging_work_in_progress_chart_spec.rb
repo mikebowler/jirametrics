@@ -98,7 +98,7 @@ describe AgingWorkInProgressChart do
     ])
   end
 
-  context 'Extra column for unmapped statuses' do
+  context 'with an extra column for unmapped statuses' do
     it 'shows the column when an issue is present with that status' do
       chart.time_range = to_time('2021-10-01')..to_time('2021-10-30')
       issue = empty_issue created: '2021-10-01', board: board

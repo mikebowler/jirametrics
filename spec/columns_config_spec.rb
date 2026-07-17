@@ -10,7 +10,7 @@ describe ColumnsConfig do
     end
   end
 
-  context 'simple columns' do
+  context 'with simple columns' do
     it 'handles string types' do
       config = described_class.new file_config: nil, block: nil
       config.string('foo', ->(issue) { "string:#{issue}" })

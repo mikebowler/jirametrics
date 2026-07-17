@@ -23,7 +23,7 @@ describe AtlassianDocumentFormat do
   end
 
   describe '#to_html' do
-    context 'v2' do
+    context 'with v2 wiki markup' do
       it 'ignores plain text' do
         expect(format.to_html 'foobar').to eq 'foobar'
       end
@@ -65,7 +65,7 @@ describe AtlassianDocumentFormat do
       end
     end
 
-    context 'v3' do
+    context 'with v3 ADF' do
       it 'handles nil' do
         expect(format.to_html nil).to eq ''
       end

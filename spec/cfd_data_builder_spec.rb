@@ -13,13 +13,13 @@ describe CfdDataBuilder do
     CfdDataBuilder.new(**defaults, **overrides).run
   end
 
-  context 'columns' do
+  describe 'columns' do
     it 'returns visible column names in left-to-right order' do
       expect(build[:columns]).to eq ['Ready', 'In Progress', 'Review', 'Done']
     end
   end
 
-  context 'daily_counts' do
+  describe 'daily_counts' do
     it 'returns zero counts when no issues are on the board' do
       expect(build[:daily_counts][Date.parse('2021-07-05')]).to eq [0, 0, 0, 0]
     end
@@ -50,9 +50,49 @@ describe CfdDataBuilder do
       result = build(date_range: Date.parse('2021-07-05')..Date.parse('2021-07-05'))
       expect(result[:daily_counts].keys).to eq [Date.parse('2021-07-05')]
     end
+
+    it 'skips status changes not mapped to any board column' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      # Status ID 10000 is Backlog — not in visible_columns for this kanban board
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
+        value_id: 10_000, time: '2021-07-02T10:00:00')
+
+      result = build(issues: [issue1])
+
+      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [0, 0, 0, 0]
+    end
+
+    it 'counts issues with changes before date_range in the initial snapshot' do
+      issue1 = empty_issue(board: board, created: '2021-06-01', key: 'SP-1')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-06-15T10:00:00')
+
+      result = build(issues: [issue1])
+
+      # issue1 already in In Progress (col 1) before the range starts — counts col 0 and col 1
+      expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [1, 1, 0, 0]
+    end
+
+    it 'contributes 0 to all columns for an issue with no status changes' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+
+      result = build(issues: [issue1])
+
+      expect(result[:daily_counts][Date.parse('2021-07-05')]).to eq [0, 0, 0, 0]
+    end
+
+    it 'counts all columns when an issue skips directly to the rightmost column' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      # Jumps straight to Done (col 3), skipping Ready, In Progress, Review
+      add_mock_change(issue: issue1, field: 'status', value: 'Done',
+        value_id: 10_002, time: '2021-07-02T10:00:00')
+
+      result = build(issues: [issue1])
+
+      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 1, 1, 1]
+    end
   end
 
-  context 'correction_windows' do
+  describe 'correction_windows' do
     it 'records a window when an issue moves backwards and recovers' do
       issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
       # Reaches Review (col 2), drops to In Progress (col 1), recovers to Review (col 2)
@@ -112,49 +152,7 @@ describe CfdDataBuilder do
     end
   end
 
-  context 'edge cases' do
-    it 'skips status changes not mapped to any board column' do
-      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
-      # Status ID 10000 is Backlog — not in visible_columns for this kanban board
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
-        value_id: 10_000, time: '2021-07-02T10:00:00')
-
-      result = build(issues: [issue1])
-
-      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [0, 0, 0, 0]
-    end
-
-    it 'counts issues with changes before date_range in the initial snapshot' do
-      issue1 = empty_issue(board: board, created: '2021-06-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-06-15T10:00:00')
-
-      result = build(issues: [issue1])
-
-      # issue1 already in In Progress (col 1) before the range starts — counts col 0 and col 1
-      expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [1, 1, 0, 0]
-    end
-
-    it 'contributes 0 to all columns for an issue with no status changes' do
-      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
-
-      result = build(issues: [issue1])
-
-      expect(result[:daily_counts][Date.parse('2021-07-05')]).to eq [0, 0, 0, 0]
-    end
-
-    it 'counts all columns when an issue skips directly to the rightmost column' do
-      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
-      # Jumps straight to Done (col 3), skipping Ready, In Progress, Review
-      add_mock_change(issue: issue1, field: 'status', value: 'Done',
-        value_id: 10_002, time: '2021-07-02T10:00:00')
-
-      result = build(issues: [issue1])
-
-      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 1, 1, 1]
-    end
-  end
-
-  context 'start time filtering' do
+  context 'when filtering by start time' do
     it 'excludes an issue that has never started' do
       # Cycletime config that starts at a specific status the issue never reaches
       never_started_config = CycleTimeConfig.new(
@@ -213,7 +211,7 @@ describe CfdDataBuilder do
     end
   end
 
-  context 'columns: override' do
+  context 'when columns are overridden' do
     it 'uses the provided columns instead of board.visible_columns' do
       # Pass only the first two columns (Ready, In Progress); Done and Review are excluded
       two_columns = board.visible_columns.first(2)

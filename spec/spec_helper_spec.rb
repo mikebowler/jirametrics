@@ -70,31 +70,29 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
   # spec_helper.rb converts a leaked exit into a normal failure so the suite keeps running. This
   # shells out to a subprocess rspec on a fixture that leaks exit and asserts the run survives.
   # Without the guard the child truncates at the leak and reports "2 examples, 0 failures".
-  context 'leaked SystemExit guard' do
-    it 'converts a leaked exit into a failure instead of terminating the run' do
-      Dir.mktmpdir do |dir|
-        leak = File.join(dir, 'leak_spec.rb')
-        File.write(leak, <<~RUBY)
-          require './spec/spec_helper'
-          RSpec.configure { |c| c.example_status_persistence_file_path = nil }
-          describe 'leaker' do
-            it('a leaks an exit') { exit 1 }
-            it('b still runs after the leak') { expect(true).to be(true) }
-          end
-        RUBY
-
-        # Reuse the exact interpreter and rspec running this suite rather than a bare
-        # `bundle exec rspec`, whose `bundle` resolves off PATH — under JRuby/RVM that can
-        # pick a different Ruby and fail to find the gem, which has nothing to do with the guard.
-        out, = Open3.capture2e(
-          { 'JIRAMETRICS_SUBPROCESS_SPEC' => '1' },
-          RbConfig.ruby, Gem.bin_path('rspec-core', 'rspec'), leak, '--seed', '0'
-        )
-
-        aggregate_failures do
-          expect(out).to include('2 examples, 1 failure')
-          expect(out).to include('SystemExit')
+  it 'converts a leaked exit into a failure instead of terminating the run' do
+    Dir.mktmpdir do |dir|
+      leak = File.join(dir, 'leak_spec.rb')
+      File.write(leak, <<~RUBY)
+        require './spec/spec_helper'
+        RSpec.configure { |c| c.example_status_persistence_file_path = nil }
+        describe 'leaker' do
+          it('a leaks an exit') { exit 1 }
+          it('b still runs after the leak') { expect(true).to be(true) }
         end
+      RUBY
+
+      # Reuse the exact interpreter and rspec running this suite rather than a bare
+      # `bundle exec rspec`, whose `bundle` resolves off PATH — under JRuby/RVM that can
+      # pick a different Ruby and fail to find the gem, which has nothing to do with the guard.
+      out, = Open3.capture2e(
+        { 'JIRAMETRICS_SUBPROCESS_SPEC' => '1' },
+        RbConfig.ruby, Gem.bin_path('rspec-core', 'rspec'), leak, '--seed', '0'
+      )
+
+      aggregate_failures do
+        expect(out).to include('2 examples, 1 failure')
+        expect(out).to include('SystemExit')
       end
     end
   end

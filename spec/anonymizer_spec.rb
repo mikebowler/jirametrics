@@ -254,21 +254,23 @@ describe Anonymizer do
     end
   end
 
-  context 'Board.status_ids_in_or_right_of_column' do
-    let(:board) { anonymizer.project_config.all_boards[1] }
+  describe 'Regressions caused by anonymization' do
+    describe 'Board#status_ids_in_or_right_of_column' do
+      let(:board) { anonymizer.project_config.all_boards[1] }
 
-    it 'works when not anonymized' do
-      aggregate_failures do
-        expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
-        expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      it 'works when not anonymized' do
+        aggregate_failures do
+          expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
+          expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+        end
       end
-    end
 
-    it 'still works after anonymization' do
-      anonymizer.anonymize_column_names
-      aggregate_failures do
-        expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
-        expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      it 'still works after anonymization' do
+        anonymizer.anonymize_column_names
+        aggregate_failures do
+          expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
+          expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+        end
       end
     end
   end

@@ -13,7 +13,7 @@ describe CycleTimeConfig do
   end
   let(:issue) { load_issue 'SP-1' }
 
-  context 'deprecated' do
+  describe 'deprecated methods' do
     it 'deprecates started_at' do
       config = described_class.new(
         possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,

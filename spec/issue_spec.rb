@@ -576,7 +576,7 @@ describe Issue do
       expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-03')
     end
 
-    context 'scrum board' do
+    context 'with a scrum board' do
       let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
       let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
 
@@ -1299,7 +1299,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'created from a linked issue' do
+  context 'when created from a linked issue' do
     let(:issue) do
       described_class.new raw: {
         'id' => '10019',
@@ -1442,7 +1442,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       expect(issue.parent_key).to eq 'ABC-1'
     end
 
-    context 'custom fields' do
+    context 'with custom fields' do
       it 'determines multiple custom fields from settings and get the parent from there' do
         project_config.settings['customfield_parent_links'] = %w[customfield_1 customfield_2]
         issue.board.project_config = project_config
@@ -1571,7 +1571,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'sorting' do
+  describe 'sorting' do
     it 'sorts when project key is the same and the numbers are different' do
       a = empty_issue(key: 'SP-1', created: '2022-01-01')
       b = empty_issue(key: 'SP-2', created: '2022-01-01')

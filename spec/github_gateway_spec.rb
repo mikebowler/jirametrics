@@ -67,7 +67,7 @@ describe GithubGateway do
       expect { gateway.extract_issue_keys(pr) }.not_to raise_error
     end
 
-    context 'commit message fallback' do
+    context 'when falling back to the commit message' do
       let(:pr_no_keys) { { 'number' => 99, 'headRefName' => 'fix-stuff', 'title' => 'Stuff', 'body' => nil } }
 
       it 'finds a key in a commit message headline when not in branch, title, or body' do
@@ -306,7 +306,7 @@ describe GithubGateway do
     end
   end
 
-  context 'batched commit-message fallback' do
+  context 'when batching commit-message fallbacks' do
     def raw_pr number:, title: 'Unrelated', branch: 'misc-branch', body: nil
       {
         'number' => number, 'url' => "https://github.com/owner/repo/pull/#{number}",

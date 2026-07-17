@@ -291,7 +291,7 @@ describe WipByColumnChart do
       end
     end
 
-    context 'respects started and stopped times from the cycletime config' do
+    context 'with started and stopped times from the cycletime config' do
       it 'excludes an issue that has not yet started at the window boundary' do
         issue = issue_in_ready key: 'SP-1'
         board.cycletime = mock_cycletime_config stub_values: [

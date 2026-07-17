@@ -20,7 +20,7 @@ describe FileConfig do
     described_class.new project_config: project_config, block: empty_config_block, today: to_date('2024-01-01')
   end
 
-  context 'conversions' do
+  describe 'conversions' do
     it 'converts string' do
       expect(file_config.to_string(5)).to eql '5'
     end
@@ -35,7 +35,7 @@ describe FileConfig do
     end
   end
 
-  context 'sort all rows' do
+  context 'when sorting all rows' do
     it 'sorts nils to the bottom' do
       input = [[nil, 1], [1, 2], [nil, 3], [4, 4]]
       expected = [[1, 2], [4, 4], [nil, 1], [nil, 3]]

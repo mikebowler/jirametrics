@@ -109,7 +109,7 @@ describe ThroughputChart do
       expect(dataset.first[:title][1]).to eq 'SP-1 : Create new draft event (priority: high)'
     end
 
-    context 'custom mode via @issue_periods' do
+    context 'when in custom mode (@issue_periods set)' do
       it 'groups issues by last_day_of_period instead of stop date range' do
         issue1.changes.clear
         add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
