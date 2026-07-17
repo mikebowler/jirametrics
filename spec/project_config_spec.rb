@@ -21,8 +21,8 @@ describe ProjectConfig do
   end
   let(:issue1) { load_issue('SP-1', board: board) }
 
-  context 'board_configuration' do
-    it 'loads' do
+  describe '#load_all_boards' do
+    it 'loads each board with its columns parsed' do
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
       project_config.load_all_boards
