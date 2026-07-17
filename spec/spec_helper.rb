@@ -26,6 +26,9 @@ require 'match_strings'
 require 'mock_cycle_time_config'
 require 'mock_file_system'
 
+# Auto-load shared test support classes (mocks, matchers, builders) from spec/support.
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |file| require file }
+
 RSpec.configure do |config|
   # Run examples in a random order and seed the global RNG from the same seed so runs
   # are reproducible with --seed. Random ordering surfaces order-dependent test pollution.
@@ -230,66 +233,11 @@ def mock_change(
   field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
   artificial: false, issue: nil, field_id: nil
 )
-  if value.is_a? Status
-    value_id = value.id
-    value = value.name
-  end
-  if old_value.is_a? Status
-    old_value_id = old_value.id
-    old_value = old_value.name
-  end
-
-  # Now that we know that status names are not unique, we have to specify an id every time we use a status name
-  if field == 'status' && issue
-    possible_statuses = issue.board.possible_statuses
-
-    if value && !value_id
-      guesses = possible_statuses.find_all_by_name(value).collect(&:id)
-      message = "ID was not specified for new status #{value.inspect}. "
-      if guesses.empty?
-        message << "No statuses with name #{value.inspect} but did find these: #{possible_statuses.inspect}"
-      else
-        message << "Perhaps you meant one of #{guesses.inspect}"
-      end
-      raise message
-    end
-
-    if old_value && !old_value_id
-      guesses = possible_statuses.find_all_by_name(old_value).collect(&:id)
-      raise "ID was not specified for old status #{old_value.inspect}. Perhaps you meant one of #{guesses.inspect}"
-    end
-
-    if value_id
-      status = possible_statuses.find_by_id(value_id)
-      raise "No status found for id: #{value_id} (#{value.inspect}) in #{possible_statuses.inspect}" unless status
-
-      unless status.name == value
-        raise "Value passed to mock_change (#{value.inspect}:#{value_id.inspect}) " \
-          "doesn't match the status found in the board (#{status})"
-      end
-    end
-    if old_value_id
-      status = possible_statuses.find_by_id(old_value_id)
-      unless status
-        raise "No status found for id: #{old_value_id} (#{old_value.inspect}) in #{possible_statuses.inspect}"
-      end
-
-      unless status.name == old_value
-        raise "Old value passed to mock_change (#{old_value.inspect}:#{old_value_id.inspect}) " \
-          "doesn't match the status found in the board (#{status})"
-      end
-    end
-  end
-
-  time = to_time(time) if time.is_a? String
-  ChangeItem.new time: time, artificial: artificial, author_raw: nil, raw: {
-    'field' => field,
-    'to' => value_id,
-    'toString' => value,
-    'from' => old_value_id,
-    'fromString' => old_value,
-    'fieldId' => field_id
-  }
+  MockChangeItem.new(
+    field: field, value: value, time: time.is_a?(String) ? to_time(time) : time,
+    value_id: value_id, old_value: old_value, old_value_id: old_value_id,
+    artificial: artificial, issue: issue, field_id: field_id
+  ).to_change_item
 end
 
 def load_settings
