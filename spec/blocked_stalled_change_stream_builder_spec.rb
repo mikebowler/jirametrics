@@ -332,4 +332,89 @@ describe BlockedStalledChangeStreamBuilder do
       BlockedStalledChange.new(time: to_time('2021-10-10'))
     ]
   end
+
+  it 'warns, naming the issue, when a link cannot be parsed' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Link', value: 'gibberish that does not match', time: '2021-10-02')
+    expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
+      include("Issue(SP-1) Can't parse link text: gibberish that does not match")
+    ).to_stdout
+  end
+
+  it 'parses "work item" link phrasing as well as "issue"' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Link', value: 'This work item is blocked by SP-99', time: '2021-10-02')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
+    expect(result).to include(
+      BlockedStalledChange.new(blocking_issue_keys: ['SP-99'], time: to_time('2021-10-02'))
+    )
+  end
+
+  it 'falls back to old_value when naming the unparseable link in the warning' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'unparseable link', time: '2021-10-02')
+    expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
+      include("Issue(SP-1) Can't parse link text: unparseable link")
+    ).to_stdout
+  end
+
+  it 'links a comment posted exactly 30 seconds after the flag' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:30')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
+    expect(result[1].flag_reason).to eq 'Reason'
+  end
+
+  it 'does not link a comment posted 31 seconds after the flag' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:31')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
+    expect(result[1].flag_reason).to be_nil
+  end
+
+  it 'ignores a comment that predates the flag' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'comment', value: 'Earlier note', time: '2021-10-03T00:00:50')
+    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
+    expect(result.find(&:flag).flag_reason).to be_nil
+  end
+
+  it 'does not compute a flag_reason when the flag is being cleared' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
+    add_mock_change(issue: issue, field: 'comment', value: 'Late note', time: '2021-10-03T00:02:10')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
+    unflag = result.find { |change| change.time == to_time('2021-10-03T00:02:00') }
+    expect(unflag.flag_reason).to be_nil
+  end
+
+  it 'trims whitespace from both ends of a flag_reason' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    add_mock_change(issue: issue, field: 'comment', value: '  spaced reason  ', time: '2021-10-03T00:01:00')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
+    expect(result[1].flag_reason).to eq 'spaced reason'
+  end
+
+  it 'reports stalled when the gap is exactly the threshold' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-07')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))
+    expect(result).to include(
+      BlockedStalledChange.new(stalled_days: 5, time: to_time('2021-10-02T01:00:00'))
+    )
+  end
+
+  it 'does not report stalled when the gap is just under the threshold' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02T00:00:00')
+    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-06T23:00:00')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))
+    expect(result.filter_map(&:stalled_days)).to be_empty
+  end
 end
