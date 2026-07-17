@@ -63,6 +63,58 @@ def sample_board
   board
 end
 
+# A board whose statuses are replaced with a fixed, known set (ids 1-15) so blocked/stalled tests
+# can reference them by name (in the blocked_statuses/stalled_statuses settings) and by id (in
+# add_mock_change value_ids). Pass a project_config when the surrounding spec needs to share it;
+# otherwise a MockFileSystem-backed one is built.
+def board_with_blocked_stalled_statuses project_config: nil
+  board = sample_board
+  board.project_config = project_config || ProjectConfig.new(
+    exporter: Exporter.new(file_system: MockFileSystem.new), target_path: 'spec/testdata/',
+    jira_config: nil, block: nil
+  )
+  statuses = board.possible_statuses
+  statuses.clear
+
+  # Ordinary flow statuses.
+  statuses << Status.new(
+    name: 'Backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new'
+  )
+  statuses << Status.new(
+    name: 'Selected for Development', id: 3, category_name: 'ready', category_id: 4, category_key: 'new'
+  )
+  statuses << Status.new(
+    name: 'In Progress', id: 5, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+  )
+  statuses << Status.new(
+    name: 'Review', id: 7, category_name: 'in-flight', category_id: 8, category_key: 'indeterminate'
+  )
+  statuses << Status.new(
+    name: 'Done', id: 9, category_name: 'finished', category_id: 10, category_key: 'indeterminate'
+  )
+
+  # Blocked/stalled fixtures referenced by the blocked_statuses/stalled_statuses settings.
+  statuses << Status.new(
+    name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+  )
+  statuses << Status.new(
+    name: 'Stalled', id: 11, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+  )
+  statuses << Status.new(
+    name: 'Doing', id: 12, category_name: 'finished', category_id: 10, category_key: 'done'
+  )
+  statuses << Status.new(
+    name: 'Doing2', id: 13, category_name: 'finished', category_id: 10, category_key: 'done'
+  )
+  statuses << Status.new(
+    name: 'Stalled2', id: 14, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+  )
+  statuses << Status.new(
+    name: 'Blocked2', id: 15, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+  )
+  board
+end
+
 def load_issue key, board: nil
   board = sample_board if board.nil?
   issue = Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)

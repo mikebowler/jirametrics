@@ -65,6 +65,39 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
     end
   end
 
+  describe '#board_with_blocked_stalled_statuses' do
+    it 'replaces the statuses with the fixed blocked/stalled fixture set' do
+      board = board_with_blocked_stalled_statuses
+      expect(board.possible_statuses.collect { |status| [status.name, status.id] }).to eq [
+        ['Backlog', 1],
+        ['Selected for Development', 3],
+        ['In Progress', 5],
+        ['Review', 7],
+        ['Done', 9],
+        ['Blocked', 10],
+        ['Stalled', 11],
+        ['Doing', 12],
+        ['Doing2', 13],
+        ['Stalled2', 14],
+        ['Blocked2', 15]
+      ]
+    end
+
+    it 'uses the supplied project_config when given' do
+      project_config = ProjectConfig.new(
+        exporter: Exporter.new(file_system: MockFileSystem.new), target_path: 'spec/testdata/',
+        jira_config: nil, block: nil
+      )
+      board = board_with_blocked_stalled_statuses project_config: project_config
+      expect(board.project_config).to be project_config
+    end
+
+    it 'builds its own project_config when none is given' do
+      board = board_with_blocked_stalled_statuses
+      expect(board.project_config).to be_a ProjectConfig
+    end
+  end
+
   # RSpec doesn't rescue SystemExit, so a production exit()/abort() that leaks out of an example
   # terminates the whole run early with a misleading partial "0 failures" summary. The guard in
   # spec_helper.rb converts a leaked exit into a normal failure so the suite keeps running. This
