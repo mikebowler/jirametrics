@@ -86,4 +86,128 @@ describe DownloaderForDataCenter do
       ])
     end
   end
+
+  describe '#enhance_issue_with_worklogs' do
+    it 'fetches all worklogs for a single issue with pagination' do
+      issue_path = 'spec/testdata/TEST-1-1.json'
+      original_issue = {
+        'key' => 'TEST-1',
+        'id' => '123',
+        'fields' => { 'summary' => 'Test' },
+        'worklog' => { 'total' => 0, 'worklogs' => [] }
+      }
+
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-1/worklog?startAt=0&maxResults=100',
+        response: {
+          'total' => 150,
+          'startAt' => 0,
+          'maxResults' => 100,
+          'worklogs' => (1..100).map { |i| { 'id' => i.to_s, 'timeSpentSeconds' => 3600 * i } }
+        }
+      )
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-1/worklog?startAt=100&maxResults=100',
+        response: {
+          'total' => 150,
+          'startAt' => 100,
+          'maxResults' => 100,
+          'worklogs' => (101..150).map { |i| { 'id' => i.to_s, 'timeSpentSeconds' => 3600 * i } }
+        }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-1', issue_path: issue_path)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(150)
+        expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
+      end
+    end
+
+    it 'advances startAt by actual items received, not max_results' do
+      issue_path = 'spec/testdata/TEST-3-1.json'
+      original_issue = { 'key' => 'TEST-3', 'id' => '125', 'fields' => { 'summary' => 'Test' } }
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-3/worklog?startAt=0&maxResults=100',
+        response: {
+          'total' => 150,
+          'worklogs' => (1..80).map { |i| { 'id' => i.to_s } }
+        }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-3/worklog?startAt=80&maxResults=100',
+        response: {
+          'total' => 150,
+          'worklogs' => (81..150).map { |i| { 'id' => i.to_s } }
+        }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-3', issue_path: issue_path)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
+    end
+
+    it 'paginates correctly when server caps page size below requested max' do
+      issue_path = 'spec/testdata/TEST-4-1.json'
+      original_issue = { 'key' => 'TEST-4', 'id' => '126', 'fields' => { 'summary' => 'Test' } }
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=0&maxResults=1',
+        response: { 'total' => 3, 'worklogs' => [{ 'id' => '1' }] }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=1&maxResults=1',
+        response: { 'total' => 3, 'worklogs' => [{ 'id' => '2' }] }
+      )
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-4/worklog?startAt=2&maxResults=1',
+        response: { 'total' => 3, 'worklogs' => [{ 'id' => '3' }] }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-4', issue_path: issue_path, max_results: 1)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(3)
+        expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(3)
+      end
+    end
+
+    it 'handles issues with no worklogs' do
+      issue_path = 'spec/testdata/TEST-2-1.json'
+      original_issue = {
+        'key' => 'TEST-2',
+        'id' => '124',
+        'fields' => { 'summary' => 'Test' }
+      }
+
+      file_system.when_loading(file: issue_path, json: original_issue)
+
+      jira_gateway.when(
+        url: '/rest/api/2/issue/TEST-2/worklog?startAt=0&maxResults=100',
+        response: {
+          'total' => 0,
+          'startAt' => 0,
+          'maxResults' => 100,
+          'worklogs' => []
+        }
+      )
+
+      downloader.enhance_issue_with_worklogs(issue_key: 'TEST-2', issue_path: issue_path)
+
+      saved_issue = file_system.saved_json_expanded[issue_path]
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(0)
+        expect(saved_issue['fields']['worklog']['worklogs']).to be_empty
+      end
+    end
+  end
 end

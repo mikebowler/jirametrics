@@ -910,4 +910,128 @@ describe DownloaderForCloud do
       end
     end
   end
+
+  describe '#attach_worklogs_to_issues' do
+    it 'skips issues whose worklogs are already complete' do
+      issue_jsons = [
+        { 'id' => '1', 'key' => 'TEST-1',
+          'fields' => { 'worklog' => { 'total' => 2, 'worklogs' => [{ 'id' => '100' }, { 'id' => '101' }] } } }
+      ]
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      aggregate_failures do
+        expect(issue_jsons[0]['fields']['worklog']['total']).to eq(2)
+        expect(issue_jsons[0]['fields']['worklog']['worklogs'].size).to eq(2)
+      end
+    end
+
+    it 'fetches remaining worklogs when initial fetch is incomplete' do
+      issue_jsons = [
+        {
+          'id' => '1', 'key' => 'TEST-1',
+          'fields' => {
+            'worklog' => {
+              'total' => 3,
+              'worklogs' => [{ 'id' => '100', 'timeSpentSeconds' => 3600 }]
+            }
+          }
+        }
+      ]
+
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=1&maxResults=100',
+        response: {
+          'total' => 3,
+          'worklogs' => [
+            { 'id' => '101', 'timeSpentSeconds' => 1800 },
+            { 'id' => '102', 'timeSpentSeconds' => 900 }
+          ]
+        }
+      )
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      worklog = issue_jsons[0]['fields']['worklog']
+      aggregate_failures do
+        expect(worklog['total']).to eq(3)
+        expect(worklog['worklogs'].size).to eq(3)
+        expect(worklog['worklogs'].map { |w| w['id'] }).to eq(%w[100 101 102])
+      end
+    end
+
+    it 'paginates until all worklogs are fetched' do
+      issue_jsons = [
+        {
+          'id' => '1', 'key' => 'TEST-1',
+          'fields' => { 'worklog' => { 'total' => 250, 'worklogs' => [] } }
+        }
+      ]
+
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=0&maxResults=100',
+        response: { 'total' => 250, 'worklogs' => (1..100).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=100&maxResults=100',
+        response: { 'total' => 250, 'worklogs' => (101..200).map { |i| { 'id' => i.to_s } } }
+      )
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=200&maxResults=100',
+        response: { 'total' => 250, 'worklogs' => (201..250).map { |i| { 'id' => i.to_s } } }
+      )
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      worklog = issue_jsons[0]['fields']['worklog']
+      aggregate_failures do
+        expect(worklog['total']).to eq(250)
+        expect(worklog['worklogs'].size).to eq(250)
+      end
+    end
+
+    it 'paginates correctly when server caps page size below requested max' do
+      issue_jsons = [
+        {
+          'id' => '1', 'key' => 'TEST-1',
+          'fields' => { 'worklog' => { 'total' => 3, 'worklogs' => [{ 'id' => '1' }] } }
+        }
+      ]
+
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=1&maxResults=1',
+        response: { 'total' => 3, 'worklogs' => [{ 'id' => '2' }] }
+      )
+      jira_gateway.when(
+        url: '/rest/api/3/issue/TEST-1/worklog?startAt=2&maxResults=1',
+        response: { 'total' => 3, 'worklogs' => [{ 'id' => '3' }] }
+      )
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons, max_results: 1)
+
+      worklog = issue_jsons[0]['fields']['worklog']
+      aggregate_failures do
+        expect(worklog['total']).to eq(3)
+        expect(worklog['worklogs'].size).to eq(3)
+      end
+    end
+
+    it 'skips issues with no worklog field' do
+      issue_jsons = [{ 'id' => '1', 'key' => 'TEST-1', 'fields' => {} }]
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      expect(issue_jsons[0]['fields']['worklog']).to be_nil
+    end
+
+    it 'skips issues with zero total worklogs' do
+      issue_jsons = [
+        { 'id' => '1', 'key' => 'TEST-1', 'fields' => { 'worklog' => { 'total' => 0, 'worklogs' => [] } } }
+      ]
+
+      downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
+
+      expect(issue_jsons[0]['fields']['worklog']['total']).to eq(0)
+    end
+  end
 end
