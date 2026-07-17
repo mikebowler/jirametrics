@@ -95,7 +95,8 @@ describe Exporter do
 
   describe '#each_project_config' do
     it 'matches all projects' do
-      exporter.instance_variable_set :@jira_config, {}
+      exporter.file_system.when_loading file: 'jira-config.json', json: {}
+      exporter.jira_config 'jira-config.json'
 
       exporter.project name: 'action'
       exporter.project name: 'burrow'
@@ -107,7 +108,8 @@ describe Exporter do
     end
 
     it 'filters by project name' do
-      exporter.instance_variable_set :@jira_config, {}
+      exporter.file_system.when_loading file: 'jira-config.json', json: {}
+      exporter.jira_config 'jira-config.json'
 
       exporter.project name: 'action'
       exporter.project name: 'burrow'

@@ -59,7 +59,7 @@ describe ThroughputByCompletedResolutionChart do
     end)
 
     rules = GroupingRules.new
-    chart.instance_variable_get(:@group_by_block).call(issue1, rules)
+    chart.group_by_block.call(issue1, rules)
     expect(rules.label).to eq 'custom'
   end
 end

@@ -5,6 +5,7 @@ require 'jirametrics/grouping_rules'
 
 module GroupableIssueChart
   attr_accessor :issue_hints, :issue_periods
+  attr_reader :group_by_block
 
   def init_configuration_block user_provided_block, &default_block
     instance_eval(&user_provided_block)
