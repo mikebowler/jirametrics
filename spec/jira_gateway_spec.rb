@@ -2,19 +2,23 @@
 
 require './spec/spec_helper'
 
-class MockStatus
-  attr_reader :exitstatus
-
-  def initialize exitstatus:
-    @exitstatus = exitstatus
-  end
-
-  def success?
-    @exitstatus.zero?
-  end
-end
-
 describe JiraGateway do
+  # MockStatus is a single-use stand-in for a process status (exitstatus/success?). stub_const scopes
+  # it to these examples rather than leaking a class into the global namespace.
+  before do
+    stub_const('MockStatus', Class.new do
+      attr_reader :exitstatus
+
+      def initialize exitstatus:
+        @exitstatus = exitstatus
+      end
+
+      def success?
+        @exitstatus.zero?
+      end
+    end)
+  end
+
   let(:file_system) { MockFileSystem.new }
   let(:jira_config) do
     {

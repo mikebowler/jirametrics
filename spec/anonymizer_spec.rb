@@ -2,16 +2,6 @@
 
 require './spec/spec_helper'
 
-class MockAnonymizer < Anonymizer
-  def random_phrase
-    'random_phrase'
-  end
-
-  def random_name
-    'random_name'
-  end
-end
-
 describe Anonymizer do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:project_config) do
@@ -43,6 +33,20 @@ describe Anonymizer do
     end
 
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
+  end
+
+  # MockAnonymizer overrides random_phrase/random_name for deterministic output. It's single-use,
+  # so stub_const scopes it to these examples rather than leaking a subclass into the global namespace.
+  before do
+    stub_const('MockAnonymizer', Class.new(Anonymizer) do
+      def random_phrase
+        'random_phrase'
+      end
+
+      def random_name
+        'random_name'
+      end
+    end)
   end
 
   describe '#anonymize_issue_keys_and_titles' do

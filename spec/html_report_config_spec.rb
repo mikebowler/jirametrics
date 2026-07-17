@@ -2,31 +2,6 @@
 
 require './spec/spec_helper'
 
-class TestableChart < ChartBase
-  attr_accessor :issues, :cycletime, :board_columns, :time_range, :date_range
-
-  def initialize _block
-    super()
-  end
-
-  def run
-    'running'
-  end
-end
-
-class TestableBoardChart < ChartBase
-  attr_accessor :board_id
-
-  def initialize _block
-    super()
-    description_text 'test description'
-  end
-
-  def run
-    'running'
-  end
-end
-
 describe HtmlReportConfig do
   let(:exporter) { Exporter.new file_system: MockFileSystem.new }
   let(:project_config) do
@@ -43,6 +18,36 @@ describe HtmlReportConfig do
     project_config
   end
   let(:file_config) { FileConfig.new project_config: project_config, block: nil }
+
+  # TestableChart / TestableBoardChart are single-use fixtures that HtmlReportConfig#method_missing
+  # resolves by name via Object.const_get. stub_const gives them those names only for the duration of
+  # each example, so they don't leak into the global namespace the way a top-level class would.
+  before do
+    stub_const('TestableChart', Class.new(ChartBase) do
+      attr_accessor :issues, :cycletime, :board_columns, :time_range, :date_range
+
+      def initialize _block
+        super()
+      end
+
+      def run
+        'running'
+      end
+    end)
+
+    stub_const('TestableBoardChart', Class.new(ChartBase) do
+      attr_accessor :board_id
+
+      def initialize _block
+        super()
+        description_text 'test description'
+      end
+
+      def run
+        'running'
+      end
+    end)
+  end
 
   context 'with no injectable dependencies' do
     it 'still passes if no dependencies supported' do
