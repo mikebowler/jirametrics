@@ -2,11 +2,6 @@
 
 require './spec/spec_helper'
 
-def complete_sample_board_columns
-  json = JSON.parse(file_system.load('./spec/complete_sample/sample_board_1_configuration.json'))
-  json['columnConfig']['columns'].collect { |raw| BoardColumn.new raw }
-end
-
 describe AgingWorkInProgressChart do
   let(:today) { to_date('2021-06-28') }
 
@@ -15,8 +10,19 @@ describe AgingWorkInProgressChart do
       board.cycletime = default_cycletime_config
     end
   end
-
   let :chart do
+    issues = load_complete_sample_issues board: board
+
+    # None of the sample issues are complete so we need to add one complete item in order for the 85% line to work.
+    issues << create_issue_from_aging_data(
+      board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-100'
+    )
+    issues.last.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
+
+    build_chart board: board, issues: issues, show_all_columns: true
+  end
+
+  def build_chart board:, issues:, show_all_columns: false
     chart = described_class.new(empty_config_block)
     chart.file_system = MockFileSystem.new
     html_path = File.expand_path('./lib/jirametrics/html/')
@@ -24,20 +30,12 @@ describe AgingWorkInProgressChart do
       file: "#{html_path}/aging_work_in_progress_chart.erb",
       json: :not_mocked
     )
-
     chart.board_id = 1
     chart.all_boards = { 1 => board }
-    chart.issues = load_complete_sample_issues board: board
-
-    # None of the sample issues are complete so we need to add one complete item in order for the 85% line to work.
-    chart.issues << create_issue_from_aging_data(
-      board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-100'
-    )
-    chart.issues.last.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
-
+    chart.issues = issues
     chart.date_range = to_date('2021-06-18')..today
     chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
-    chart.show_all_columns
+    chart.show_all_columns if show_all_columns
     chart
   end
 
@@ -147,26 +145,12 @@ describe AgingWorkInProgressChart do
     end
   end
 
-  context 'show_all_columns is false (default)' do
-    def make_trimming_chart board:, issues:
-      c = described_class.new(empty_config_block)
-      c.file_system = MockFileSystem.new
-      c.file_system.when_loading(
-        file: File.expand_path('./lib/jirametrics/html/aging_work_in_progress_chart.erb'),
-        json: :not_mocked
-      )
-      c.board_id = 1
-      c.all_boards = { 1 => board }
-      c.issues = issues
-      c.date_range = to_date('2021-06-18')..to_date('2021-06-28')
-      c.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
-      c
-    end
-
+  context 'when show_all_columns is false (default)' do
     it 'removes a trailing done column with age data when @fake_column is also visible' do
-      # Bug: Done has non-zero age data (completed issue passed through it), so
-      # indexes_of_leading_and_trailing_zeros never flagged it. With @fake_column also
-      # present it is not a trailing zero from age_data's perspective, so it stayed.
+      # Regression test for the case where Done has non-zero age data (a completed issue
+      # passed through it), so indexes_of_leading_and_trailing_zeros never flagged it. With
+      # @fake_column also present it is not a trailing zero from age_data's perspective, so it
+      # previously stayed.
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
@@ -180,23 +164,22 @@ describe AgingWorkInProgressChart do
         [active,    '2021-06-20', nil]
       ]
 
-      c = make_trimming_chart board: board, issues: [completed, active]
-      c.run
+      chart = build_chart board: board, issues: [completed, active]
+      chart.run
 
-      names = c.board_columns.map(&:name)
+      names = chart.board_columns.map(&:name)
       expect(names).to include('[Unmapped Statuses]')
       expect(names).not_to include('Done')
     end
 
     it 'keeps intermediate columns with completion history even when no aging items are currently there' do
-      # Board columns: [Ready, In Progress, Review, Done]
-      # Completed issue passes through In Progress, Review, and Done.
-      # Done is the last visible column: BoardMovementCalculator uses today as end_date for
-      # the last column, so its age_data is always inflated — it can never be a trailing zero
-      # and the original algorithm therefore could not remove it.
-      # The fix excludes the last visible column from the age_data right-boundary calculation,
-      # making right_bound = Review.  In Progress and Review are kept; Done is removed.
-      # Active issue is in @fake_column to trigger the scenario.
+      # Regression test for the case where Done is the last visible column: BoardMovementCalculator
+      # uses today as end_date for the last column, so Done's age_data is always inflated — it can
+      # never be a trailing zero, and the naive algorithm therefore could not remove it. Excluding
+      # the last visible column from the age_data right-boundary calculation keeps In Progress and
+      # Review while dropping Done.
+      # Setup: completed issue passes through In Progress/Review/Done; active issue sits in
+      # @fake_column to trigger the scenario.
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
@@ -210,10 +193,10 @@ describe AgingWorkInProgressChart do
         [active,    '2021-06-20', nil]
       ]
 
-      c = make_trimming_chart board: board, issues: [completed, active]
-      c.run
+      chart = build_chart board: board, issues: [completed, active]
+      chart.run
 
-      names = c.board_columns.map(&:name)
+      names = chart.board_columns.map(&:name)
       expect(names).to include('In Progress')
       expect(names).to include('Review')
       expect(names).to include('[Unmapped Statuses]')
@@ -235,23 +218,12 @@ describe AgingWorkInProgressChart do
         [active_issue, '2021-06-23', nil]
       ]
 
-      new_chart = described_class.new(empty_config_block)
-      new_chart.file_system = MockFileSystem.new
-      html_path = File.expand_path('./lib/jirametrics/html/')
-      new_chart.file_system.when_loading(
-        file: "#{html_path}/aging_work_in_progress_chart.erb",
-        json: :not_mocked
-      )
-      new_chart.board_id = 1
-      new_chart.all_boards = { 1 => board }
-      new_chart.issues = [completed_issue, active_issue]
-      new_chart.date_range = to_date('2021-06-18')..today
-      new_chart.percentiles 85 => '--aging-work-in-progress-chart-shading-color'
-      # Deliberately NOT calling show_all_columns, so leading/trailing zero trimming is active
+      # show_all_columns defaults to false, so leading/trailing zero trimming is active
+      chart = build_chart board: board, issues: [completed_issue, active_issue]
 
-      new_chart.run
+      chart.run
 
-      expect(new_chart.board_columns.first.name).to eq 'Ready'
+      expect(chart.board_columns.first.name).to eq 'Ready'
     end
   end
 
