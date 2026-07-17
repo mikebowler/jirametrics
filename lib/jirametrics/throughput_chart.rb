@@ -7,8 +7,10 @@ class ThroughputChart < ChartBase
 
   attr_accessor :possible_statuses
 
-  def initialize block
+  def initialize block, throughput_samples: nil, not_started_count: nil
     super()
+    @throughput_samples = throughput_samples
+    @not_started_count = not_started_count
 
     header_text 'Throughput Chart'
     description_text <<-TEXT

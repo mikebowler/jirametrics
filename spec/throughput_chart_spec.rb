@@ -187,9 +187,7 @@ describe ThroughputChart do
 
   describe '#throughput_forecaster_url' do
     it 'builds URL with samples and not-started count' do
-      chart = described_class.new empty_config_block
-      chart.instance_variable_set(:@throughput_samples, [3, 5, 2])
-      chart.instance_variable_set(:@not_started_count, 2)
+      chart = described_class.new empty_config_block, throughput_samples: [3, 5, 2], not_started_count: 2
 
       url = chart.throughput_forecaster_url
       aggregate_failures do
@@ -202,9 +200,7 @@ describe ThroughputChart do
     end
 
     it 'uses zero for not-started count when all issues are started' do
-      chart = described_class.new empty_config_block
-      chart.instance_variable_set(:@throughput_samples, [1])
-      chart.instance_variable_set(:@not_started_count, 0)
+      chart = described_class.new empty_config_block, throughput_samples: [1], not_started_count: 0
 
       url = chart.throughput_forecaster_url
       aggregate_failures do
