@@ -53,14 +53,18 @@ describe GemDeployer do
 
   describe '#release_notes' do
     it 'strips markdown links leaving just the text' do
-      expect(deployer.release_notes).to include 'major bug'
-      expect(deployer.release_notes).not_to include '{% link'
-      expect(deployer.release_notes).not_to include 'config_charts.md'
+      aggregate_failures do
+        expect(deployer.release_notes).to include 'major bug'
+        expect(deployer.release_notes).not_to include '{% link'
+        expect(deployer.release_notes).not_to include 'config_charts.md'
+      end
     end
 
     it 'strips inline code links leaving the code text' do
-      expect(deployer.release_notes).to include '`throughput_chart`'
-      expect(deployer.release_notes).not_to include '#throughput_chart'
+      aggregate_failures do
+        expect(deployer.release_notes).to include '`throughput_chart`'
+        expect(deployer.release_notes).not_to include '#throughput_chart'
+      end
     end
 
     it 'removes the heading line' do

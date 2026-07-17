@@ -243,10 +243,12 @@ describe ChartBase do
     it 'includes annotation for a plain date within range' do
       chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01', 'label' => 'Coaching started' }] }
       result = chart_base.date_annotation
-      expect(result).to include('"2022-06-01T00:00:00+00:00"')
-      expect(result).to include('"Coaching started"')
-      expect(result).to include('dateAnnotation0:')
-      expect(result).to include('position: "5%"')
+      aggregate_failures do
+        expect(result).to include('"2022-06-01T00:00:00+00:00"')
+        expect(result).to include('"Coaching started"')
+        expect(result).to include('dateAnnotation0:')
+        expect(result).to include('position: "5%"')
+      end
     end
 
     it 'staggers labels for close annotations' do
@@ -257,15 +259,19 @@ describe ChartBase do
         ]
       }
       result = chart_base.date_annotation
-      expect(result).to include('position: "5%"')
-      expect(result).to include('position: "25%"')
+      aggregate_failures do
+        expect(result).to include('position: "5%"')
+        expect(result).to include('position: "25%"')
+      end
     end
 
     it 'includes annotation for a datetime within range' do
       chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01T10:00:00', 'label' => 'Meeting' }] }
       result = chart_base.date_annotation
-      expect(result).to include('"2022-06-01T10:00:00+00:00"')
-      expect(result).to include('dateAnnotation0:')
+      aggregate_failures do
+        expect(result).to include('"2022-06-01T10:00:00+00:00"')
+        expect(result).to include('dateAnnotation0:')
+      end
     end
 
     it 'includes annotation for a datetime with explicit timezone' do
@@ -287,8 +293,10 @@ describe ChartBase do
         ]
       }
       result = chart_base.date_annotation
-      expect(result).to include('dateAnnotation0:')
-      expect(result).to include('dateAnnotation1:')
+      aggregate_failures do
+        expect(result).to include('dateAnnotation0:')
+        expect(result).to include('dateAnnotation1:')
+      end
     end
 
     it 'filters out-of-range annotations while keeping in-range ones' do
@@ -299,10 +307,12 @@ describe ChartBase do
         ]
       }
       result = chart_base.date_annotation
-      expect(result).to include('dateAnnotation0:')
-      expect(result).not_to include('dateAnnotation1:')
-      expect(result).to include('"In range"')
-      expect(result).not_to include('"Too early"')
+      aggregate_failures do
+        expect(result).to include('dateAnnotation0:')
+        expect(result).not_to include('dateAnnotation1:')
+        expect(result).to include('"In range"')
+        expect(result).not_to include('"Too early"')
+      end
     end
   end
 

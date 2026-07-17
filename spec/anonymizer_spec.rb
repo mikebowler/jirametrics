@@ -49,9 +49,11 @@ describe Anonymizer do
     it 'has renumbered all issue keys and changed summary' do
       issue = anonymizer.project_config.issues.first
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
-      expect(issue.key).to eq 'ANON-1'
-      expect(issue.summary).to eq 'random_phrase'
-      expect(issue.assigned_to).to be_nil
+      aggregate_failures do
+        expect(issue.key).to eq 'ANON-1'
+        expect(issue.summary).to eq 'random_phrase'
+        expect(issue.assigned_to).to be_nil
+      end
     end
 
     it 'has changed assigned_to if it was set' do
@@ -101,10 +103,12 @@ describe Anonymizer do
       }
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
       creator = issue.raw['fields']['creator']
-      expect(creator['displayName']).to eq 'random_name'
-      expect(creator['name']).to eq 'random_name'
-      expect(creator['emailAddress']).to be_nil
-      expect(creator['avatarUrls']).to be_nil
+      aggregate_failures do
+        expect(creator['displayName']).to eq 'random_name'
+        expect(creator['name']).to eq 'random_name'
+        expect(creator['emailAddress']).to be_nil
+        expect(creator['avatarUrls']).to be_nil
+      end
     end
 
     it 'anonymizes change history authors' do
@@ -120,10 +124,12 @@ describe Anonymizer do
         time: to_time('2021-07-01'), author_raw: author
       )
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
-      expect(author['displayName']).to eq 'random_name'
-      expect(author['name']).to eq 'random_name'
-      expect(author['emailAddress']).to be_nil
-      expect(author['avatarUrls']).to be_nil
+      aggregate_failures do
+        expect(author['displayName']).to eq 'random_name'
+        expect(author['name']).to eq 'random_name'
+        expect(author['emailAddress']).to be_nil
+        expect(author['avatarUrls']).to be_nil
+      end
     end
 
     it 'only anonymizes the same author_raw hash once even when shared across changes' do
@@ -164,8 +170,10 @@ describe Anonymizer do
       )
       issue.changes << change
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
-      expect(change.value).to be_nil
-      expect(change.old_value).to be_nil
+      aggregate_failures do
+        expect(change.value).to be_nil
+        expect(change.old_value).to be_nil
+      end
     end
   end
 
@@ -175,8 +183,10 @@ describe Anonymizer do
       issue.raw['fields']['labels'] = %w[Customer-XYZ Priority-1]
       issue.raw['fields']['components'] = [{ 'name' => 'Backend' }, { 'name' => 'API' }]
       anonymizer.anonymize_labels_and_components
-      expect(issue.labels).to be_empty
-      expect(issue.component_names).to be_empty
+      aggregate_failures do
+        expect(issue.labels).to be_empty
+        expect(issue.component_names).to be_empty
+      end
     end
   end
 
@@ -220,8 +230,10 @@ describe Anonymizer do
         [{ 'id' => '10', 'name' => 'v1.0', 'released' => false },
 { 'id' => '20', 'name' => 'v2.0', 'released' => false }]
       anonymizer.anonymize_fix_versions
-      expect(issue1.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1']
-      expect(issue2.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq %w[Version-1 Version-2]
+      aggregate_failures do
+        expect(issue1.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq ['Version-1']
+        expect(issue2.raw['fields']['fixVersions'].collect { |fv| fv['name'] }).to eq %w[Version-1 Version-2]
+      end
     end
   end
 
@@ -230,8 +242,10 @@ describe Anonymizer do
 
     it 'replaces the real Jira domain in board.raw[self]' do
       anonymizer.anonymize_server_url
-      expect(board.raw['self']).to start_with('https://anon.example.com/')
-      expect(board.raw['self']).not_to include('improvingflow')
+      aggregate_failures do
+        expect(board.raw['self']).to start_with('https://anon.example.com/')
+        expect(board.raw['self']).not_to include('improvingflow')
+      end
     end
 
     it 'still allows server_url_prefix to work after anonymization' do
@@ -244,14 +258,18 @@ describe Anonymizer do
     let(:board) { anonymizer.project_config.all_boards[1] }
 
     it 'works when not anonymized' do
-      expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
-      expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      aggregate_failures do
+        expect(board.visible_columns.collect(&:name)).to eq ['Ready', 'In Progress', 'Review', 'Done']
+        expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      end
     end
 
     it 'still works after anonymization' do
       anonymizer.anonymize_column_names
-      expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
-      expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      aggregate_failures do
+        expect(board.visible_columns.collect(&:name)).to eq %w[Column-A Column-B Column-C Column-D]
+        expect(board.status_ids_in_or_right_of_column('Review')).to eq [10_011, 10_002]
+      end
     end
   end
 
@@ -261,15 +279,17 @@ describe Anonymizer do
       changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 0
-      expect(changes).to eq [
-        'status  2021-06-18 18:41:29 +0000',
-        'priority  2021-06-18 18:41:29 +0000',
-        'status  2021-06-18 18:43:34 +0000',
-        'status  2021-06-18 18:44:21 +0000',
-        'Flagged  2021-08-29 18:04:39 +0000',
-        'status  2021-12-14 00:30:15 +0000'
-      ]
-      expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-14 00:30:15 +0000'
+      aggregate_failures do
+        expect(changes).to eq [
+          'status  2021-06-18 18:41:29 +0000',
+          'priority  2021-06-18 18:41:29 +0000',
+          'status  2021-06-18 18:43:34 +0000',
+          'status  2021-06-18 18:44:21 +0000',
+          'Flagged  2021-08-29 18:04:39 +0000',
+          'status  2021-12-14 00:30:15 +0000'
+        ]
+        expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-14 00:30:15 +0000'
+      end
       non_diag_messages = exporter.file_system.log_messages.reject { |m| m.include?('[diag]') }
       expect(non_diag_messages).to eq [
         'Shifting all dates by 0 days'
@@ -281,15 +301,17 @@ describe Anonymizer do
       changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 1
-      expect(changes).to eq [
-        'status  2021-06-18 18:41:29 +0000',
-        'priority  2021-06-18 18:41:29 +0000',
-        'status  2021-06-18 18:43:34 +0000',
-        'status  2021-06-18 18:44:21 +0000',
-        'Flagged  2021-08-29 18:04:39 +0000',
-        'status  2021-12-14 00:30:15 +0000'
-      ]
-      expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-15 00:30:15 +0000'
+      aggregate_failures do
+        expect(changes).to eq [
+          'status  2021-06-18 18:41:29 +0000',
+          'priority  2021-06-18 18:41:29 +0000',
+          'status  2021-06-18 18:43:34 +0000',
+          'status  2021-06-18 18:44:21 +0000',
+          'Flagged  2021-08-29 18:04:39 +0000',
+          'status  2021-12-14 00:30:15 +0000'
+        ]
+        expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-15 00:30:15 +0000'
+      end
       non_diag_messages = exporter.file_system.log_messages.reject { |m| m.include?('[diag]') }
       expect(non_diag_messages).to eq [
         'Shifting all dates by 1 day'
@@ -298,8 +320,10 @@ describe Anonymizer do
 
     it 'shifts time_range by the same number of days as the changes' do
       anonymizer.shift_all_dates date_adjustment: 5
-      expect(anonymizer.project_config.time_range.begin.to_date.to_s).to eq '2021-06-06'
-      expect(anonymizer.project_config.time_range.end.to_date.to_s).to eq '2021-09-06'
+      aggregate_failures do
+        expect(anonymizer.project_config.time_range.begin.to_date.to_s).to eq '2021-06-06'
+        expect(anonymizer.project_config.time_range.end.to_date.to_s).to eq '2021-09-06'
+      end
     end
   end
 end

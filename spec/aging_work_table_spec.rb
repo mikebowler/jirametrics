@@ -147,8 +147,10 @@ describe AgingWorkTable do
       table.age_cutoff 5
       table.today = to_date '2021-01-03'
       table.issues = [issue1]
-      expect(table.select_aging_issues).to be_empty
-      expect(table.age_cutoff).to eq 5 # Pull it back out just to verify that we can.
+      aggregate_failures do
+        expect(table.select_aging_issues).to be_empty
+        expect(table.age_cutoff).to eq 5 # Pull it back out just to verify that we can.
+      end
     end
   end
 

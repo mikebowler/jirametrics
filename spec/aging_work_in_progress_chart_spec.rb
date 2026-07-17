@@ -168,8 +168,10 @@ describe AgingWorkInProgressChart do
       chart.run
 
       names = chart.board_columns.map(&:name)
-      expect(names).to include('[Unmapped Statuses]')
-      expect(names).not_to include('Done')
+      aggregate_failures do
+        expect(names).to include('[Unmapped Statuses]')
+        expect(names).not_to include('Done')
+      end
     end
 
     it 'keeps intermediate columns with completion history even when no aging items are currently there' do
@@ -197,10 +199,12 @@ describe AgingWorkInProgressChart do
       chart.run
 
       names = chart.board_columns.map(&:name)
-      expect(names).to include('In Progress')
-      expect(names).to include('Review')
-      expect(names).to include('[Unmapped Statuses]')
-      expect(names).not_to include('Done')
+      aggregate_failures do
+        expect(names).to include('In Progress')
+        expect(names).to include('Review')
+        expect(names).to include('[Unmapped Statuses]')
+        expect(names).not_to include('Done')
+      end
     end
 
     it 'keeps columns that have active aging items even when they have no historical data' do

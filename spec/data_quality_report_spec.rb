@@ -32,12 +32,14 @@ describe DataQualityReport do
   it 'creates entries' do
     report.initialize_entries
 
-    expect(report.testable_entries).to eq [
-      ['2021-06-18 18:43:34 +0000', '', issue1],
-      ['2021-08-29 18:06:28 +0000', '2021-09-06 04:34:26 +0000', issue10]
-    ]
+    aggregate_failures do
+      expect(report.testable_entries).to eq [
+        ['2021-06-18 18:43:34 +0000', '', issue1],
+        ['2021-08-29 18:06:28 +0000', '2021-09-06 04:34:26 +0000', issue10]
+      ]
 
-    expect(report.entries_with_problems).to be_empty
+      expect(report.entries_with_problems).to be_empty
+    end
   end
 
   it 'ignores entries that finished before the range' do
@@ -697,8 +699,10 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue2)
       report.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
 
-      expect(entry1.problems).to be_empty
-      expect(entry2.problems).to be_empty
+      aggregate_failures do
+        expect(entry1.problems).to be_empty
+        expect(entry2.problems).to be_empty
+      end
     end
 
     it 'does report errors when no duplicates' do
@@ -719,10 +723,12 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1a)
       report.scan_for_issues_on_multiple_boards entries: [entry1, entry2]
 
-      expect(entry1.problems).to eq [
-        [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"']
-      ]
-      expect(entry2.problems).to be_empty
+      aggregate_failures do
+        expect(entry1.problems).to eq [
+          [:issue_on_multiple_boards, 'Found on boards: "SP board", "bar"']
+        ]
+        expect(entry2.problems).to be_empty
+      end
     end
   end
 

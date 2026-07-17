@@ -20,9 +20,11 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Start date unknown', CssVariable['--body-background'], false]
-      expect(rules.group_priority).to eq 11
-      expect(rules.issue_hint).to eq '(created: 2 days earlier, stopped on 2022-01-05)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Start date unknown', CssVariable['--body-background'], false]
+        expect(rules.group_priority).to eq 11
+        expect(rules.issue_hint).to eq '(created: 2 days earlier, stopped on 2022-01-05)'
+      end
     end
 
     it 'handles completed items with no start' do
@@ -33,11 +35,13 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq(
-        ['Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color'], false]
-      )
-      expect(rules.group_priority).to eq(-1)
-      expect(rules.issue_hint).to be_nil
+      aggregate_failures do
+        expect(rules.group).to eq(
+          ['Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color'], false]
+        )
+        expect(rules.group_priority).to eq(-1)
+        expect(rules.issue_hint).to be_nil
+      end
     end
 
     it 'completed today' do
@@ -47,9 +51,11 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color'], false]
-      expect(rules.group_priority).to eq(-2)
-      expect(rules.issue_hint).to be_nil
+      aggregate_failures do
+        expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color'], false]
+        expect(rules.group_priority).to eq(-2)
+        expect(rules.issue_hint).to be_nil
+      end
     end
 
     it 'active less than a day' do
@@ -59,9 +65,11 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-01')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Less than a day', CssVariable['--wip-chart-duration-less-than-day-color'], false]
-      expect(rules.group_priority).to eq 10
-      expect(rules.issue_hint).to eq '(age: 1 day)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Less than a day', CssVariable['--wip-chart-duration-less-than-day-color'], false]
+        expect(rules.group_priority).to eq 10
+        expect(rules.issue_hint).to eq '(age: 1 day)'
+      end
     end
 
     it 'active less than a week' do
@@ -71,9 +79,11 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-07')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['A week or less', CssVariable['--wip-chart-duration-week-or-less-color'], false]
-      expect(rules.group_priority).to eq 9
-      expect(rules.issue_hint).to eq '(age: 7 days)'
+      aggregate_failures do
+        expect(rules.group).to eq ['A week or less', CssVariable['--wip-chart-duration-week-or-less-color'], false]
+        expect(rules.group_priority).to eq 9
+        expect(rules.issue_hint).to eq '(age: 7 days)'
+      end
     end
 
     it 'active less than two weeks' do
@@ -83,10 +93,12 @@ describe DailyWipByAgeChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-14')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Two weeks or less', CssVariable['--wip-chart-duration-two-weeks-or-less-color'],
+      aggregate_failures do
+        expect(rules.group).to eq ['Two weeks or less', CssVariable['--wip-chart-duration-two-weeks-or-less-color'],
 false]
-      expect(rules.group_priority).to eq 8
-      expect(rules.issue_hint).to eq '(age: 14 days)'
+        expect(rules.group_priority).to eq 8
+        expect(rules.issue_hint).to eq '(age: 14 days)'
+      end
     end
 
     it 'active less than four weeks' do
@@ -96,10 +108,12 @@ false]
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-28')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Four weeks or less', CssVariable['--wip-chart-duration-four-weeks-or-less-color'],
+      aggregate_failures do
+        expect(rules.group).to eq ['Four weeks or less', CssVariable['--wip-chart-duration-four-weeks-or-less-color'],
 false]
-      expect(rules.group_priority).to eq 7
-      expect(rules.issue_hint).to eq '(age: 28 days)'
+        expect(rules.group_priority).to eq 7
+        expect(rules.issue_hint).to eq '(age: 28 days)'
+      end
     end
 
     it 'active more than four weeks' do
@@ -109,10 +123,12 @@ false]
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-29')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['More than four weeks',
+      aggregate_failures do
+        expect(rules.group).to eq ['More than four weeks',
 CssVariable['--wip-chart-duration-more-than-four-weeks-color'], false]
-      expect(rules.group_priority).to eq 6
-      expect(rules.issue_hint).to eq '(age: 29 days)'
+        expect(rules.group_priority).to eq 6
+        expect(rules.issue_hint).to eq '(age: 29 days)'
+      end
     end
   end
 end

@@ -24,28 +24,36 @@ describe PullRequest do
   let(:pr) { described_class.new(raw: raw) }
 
   it 'exposes simple fields' do
-    expect(pr.number).to eq 42
-    expect(pr.repo).to eq 'owner/repo'
-    expect(pr.url).to eq 'https://github.com/owner/repo/pull/42'
-    expect(pr.title).to eq 'Fix SP-112'
-    expect(pr.branch).to eq 'SP-112-fix'
-    expect(pr.state).to eq 'MERGED'
-    expect(pr.issue_keys).to eq ['SP-112']
+    aggregate_failures do
+      expect(pr.number).to eq 42
+      expect(pr.repo).to eq 'owner/repo'
+      expect(pr.url).to eq 'https://github.com/owner/repo/pull/42'
+      expect(pr.title).to eq 'Fix SP-112'
+      expect(pr.branch).to eq 'SP-112-fix'
+      expect(pr.state).to eq 'MERGED'
+      expect(pr.issue_keys).to eq ['SP-112']
+    end
   end
 
   it 'returns opened_at as a Time' do
-    expect(pr.opened_at).to be_a Time
-    expect(pr.opened_at).to eq Time.parse('2026-01-10T09:00:00Z')
+    aggregate_failures do
+      expect(pr.opened_at).to be_a Time
+      expect(pr.opened_at).to eq Time.parse('2026-01-10T09:00:00Z')
+    end
   end
 
   it 'returns closed_at as a Time' do
-    expect(pr.closed_at).to be_a Time
-    expect(pr.closed_at).to eq Time.parse('2026-01-14T16:30:00Z')
+    aggregate_failures do
+      expect(pr.closed_at).to be_a Time
+      expect(pr.closed_at).to eq Time.parse('2026-01-14T16:30:00Z')
+    end
   end
 
   it 'returns merged_at as a Time' do
-    expect(pr.merged_at).to be_a Time
-    expect(pr.merged_at).to eq Time.parse('2026-01-14T16:30:00Z')
+    aggregate_failures do
+      expect(pr.merged_at).to be_a Time
+      expect(pr.merged_at).to eq Time.parse('2026-01-14T16:30:00Z')
+    end
   end
 
   it 'returns nil for closed_at when not set' do

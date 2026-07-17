@@ -50,8 +50,10 @@ describe DailyWipChart do
       chart.settings = {}
 
       output = chart.run
-      expect(output).to include('min: "2021-10-11"')
-      expect(output).to include('max: "2021-11-08"')
+      aggregate_failures do
+        expect(output).to include('min: "2021-10-11"')
+        expect(output).to include('max: "2021-11-08"')
+      end
     end
   end
 
@@ -308,8 +310,10 @@ describe DailyWipChart do
       issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
-      expect(data_set[:label_hint]).to eq 'foo Full description of the group'
-      expect(data_set[:data].first[:title].first).to eq 'foo Full description of the group (1 issue)'
+      aggregate_failures do
+        expect(data_set[:label_hint]).to eq 'foo Full description of the group'
+        expect(data_set[:data].first[:title].first).to eq 'foo Full description of the group (1 issue)'
+      end
     end
 
     it 'appends * to label when label_suffix is provided' do
@@ -325,8 +329,10 @@ describe DailyWipChart do
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date,
                                      label_suffix: '*'
-      expect(data_set[:label]).to eq 'foo*'
-      expect(data_set[:data].first[:title].first).to eq 'foo* (1 issue)'
+      aggregate_failures do
+        expect(data_set[:label]).to eq 'foo*'
+        expect(data_set[:data].first[:title].first).to eq 'foo* (1 issue)'
+      end
     end
   end
 

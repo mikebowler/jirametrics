@@ -18,9 +18,11 @@ describe User do
       'active' => true,
       'locale' => 'en_US'
     })
-    expect(user.account_id).to eq '712020:d3b13c86-3b58-4fb3-807f-e6129eb85d83'
-    expect(user.avatar_url).to eq 'https://example.com/fred.png'
-    expect(user).to be_active
-    expect(user.display_name).to eq 'Fred Flintstone'
+    aggregate_failures do
+      expect(user.account_id).to eq '712020:d3b13c86-3b58-4fb3-807f-e6129eb85d83'
+      expect(user.avatar_url).to eq 'https://example.com/fred.png'
+      expect(user).to be_active
+      expect(user.display_name).to eq 'Fred Flintstone'
+    end
   end
 end

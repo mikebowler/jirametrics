@@ -21,8 +21,10 @@ describe TrendLineCalculator do
   describe '#calc_y' do
     it 'calculates for two simple points' do
       calculator = described_class.new [[3, 3], [2, 2]]
-      expect(calculator.calc_y x: 4).to eq 4.0
-      expect(calculator.calc_y x: 1).to eq 1.0
+      aggregate_failures do
+        expect(calculator.calc_y x: 4).to eq 4.0
+        expect(calculator.calc_y x: 1).to eq 1.0
+      end
     end
 
     it 'calculates for a perfect horizontal trend' do

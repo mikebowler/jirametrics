@@ -38,8 +38,10 @@ describe 'Worklog' do
 
       downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
 
-      expect(issue_jsons[0]['fields']['worklog']['total']).to eq(2)
-      expect(issue_jsons[0]['fields']['worklog']['worklogs'].size).to eq(2)
+      aggregate_failures do
+        expect(issue_jsons[0]['fields']['worklog']['total']).to eq(2)
+        expect(issue_jsons[0]['fields']['worklog']['worklogs'].size).to eq(2)
+      end
     end
 
     it 'fetches remaining worklogs when initial fetch is incomplete' do
@@ -69,9 +71,11 @@ describe 'Worklog' do
       downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
 
       worklog = issue_jsons[0]['fields']['worklog']
-      expect(worklog['total']).to eq(3)
-      expect(worklog['worklogs'].size).to eq(3)
-      expect(worklog['worklogs'].map { |w| w['id'] }).to eq(%w[100 101 102])
+      aggregate_failures do
+        expect(worklog['total']).to eq(3)
+        expect(worklog['worklogs'].size).to eq(3)
+        expect(worklog['worklogs'].map { |w| w['id'] }).to eq(%w[100 101 102])
+      end
     end
 
     it 'paginates until all worklogs are fetched' do
@@ -98,8 +102,10 @@ describe 'Worklog' do
       downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons)
 
       worklog = issue_jsons[0]['fields']['worklog']
-      expect(worklog['total']).to eq(250)
-      expect(worklog['worklogs'].size).to eq(250)
+      aggregate_failures do
+        expect(worklog['total']).to eq(250)
+        expect(worklog['worklogs'].size).to eq(250)
+      end
     end
 
     it 'paginates correctly when server caps page size below requested max' do
@@ -122,8 +128,10 @@ describe 'Worklog' do
       downloader.attach_worklogs_to_issues(issue_datas: [], issue_jsons: issue_jsons, max_results: 1)
 
       worklog = issue_jsons[0]['fields']['worklog']
-      expect(worklog['total']).to eq(3)
-      expect(worklog['worklogs'].size).to eq(3)
+      aggregate_failures do
+        expect(worklog['total']).to eq(3)
+        expect(worklog['worklogs'].size).to eq(3)
+      end
     end
 
     it 'skips issues with no worklog field' do
@@ -188,8 +196,10 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-1', issue_path: issue_path)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['fields']['worklog']['total']).to eq(150)
-      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(150)
+        expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(150)
+      end
     end
 
     it 'advances startAt by actual items received, not max_results' do
@@ -239,8 +249,10 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-4', issue_path: issue_path, max_results: 1)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['fields']['worklog']['total']).to eq(3)
-      expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(3)
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(3)
+        expect(saved_issue['fields']['worklog']['worklogs'].size).to eq(3)
+      end
     end
 
     it 'handles issues with no worklogs' do
@@ -266,8 +278,10 @@ describe 'Worklog' do
       downloader.enhance_issue_with_worklogs(issue_key: 'TEST-2', issue_path: issue_path)
 
       saved_issue = file_system.saved_json_expanded[issue_path]
-      expect(saved_issue['fields']['worklog']['total']).to eq(0)
-      expect(saved_issue['fields']['worklog']['worklogs']).to be_empty
+      aggregate_failures do
+        expect(saved_issue['fields']['worklog']['total']).to eq(0)
+        expect(saved_issue['fields']['worklog']['worklogs']).to be_empty
+      end
     end
   end
 end

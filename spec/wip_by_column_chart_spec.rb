@@ -50,13 +50,15 @@ describe WipByColumnChart do
       chart.issues = []
       stats = chart.column_stats
 
-      expect(stats[0].name).to eq 'Ready'
-      expect(stats[0].min_wip_limit).to eq 1   # Ready min
-      expect(stats[0].max_wip_limit).to eq 4   # Ready max
-      expect(stats[1].name).to eq 'In Progress'
-      expect(stats[1].min_wip_limit).to be_nil # In Progress min
-      expect(stats[1].max_wip_limit).to eq 3   # In Progress max
-      expect(stats[3].max_wip_limit).to be_nil # Done max
+      aggregate_failures do
+        expect(stats[0].name).to eq 'Ready'
+        expect(stats[0].min_wip_limit).to eq 1   # Ready min
+        expect(stats[0].max_wip_limit).to eq 4   # Ready max
+        expect(stats[1].name).to eq 'In Progress'
+        expect(stats[1].min_wip_limit).to be_nil # In Progress min
+        expect(stats[1].max_wip_limit).to eq 3   # In Progress max
+        expect(stats[3].max_wip_limit).to be_nil # Done max
+      end
     end
 
     it 'tracks time spent at each WIP level as issues move between columns' do
@@ -72,11 +74,13 @@ describe WipByColumnChart do
       chart.issues = [issue_a, issue_b]
       stats = chart.column_stats
 
-      # Ready: WIP=2 for first 500s, WIP=1 for last 500s
-      expect(stats[0].wip_history).to eq [[1, 500], [2, 500]]
+      aggregate_failures do
+        # Ready: WIP=2 for first 500s, WIP=1 for last 500s
+        expect(stats[0].wip_history).to eq [[1, 500], [2, 500]]
 
-      # In Progress: WIP=0 for first 500s, WIP=1 for last 500s
-      expect(stats[1].wip_history).to eq [[0, 500], [1, 500]]
+        # In Progress: WIP=0 for first 500s, WIP=1 for last 500s
+        expect(stats[1].wip_history).to eq [[0, 500], [1, 500]]
+      end
     end
 
     it 'excludes issues belonging to a different board' do
@@ -124,10 +128,12 @@ describe WipByColumnChart do
       chart.issues = [issue_a, issue_b]
       stats = chart.column_stats
 
-      # Ready: WIP=2 for 500s, WIP=0 for 500s
-      expect(stats[0].wip_history).to eq [[0, 500], [2, 500]]
-      # In Progress: WIP=0 for 500s, WIP=2 for 500s
-      expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
+      aggregate_failures do
+        # Ready: WIP=2 for 500s, WIP=0 for 500s
+        expect(stats[0].wip_history).to eq [[0, 500], [2, 500]]
+        # In Progress: WIP=0 for 500s, WIP=2 for 500s
+        expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
+      end
     end
 
     describe '#show_recommendations' do
@@ -153,8 +159,10 @@ describe WipByColumnChart do
       it 'recommendations are not shown by default' do
         chart.issues = two_issue_setup
         output = chart.run
-        expect(output).not_to include('rec: ')
-        expect(output).not_to include('WIP limit recommendations')
+        aggregate_failures do
+          expect(output).not_to include('rec: ')
+          expect(output).not_to include('WIP limit recommendations')
+        end
       end
 
       it 'computes the 85th-percentile WIP per column' do
@@ -163,10 +171,12 @@ describe WipByColumnChart do
 
         recs = chart.send(:compute_recommendations, stats)
 
-        # Ready: WIP=1 for 400s (40%), WIP=2 for 600s (60%); 85% reached at WIP=2
-        expect(recs[0]).to eq 2
-        # In Progress: WIP=0 for 600s (60%), WIP=1 for 400s (40%); 85% reached at WIP=1
-        expect(recs[1]).to eq 1
+        aggregate_failures do
+          # Ready: WIP=1 for 400s (40%), WIP=2 for 600s (60%); 85% reached at WIP=2
+          expect(recs[0]).to eq 2
+          # In Progress: WIP=0 for 600s (60%), WIP=1 for 400s (40%); 85% reached at WIP=1
+          expect(recs[1]).to eq 1
+        end
       end
 
       it 'draws recommendation lines and texts when enabled' do
@@ -174,8 +184,10 @@ describe WipByColumnChart do
         chart.show_recommendations
         output = chart.run
 
-        expect(output).to include('rec: ')
-        expect(output).to include('WIP limit recommendations')
+        aggregate_failures do
+          expect(output).to include('rec: ')
+          expect(output).to include('WIP limit recommendations')
+        end
       end
 
       it 'suggests adding a limit when none exists' do
@@ -183,10 +195,12 @@ describe WipByColumnChart do
         chart.show_recommendations
         output = chart.run
 
-        # In Progress has max=3 so rec=1 < 3 → lower; Ready has max=4 so rec=2 < 4 → lower
-        # Done has no non-zero WIP so it's trimmed
-        expect(output).to include("Lower the WIP limit for 'Ready' from 4 to 2")
-        expect(output).to include("Lower the WIP limit for 'In Progress' from 3 to 1")
+        aggregate_failures do
+          # In Progress has max=3 so rec=1 < 3 → lower; Ready has max=4 so rec=2 < 4 → lower
+          # Done has no non-zero WIP so it's trimmed
+          expect(output).to include("Lower the WIP limit for 'Ready' from 4 to 2")
+          expect(output).to include("Lower the WIP limit for 'In Progress' from 3 to 1")
+        end
       end
 
       it 'recommends removing a column when 85% of time is at WIP=0' do
@@ -201,9 +215,11 @@ describe WipByColumnChart do
         chart.show_recommendations
         output = chart.run
 
-        expect(output).to include("Almost nothing passes through column 'In Progress'")
-        expect(output).not_to include("Lower the WIP limit for 'In Progress'")
-        expect(output).not_to include("Add a WIP limit to column 'In Progress'")
+        aggregate_failures do
+          expect(output).to include("Almost nothing passes through column 'In Progress'")
+          expect(output).not_to include("Lower the WIP limit for 'In Progress'")
+          expect(output).not_to include("Add a WIP limit to column 'In Progress'")
+        end
       end
 
       it 'suggests adding a limit when there is no existing limit' do
@@ -235,8 +251,10 @@ describe WipByColumnChart do
         chart.issues = [issue]
         output = chart.run
 
-        expect(output).not_to include('"Ready"')
-        expect(output).to include('"In Progress"')
+        aggregate_failures do
+          expect(output).not_to include('"Ready"')
+          expect(output).to include('"In Progress"')
+        end
       end
 
       it 'removes a trailing all-zero column' do
@@ -246,8 +264,10 @@ describe WipByColumnChart do
         chart.issues = [issue]
         output = chart.run
 
-        expect(output).not_to include('"Done"')
-        expect(output).to include('"Ready"')
+        aggregate_failures do
+          expect(output).not_to include('"Done"')
+          expect(output).to include('"Ready"')
+        end
       end
 
       it 'keeps an all-zero column in the middle' do
@@ -262,10 +282,12 @@ describe WipByColumnChart do
         chart.issues = [issue_a, issue_b]
         output = chart.run
 
-        expect(output).to include('"Ready"')
-        expect(output).to include('"In Progress"')
-        expect(output).to include('"Review"')
-        expect(output).not_to include('"Done"')
+        aggregate_failures do
+          expect(output).to include('"Ready"')
+          expect(output).to include('"In Progress"')
+          expect(output).to include('"Review"')
+          expect(output).not_to include('"Done"')
+        end
       end
     end
 

@@ -44,22 +44,26 @@ describe TreeOrganizer do
       issue2.parent = issue1
 
       subject = described_class.new issues: [issue1]
-      expect(subject.flattened_issue_keys).to eq([
-        ['SP-2', 1],
-        ['SP-1', 2]
-      ])
-      expect(subject.cyclical_links).to eq [%w[SP-2 SP-1]]
+      aggregate_failures do
+        expect(subject.flattened_issue_keys).to eq([
+          ['SP-2', 1],
+          ['SP-1', 2]
+        ])
+        expect(subject.cyclical_links).to eq [%w[SP-2 SP-1]]
+      end
     end
 
     it 'organizes an issue that has itself as parent' do
       issue1.parent = issue1
 
       subject = described_class.new issues: [issue1]
-      expect(subject.flattened_issue_keys).to eq([
-        ['SP-1', 1],
-        ['SP-1', 2]
-      ])
-      expect(subject.cyclical_links).to eq [%w[SP-1 SP-1]]
+      aggregate_failures do
+        expect(subject.flattened_issue_keys).to eq([
+          ['SP-1', 1],
+          ['SP-1', 2]
+        ])
+        expect(subject.cyclical_links).to eq [%w[SP-1 SP-1]]
+      end
     end
 
     it 'organizes a three issue cyclical chain' do
@@ -68,12 +72,14 @@ describe TreeOrganizer do
       issue3.parent = issue1
 
       subject = described_class.new issues: [issue1]
-      expect(subject.flattened_issue_keys).to eq([
-        ['SP-3', 1],
-        ['SP-2', 2],
-        ['SP-1', 3]
-      ])
-      expect(subject.cyclical_links).to eq [%w[SP-3 SP-2 SP-1]]
+      aggregate_failures do
+        expect(subject.flattened_issue_keys).to eq([
+          ['SP-3', 1],
+          ['SP-2', 2],
+          ['SP-1', 3]
+        ])
+        expect(subject.cyclical_links).to eq [%w[SP-3 SP-2 SP-1]]
+      end
     end
 
     it 'organizes the same issue twice but not at the root' do
@@ -84,12 +90,14 @@ describe TreeOrganizer do
       issue3a.parent = issue2
 
       subject = described_class.new issues: [issue1, issue2, issue3, issue3a]
-      expect(subject.flattened_issue_keys).to eq([
-        ['SP-1', 1],
-        ['SP-2', 2],
-        ['SP-3', 3]
-      ])
-      expect(subject.cyclical_links).to be_empty
+      aggregate_failures do
+        expect(subject.flattened_issue_keys).to eq([
+          ['SP-1', 1],
+          ['SP-2', 2],
+          ['SP-3', 3]
+        ])
+        expect(subject.cyclical_links).to be_empty
+      end
     end
   end
 end

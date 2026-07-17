@@ -21,9 +21,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Start date unknown', CssVariable['--body-background'], false]
-      expect(rules.group_priority).to eq 4
-      expect(rules.issue_hint).to be_nil
+      aggregate_failures do
+        expect(rules.group).to eq ['Start date unknown', CssVariable['--body-background'], false]
+        expect(rules.group_priority).to eq 4
+        expect(rules.issue_hint).to be_nil
+      end
     end
 
     it 'is active' do
@@ -36,9 +38,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Active', CssVariable['--wip-chart-active-color'], false]
-      expect(rules.group_priority).to eq 3
-      expect(rules.issue_hint).to eq '(Age: 3 days)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Active', CssVariable['--wip-chart-active-color'], false]
+        expect(rules.group_priority).to eq 3
+        expect(rules.issue_hint).to eq '(Age: 3 days)'
+      end
     end
 
     it 'is blocked and not stalled' do
@@ -52,9 +56,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Blocked', CssVariable['--blocked-color'], false]
-      expect(rules.group_priority).to eq 1
-      expect(rules.issue_hint).to eq '(Age: 3 days, Blocked by flag)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Blocked', CssVariable['--blocked-color'], false]
+        expect(rules.group_priority).to eq 1
+        expect(rules.issue_hint).to eq '(Age: 3 days, Blocked by flag)'
+      end
     end
 
     it 'is stalled and not blocked' do
@@ -67,9 +73,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-12')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Stalled', CssVariable['--stalled-color'], false]
-      expect(rules.group_priority).to eq 2
-      expect(rules.issue_hint).to eq '(Age: 13 days, Stalled by inactivity: 12 days)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Stalled', CssVariable['--stalled-color'], false]
+        expect(rules.group_priority).to eq 2
+        expect(rules.issue_hint).to eq '(Age: 13 days, Stalled by inactivity: 12 days)'
+      end
     end
 
     it 'is both stalled and blocked' do
@@ -82,9 +90,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-01')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Blocked', CssVariable.new('--blocked-color'), false]
-      expect(rules.group_priority).to eq 1
-      expect(rules.issue_hint).to eq '(Age: 32 days, Blocked by flag)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Blocked', CssVariable.new('--blocked-color'), false]
+        expect(rules.group_priority).to eq 1
+        expect(rules.issue_hint).to eq '(Age: 32 days, Blocked by flag)'
+      end
     end
 
     it 'is completed' do
@@ -96,9 +106,11 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color'], false]
-      expect(rules.group_priority).to eq(-2)
-      expect(rules.issue_hint).to eq '(Cycle time: 2 days)'
+      aggregate_failures do
+        expect(rules.group).to eq ['Completed', CssVariable['--wip-chart-completed-color'], false]
+        expect(rules.group_priority).to eq(-2)
+        expect(rules.issue_hint).to eq '(Cycle time: 2 days)'
+      end
     end
 
     it 'is completed, without being started' do
@@ -110,11 +122,13 @@ describe DailyWipByBlockedStalledChart do
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-02')
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.group).to eq [
-        'Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color'], false
-      ]
-      expect(rules.group_priority).to eq(-1)
-      expect(rules.issue_hint).to eq '(Cycle time: Unknown)'
+      aggregate_failures do
+        expect(rules.group).to eq [
+          'Completed but not started', CssVariable['--wip-chart-completed-but-not-started-color'], false
+        ]
+        expect(rules.group_priority).to eq(-1)
+        expect(rules.issue_hint).to eq '(Cycle time: Unknown)'
+      end
     end
   end
 end

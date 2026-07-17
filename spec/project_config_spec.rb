@@ -325,8 +325,10 @@ describe ProjectConfig do
       issue = load_issue('SP-1', board: board)
       project_config.add_issues([issue])
 
-      expect(project_config.all_boards.collect { |id, b| [id, b.id] }).to eql([[1, 1]])
-      expect(project_config.issues).to eql([issue])
+      aggregate_failures do
+        expect(project_config.all_boards.collect { |id, b| [id, b.id] }).to eql([[1, 1]])
+        expect(project_config.issues).to eql([issue])
+      end
     end
 
     it 'accumulates boards across multiple calls' do
@@ -341,8 +343,10 @@ describe ProjectConfig do
       project_config.add_issues([issue1])
       project_config.add_issues([issue2])
 
-      expect(project_config.all_boards.keys.sort).to eq [1, 2]
-      expect(project_config.issues).to include(issue1, issue2)
+      aggregate_failures do
+        expect(project_config.all_boards.keys.sort).to eq [1, 2]
+        expect(project_config.issues).to include(issue1, issue2)
+      end
     end
   end
 
@@ -473,8 +477,10 @@ describe ProjectConfig do
     it 'skips when file missing' do
       project_config.file_prefix 'sample'
       project_config.load_status_history
-      expect(exporter.file_system.log_messages).to be_empty
-      expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+      aggregate_failures do
+        expect(exporter.file_system.log_messages).to be_empty
+        expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+      end
     end
 
     it 'continues even if load fails' do
@@ -482,11 +488,13 @@ describe ProjectConfig do
       exporter.file_system.when_loading file: 'spec/testdata/sample_status_history.json', json: 'xxx'
 
       project_config.load_status_history
-      expect(exporter.file_system.log_messages).to match_strings [
-        'Loading historical statuses',
-        /^Warning: Unable to load status history/
-      ]
-      expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+      aggregate_failures do
+        expect(exporter.file_system.log_messages).to match_strings [
+          'Loading historical statuses',
+          /^Warning: Unable to load status history/
+        ]
+        expect(project_config.possible_statuses.historical_status_mappings).to be_empty
+      end
     end
 
     it 'loads successfully' do
@@ -504,12 +512,14 @@ describe ProjectConfig do
       ]
 
       project_config.load_status_history
-      expect(exporter.file_system.log_messages).to match_strings [
-        'Loading historical statuses'
-      ]
-      expect(project_config.possible_statuses.historical_status_mappings).to eq({
-        '"Doing":100' => Status::Category.new(id: 4, name: 'In Progress', key: 'indeterminate')
-      })
+      aggregate_failures do
+        expect(exporter.file_system.log_messages).to match_strings [
+          'Loading historical statuses'
+        ]
+        expect(project_config.possible_statuses.historical_status_mappings).to eq({
+          '"Doing":100' => Status::Category.new(id: 4, name: 'In Progress', key: 'indeterminate')
+        })
+      end
     end
   end
 
@@ -735,10 +745,12 @@ describe ProjectConfig do
       project_config.settings['stalled_statuses'] = []
       project_config.send(:resolve_blocked_stalled_status_settings)
 
-      expect(project_config.settings['blocked_statuses']).to be_empty
-      expect(exporter.file_system.log_messages).to eq [
-        'Warning: Status "NonExistent" in blocked_statuses not found. Ignoring.'
-      ]
+      aggregate_failures do
+        expect(project_config.settings['blocked_statuses']).to be_empty
+        expect(exporter.file_system.log_messages).to eq [
+          'Warning: Status "NonExistent" in blocked_statuses not found. Ignoring.'
+        ]
+      end
     end
 
     it 'processes remaining statuses after a not-found one' do

@@ -34,9 +34,11 @@ describe JiraMetrics do
       described_class.log_uncaught_exception exception, file_system: file_system
 
       output = logfile.string
-      expect(output).to include('RuntimeError: something went wrong')
-      expect(output).to include("\tlib/foo.rb:10:in method_a")
-      expect(output).to include("\tlib/bar.rb:20:in method_b")
+      aggregate_failures do
+        expect(output).to include('RuntimeError: something went wrong')
+        expect(output).to include("\tlib/foo.rb:10:in method_a")
+        expect(output).to include("\tlib/bar.rb:20:in method_b")
+      end
     end
   end
 end

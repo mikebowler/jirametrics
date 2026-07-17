@@ -67,8 +67,10 @@ describe IssuePrinter do
                              old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
                              issue: issue1)
         message = printer.create_change_message(change: change, issue: issue1)
-        expect(message).to include('(added: [20])')
-        expect(message).to include('(removed: [10])')
+        aggregate_failures do
+          expect(message).to include('(added: [20])')
+          expect(message).to include('(removed: [10])')
+        end
       end
 
       it 'shows no added or removed when sprint list is unchanged' do
@@ -76,8 +78,10 @@ describe IssuePrinter do
                              old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
                              issue: issue1)
         message = printer.create_change_message(change: change, issue: issue1)
-        expect(message).not_to include('added:')
-        expect(message).not_to include('removed:')
+        aggregate_failures do
+          expect(message).not_to include('added:')
+          expect(message).not_to include('removed:')
+        end
       end
     end
   end

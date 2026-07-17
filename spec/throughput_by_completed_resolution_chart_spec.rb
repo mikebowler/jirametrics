@@ -29,9 +29,11 @@ describe ThroughputByCompletedResolutionChart do
       rules = GroupingRules.new
       chart.default_grouping_rules(issue1, rules)
 
-      expect(rules.label).to eq 'Done:Fixed'
-      expect(rules.label_hint).to include('Done')
-      expect(rules.label_hint).to include('Fixed')
+      aggregate_failures do
+        expect(rules.label).to eq 'Done:Fixed'
+        expect(rules.label_hint).to include('Done')
+        expect(rules.label_hint).to include('Fixed')
+      end
     end
 
     it 'sets label and label_hint from status only when no resolution' do
@@ -41,9 +43,11 @@ describe ThroughputByCompletedResolutionChart do
       rules = GroupingRules.new
       chart.default_grouping_rules(issue1, rules)
 
-      expect(rules.label).to eq 'Done'
-      expect(rules.label_hint).to include('Done')
-      expect(rules.label_hint).not_to include('resolution')
+      aggregate_failures do
+        expect(rules.label).to eq 'Done'
+        expect(rules.label_hint).to include('Done')
+        expect(rules.label_hint).not_to include('resolution')
+      end
     end
   end
 

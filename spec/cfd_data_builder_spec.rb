@@ -34,14 +34,16 @@ describe CfdDataBuilder do
 
       result = build(issues: [issue1, issue2])
 
-      # July 1: no issues have reached any column yet
-      expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [0, 0, 0, 0]
-      # July 2: issue1 reached Ready (col 0); cumulative: col0+=1
-      expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 0, 0, 0]
-      # July 3: issue2 reached In Progress (col 1); cumulative: col0+=2, col1+=1
-      expect(result[:daily_counts][Date.parse('2021-07-03')]).to eq [2, 1, 0, 0]
-      # July 10: same as July 3 (no more changes)
-      expect(result[:daily_counts][Date.parse('2021-07-10')]).to eq [2, 1, 0, 0]
+      aggregate_failures do
+        # July 1: no issues have reached any column yet
+        expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [0, 0, 0, 0]
+        # July 2: issue1 reached Ready (col 0); cumulative: col0+=1
+        expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [1, 0, 0, 0]
+        # July 3: issue2 reached In Progress (col 1); cumulative: col0+=2, col1+=1
+        expect(result[:daily_counts][Date.parse('2021-07-03')]).to eq [2, 1, 0, 0]
+        # July 10: same as July 3 (no more changes)
+        expect(result[:daily_counts][Date.parse('2021-07-10')]).to eq [2, 1, 0, 0]
+      end
     end
 
     it 'returns exactly one key per day in date_range' do

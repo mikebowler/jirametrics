@@ -108,8 +108,10 @@ describe Issue do
       described_class.new raw: { 'key' => 'ABC-1' }, board: nil
       raise 'Should have failed because no board specified'
     rescue StandardError => e
-      expect(e.message).to eq 'Unable to initialize ABC-1'
-      expect(e.cause.message).to eq 'No board for issue ABC-1'
+      aggregate_failures do
+        expect(e.message).to eq 'Unable to initialize ABC-1'
+        expect(e.cause.message).to eq 'No board for issue ABC-1'
+      end
     end
   end
 
@@ -203,11 +205,13 @@ describe Issue do
       board.project_config = project_config
       issue = described_class.new raw: raw, board: board
       status_change = issue.changes.reverse.find(&:status?)
-      expect(status_change.value_id).to eq 0
-      expect(status_change.value).to eq 'Development'
-      expect(exporter.file_system.log_messages).to match_strings [
-        /Issue SP-1 has a status change without a 'to' id.*To Do.*Development/
-      ]
+      aggregate_failures do
+        expect(status_change.value_id).to eq 0
+        expect(status_change.value).to eq 'Development'
+        expect(exporter.file_system.log_messages).to match_strings [
+          /Issue SP-1 has a status change without a 'to' id.*To Do.*Development/
+        ]
+      end
     end
 
     it 'handles a status change missing the from field when fabricating initial status' do
@@ -242,8 +246,10 @@ describe Issue do
       board.project_config = project_config
       issue = described_class.new raw: raw, board: board
       fabricated_change = issue.changes.first
-      expect(fabricated_change.artificial?).to be true
-      expect(fabricated_change.value_id).not_to be_nil
+      aggregate_failures do
+        expect(fabricated_change.artificial?).to be true
+        expect(fabricated_change.value_id).not_to be_nil
+      end
     end
   end
 
@@ -1503,14 +1509,18 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'returns nil when priority field is absent' do
       issue.raw['fields']['priority'] = nil
-      expect(issue.priority_name).to be_nil
-      expect(issue.priority_url).to be_nil
+      aggregate_failures do
+        expect(issue.priority_name).to be_nil
+        expect(issue.priority_url).to be_nil
+      end
     end
 
     it 'returns the name and url when priority is set' do
       issue.raw['fields']['priority'] = { 'name' => 'High', 'iconUrl' => 'http://example.com/icon.png' }
-      expect(issue.priority_name).to eq 'High'
-      expect(issue.priority_url).to eq 'http://example.com/icon.png'
+      aggregate_failures do
+        expect(issue.priority_name).to eq 'High'
+        expect(issue.priority_url).to eq 'http://example.com/icon.png'
+      end
     end
   end
 
@@ -1879,8 +1889,10 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
       status, resolution = issue.status_resolution_at_done
-      expect(status.name).to eq 'Done'
-      expect(resolution).to be_nil
+      aggregate_failures do
+        expect(status.name).to eq 'Done'
+        expect(resolution).to be_nil
+      end
     end
 
     it 'returns status and resolution at the done time' do
@@ -1889,8 +1901,10 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change(issue: issue, field: 'resolution', value: 'Fixed', time: '2021-10-03')
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
       status, resolution = issue.status_resolution_at_done
-      expect(status.name).to eq 'Done'
-      expect(resolution).to eq 'Fixed'
+      aggregate_failures do
+        expect(status.name).to eq 'Done'
+        expect(resolution).to eq 'Fixed'
+      end
     end
 
     it 'ignores status and resolution changes after the done time' do
@@ -1901,8 +1915,10 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change(issue: issue, field: 'resolution', value: nil, time: '2021-10-04')
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
       status, resolution = issue.status_resolution_at_done
-      expect(status.name).to eq 'Done'
-      expect(resolution).to eq 'Fixed'
+      aggregate_failures do
+        expect(status.name).to eq 'Done'
+        expect(resolution).to eq 'Fixed'
+      end
     end
   end
 

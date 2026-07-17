@@ -14,24 +14,30 @@ describe DailyWipByParentChart do
   let(:issue2) { load_issue('SP-2', board: board).tap { |i| i.changes.clear } }
 
   it 'compiles and runs text with embedded erb' do
-    expect(chart.default_header_text).not_to be_nil
-    expect(chart.default_description_text).not_to be_nil
+    aggregate_failures do
+      expect(chart.default_header_text).not_to be_nil
+      expect(chart.default_description_text).not_to be_nil
+    end
   end
 
   describe '#grouping_rules' do
     it 'detects no parent' do
       rules = DailyGroupingRules.new
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.label).to eq 'No parent'
-      expect(rules.label_hint).to eq 'No parent'
+      aggregate_failures do
+        expect(rules.label).to eq 'No parent'
+        expect(rules.label_hint).to eq 'No parent'
+      end
     end
 
     it 'detects parent' do
       issue1.parent = issue2
       rules = DailyGroupingRules.new
       chart.default_grouping_rules issue: issue1, rules: rules
-      expect(rules.label).to eq 'SP-2'
-      expect(rules.label_hint).to eq 'SP-2 : Update existing event'
+      aggregate_failures do
+        expect(rules.label).to eq 'SP-2'
+        expect(rules.label_hint).to eq 'SP-2 : Update existing event'
+      end
     end
   end
 end

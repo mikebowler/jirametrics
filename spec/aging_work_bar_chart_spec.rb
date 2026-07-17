@@ -19,15 +19,19 @@ describe AgingWorkBarChart do
     it 'mentions four bars and includes sprints item for scrum board' do
       board.raw['type'] = 'scrum'
       rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
-      expect(rendered).to include('four bars')
-      expect(rendered).to include('Sprints')
+      aggregate_failures do
+        expect(rendered).to include('four bars')
+        expect(rendered).to include('Sprints')
+      end
     end
 
     it 'mentions three bars and excludes sprints item for kanban board' do
       board.raw['type'] = 'kanban'
       rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
-      expect(rendered).to include('three bars')
-      expect(rendered).not_to include('Sprints')
+      aggregate_failures do
+        expect(rendered).to include('three bars')
+        expect(rendered).not_to include('Sprints')
+      end
     end
   end
 
@@ -315,9 +319,11 @@ describe AgingWorkBarChart do
       chart.issues = [issue1, issue2, issue3]
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
 
-      expect(chart.calculate_percent_line percentage: 5).to eq 10
-      expect(chart.calculate_percent_line percentage: 45).to eq 20
-      expect(chart.calculate_percent_line percentage: 95).to eq 30
+      aggregate_failures do
+        expect(chart.calculate_percent_line percentage: 5).to eq 10
+        expect(chart.calculate_percent_line percentage: 45).to eq 20
+        expect(chart.calculate_percent_line percentage: 95).to eq 30
+      end
     end
   end
 
@@ -377,8 +383,10 @@ describe AgingWorkBarChart do
         [issue1, to_time('2021-03-02'), nil]
       ]
       chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
-      expect(chart.time_range).to eq(to_time('2021-03-01')..to_time('2021-05-30'))
-      expect(chart.date_range).to eq(to_date('2021-03-01')..to_date('2021-05-30'))
+      aggregate_failures do
+        expect(chart.time_range).to eq(to_time('2021-03-01')..to_time('2021-05-30'))
+        expect(chart.date_range).to eq(to_date('2021-03-01')..to_date('2021-05-30'))
+      end
     end
 
     it 'adjusts time and date' do
@@ -388,8 +396,10 @@ describe AgingWorkBarChart do
         [issue1, to_time('2021-02-01'), nil]
       ]
       chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
-      expect(chart.time_range).to eq(to_time('2021-02-01')..to_time('2021-05-30'))
-      expect(chart.date_range).to eq(to_date('2021-02-01')..to_date('2021-05-30'))
+      aggregate_failures do
+        expect(chart.time_range).to eq(to_time('2021-02-01')..to_time('2021-05-30'))
+        expect(chart.date_range).to eq(to_date('2021-02-01')..to_date('2021-05-30'))
+      end
     end
   end
 

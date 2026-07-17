@@ -21,9 +21,11 @@ describe Sprint do
   end
 
   it 'returns state' do
-    expect(sprint).to be_active
-    expect(sprint).not_to be_closed
-    expect(sprint).not_to be_future
+    aggregate_failures do
+      expect(sprint).to be_active
+      expect(sprint).not_to be_closed
+      expect(sprint).not_to be_future
+    end
   end
 
   it 'returns start' do

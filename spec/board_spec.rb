@@ -132,14 +132,18 @@ describe Board do
         'type' => 'scrum',
         'columnConfig' => { 'columns' => [] }
       }, possible_statuses: StatusCollection.new
-      expect(board.scrum?).to be true
-      expect(board.kanban?).to be false
+      aggregate_failures do
+        expect(board.scrum?).to be true
+        expect(board.kanban?).to be false
+      end
     end
 
     it 'is kanban for a board with type kanban' do
       board = load_complete_sample_board
-      expect(board.scrum?).to be false
-      expect(board.kanban?).to be true
+      aggregate_failures do
+        expect(board.scrum?).to be false
+        expect(board.kanban?).to be true
+      end
     end
   end
 
@@ -170,8 +174,10 @@ describe Board do
     it 'returns story points defaults when estimation section is absent' do
       board = load_complete_sample_board
       config = board.estimation_configuration
-      expect(config.units).to eq :story_points
-      expect(config.display_name).to eq 'Story Points'
+      aggregate_failures do
+        expect(config.units).to eq :story_points
+        expect(config.display_name).to eq 'Story Points'
+      end
     end
 
     it 'returns issue count configuration' do
@@ -182,8 +188,10 @@ describe Board do
         'estimation' => { 'type' => 'issueCount' }
       }, possible_statuses: StatusCollection.new
       config = board.estimation_configuration
-      expect(config.units).to eq :issue_count
-      expect(config.display_name).to eq 'Issue Count'
+      aggregate_failures do
+        expect(config.units).to eq :issue_count
+        expect(config.display_name).to eq 'Issue Count'
+      end
     end
   end
 
@@ -271,21 +279,27 @@ describe Board do
     it 'is scrum when sprints feature is enabled' do
       board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
                                   features: sprints_enabled
-      expect(board.scrum?).to be true
-      expect(board.kanban?).to be false
+      aggregate_failures do
+        expect(board.scrum?).to be true
+        expect(board.kanban?).to be false
+      end
     end
 
     it 'is kanban when sprints feature is disabled' do
       board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new,
                                   features: sprints_disabled
-      expect(board.scrum?).to be false
-      expect(board.kanban?).to be true
+      aggregate_failures do
+        expect(board.scrum?).to be false
+        expect(board.kanban?).to be true
+      end
     end
 
     it 'is kanban when no features file is available' do
       board = described_class.new raw: simple_raw, possible_statuses: StatusCollection.new
-      expect(board.scrum?).to be false
-      expect(board.kanban?).to be true
+      aggregate_failures do
+        expect(board.scrum?).to be false
+        expect(board.kanban?).to be true
+      end
     end
   end
 end

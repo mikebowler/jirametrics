@@ -29,9 +29,11 @@ describe CumulativeFlowDiagram do
     it 'includes the board column names' do
       output = chart.run
       # complete_sample board visible columns: Ready, In Progress, Review, Done
-      expect(output).to include('Ready')
-      expect(output).to include('In Progress')
-      expect(output).to include('Done')
+      aggregate_failures do
+        expect(output).to include('Ready')
+        expect(output).to include('In Progress')
+        expect(output).to include('Done')
+      end
     end
 
     it 'includes the segment callback for dashed lines during correction windows' do
@@ -98,8 +100,10 @@ describe CumulativeFlowDiagram do
             rule.label = 'WIP' if column.name == 'In Progress'
           end
         end.run
-        expect(output).to include('"label":"WIP"')
-        expect(output).not_to include('"label":"In Progress"')
+        aggregate_failures do
+          expect(output).to include('"label":"WIP"')
+          expect(output).not_to include('"label":"In Progress"')
+        end
       end
 
       it 'includes label_hint in the dataset JSON when set' do
@@ -117,16 +121,20 @@ describe CumulativeFlowDiagram do
             rule.label_hint = 'Some hint' if column.name == 'In Progress'
           end
         end.run
-        expect(output).to include('onHover')
-        expect(output).to include('legendItem')
+        aggregate_failures do
+          expect(output).to include('onHover')
+          expect(output).to include('legendItem')
+        end
       end
 
       # rubocop:disable RSpec/NestedGroups
       describe '#triangle_color' do
         it 'uses a dark/light pair by default' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
-          expect(output).to include('"#333333"')
-          expect(output).to include('"#ffffff"')
+          aggregate_failures do
+            expect(output).to include('"#333333"')
+            expect(output).to include('"#ffffff"')
+          end
         end
 
         it 'uses the configured color' do
@@ -136,8 +144,10 @@ describe CumulativeFlowDiagram do
 
         it 'supports a light/dark color pair' do
           output = chart_with_rules { triangle_color ['#111111', '#eeeeee'] }.run
-          expect(output).to include('"#111111"')
-          expect(output).to include('"#eeeeee"')
+          aggregate_failures do
+            expect(output).to include('"#111111"')
+            expect(output).to include('"#eeeeee"')
+          end
         end
       end
 
@@ -154,8 +164,10 @@ describe CumulativeFlowDiagram do
 
         it 'supports a light/dark color pair' do
           output = chart_with_rules { arrival_rate_line_color ['#112233', '#aabbcc'] }.run
-          expect(output).to include('"#112233"')
-          expect(output).to include('"#aabbcc"')
+          aggregate_failures do
+            expect(output).to include('"#112233"')
+            expect(output).to include('"#aabbcc"')
+          end
         end
 
         it 'suppresses the line when nil is passed' do
@@ -177,8 +189,10 @@ describe CumulativeFlowDiagram do
 
         it 'supports a light/dark color pair' do
           output = chart_with_rules { departure_rate_line_color ['#223344', '#ddeeff'] }.run
-          expect(output).to include('"#223344"')
-          expect(output).to include('"#ddeeff"')
+          aggregate_failures do
+            expect(output).to include('"#223344"')
+            expect(output).to include('"#ddeeff"')
+          end
         end
 
         it 'suppresses the line when nil is passed' do

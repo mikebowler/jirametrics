@@ -64,9 +64,11 @@ describe IssueLink do
   end
 
   it 'returns direction' do
-    expect(issue_link.direction).to be :inward
-    expect(issue_link).to be_inward
-    expect(issue_link).not_to be_outward
+    aggregate_failures do
+      expect(issue_link.direction).to be :inward
+      expect(issue_link).to be_inward
+      expect(issue_link).not_to be_outward
+    end
   end
 
   it 'returns inward label' do

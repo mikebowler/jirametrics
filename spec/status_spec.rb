@@ -19,10 +19,12 @@ describe Status do
         'name' => 'In Progress'
       }
     })
-    expect(status.inspect).to(
-      eq('Status(name: "InProgress", id: 3, category: {name:"In Progress", id: 4, key: "indeterminate"})')
-    )
-    expect(status).to be_global
+    aggregate_failures do
+      expect(status.inspect).to(
+        eq('Status(name: "InProgress", id: 3, category: {name:"In Progress", id: 4, key: "indeterminate"})')
+      )
+      expect(status).to be_global
+    end
   end
 
   it 'parses status with project id' do
@@ -48,11 +50,13 @@ describe Status do
       }
     })
 
-    expect(status.inspect).to eq(
-      'Status(name: "FakeBacklog", id: 10017, project_id: 10002, ' \
-        'category: {name:"In Progress", id: 4, key: "indeterminate"})'
-    )
-    expect(status).to be_project_scoped
-    expect(status).not_to be_artificial
+    aggregate_failures do
+      expect(status.inspect).to eq(
+        'Status(name: "FakeBacklog", id: 10017, project_id: 10002, ' \
+          'category: {name:"In Progress", id: 4, key: "indeterminate"})'
+      )
+      expect(status).to be_project_scoped
+      expect(status).not_to be_artificial
+    end
   end
 end

@@ -114,10 +114,12 @@ describe DownloaderForCloud do
       download_config.github_repo 'owner/repo'
       downloader.download_github_prs
 
-      expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
-      expect(file_system.log_messages).to eq(
-        ['No project keys found in downloaded issues, skipping GitHub PR download']
-      )
+      aggregate_failures do
+        expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
+        expect(file_system.log_messages).to eq(
+          ['No project keys found in downloaded issues, skipping GitHub PR download']
+        )
+      end
     end
 
     it 'collects PRs from multiple repos and saves them' do
@@ -202,18 +204,22 @@ describe DownloaderForCloud do
 
       downloader.download_statuses
 
-      expect(file_system.log_messages).to eq(['Downloading all statuses'])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_statuses.json' => '{"a":1}'
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq(['Downloading all statuses'])
+        expect(file_system.saved_json).to eq({
+          'spec/testdata/sample_statuses.json' => '{"a":1}'
+        })
+      end
     end
   end
 
   describe '#update_status_history_file' do
     it 'does nothing when status file does not exist' do
       downloader.update_status_history_file
-      expect(file_system.log_messages).to be_empty
-      expect(file_system.saved_json).to be_empty
+      aggregate_failures do
+        expect(file_system.log_messages).to be_empty
+        expect(file_system.saved_json).to be_empty
+      end
     end
 
     it 'copies status to history when history did not exist' do
@@ -228,12 +234,14 @@ describe DownloaderForCloud do
       file_system.when_loading(file: 'spec/testdata/sample_statuses.json', json: json)
 
       downloader.update_status_history_file
-      expect(file_system.log_messages).to eq([
-        'Creating status history file'
-      ])
-      expect(file_system.saved_json_expanded).to eq({
-        'spec/testdata/sample_status_history.json' => json
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Creating status history file'
+        ])
+        expect(file_system.saved_json_expanded).to eq({
+          'spec/testdata/sample_status_history.json' => json
+        })
+      end
     end
 
     it 'merges history' do
@@ -260,25 +268,27 @@ describe DownloaderForCloud do
       ])
 
       downloader.update_status_history_file
-      expect(file_system.log_messages).to eq([
-        'Updating status history file'
-      ])
-      expect(file_system.saved_json_expanded).to eq({
-        'spec/testdata/sample_status_history.json' => [
-          {
-            'name' => 'A', 'id' => '5',
-            'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
-          },
-          {
-            'name' => 'B', 'id' => '2',
-            'statusCategory' => { 'id' => '11', 'name' => 'Done' }
-          },
-          {
-            'name' => 'C', 'id' => '3',
-            'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
-          }
-        ]
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Updating status history file'
+        ])
+        expect(file_system.saved_json_expanded).to eq({
+          'spec/testdata/sample_status_history.json' => [
+            {
+              'name' => 'A', 'id' => '5',
+              'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+            },
+            {
+              'name' => 'B', 'id' => '2',
+              'statusCategory' => { 'id' => '11', 'name' => 'Done' }
+            },
+            {
+              'name' => 'C', 'id' => '3',
+              'statusCategory' => { 'id' => '10', 'name' => 'To Do' }
+            }
+          ]
+        })
+      end
     end
   end
 
@@ -308,10 +318,12 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq(['Downloading board configuration for board 2'])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json)
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq(['Downloading board configuration for board 2'])
+        expect(file_system.saved_json).to eq({
+          'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json)
+        })
+      end
     end
 
     it 'pulls extra data for simple board' do
@@ -334,14 +346,16 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq([
-        'Downloading board configuration for board 2',
-        'Downloading features for board 2'
-      ])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
-        'spec/testdata/sample_board_2_features.json' => JSON.generate(features_json)
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading board configuration for board 2',
+          'Downloading features for board 2'
+        ])
+        expect(file_system.saved_json).to eq({
+          'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
+          'spec/testdata/sample_board_2_features.json' => JSON.generate(features_json)
+        })
+      end
     end
 
     it 'downloads sprints for a simple board that has the sprint feature enabled' do
@@ -370,15 +384,17 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq([
-        'Downloading board configuration for board 2',
-        'Downloading features for board 2',
-        'Downloading sprints for board 2'
-      ])
-      expect(file_system.saved_json.keys).to include(
-        'spec/testdata/sample_board_2_features.json',
-        'spec/testdata/sample_board_2_sprints_0.json'
-      )
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading board configuration for board 2',
+          'Downloading features for board 2',
+          'Downloading sprints for board 2'
+        ])
+        expect(file_system.saved_json.keys).to include(
+          'spec/testdata/sample_board_2_features.json',
+          'spec/testdata/sample_board_2_sprints_0.json'
+        )
+      end
     end
 
     it 'does not download sprints for a simple board when the sprint feature is disabled' do
@@ -401,11 +417,13 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq([
-        'Downloading board configuration for board 2',
-        'Downloading features for board 2'
-      ])
-      expect(file_system.saved_json.keys).not_to include('spec/testdata/sample_board_2_sprints_0.json')
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading board configuration for board 2',
+          'Downloading features for board 2'
+        ])
+        expect(file_system.saved_json.keys).not_to include('spec/testdata/sample_board_2_sprints_0.json')
+      end
     end
 
     it 'pulls extra data for scrum board' do
@@ -428,14 +446,16 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq([
-        'Downloading board configuration for board 2',
-        'Downloading sprints for board 2'
-      ])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
-        'spec/testdata/sample_board_2_sprints_0.json' => JSON.generate(sprints_json)
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading board configuration for board 2',
+          'Downloading sprints for board 2'
+        ])
+        expect(file_system.saved_json).to eq({
+          'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
+          'spec/testdata/sample_board_2_sprints_0.json' => JSON.generate(sprints_json)
+        })
+      end
     end
 
     it 'pulls extra data for scrum board with pagination' do
@@ -460,15 +480,17 @@ describe DownloaderForCloud do
 
       downloader.download_board_configuration board_id: 2
 
-      expect(file_system.log_messages).to eq([
-        'Downloading board configuration for board 2',
-        'Downloading sprints for board 2'
-      ])
-      expect(file_system.saved_json).to eq({
-        'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
-        'spec/testdata/sample_board_2_sprints_0.json' => '{"isLast":false,"maxResults":1,"values":[{"a":2}]}',
-        'spec/testdata/sample_board_2_sprints_1.json' => '{"isLast":true,"maxResults":1,"values":[{"a":2}]}'
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading board configuration for board 2',
+          'Downloading sprints for board 2'
+        ])
+        expect(file_system.saved_json).to eq({
+          'spec/testdata/sample_board_2_configuration.json' => JSON.generate(configuration_json),
+          'spec/testdata/sample_board_2_sprints_0.json' => '{"isLast":false,"maxResults":1,"values":[{"a":2}]}',
+          'spec/testdata/sample_board_2_sprints_1.json' => '{"isLast":true,"maxResults":1,"values":[{"a":2}]}'
+        })
+      end
     end
 
     it 'does not blow up for a board with no sprints' do
@@ -530,8 +552,10 @@ describe DownloaderForCloud do
 
         downloader.download_fix_versions
 
-        expect(file_system.log_messages).to include('Downloading fix versions for project SP')
-        expect(file_system.saved_json_expanded['spec/testdata/sample_fix_versions.json']).to eq(versions)
+        aggregate_failures do
+          expect(file_system.log_messages).to include('Downloading fix versions for project SP')
+          expect(file_system.saved_json_expanded['spec/testdata/sample_fix_versions.json']).to eq(versions)
+        end
       end
 
       it 'fetches all pages when paginated' do
@@ -564,12 +588,14 @@ describe DownloaderForCloud do
       downloader.board_id_to_filter_id[2] = 123
       downloader.download_issues board: board
 
-      expect(file_system.log_messages).to eq([
-        'Downloading primary issues for board 2 from Jira Cloud',
-        'Creating path spec/testdata/sample_issues/',
-        '[Debug] mkdir spec/testdata/sample_issues/'
-      ])
-      expect(file_system.saved_json).to be_empty
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading primary issues for board 2 from Jira Cloud',
+          'Creating path spec/testdata/sample_issues/',
+          '[Debug] mkdir spec/testdata/sample_issues/'
+        ])
+        expect(file_system.saved_json).to be_empty
+      end
     end
 
     it 'finds one issue that is not in cache' do
@@ -597,17 +623,19 @@ describe DownloaderForCloud do
       file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
 
       downloader.download_issues board: board
-      expect(file_system.log_messages).to eq([
-        'Downloading primary issues for board 2 from Jira Cloud',
-        'Creating path spec/testdata/sample_issues/',
-        '[Debug] mkdir spec/testdata/sample_issues/',
-        'Downloading more issues',
-        '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json',
-        '[Progress] 1 dots'
-      ])
-      expect(file_system.saved_json).to eq({
-        'foo.json' => JSON.generate(issue.raw)
-      })
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading primary issues for board 2 from Jira Cloud',
+          'Creating path spec/testdata/sample_issues/',
+          '[Debug] mkdir spec/testdata/sample_issues/',
+          'Downloading more issues',
+          '[Debug] utime 2025-01-01 00:00:00 +0000 foo.json',
+          '[Progress] 1 dots'
+        ])
+        expect(file_system.saved_json).to eq({
+          'foo.json' => JSON.generate(issue.raw)
+        })
+      end
     end
 
     it 'follows non-cloner linked issues' do
@@ -679,10 +707,12 @@ describe DownloaderForCloud do
 
       downloader.download_issues board: board
 
-      expect(fetched_keys).to contain_exactly('ABC-123', 'ABC-LINKED')
-      expect(file_system.log_messages).to include(
-        '[diag] One-hop limit: not following 1 onward link(s) from related issue ABC-LINKED: ABC-SECOND'
-      )
+      aggregate_failures do
+        expect(fetched_keys).to contain_exactly('ABC-123', 'ABC-LINKED')
+        expect(file_system.log_messages).to include(
+          '[diag] One-hop limit: not following 1 onward link(s) from related issue ABC-LINKED: ABC-SECOND'
+        )
+      end
     end
 
     it 'follows linked issues from up-to-date cached issues' do
@@ -773,30 +803,32 @@ describe DownloaderForCloud do
       downloader.bulk_fetch_issues(
         issue_datas: [issue_data1], board: sample_board, in_initial_query: true
       )
-      expect(file_system.log_messages).to eq([
-        'Downloading 1 issues',
-        'post_request: relative_url=/rest/api/3/issue/bulkfetch, ' \
-          'payload={"fields":["*all"],"issueIdsOrKeys":["SP-1"]}',
-        'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
-          'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}'
-      ])
-      expect(issue_data1.issue.status_changes).to eq([
-        mock_change(
-          field: 'status',
-          value: 'Ready',
-          value_id: 1,
-          time: '2025-01-01',
-          artificial: true
-        ),
-        mock_change(
-          field: 'status',
-          value: 'Review',
-          value_id: 2,
-          old_value: 'Ready',
-          old_value_id: 1,
-          time: '2025-09-28T17:36:33'
-        )
-     ])
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading 1 issues',
+          'post_request: relative_url=/rest/api/3/issue/bulkfetch, ' \
+            'payload={"fields":["*all"],"issueIdsOrKeys":["SP-1"]}',
+          'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
+            'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}'
+        ])
+        expect(issue_data1.issue.status_changes).to eq([
+          mock_change(
+            field: 'status',
+            value: 'Ready',
+            value_id: 1,
+            time: '2025-01-01',
+            artificial: true
+          ),
+          mock_change(
+            field: 'status',
+            value: 'Review',
+            value_id: 2,
+            old_value: 'Ready',
+            old_value_id: 1,
+            time: '2025-09-28T17:36:33'
+          )
+       ])
+      end
     end
 
     it 'fetches with pagination' do
@@ -817,41 +849,43 @@ describe DownloaderForCloud do
       downloader.bulk_fetch_issues(
         issue_datas: [issue_data1], board: sample_board, in_initial_query: true
       )
-      expect(file_system.log_messages).to eq([
-        'Downloading 1 issues',
-        'post_request: relative_url=/rest/api/3/issue/bulkfetch, ' \
-          'payload={"fields":["*all"],"issueIdsOrKeys":["SP-1"]}',
-        'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
-          'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}',
-        'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
-          'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000,"nextPageToken":"ABC"}'
-      ])
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading 1 issues',
+          'post_request: relative_url=/rest/api/3/issue/bulkfetch, ' \
+            'payload={"fields":["*all"],"issueIdsOrKeys":["SP-1"]}',
+          'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
+            'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}',
+          'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
+            'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000,"nextPageToken":"ABC"}'
+        ])
 
-      expect(issue_data1.issue.status_changes).to eq([
-        mock_change(
-          field: 'status',
-          value: 'Ready',
-          value_id: 1,
-          time: '2025-01-01',
-          artificial: true
-        ),
-        mock_change(
-          field: 'status',
-          value: 'Review',
-          value_id: 2,
-          old_value: 'Ready',
-          old_value_id: 1,
-          time: '2025-09-20T00:00:00'
-        ),
-        mock_change(
-          field: 'status',
-          value: 'Review',
-          value_id: 2,
-          old_value: 'Ready',
-          old_value_id: 1,
-          time: '2025-09-28T17:36:33'
-        )
-     ])
+        expect(issue_data1.issue.status_changes).to eq([
+          mock_change(
+            field: 'status',
+            value: 'Ready',
+            value_id: 1,
+            time: '2025-01-01',
+            artificial: true
+          ),
+          mock_change(
+            field: 'status',
+            value: 'Review',
+            value_id: 2,
+            old_value: 'Ready',
+            old_value_id: 1,
+            time: '2025-09-20T00:00:00'
+          ),
+          mock_change(
+            field: 'status',
+            value: 'Review',
+            value_id: 2,
+            old_value: 'Ready',
+            old_value_id: 1,
+            time: '2025-09-28T17:36:33'
+          )
+       ])
+      end
     end
 
     it 'skips issues returned by Jira with a key not in the request (moved issues)' do
@@ -868,10 +902,12 @@ describe DownloaderForCloud do
       issue_data = DownloadIssueData.new key: 'SP-1', cache_path: 'SP-1.json'
       downloader.bulk_fetch_issues(issue_datas: [issue_data], board: sample_board, in_initial_query: false)
 
-      expect(issue_data.issue).to be_nil
-      expect(file_system.log_messages).to include(
-        'Skipping OTHER-999: returned by Jira but key not in request (issue may have been moved)'
-      )
+      aggregate_failures do
+        expect(issue_data.issue).to be_nil
+        expect(file_system.log_messages).to include(
+          'Skipping OTHER-999: returned by Jira but key not in request (issue may have been moved)'
+        )
+      end
     end
   end
 end

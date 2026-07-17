@@ -181,9 +181,11 @@ describe GithubGateway do
       raw_pr['closedAt'] = nil
       raw_pr['mergedAt'] = nil
       result = gateway.build_pr_data(raw_pr)
-      expect(result.state).to eq 'OPEN'
-      expect(result.closed_at).to be_nil
-      expect(result.merged_at).to be_nil
+      aggregate_failures do
+        expect(result.state).to eq 'OPEN'
+        expect(result.closed_at).to be_nil
+        expect(result.merged_at).to be_nil
+      end
     end
   end
 
@@ -331,9 +333,11 @@ describe GithubGateway do
 
       results = gateway.fetch_pull_requests
 
-      expect(results.map(&:number)).to contain_exactly(42, 43)
-      expect(gateway).to have_received(:run_command).with(array_including('api', 'graphql')).once
-      expect(gateway).not_to have_received(:run_command).with(array_including('view'))
+      aggregate_failures do
+        expect(results.map(&:number)).to contain_exactly(42, 43)
+        expect(gateway).to have_received(:run_command).with(array_including('api', 'graphql')).once
+        expect(gateway).not_to have_received(:run_command).with(array_including('view'))
+      end
     end
 
     it 'does not issue a graphql request when every PR already has keys in its fields' do
@@ -361,8 +365,10 @@ describe GithubGateway do
 
       results = gateway.fetch_pull_requests
 
-      expect(results.map(&:number)).to eq [43]
-      expect(gateway).to have_received(:run_command).with(array_including('pr', 'view'))
+      aggregate_failures do
+        expect(results.map(&:number)).to eq [43]
+        expect(gateway).to have_received(:run_command).with(array_including('pr', 'view'))
+      end
     end
 
     it 'builds the graphql query from a full repo URL' do
@@ -383,8 +389,10 @@ describe GithubGateway do
 
       url_gateway.fetch_pull_requests
 
-      expect(captured).to include('owner: "JANA-Technology"', 'name: "Lighthouse-TIMP-Backend"')
-      expect(captured).to include('pr0: pullRequest(number: 43)')
+      aggregate_failures do
+        expect(captured).to include('owner: "JANA-Technology"', 'name: "Lighthouse-TIMP-Backend"')
+        expect(captured).to include('pr0: pullRequest(number: 43)')
+      end
     end
 
     it 'splits large keyless sets into batches' do

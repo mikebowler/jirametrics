@@ -25,15 +25,19 @@ describe Exporter do
     it 'works with no file separator at end' do
       Dir.rmdir TARGET_PATH if File.exist? TARGET_PATH
       exporter.target_path TARGET_PATH
-      expect(exporter.target_path).to eq "#{TARGET_PATH}/"
-      expect(Dir).to exist(TARGET_PATH)
+      aggregate_failures do
+        expect(exporter.target_path).to eq "#{TARGET_PATH}/"
+        expect(Dir).to exist(TARGET_PATH)
+      end
     end
 
     it 'works with file separator at end' do
       Dir.rmdir TARGET_PATH if File.exist? TARGET_PATH
       exporter.target_path "#{TARGET_PATH}/"
-      expect(exporter.target_path).to eq "#{TARGET_PATH}/"
-      expect(Dir).to exist(TARGET_PATH)
+      aggregate_failures do
+        expect(exporter.target_path).to eq "#{TARGET_PATH}/"
+        expect(Dir).to exist(TARGET_PATH)
+      end
     end
   end
 

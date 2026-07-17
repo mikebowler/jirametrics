@@ -129,10 +129,12 @@ describe ThroughputChart do
           periods: [Date.parse('2026-01-01')..jan31, Date.parse('2026-02-01')..feb28],
           completed_issues: [issue1, issue2]
         )
-        expect(dataset[0][:y]).to eq 1
-        expect(dataset[0][:x]).to eq '2026-01-31T23:59:59'
-        expect(dataset[1][:y]).to eq 1
-        expect(dataset[1][:x]).to eq '2026-02-28T23:59:59'
+        aggregate_failures do
+          expect(dataset[0][:y]).to eq 1
+          expect(dataset[0][:x]).to eq '2026-01-31T23:59:59'
+          expect(dataset[1][:y]).to eq 1
+          expect(dataset[1][:x]).to eq '2026-02-28T23:59:59'
+        end
       end
     end
   end
@@ -176,8 +178,10 @@ describe ThroughputChart do
       chart.settings = {}
 
       output = chart.run
-      expect(output).to include('min: "2021-10-11"')
-      expect(output).to include('max: "2021-11-08"')
+      aggregate_failures do
+        expect(output).to include('min: "2021-10-11"')
+        expect(output).to include('max: "2021-11-08"')
+      end
     end
   end
 
@@ -188,11 +192,13 @@ describe ThroughputChart do
       chart.instance_variable_set(:@not_started_count, 2)
 
       url = chart.throughput_forecaster_url
-      expect(url).to start_with('https://focusedobjective.com/throughput?')
-      expect(url).to include('throughputMode=data')
-      expect(url).to include('samplesText=3%2C5%2C2')
-      expect(url).to include('storyLow=2')
-      expect(url).to include('storyHigh=2')
+      aggregate_failures do
+        expect(url).to start_with('https://focusedobjective.com/throughput?')
+        expect(url).to include('throughputMode=data')
+        expect(url).to include('samplesText=3%2C5%2C2')
+        expect(url).to include('storyLow=2')
+        expect(url).to include('storyHigh=2')
+      end
     end
 
     it 'uses zero for not-started count when all issues are started' do
@@ -201,8 +207,10 @@ describe ThroughputChart do
       chart.instance_variable_set(:@not_started_count, 0)
 
       url = chart.throughput_forecaster_url
-      expect(url).to include('storyLow=0')
-      expect(url).to include('storyHigh=0')
+      aggregate_failures do
+        expect(url).to include('storyLow=0')
+        expect(url).to include('storyHigh=0')
+      end
     end
   end
 
