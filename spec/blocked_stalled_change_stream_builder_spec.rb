@@ -350,6 +350,13 @@ describe BlockedStalledChangeStreamBuilder do
     )
   end
 
+  it 'ignores a parseable link whose phrasing is not in blocked_link_text' do
+    issue = empty_issue created: '2021-10-01', board: board
+    add_mock_change(issue: issue, field: 'Link', value: 'This issue relates to SP-5', time: '2021-10-02')
+    result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
+    expect(result.flat_map { |change| change.blocking_issue_keys || [] }).to be_empty
+  end
+
   it 'falls back to old_value when naming the unparseable link in the warning' do
     issue = empty_issue created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'unparseable link', time: '2021-10-02')
