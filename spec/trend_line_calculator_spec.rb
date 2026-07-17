@@ -4,7 +4,7 @@ require './spec/spec_helper'
 require 'jirametrics/trend_line_calculator'
 
 describe TrendLineCalculator do
-  context 'valid?' do
+  describe '#valid?' do
     it 'no points' do
       expect(described_class.new []).not_to be_valid
     end
@@ -18,7 +18,7 @@ describe TrendLineCalculator do
     end
   end
 
-  context 'calc_y' do
+  describe '#calc_y' do
     it 'calculates for two simple points' do
       calculator = described_class.new [[3, 3], [2, 2]]
       expect(calculator.calc_y x: 4).to eq 4.0
@@ -31,7 +31,7 @@ describe TrendLineCalculator do
     end
   end
 
-  context 'line_crosses_at' do
+  describe '#line_crosses_at' do
     it 'calculates for two simple points' do
       calculator = described_class.new [[4, 3], [3, 2]]
       expect(calculator).not_to be_horizontal
@@ -47,7 +47,7 @@ describe TrendLineCalculator do
     end
   end
 
-  context 'chart_datapoints' do
+  describe '#chart_datapoints' do
     it 'returns return empty array when trend cant be calculated' do
       calculator = described_class.new []
       expect(calculator.chart_datapoints range: 3..4, max_y: 100).to be_empty

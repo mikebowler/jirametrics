@@ -41,7 +41,7 @@ describe AgingWorkInProgressChart do
     chart
   end
 
-  context 'column_for' do
+  describe '#column_for' do
     it 'returns name' do
       chart.run
 
@@ -255,7 +255,7 @@ describe AgingWorkInProgressChart do
     end
   end
 
-  context 'indexes_of_leading_and_trailing_zeros' do
+  describe '#indexes_of_leading_and_trailing_zeros' do
     it 'handles empty' do
       expect(chart.indexes_of_leading_and_trailing_zeros []).to be_empty
     end
@@ -277,7 +277,7 @@ describe AgingWorkInProgressChart do
     end
   end
 
-  context 'adjust_bar_data' do
+  describe '#adjust_bar_data' do
     it 'returns empty for empty' do
       expect(chart.adjust_bar_data []).to be_empty
     end

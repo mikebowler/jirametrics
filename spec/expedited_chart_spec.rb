@@ -16,7 +16,7 @@ describe ExpeditedChart do
   let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
   let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
 
-  context 'run' do
+  describe '#run' do
     it 'sets x-axis max to one day past date_range.end' do
       issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2022-01-01'), nil]]
       add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2022-01-05')
@@ -36,7 +36,7 @@ describe ExpeditedChart do
     end
   end
 
-  context 'prepare_expedite_data' do
+  describe '#prepare_expedite_data' do
     it 'handles issue with no changes' do
       expect(chart.prepare_expedite_data(issue1)).to be_empty
     end
@@ -75,7 +75,7 @@ describe ExpeditedChart do
     end
   end
 
-  context 'find_expedited_issues' do
+  describe '#find_expedited_issues' do
     it 'handles no issues at all' do
       chart.issues = []
       expect(chart.find_expedited_issues).to be_empty
@@ -93,7 +93,7 @@ describe ExpeditedChart do
     end
   end
 
-  context 'later_date' do
+  describe '#later_date' do
     it 'handles null first parameter' do
       date2 = Date.today
       expect(chart.later_date(nil, date2)).to be date2
@@ -115,7 +115,7 @@ describe ExpeditedChart do
     end
   end
 
-  context 'make_expedite_lines_data_set' do
+  describe '#make_expedite_lines_data_set' do
     it 'handles the case with no start or stop times or data' do
       config = CycleTimeConfig.new(
         possible_statuses: nil, label: nil, block: nil, settings: load_settings,

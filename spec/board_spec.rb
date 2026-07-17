@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe Board do
-  context 'url' do
+  describe '#url' do
     it 'fabricates url' do
       board = described_class.new raw: {
         'id' => 3,
@@ -27,7 +27,7 @@ describe Board do
     end
   end
 
-  context 'project_id' do
+  describe '#project_id' do
     it 'returns nil when no location key is present' do
       board = described_class.new raw: {
         'id' => 3,
@@ -65,7 +65,7 @@ describe Board do
     end
   end
 
-  context 'status_ids_from_column' do
+  describe '#status_ids_from_column' do
     it 'returns empty array when statuses key is absent' do
       board = load_complete_sample_board
       expect(board.status_ids_from_column({})).to eq []
@@ -78,7 +78,7 @@ describe Board do
     end
   end
 
-  context 'status_ids_in_or_right_of_column' do
+  describe '#status_ids_in_or_right_of_column' do
     it 'returns ids from the named column and all columns to its right' do
       board = load_complete_sample_board
       expect(board.status_ids_in_or_right_of_column('In Progress')).to eq [3, 10_011, 10_002]
@@ -109,7 +109,7 @@ describe Board do
     end
   end
 
-  context 'backlog_statuses' do
+  describe '#backlog_statuses' do
     it 'returns statuses from the first column for a kanban board' do
       board = load_complete_sample_board
       expect(board.backlog_statuses.map(&:id)).to eq [10_000]
@@ -125,7 +125,7 @@ describe Board do
     end
   end
 
-  context 'scrum? and kanban? for natively typed boards' do
+  describe 'scrum? and kanban? for natively typed boards' do
     it 'is scrum for a board with type scrum' do
       board = described_class.new raw: {
         'id' => 1,
@@ -143,7 +143,7 @@ describe Board do
     end
   end
 
-  context 'team_managed_kanban?' do
+  describe '#team_managed_kanban?' do
     let(:simple_raw) { { 'id' => 1, 'type' => 'simple', 'columnConfig' => { 'columns' => [] } } }
     let(:sprints_enabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'ENABLED' })] }
     let(:sprints_disabled) { [BoardFeature.new(raw: { 'feature' => 'jsw.agility.sprints', 'state' => 'DISABLED' })] }
@@ -166,7 +166,7 @@ describe Board do
     end
   end
 
-  context 'estimation_configuration' do
+  describe '#estimation_configuration' do
     it 'returns story points defaults when estimation section is absent' do
       board = load_complete_sample_board
       config = board.estimation_configuration
@@ -187,7 +187,7 @@ describe Board do
     end
   end
 
-  context 'accumulated_status_ids_per_column' do
+  describe '#accumulated_status_ids_per_column' do
     it 'accumulates properly no columns' do
       raw = {
         'id' => 3,
@@ -212,7 +212,7 @@ describe Board do
     end
   end
 
-  context 'ensure_uniqueness_of_column_names' do
+  describe '#ensure_uniqueness_of_column_names!' do
     let(:find_names) do
       lambda do |json|
         json.collect { |status| status['name'] }
@@ -257,7 +257,7 @@ describe Board do
     )
   end
 
-  context 'scrum? and kanban? for simple boards' do
+  describe 'scrum? and kanban? for simple boards' do
     let(:simple_raw) do
       {
         'id' => 1,

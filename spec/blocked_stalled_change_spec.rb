@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe BlockedStalledChange do
-  context 'reasons' do
+  describe '#reasons' do
     it 'stalled by inactivity' do
       change = described_class.new time: '2022-01-01', stalled_days: 5
       expect(change.reasons).to eq 'Stalled by inactivity: 5 days'
@@ -46,7 +46,7 @@ describe BlockedStalledChange do
     end
   end
 
-  context 'inspect' do
+  describe '#inspect' do
     it 'is active' do
       change = described_class.new(time: '2022-01-01')
       expect(change.inspect).to eq "BlockedStalledChange(time: '2022-01-01', Active)"
@@ -58,7 +58,7 @@ describe BlockedStalledChange do
     end
   end
 
-  context 'flag_reason' do
+  describe '#flag_reason' do
     it 'stores the flag reason when provided' do
       change = described_class.new(time: '2022-01-01', flagged: true, flag_reason: 'Waiting on vendor')
       expect(change.flag_reason).to eq 'Waiting on vendor'

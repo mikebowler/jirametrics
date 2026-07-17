@@ -8,7 +8,7 @@ describe JiraMetrics do
     FileSystem.new.tap { |fs| fs.logfile = logfile }
   end
 
-  context 'log_uncaught_exception' do
+  describe '.log_uncaught_exception' do
     it 'does nothing when exception is nil' do
       described_class.log_uncaught_exception nil, file_system: file_system
       expect(logfile.string).to be_empty

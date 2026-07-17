@@ -49,14 +49,14 @@ describe FileConfig do
     end
   end
 
-  context 'output_filename' do
+  describe '#output_filename' do
     it 'creates filename' do
       file_config.file_suffix '.csv'
       expect(file_config.output_filename).to eq 'spec/testdata/sample.csv'
     end
   end
 
-  context 'prepare_grid' do
+  describe '#prepare_grid' do
     it 'prepares grid without headers' do
       file_config.columns do
         string 'id', key
@@ -107,14 +107,14 @@ describe FileConfig do
     end
   end
 
-  context 'columns' do
+  describe '#columns' do
     it 'raises error if multiples are set' do
       file_config.columns { 'a' }
       expect { file_config.columns { 'a' } }.to raise_error(/Can only have one/)
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'raises error if neither columns or html_report specified' do
       file_config = described_class.new project_config: project_config, block: empty_config_block
       expect { file_config.run }.to raise_error('Must specify one of "columns" or "html_report"')

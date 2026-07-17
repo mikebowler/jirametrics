@@ -22,7 +22,7 @@ describe IssuePrinter do
     TEXT
   end
 
-  context 'create_change_message' do
+  describe '#create_change_message' do
     let(:printer) { described_class.new(issue1) }
 
     it 'formats a non-status change with no prior value' do
@@ -82,7 +82,7 @@ describe IssuePrinter do
     end
   end
 
-  context 'sort_history!' do
+  describe '#sort_history!' do
     let(:printer) { described_class.new(issue1) }
     let(:t1) { to_time '2021-01-01' }
     let(:t2) { to_time '2021-01-02' }

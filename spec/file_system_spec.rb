@@ -23,7 +23,7 @@ describe FileSystem do
       .to raise_error Errno::ENOENT
   end
 
-  context 'diagnostic' do
+  describe '#diagnostic' do
     it 'prefixes the message and writes only to the logfile' do
       file_system = described_class.new
       output = StringIO.new
@@ -36,7 +36,7 @@ describe FileSystem do
     end
   end
 
-  context 'compress' do
+  describe '#compress' do
     it "doesn't change structures that are full" do
       input    = { a: 1, b: { d: 5, e: [4, 5, 6] } }
       expected = { a: 1, b: { d: 5, e: [4, 5, 6] } }

@@ -9,7 +9,7 @@ class Issue
 end
 
 describe SelfOrIssueDispatcher do
-  context 'method_missing and responds_to_missing?' do
+  describe 'method_missing and responds_to_missing?' do
     # Note that the way we test responds_to_missing? is by calling respond_to? Non-intuitive.
 
     let(:issue) { load_issue 'SP-2' }

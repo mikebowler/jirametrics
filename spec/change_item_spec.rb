@@ -74,7 +74,7 @@ describe ChangeItem do
     )
   end
 
-  context 'initialize' do
+  describe '#initialize' do
     it 'raises when time is nil' do
       expect { described_class.new time: nil, author_raw: nil, raw: status_raw }
         .to raise_error('ChangeItem.new() time cannot be nil')
@@ -95,7 +95,7 @@ describe ChangeItem do
     end
   end
 
-  context 'author' do
+  describe '#author' do
     it 'returns displayName when present' do
       change = described_class.new time: time, author_raw: { 'displayName' => 'Alice', 'name' => 'alice' },
 raw: status_raw
@@ -112,7 +112,7 @@ raw: status_raw
     end
   end
 
-  context 'author_icon_url' do
+  describe '#author_icon_url' do
     it 'returns the 16x16 avatar URL when present' do
       change = described_class.new time: time,
 author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, raw: status_raw
@@ -150,7 +150,7 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
     end
   end
 
-  context 'field_as_human_readable' do
+  describe '#field_as_human_readable' do
     it 'translates duedate' do
       expect(change_for('duedate').field_as_human_readable).to eq 'Due date'
     end
@@ -176,7 +176,7 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
     end
   end
 
-  context '==' do
+  describe '#==' do
     it 'equals another change with the same field, value, and time' do
       other = described_class.new time: time, author_raw: nil, raw: status_raw
       expect(status_change).to eq other
@@ -198,7 +198,7 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
     end
   end
 
-  context 'to_s' do
+  describe '#to_s' do
     it 'includes old_value and old_value_id when present' do
       expect(status_change.to_s).to include('"To Do":3')
     end
@@ -225,7 +225,7 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
       }
     end
 
-    context 'current_status_matches' do
+    describe '#current_status_matches' do
       it 'matches on id' do
         expect(change_item.current_status_matches 2).to be_truthy
       end
@@ -250,7 +250,7 @@ author_raw: { 'avatarUrls' => { '16x16' => 'https://example.com/icon.png' } }, r
       end
     end
 
-    context 'old_status_matches' do
+    describe '#old_status_matches' do
       it 'matches on id' do
         expect(change_item.old_status_matches 1).to be_truthy
       end

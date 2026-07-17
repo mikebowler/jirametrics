@@ -20,7 +20,7 @@ describe AggregateConfig do
     )
   end
 
-  context 'include_issues_from' do
+  describe '#include_issues_from' do
     it 'raises error if project not found' do
       project = ProjectConfig.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'aggregate'
@@ -81,7 +81,7 @@ describe AggregateConfig do
     end
   end
 
-  context 'find_time_range' do
+  describe '#find_time_range' do
     it 'raises error if no projects found' do
       subject = described_class.new project_config: aggregated_project, block: nil
       expect { subject.find_time_range projects: [] }.to raise_error(
@@ -122,7 +122,7 @@ describe AggregateConfig do
     end
   end
 
-  context 'adjust_issue_links' do
+  describe '#adjust_issue_links' do
     it 'adjusts link' do
       issue1 = load_issue('SP-1')
       issue2 = load_issue('SP-2')
@@ -141,7 +141,7 @@ describe AggregateConfig do
     end
   end
 
-  context 'evaluate_next_level' do
+  describe '#evaluate_next_level' do
     it 'raises error if no projects set' do
       subject = described_class.new project_config: aggregated_project, block: empty_config_block
       expect { subject.evaluate_next_level }.to raise_error(

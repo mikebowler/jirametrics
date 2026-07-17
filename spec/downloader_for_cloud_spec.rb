@@ -37,7 +37,7 @@ describe DownloaderForCloud do
     )
   end
 
-  context 'create' do
+  describe '.create' do
     it 'defaults to cloud for atlassian domains' do
       jira_gateway = MockJiraGateway.new(
         file_system: file_system,
@@ -67,7 +67,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'skips the download when no-download specified' do
       file_system.when_loading file: 'spec/testdata/sample_meta.json', json: { 'no-download' => true }
       downloader.run
@@ -75,7 +75,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'extract_project_keys_from_downloaded_issues' do
+  describe '#extract_project_keys_from_downloaded_issues' do
     it 'returns project keys from issue filenames' do
       file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
       file_system.when_foreach root: 'spec/testdata/sample_issues', result: %w[SP-1-1.json SP-2-1.json OTHER-10-1.json]
@@ -106,7 +106,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'download_github_prs' do
+  describe '#download_github_prs' do
     it 'skips download when no project keys are found' do
       file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
       file_system.when_foreach root: 'spec/testdata/sample_issues', result: []
@@ -142,7 +142,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'make_jql' do
+  describe '#make_jql' do
     it 'pulls from all time when rolling_date_count not set' do
       jql = downloader.make_jql(today: Time.parse('2021-08-01'), filter_id: 5)
       expect(jql).to eql 'filter=5'
@@ -196,7 +196,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'download_statuses' do
+  describe '#download_statuses' do
     it 'loads statuses' do
       jira_gateway.when url: '/rest/api/2/status', response: { 'a' => 1 }
 
@@ -209,7 +209,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'update_status_history_file' do
+  describe '#update_status_history_file' do
     it 'does nothing when status file does not exist' do
       downloader.update_status_history_file
       expect(file_system.log_messages).to be_empty
@@ -282,7 +282,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'download_board_configuration' do
+  describe '#download_board_configuration' do
     it 'suceeds for kanban board' do
       configuration_json = {
         'id' => '2',
@@ -497,7 +497,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'download_fix_versions' do
+  describe '#download_fix_versions' do
     it 'does nothing when no project key has been captured' do
       downloader.download_fix_versions
       expect(file_system.saved_json).to be_empty
@@ -553,7 +553,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'download_issues' do
+  describe '#download_issues' do
     it 'finds no issues' do
       allow(downloader).to(receive(:search_for_issues)).and_return({})
 
@@ -718,7 +718,7 @@ describe DownloaderForCloud do
     end
   end
 
-  context 'bulk_fetch_issues' do
+  describe '#bulk_fetch_issues' do
     let(:raw_issue) do
       raw_issue = empty_issue(created: '2025-01-01').raw
       raw_issue['changelog'] = nil

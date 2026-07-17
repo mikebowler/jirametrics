@@ -21,7 +21,7 @@ describe CumulativeFlowDiagram do
     chart
   end
 
-  context 'run' do
+  describe '#run' do
     it 'renders without error' do
       expect { chart.run }.not_to raise_error
     end
@@ -49,7 +49,7 @@ describe CumulativeFlowDiagram do
       expect(output).to include('"reverse":true').or include('reverse: true').or include('reverse:true')
     end
 
-    context 'column_rules' do
+    describe '#column_rules' do
       def chart_with_rules &block
         c = described_class.new(block)
         c.file_system = MockFileSystem.new
@@ -122,7 +122,7 @@ describe CumulativeFlowDiagram do
       end
 
       # rubocop:disable RSpec/NestedGroups
-      context 'triangle_color' do
+      describe '#triangle_color' do
         it 'uses a dark/light pair by default' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
           expect(output).to include('"#333333"')
@@ -141,7 +141,7 @@ describe CumulativeFlowDiagram do
         end
       end
 
-      context 'arrival_rate_line_color' do
+      describe '#arrival_rate_line_color' do
         it 'uses the default orange when not configured' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
           expect(output).to include('"rgba(255,138,101,0.85)"')
@@ -164,7 +164,7 @@ describe CumulativeFlowDiagram do
         end
       end
 
-      context 'departure_rate_line_color' do
+      describe '#departure_rate_line_color' do
         it 'uses the default teal when not configured' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
           expect(output).to include('"rgba(128,203,196,0.85)"')

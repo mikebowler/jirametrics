@@ -11,7 +11,7 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'estimate_at' do
+  describe '#estimate_at' do
     it 'handles no story points' do
       issue = empty_issue created: '2023-01-02'
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-03')
@@ -49,7 +49,7 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'estimate_label' do
+  describe '#estimate_label' do
     it 'renders story points' do
       expect(chart.estimate_label estimate: '2.0', estimation_units: :story_points).to eq '2.0pts'
     end
@@ -68,7 +68,7 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'hash_sorter' do
+  describe '#hash_sorter' do
     [ # lowest to highest
       [5, 2, 5, 2, ['5:2', '5:2']],
       [5, 2, 5, 3, ['5:2', '5:3']],
@@ -89,7 +89,7 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'correlation_coefficient' do
+  describe '#correlation_coefficient' do
     it 'returns nil for an empty hash' do
       expect(chart.correlation_coefficient({})).to be_nil
     end
@@ -121,7 +121,7 @@ describe EstimateAccuracyChart do
     end
   end
 
-  context 'split_into_completed_and_aging' do
+  describe '#split_into_completed_and_aging' do
     it 'works for no issues' do
       expect(chart.split_into_completed_and_aging issues: []).to eq [{}, {}]
     end

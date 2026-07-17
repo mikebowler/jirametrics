@@ -9,7 +9,7 @@ describe ThroughputChart do
   let(:issue2) { load_issue 'SP-2', board: board }
   let(:issue10) { load_issue 'SP-10', board: board }
 
-  context 'calculate_time_periods' do
+  describe '#calculate_time_periods' do
     # October 11 is a Monday
 
     it 'returns empty list if no complete periods' do
@@ -46,7 +46,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'throughput_dataset' do
+  describe '#throughput_dataset' do
     it 'returns correct data' do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
@@ -137,7 +137,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'calculate_custom_periods' do
+  describe '#calculate_custom_periods' do
     it 'builds ranges from unique last_day_of_period values' do
       chart = described_class.new empty_config_block
       chart.date_range = Date.parse('2026-01-01')..Date.parse('2026-03-31')
@@ -161,7 +161,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'sets x-axis min and max to the full date range' do
       chart = described_class.new(empty_config_block)
       chart.file_system = MockFileSystem.new
@@ -181,7 +181,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'throughput_forecaster_url' do
+  describe '#throughput_forecaster_url' do
     it 'builds URL with samples and not-started count' do
       chart = described_class.new empty_config_block
       chart.instance_variable_set(:@throughput_samples, [3, 5, 2])
@@ -206,7 +206,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'weekly_throughput_dataset' do
+  describe '#weekly_throughput_dataset' do
     it 'includes label_hint when provided' do
       chart = described_class.new empty_config_block
       chart.date_range = Date.parse('2021-10-11')..Date.parse('2021-10-17')
@@ -224,7 +224,7 @@ describe ThroughputChart do
     end
   end
 
-  context 'group_issues' do
+  describe '#group_issues' do
     it 'renders when no rules specified' do
       expected_rules = GroupingRules.new
       expected_rules.color = '--type-story-color'

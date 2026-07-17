@@ -64,7 +64,7 @@ describe HtmlReportConfig do
     expect { config.cycletime '2nd', &empty_config_block }.to raise_error 'Multiple cycletimes not supported'
   end
 
-  context 'load_css' do
+  describe '#load_css' do
     before do
       ['lib/jirametrics/html/index.css', 'Gemfile'].each do |unmocked_file|
         exporter.file_system.when_loading file: unmocked_file, json: :not_mocked
@@ -96,7 +96,7 @@ describe HtmlReportConfig do
     end
   end
 
-  context 'create_footer' do
+  describe '#create_footer' do
     let(:now) { DateTime.parse '2010-01-02T01:02:03 +0000' }
 
     it 'parses with unpackaged version' do
@@ -134,7 +134,7 @@ describe HtmlReportConfig do
     end
   end
 
-  context 'method_missing' do
+  describe '#method_missing' do
     it 'instantiates a chart class that matches the snake_case method name' do
       config = described_class.new file_config: file_config, block: nil
       expect { config.testable_chart }.not_to raise_error
@@ -235,7 +235,7 @@ describe HtmlReportConfig do
     end
   end
 
-  context 'define chart' do
+  describe '.define_chart' do
     it 'Tracks deprecated warnings' do
       described_class.define_chart(
         name: 'fake_chart', classname: 'TestableChart',

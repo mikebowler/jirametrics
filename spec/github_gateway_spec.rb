@@ -13,7 +13,7 @@ describe GithubGateway do
     )
   end
 
-  context 'extract_issue_keys' do
+  describe '#extract_issue_keys' do
     it 'extracts a key from the branch name' do
       pr = { 'headRefName' => 'SP-112-fix-validation', 'title' => '', 'body' => nil }
       expect(gateway.extract_issue_keys(pr)).to eq ['SP-112']
@@ -101,7 +101,7 @@ describe GithubGateway do
     end
   end
 
-  context 'extract_reviews' do
+  describe '#extract_reviews' do
     it 'includes APPROVED reviews' do
       reviews = [{ 'author' => { 'login' => 'alice' }, 'submittedAt' => '2026-01-14T15:00:00Z', 'state' => 'APPROVED' }]
       expect(gateway.extract_reviews(reviews)).to eq [
@@ -130,7 +130,7 @@ describe GithubGateway do
     end
   end
 
-  context 'build_pr_data' do
+  describe '#build_pr_data' do
     let(:raw_pr) do
       {
         'number' => 42,
@@ -187,7 +187,7 @@ describe GithubGateway do
     end
   end
 
-  context 'fetch_pull_requests' do
+  describe '#fetch_pull_requests' do
     let(:raw_prs) do
       [
         {
@@ -407,7 +407,7 @@ describe GithubGateway do
     end
   end
 
-  context 'run_command' do
+  describe '#run_command' do
     it 'raises a helpful error when the gh CLI reports a SAML enforcement error' do
       success = instance_double(Process::Status, success?: true)
       allow(Open3).to receive(:capture3).and_return(

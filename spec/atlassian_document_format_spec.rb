@@ -22,135 +22,137 @@ describe AtlassianDocumentFormat do
     end
   end
 
-  context 'v2 to_html' do
-    it 'ignores plain text' do
-      expect(format.to_html 'foobar').to eq 'foobar'
+  describe '#to_html' do
+    context 'v2' do
+      it 'ignores plain text' do
+        expect(format.to_html 'foobar').to eq 'foobar'
+      end
+
+      it 'converts color declarations' do
+        input = 'one {color:#bf2600}bold Red{color} two ' \
+          '{color:#403294}Bold purple{color} ' \
+          'three {color:#b3f5ff}Subtle teal{color}'
+        expect(format.to_html input).to eq(
+          'one <span style="color: #bf2600">bold Red</span> ' \
+          'two <span style="color: #403294">Bold purple</span> ' \
+          'three <span style="color: #b3f5ff">Subtle teal</span>'
+        )
+      end
+
+      it 'converts urls' do
+        input = 'a [link|http://example.com] embedded'
+        expect(format.to_html input).to eq(
+          'a <a href="http://example.com">link</a> embedded'
+        )
+      end
+
+      it 'converts comment with only a list' do
+        input = "* one\n* two"
+        expect(format.to_html input).to eq(
+          '* one<br />* two'
+        )
+      end
+
+      it 'converts account id' do
+        input = 'foo [~accountid:abcdef] bar'
+        expect(format.to_html input).to eq(
+          "foo <span class='account_id'>abcdef</span> bar"
+        )
+      end
+
+      it 'converts newlines to br tags' do
+        expect(format.to_html "line one\nline two").to eq 'line one<br />line two'
+      end
     end
 
-    it 'converts color declarations' do
-      input = 'one {color:#bf2600}bold Red{color} two ' \
-        '{color:#403294}Bold purple{color} ' \
-        'three {color:#b3f5ff}Subtle teal{color}'
-      expect(format.to_html input).to eq(
-        'one <span style="color: #bf2600">bold Red</span> ' \
-        'two <span style="color: #403294">Bold purple</span> ' \
-        'three <span style="color: #b3f5ff">Subtle teal</span>'
-      )
-    end
+    context 'v3' do
+      it 'handles nil' do
+        expect(format.to_html nil).to eq ''
+      end
 
-    it 'converts urls' do
-      input = 'a [link|http://example.com] embedded'
-      expect(format.to_html input).to eq(
-        'a <a href="http://example.com">link</a> embedded'
-      )
-    end
+      it 'handles single paragraph' do
+        input = {
+          'type' => 'doc',
+          'version' => 1,
+          'content' => [
+            {
+              'type' => 'paragraph',
+              'content' => [
+                {
+                  'type' => 'text',
+                  'text' => 'Comment 2'
+                }
+              ]
+            }
+          ]
+        }
+        expect(format.to_html input).to eq '<p>Comment 2</p>'
+      end
 
-    it 'converts comment with only a list' do
-      input = "* one\n* two"
-      expect(format.to_html input).to eq(
-        '* one<br />* two'
-      )
-    end
+      it 'single paragraph with a bold word' do
+        input = {
+          'version' => 1,
+          'type' => 'doc',
+          'content' => [
+            {
+              'type' => 'paragraph',
+              'content' => [
+                {
+                  'type' => 'text',
+                  'text' => 'Hello '
+                },
+                {
+                  'type' => 'text',
+                  'text' => 'world',
+                  'marks' => [
+                    {
+                      'type' => 'strong'
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        expect(format.to_html input).to eq '<p>Hello <b>world</b></p>'
+      end
 
-    it 'converts account id' do
-      input = 'foo [~accountid:abcdef] bar'
-      expect(format.to_html input).to eq(
-        "foo <span class='account_id'>abcdef</span> bar"
-      )
-    end
+      it 'handles two simple paragraphs with only text' do
+        input = {
+          'type' => 'doc',
+          'version' => 1,
+          'content' => [
+            {
+              'type' => 'paragraph',
+              'content' => [
+                {
+                  'type' => 'text',
+                  'text' => 'paragraph 1'
+                }
+              ]
+            },
+            {
+              'type' => 'paragraph',
+              'content' => [
+                {
+                  'type' => 'text',
+                  'text' => 'paragraph 2'
+                }
+              ]
+            }
+          ]
+        }
+        expect(format.to_html input).to eq "<p>paragraph 1</p>\n<p>paragraph 2</p>"
+      end
 
-    it 'converts newlines to br tags' do
-      expect(format.to_html "line one\nline two").to eq 'line one<br />line two'
-    end
-  end
-
-  context 'v3 to_html' do
-    it 'handles nil' do
-      expect(format.to_html nil).to eq ''
-    end
-
-    it 'handles single paragraph' do
-      input = {
-        'type' => 'doc',
-        'version' => 1,
-        'content' => [
-          {
-            'type' => 'paragraph',
-            'content' => [
-              {
-                'type' => 'text',
-                'text' => 'Comment 2'
-              }
-            ]
-          }
-        ]
-      }
-      expect(format.to_html input).to eq '<p>Comment 2</p>'
-    end
-
-    it 'single paragraph with a bold word' do
-      input = {
-        'version' => 1,
-        'type' => 'doc',
-        'content' => [
-          {
-            'type' => 'paragraph',
-            'content' => [
-              {
-                'type' => 'text',
-                'text' => 'Hello '
-              },
-              {
-                'type' => 'text',
-                'text' => 'world',
-                'marks' => [
-                  {
-                    'type' => 'strong'
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-      expect(format.to_html input).to eq '<p>Hello <b>world</b></p>'
-    end
-
-    it 'handles two simple paragraphs with only text' do
-      input = {
-        'type' => 'doc',
-        'version' => 1,
-        'content' => [
-          {
-            'type' => 'paragraph',
-            'content' => [
-              {
-                'type' => 'text',
-                'text' => 'paragraph 1'
-              }
-            ]
-          },
-          {
-            'type' => 'paragraph',
-            'content' => [
-              {
-                'type' => 'text',
-                'text' => 'paragraph 2'
-              }
-            ]
-          }
-        ]
-      }
-      expect(format.to_html input).to eq "<p>paragraph 1</p>\n<p>paragraph 2</p>"
-    end
-
-    # You'd think that there would always be a content section but apparently not.
-    it 'handles an empty document' do
-      input = {
-        'type' => 'doc',
-        'version' => 1
-      }
-      expect(format.to_html input).to be_empty
+      # You'd think that there would always be a content section but apparently not.
+      it 'handles an empty document' do
+        input = {
+          'type' => 'doc',
+          'version' => 1
+        }
+        expect(format.to_html input).to be_empty
+      end
     end
   end
 

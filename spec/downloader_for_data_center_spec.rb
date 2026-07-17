@@ -37,7 +37,7 @@ describe DownloaderForDataCenter do
     )
   end
 
-  context 'create' do
+  describe '.create' do
     it 'defaults to data centre for non atlassian domains' do
       jira_gateway = MockJiraGateway.new(
         file_system: file_system,
@@ -53,7 +53,7 @@ describe DownloaderForDataCenter do
     end
   end
 
-  context 'download_issues' do
+  describe '#download_issues' do
     let(:raw_issue) do
       raw_issue = empty_issue(created: '2025-01-01').raw
       raw_issue['changelog'] = nil

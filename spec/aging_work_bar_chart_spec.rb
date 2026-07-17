@@ -15,7 +15,7 @@ describe AgingWorkBarChart do
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
 
-  context 'description_text' do
+  describe '#description_text' do
     it 'mentions four bars and includes sprints item for scrum board' do
       board.raw['type'] = 'scrum'
       rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
@@ -31,7 +31,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'collect_status_ranges' do
+  describe '#collect_status_ranges' do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
@@ -69,7 +69,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'bar_chart_range_to_data_set' do
+  describe '#bar_chart_range_to_data_set' do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
@@ -104,7 +104,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'collect_blocked_stalled_ranges' do
+  describe '#collect_blocked_stalled_ranges' do
     it 'handles blocked by flag' do
       chart.settings = board.project_config.settings
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
@@ -171,7 +171,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'sort_by_age!' do
+  describe '#sort_by_age!' do
     it 'leaves an already sorted list alone' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2024-01-01', nil],
@@ -193,7 +193,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'select_aging_issues' do
+  describe '#select_aging_issues' do
     it 'returns empty when no issues' do
       expect(chart.select_aging_issues issues: []).to be_empty
     end
@@ -220,7 +220,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'clip_ranges_to_start_time' do
+  describe '#clip_ranges_to_start_time' do
     let(:color) { CssVariable['--blocked-color'] }
 
     it 'does nothing when issue_start_time is nil' do
@@ -250,7 +250,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'collect_priority_ranges' do
+  describe '#collect_priority_ranges' do
     it 'returns empty array when issue has no priority changes at all' do
       issue = empty_issue created: '2021-01-02'
       issue.changes.reject! { |c| c.priority? }
@@ -296,7 +296,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'calculate_percent_line' do
+  describe '#calculate_percent_line' do
     it 'returns nil when no issues' do
       chart.issues = []
       expect(chart.calculate_percent_line).to be_nil
@@ -321,7 +321,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'grow_chart_height_if_too_many_issues' do
+  describe '#grow_chart_height_if_too_many_issues' do
     it 'is the minimum height when only one issue' do
       chart.grow_chart_height_if_too_many_issues aging_issue_count: 1
       expect(chart.canvas_height).to eq 80
@@ -339,7 +339,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'escapes early if no active items' do
       chart.issues = []
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
@@ -369,7 +369,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'adjust_time_date_ranges_to_start_from_earliest_issue_start' do
+  describe '#adjust_time_date_ranges_to_start_from_earliest_issue_start' do
     it 'doesn\'t do anything when the earliest is already inside the normal range' do
       chart.time_range = to_time('2021-03-01')..to_time('2021-05-30') # 90 days
       chart.date_range = to_date('2021-03-01')..to_date('2021-05-30') # 90 days
@@ -393,7 +393,7 @@ describe AgingWorkBarChart do
     end
   end
 
-  context 'collect_sprint_ranges' do
+  describe '#collect_sprint_ranges' do
     let(:sprint1) do
       Sprint.new(
         raw: {

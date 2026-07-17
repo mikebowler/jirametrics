@@ -33,7 +33,7 @@ describe StatusCollection do
     )
   end
 
-  context 'fabricate_status_for' do
+  describe '#fabricate_status_for' do
     it 'pulls category from historical statuses' do
       collection.historical_status_mappings['"walk":100'] = Status::Category.new name: 'movement', id: 101, key: 'new'
       collection.fabricate_status_for name: 'walk', id: 100
@@ -50,7 +50,7 @@ describe StatusCollection do
     end
   end
 
-  context 'find_all_by_name' do
+  describe '#find_all_by_name' do
     it 'finds nothing' do
       expect(collection.find_all_by_name 'e').to be_empty
     end
@@ -87,7 +87,7 @@ describe StatusCollection do
     end
   end
 
-  context 'find_all_categories_by_name' do
+  describe '#find_all_categories_by_name' do
     it 'accepts symbol to search by key' do
       expect(collection.find_all_categories_by_name :new).to eq [status_a.category]
     end

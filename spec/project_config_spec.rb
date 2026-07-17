@@ -43,7 +43,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'possible_statuses' do
+  describe '#possible_statuses' do
     it 'loads' do
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -76,7 +76,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'evaluate_next_level' do
+  describe '#evaluate_next_level' do
     it 'executes the original block that had been passed in, in its own context' do
       columns = described_class.new exporter: exporter, target_path: nil, jira_config: nil,
         block: ->(_) { self.class.to_s }
@@ -84,7 +84,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'guess_board_id' do
+  describe '#guess_board_id' do
     it 'fails if no board id set and there are no boards' do
       expect { project_config.guess_board_id }.to raise_error %r{we couldn't find any configuration files}
     end
@@ -99,7 +99,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'guess_project_id' do
+  describe '#guess_project_id' do
     it 'defaults to nil' do
       project_config = described_class.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
@@ -151,7 +151,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'discard_changes_before' do
+  describe '#discard_changes_before' do
     it 'discards for date provided' do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
@@ -241,7 +241,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'name' do
+  describe '#name' do
     it 'allows name' do
       project_config = described_class.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
@@ -257,7 +257,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'group_filenames_and_board_ids' do
+  describe '#group_filenames_and_board_ids' do
     let(:issue_path) { File.join %w[spec tmp] }
 
     before do
@@ -319,7 +319,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'add_issues' do
+  describe '#add_issues' do
     it 'adds both boards and issues' do
       board = sample_board
       issue = load_issue('SP-1', board: board)
@@ -346,7 +346,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'status_category_mapping' do
+  describe '#status_category_mapping' do
     let(:project_config) do
       described_class.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
@@ -423,7 +423,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'add_possible_status' do
+  describe '#add_possible_status' do
     let(:project_config) do
       described_class.new(
         exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'sample'
@@ -513,13 +513,13 @@ describe ProjectConfig do
     end
   end
 
-  context 'settings' do
+  describe '#settings' do
     it 'loaded settings' do
       expect(project_config.settings['stalled_threshold_days']).not_to be_nil
     end
   end
 
-  context 'load_project_metadata' do
+  describe '#load_project_metadata' do
     it 'adjusts start for no_earlier_than' do
       project_config.file_prefix 'sample'
       project_config.download do
@@ -568,7 +568,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'issues' do
+  describe '#issues' do
     it 'warns when issues directory missing' do
       # We have to create our own project_config here as the default one at the top of the file will have
       # already loaded issues so it's too late.
@@ -601,7 +601,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'find_default_board' do
+  describe '#find_default_board' do
     it 'defaults to first when multiple' do
       board4 = sample_board
       board4.raw['id'] = '4'
@@ -621,7 +621,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'load_sprints' do
+  describe '#load_sprints' do
     it "ignores sprint data that doesn't correspond to a known board" do
       exporter.file_system.when_foreach root: 'spec/testdata/', result: ['foo.json', 'sample_board_2_sprints_0.json']
 
@@ -635,7 +635,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'load_fix_versions' do
+  describe '#load_fix_versions' do
     it 'loads fix versions from file' do
       project_config.file_prefix 'sample'
       raw = [{ 'id' => '10', 'name' => 'v1.0', 'released' => true, 'releaseDate' => '2026-01-15' }]
@@ -657,7 +657,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'file_prefix' do
+  describe '#file_prefix' do
     it 'can only be set once' do
       project_config.file_prefix 'sample'
       expect { project_config.file_prefix 'second' }.to raise_error(
@@ -688,7 +688,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'does not anonymize data when load_only is true' do
       project_config.anonymize
       allow(project_config).to receive(:load_data)
@@ -698,7 +698,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'resolve_blocked_stalled_status_settings' do
+  describe '#resolve_blocked_stalled_status_settings' do
     before do
       project_config.file_prefix 'sample'
     end
@@ -750,7 +750,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'stringify_keys' do
+  describe '#stringify_keys' do
     it 'converts symbol keys to strings at the top level' do
       expect(project_config.send(:stringify_keys, { foo: 1, bar: 2 })).to eq({ 'foo' => 1, 'bar' => 2 })
     end
@@ -773,7 +773,7 @@ describe ProjectConfig do
     end
   end
 
-  context 'load_settings' do
+  describe '#load_settings' do
     it 'returns a hash with only string keys' do
       expect(project_config.settings.keys).to all(be_a(String))
     end

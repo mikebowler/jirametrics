@@ -45,7 +45,7 @@ describe Anonymizer do
     MockAnonymizer.new project_config: project_config, date_adjustment: -10
   end
 
-  context 'anonymize_issue_keys_and_titles' do
+  describe '#anonymize_issue_keys_and_titles' do
     it 'has renumbered all issue keys and changed summary' do
       issue = anonymizer.project_config.issues.first
       anonymizer.anonymize_issue_keys_and_titles(issues: [issue])
@@ -169,7 +169,7 @@ describe Anonymizer do
     end
   end
 
-  context 'anonymize_labels_and_components' do
+  describe '#anonymize_labels_and_components' do
     it 'clears labels and component names' do
       issue = anonymizer.project_config.issues.first
       issue.raw['fields']['labels'] = %w[Customer-XYZ Priority-1]
@@ -180,7 +180,7 @@ describe Anonymizer do
     end
   end
 
-  context 'anonymize_sprints' do
+  describe '#anonymize_sprints' do
     let(:board) { anonymizer.project_config.all_boards[1] }
 
     it 'anonymizes sprint names' do
@@ -211,7 +211,7 @@ describe Anonymizer do
     end
   end
 
-  context 'anonymize_fix_versions' do
+  describe '#anonymize_fix_versions' do
     it 'anonymizes fix version names consistently across issues' do
       issue1 = anonymizer.project_config.issues.first
       issue2 = anonymizer.project_config.issues[1]
@@ -225,7 +225,7 @@ describe Anonymizer do
     end
   end
 
-  context 'anonymize_server_url' do
+  describe '#anonymize_server_url' do
     let(:board) { anonymizer.project_config.all_boards[1] }
 
     it 'replaces the real Jira domain in board.raw[self]' do
@@ -255,7 +255,7 @@ describe Anonymizer do
     end
   end
 
-  context 'shift_all_dates' do
+  describe '#shift_all_dates' do
     it 'changes nothing when shift is zero' do
       issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
       changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }

@@ -31,7 +31,7 @@ describe JiraGateway do
     )
   end
 
-  context 'make_curl_command' do
+  describe '#make_curl_command' do
     it 'handles empty config' do
       gateway.load_jira_config({ 'url' => 'https://example.com' })
 
@@ -71,7 +71,7 @@ describe JiraGateway do
     end
   end
 
-  context 'load_jira_config' do
+  describe '#load_jira_config' do
     it 'fails when api-key specified but not email' do
       expect do
         gateway.load_jira_config({
@@ -141,7 +141,7 @@ describe JiraGateway do
     end
   end
 
-  context 'json_successful' do
+  describe '#json_successful?' do
     it 'succeeds for simple json' do
       json = { 'a' => 'b' }
       expect(gateway).to be_json_successful(json)
@@ -169,7 +169,7 @@ describe JiraGateway do
     end
   end
 
-  context 'exec_and_parse_response' do
+  describe '#exec_and_parse_response' do
     it 'execs with failure' do
       allow(gateway).to receive(:capture3).and_return(
         ['stdout', 'stderr', MockStatus.new(exitstatus: 1)]

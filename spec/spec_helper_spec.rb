@@ -5,7 +5,7 @@ require 'open3'
 require 'tmpdir'
 
 describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
-  context 'to_time' do
+  describe '#to_time' do
     it 'parses date only' do
       expect(to_time('2024-01-01').inspect).to eq '2024-01-01 00:00:00 +0000'
     end
@@ -27,7 +27,7 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
     end
   end
 
-  context 'create_issue_from_aging_data' do
+  describe '#create_issue_from_aging_data' do
     let(:board) { sample_board }
 
     it 'creates no issues when no ages' do

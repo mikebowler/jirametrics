@@ -21,7 +21,7 @@ describe FlowEfficiencyScatterplot do
     end
   end
 
-  context 'create_dataset' do
+  describe '#create_dataset' do
     it 'returns nil when no issues' do
       expect(chart.create_dataset issues: [], label: 'label', color: 'color').to be_nil
     end

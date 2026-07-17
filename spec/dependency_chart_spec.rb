@@ -11,7 +11,7 @@ describe DependencyChart do
   let(:issue14) { load_issue('SP-14') }
   let(:issue15) { load_issue('SP-15') }
 
-  context 'build_dot_graph' do
+  describe '#build_dot_graph' do
     it 'handles no issues' do
       chart.issues = []
       expect(chart.build_dot_graph).to be_nil
@@ -191,7 +191,7 @@ describe DependencyChart do
     end
   end
 
-  context 'make_dot_issue' do
+  describe '#make_dot_issue' do
     it 'handles simple case' do
       rules = DependencyChart::IssueRules.new
       rules.color = :none
@@ -228,7 +228,7 @@ describe DependencyChart do
     end
   end
 
-  context 'shrink_svg' do
+  describe '#shrink_svg' do
     it 'shrinks' do
       svg = '<svg width="914pt" height="1126pt" viewBox="0.00 0.00 914.00 1126.00"'
       expected = '<svg width="731pt" height="900pt" viewBox="0.00 0.00 914.00 1126.00"'
@@ -236,7 +236,7 @@ describe DependencyChart do
     end
   end
 
-  context 'word_wrap' do
+  describe '#word_wrap' do
     it 'handles different line endings coming in' do
       expect(chart.word_wrap "a\nb\r\nc", max_width: 80, separator: '|').to eq 'a|b|c'
     end
@@ -258,7 +258,7 @@ describe DependencyChart do
     end
   end
 
-  context 'default_issue_rules' do
+  describe '#default_issue_rules' do
     it 'handles done' do
       rules = DependencyChart::IssueRules.new
       issue13.board.cycletime = mock_cycletime_config stub_values: [

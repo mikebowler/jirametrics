@@ -58,7 +58,7 @@ describe CycleTimeConfig do
     end
   end
 
-  context 'started_stopped_changes caching' do
+  describe '#started_stopped_changes' do
     let(:settings) { load_settings }
     let(:cycletime) do
       described_class.new(

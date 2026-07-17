@@ -18,7 +18,7 @@ describe DailyWipByParentChart do
     expect(chart.default_description_text).not_to be_nil
   end
 
-  context 'grouping_rules' do
+  describe '#grouping_rules' do
     it 'detects no parent' do
       rules = DailyGroupingRules.new
       chart.default_grouping_rules issue: issue1, rules: rules

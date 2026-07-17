@@ -92,7 +92,7 @@ describe DataQualityReport do
     end
   end
 
-  context 'scan_for_completed_issues_without_a_start_time' do
+  describe '#scan_for_completed_issues_without_a_start_time' do
     it 'identifies items with completed but not started' do
       issue = empty_issue created: '2021-09-01', key: 'SP-1', board: board
       # report.all_boards = { board.id => board }
@@ -121,7 +121,7 @@ describe DataQualityReport do
     end
   end
 
-  context 'scan_for_status_change_after_done' do
+  describe '#scan_for_status_change_after_done' do
     it 'detects status changes after done' do
       # Issue 1 does have a resolution but no status after it.
       # Issue 2 has no resolutions at all
@@ -292,7 +292,7 @@ describe DataQualityReport do
     end
   end
 
-  context 'scan_for_issue_not_in_active_sprint' do
+  describe '#scan_for_issue_not_in_active_sprint' do
     it 'does nothing for kanban boards' do
       board.raw['type'] = 'kanban'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
@@ -328,7 +328,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_issue_never_visible_on_board' do
+  describe '#scan_for_issue_never_visible_on_board' do
     it 'does nothing when issue has been in a visible column' do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_never_visible_on_board entry: entry
@@ -345,7 +345,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_issues_not_created_in_the_right_status' do
+  describe '#scan_for_issues_not_created_in_a_backlog_status' do
     it 'catches invalid starting status' do
       report.all_boards = { 1 => board }
       report.initialize_entries
@@ -389,7 +389,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_stopped_before_started' do
+  describe '#scan_for_stopped_before_started' do
     it 'accepts correct data' do
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
@@ -412,7 +412,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_issues_not_started_with_subtasks_that_have' do
+  describe '#scan_for_issues_not_started_with_subtasks_that_have' do
     let(:subtask) do
       subtask = load_issue('SP-2', board: board)
       subtask.raw['fields']['issuetype']['name'] = 'Sub-task'
@@ -550,7 +550,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'label_issues' do
+  describe '#label_issues' do
     it 'handles singular' do
       expect(report.label_issues(1)).to eq '1 item'
     end
@@ -560,7 +560,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_discarded_data' do
+  describe '#scan_for_discarded_data' do
     it 'handles nothing discarded' do
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-02'), stopped: to_time('2022-01-03'), issue: issue1
@@ -691,7 +691,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_issues_on_multiple_boards' do
+  describe '#scan_for_issues_on_multiple_boards' do
     it 'does not report errors when no duplicates' do
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       entry2 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue2)
@@ -726,7 +726,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'scan_for_items_blocked_on_closed_tickets' do
+  describe '#scan_for_items_blocked_on_closed_tickets' do
     it 'matches' do
       entry1 = DataQualityReport::Entry.new(started: nil, stopped: nil, issue: issue1)
       link = IssueLink.new origin: issue1, raw: {
@@ -843,7 +843,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'time_as_english' do
+  describe '#time_as_english' do
     it 'handles seconds' do
       expect(report.time_as_english to_time('2024-01-01'), to_time('2024-01-01T00:00:07')).to eq('7 seconds')
     end

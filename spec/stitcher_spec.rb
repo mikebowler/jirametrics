@@ -6,7 +6,7 @@ describe Stitcher do
   let(:file_system) { MockFileSystem.new }
   let(:stitcher) { described_class.new file_system: file_system }
 
-  context 'output_filename' do
+  describe '#make_output_filename' do
     it 'replaces erb with html' do
       expect(stitcher.make_output_filename('foo.erb')).to eq 'foo.html'
     end
@@ -16,7 +16,7 @@ describe Stitcher do
     end
   end
 
-  context 'parse_file' do
+  describe '#parse_file' do
     it 'skips if already loaded' do
       stitcher.loaded_files << 'foo.html'
       expect(stitcher.parse_file 'foo.html').to be_falsy

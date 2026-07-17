@@ -93,7 +93,7 @@ describe Issue do
     ]
   end
 
-  context 'initialize' do
+  describe '#initialize' do
     it 'includes issue key when an exception happens' do
       raw = {
         'key' => 'SP-1',
@@ -113,7 +113,7 @@ describe Issue do
     end
   end
 
-  context 'load_history_into_changes' do
+  describe '#load_history_into_changes' do
     it 'continues even when the history does not have items (seen in prod)' do
       raw = {
         'key' => 'SP-1',
@@ -247,7 +247,7 @@ describe Issue do
     end
   end
 
-  context 'changes' do
+  describe '#changes' do
     it 'gets simple history with a single status' do
       expect(issue2.changes).to eq [
         mock_change(
@@ -301,7 +301,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_in_status' do
+  describe '#first_time_in_status' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'first time in status' do
@@ -315,7 +315,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_not_in_status' do
+  describe '#first_time_not_in_status' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'first time not in status' do
@@ -348,7 +348,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_in_or_right_of_column' do
+  describe '#first_time_in_or_right_of_column' do
     let(:issue) { empty_issue created: '2021-06-01', board: board }
 
     it 'fails for invalid column name' do
@@ -373,7 +373,7 @@ describe Issue do
     end
   end
 
-  context 'still_in_or_right_of_column' do
+  describe '#still_in_or_right_of_column' do
     let(:issue) { empty_issue created: '2021-06-01', board: board }
 
     it 'works for happy path' do
@@ -388,7 +388,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_in_status_category' do
+  describe '#first_time_in_status_category' do
     let(:issue) { empty_issue created: '2021-06-01', board: board }
 
     it 'matches first time in status category' do
@@ -401,7 +401,7 @@ describe Issue do
     end
   end
 
-  context 'first_status_change_after_created' do
+  describe '#first_status_change_after_created' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it "finds first time for any status change - created doesn't count as status change" do
@@ -435,7 +435,7 @@ describe Issue do
     end
   end
 
-  context 'currently_in_status' do
+  describe '#currently_in_status' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
@@ -456,7 +456,7 @@ describe Issue do
     end
   end
 
-  context 'still_in_status' do
+  describe '#still_in_status' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
@@ -484,7 +484,7 @@ describe Issue do
     end
   end
 
-  context 'currently_in_status_category' do
+  describe '#currently_in_status_category' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
@@ -506,7 +506,7 @@ describe Issue do
     end
   end
 
-  context 'still_in_status_category' do
+  describe '#still_in_status_category' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
@@ -530,7 +530,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_label_added' do
+  describe '#first_time_label_added' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'does not match when no labels' do
@@ -558,7 +558,7 @@ describe Issue do
     end
   end
 
-  context 'first_time_visible_on_board' do
+  describe '#first_time_visible_on_board' do
     let(:issue) { empty_issue created: '2021-10-01', board: sample_board }
 
     it 'does not match when not visible' do
@@ -640,7 +640,7 @@ time: '2021-10-02')
     end
   end
 
-  context 'first_time_added_to_active_sprint' do
+  describe '#first_time_added_to_active_sprint' do
     let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
     let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
 
@@ -820,7 +820,7 @@ time: '2021-10-02')
     end
   end
 
-  context 'reasons_not_visible_on_board' do
+  describe '#reasons_not_visible_on_board' do
     let(:kanban_board) { sample_board }
     let(:in_progress) { kanban_board.possible_statuses.find_by_id(3) }
     let(:issue) { empty_issue created: '2021-10-01', board: kanban_board }
@@ -859,7 +859,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'visible_on_board?' do
+  describe '#visible_on_board?' do
     let(:kanban_board) { sample_board }
 
     it 'returns false when issue is not visible' do
@@ -874,7 +874,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'blocked_stalled_changes' do
+  describe '#blocked_stalled_changes' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     let(:settings) do
       {
@@ -1150,7 +1150,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'blocked_stalled_by_date' do
+  describe '#blocked_stalled_by_date' do
     it 'handles no changes' do
       issue = empty_issue created: '2021-10-01', board: board
       actual = issue.blocked_stalled_by_date(
@@ -1242,13 +1242,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'inspect' do
+  describe '#inspect' do
     it 'returns a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
     end
   end
 
-  context 'resolutions' do
+  describe 'resolutions' do
     it 'finds resolutions when they are present' do
       issue = empty_issue created: '2021-10-01T00:00:00+00:00', board: board
       add_mock_change(
@@ -1280,7 +1280,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'resolution' do
+  describe '#resolution' do
     it 'returns nil when not resolved' do
       issue = empty_issue created: '2021-10-01'
       expect(issue.resolution).to be_nil
@@ -1350,7 +1350,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'status' do
+  describe '#status' do
     it 'returns status' do
       expect(load_issue('SP-1').status).to eql(
         Status.new(
@@ -1360,7 +1360,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'last_activity' do
+  describe '#last_activity' do
     let(:issue) { empty_issue created: '2020-01-01', board: board }
 
     it 'handles no activity, ever' do
@@ -1401,7 +1401,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'parent_link' do
+  describe '#parent_key' do
     let(:issue) { empty_issue created: '2020-01-01' }
 
     it 'returns nil when no parent found' do
@@ -1463,7 +1463,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'looks_like_issue_key?' do
+  describe '#looks_like_issue_key?' do
     let(:issue) { empty_issue created: '2020-01-01' }
 
     it 'returns true for valid key' do
@@ -1479,7 +1479,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'expedited?' do
+  describe '#expedited?' do
     let(:issue) { empty_issue created: '2020-01-01', board: board }
 
     it 'no priority set' do
@@ -1498,7 +1498,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'priority_name and priority_url' do
+  describe 'priority_name and priority_url' do
     let(:issue) { empty_issue created: '2020-01-01', board: board }
 
     it 'returns nil when priority field is absent' do
@@ -1514,7 +1514,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'expedited_on_date?' do
+  describe '#expedited_on_date?' do
     it 'works when expedited turns on and off on same day' do
       issue = empty_issue created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
@@ -1575,7 +1575,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'author' do
+  describe '#author' do
     it 'returns empty string when author section is missing' do
       issue1.raw['fields']['creator'] = nil
       expect(issue1.author).to eq ''
@@ -1586,14 +1586,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'created' do
+  describe '#created' do
     it "doesn't blow up if created is missing" do # Seen in production
       issue1.raw['fields']['created'] = nil
       expect(issue1.created).to be_nil
     end
   end
 
-  context 'key_as_i' do
+  describe '#key_as_i' do
     it 'returns when valid' do
       expect(issue1.key_as_i).to eq 1
     end
@@ -1604,7 +1604,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'component_names' do
+  describe '#component_names' do
     it 'returns empty when there are none' do
       issue1.raw['fields']['components'] = nil
       expect(issue1.component_names).to be_empty
@@ -1618,7 +1618,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'flow_efficiency_numbers' do # part of a flow efficiency calculation
+  describe '#flow_efficiency_numbers' do # part of a flow efficiency calculation
     let(:settings) do
       {
         'blocked_statuses' => status_collection_for(board: board, names: %w[Blocked Blocked2]),
@@ -1726,7 +1726,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'find_or_create_status' do
+  describe '#find_or_create_status' do
     it 'returns status when present' do
       expect(issue1.find_or_create_status id: 1, name: 'foo').to eq(
         Status.new name: 'Backlog', id: 1, category_name: 'ready', category_id: 2, category_key: 'new'
@@ -1757,7 +1757,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'due_date' do
+  describe '#due_date' do
     it 'handles none' do
       expect(issue1.due_date).to be_nil
     end
@@ -1768,7 +1768,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context '<=>' do
+  describe '#<=>' do
     it 'compares numerically when projects are the same' do
       issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
       issue2 = empty_issue created: '2024-01-01', key: 'SP-2'
@@ -1791,7 +1791,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'compact_text' do
+  describe '#compact_text' do
     it 'returns empty for nil' do
       expect(issue1.compact_text nil).to eq ''
     end
@@ -1824,7 +1824,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'parse_time' do
+  describe '#parse_time' do
     it 'parses string' do
       expect(issue1.parse_time('2021-01-13T14:13:42.257-0500').strftime('%Y-%m-%d %H:%M:%S %z')).to eq(
         '2021-01-13 19:13:42 +0000'
@@ -1838,7 +1838,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'assigned_to' do
+  describe '#assigned_to' do
     it 'is assigned' do
       issue1.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
       expect(issue1.assigned_to).to eq 'Fred'
@@ -1849,7 +1849,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'assigned_to_icon_url' do
+  describe '#assigned_to_icon_url' do
     it 'is assigned' do
       issue1.raw['fields']['assignee'] = { 'avatarUrls' => { '16x16' => 'myurl' } }
       expect(issue1.assigned_to_icon_url).to eq 'myurl'
@@ -1860,13 +1860,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'time_created' do
+  describe '#time_created' do
     it 'returns the first item, which will be the created one' do
       expect(issue1.time_created.time).to eq issue1.created
     end
   end
 
-  context 'status_resolution_at_done' do
+  describe '#status_resolution_at_done' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
 
     it 'returns [nil, nil] when issue is not done' do
@@ -1906,7 +1906,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'in_initial_query?' do
+  describe '#in_initial_query?' do
     it 'returns true when exporter is nil (artificial issue)' do
       issue = empty_issue created: '2021-01-01', board: board
       expect(issue.in_initial_query?).to be true
@@ -1923,7 +1923,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'done?' do
+  describe '#done?' do
     it 'returns true for an artificial issue in a done status category' do
       issue = empty_issue created: '2021-01-01', board: board
       # Doing (id: 12) has category_key: 'done'; set directly since empty_issue hardcodes statusCategory
@@ -1953,7 +1953,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'discard_changes_before' do
+  describe '#discard_changes_before' do
     # Use the actual change time from the fixture to avoid millisecond precision surprises
     let(:real_status_change) { issue2.changes.find { |c| c.status? && !c.artificial? } }
 
@@ -1995,7 +1995,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'load_comments_into_changes' do
+  describe '#load_comments_into_changes' do
     let(:issue_with_comments) do
       raw = {
         'key' => 'SP-99',
@@ -2058,7 +2058,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'in_visible_status_at?' do
+  describe '#in_visible_status_at?' do
     # Private method tested via send; only called from first_time_visible_on_board (scrum path)
     let(:real_status_change) { issue2.changes.find { |c| c.status? && !c.artificial? } }
 

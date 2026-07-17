@@ -34,13 +34,13 @@ describe AgingWorkTable do
     end
   end
 
-  context 'icon_span' do
+  describe '#icon_span' do
     it 'creates span' do
       expect(table.icon_span title: 'foo', icon: 'x').to eq "<span title='foo' style='font-size: 0.8em;'>x</span>"
     end
   end
 
-  context 'expedited_text' do
+  describe '#expedited_text' do
     it 'is empty when not expedited' do
       issue1.raw['fields']['priority'] = { 'name' => 'Not set' }
       expect(table.expedited_text issue1).to be_nil
@@ -56,7 +56,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'blocked_text' do
+  describe '#blocked_text' do
     it 'handles flagged' do
       board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
       add_mock_change(issue: issue1, field: 'Flagged', value: 'Blocked', time: '2020-10-03')
@@ -121,7 +121,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'select_aging_issues' do
+  describe '#select_aging_issues' do
     it 'handles no issues' do
       table.issues = []
       expect(table.select_aging_issues).to be_empty
@@ -152,7 +152,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'fix_versions_text' do
+  describe '#fix_versions_text' do
     it 'returns blank when no fix versions' do
       expect(table.fix_versions_text issue1).to eq ''
     end
@@ -166,7 +166,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'sprints_text' do
+  describe '#sprints_text' do
     it 'returns empty when no sprints' do
       expect(table.sprints_text issue1).to eq ''
     end
@@ -202,7 +202,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'not_visible_text' do
+  describe '#not_visible_text' do
     it 'returns nil when issue is visible on the board' do
       expect(table.not_visible_text(issue1)).to be_nil
     end
@@ -225,7 +225,7 @@ describe AgingWorkTable do
     end
   end
 
-  context 'parent_hierarchy' do
+  describe '#parent_hierarchy' do
     it 'works when no parent' do
       expect(table.parent_hierarchy(issue1)).to eq [issue1]
     end
@@ -258,7 +258,7 @@ describe AgingWorkTable do
     expect(table.expedited_but_not_started).to eq [issue3]
   end
 
-  context 'dates_text' do
+  describe '#dates_text' do
     # The 85% ages across this table with issue1 and issue2 is 1, 2, 4
 
     it 'handles no due date' do

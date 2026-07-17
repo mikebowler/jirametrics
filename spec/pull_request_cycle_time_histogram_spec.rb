@@ -15,7 +15,7 @@ describe PullRequestCycleTimeHistogram do
     })
   end
 
-  context 'cycletime_unit' do
+  describe '#cycletime_unit' do
     it 'defaults to :days' do
       expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
     end
@@ -49,7 +49,7 @@ describe PullRequestCycleTimeHistogram do
     end
   end
 
-  context 'value_for_item' do
+  describe '#value_for_item' do
     it 'returns days by default (ceiling)' do
       expect(chart.value_for_item(pull_request)).to eq 3
     end
@@ -65,7 +65,7 @@ describe PullRequestCycleTimeHistogram do
     end
   end
 
-  context 'title_for_item' do
+  describe '#title_for_item' do
     it 'uses days by default' do
       expect(chart.title_for_item(count: 2, value: 3)).to eq '2 PRs closed in 3 days'
     end
@@ -85,7 +85,7 @@ describe PullRequestCycleTimeHistogram do
     end
   end
 
-  context 'label_for_item' do
+  describe '#label_for_item' do
     it 'formats PR number and title' do
       expect(chart.label_for_item(pull_request, hint: nil)).to eq '42 Fix the bug'
     end

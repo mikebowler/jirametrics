@@ -21,7 +21,7 @@ describe DailyView do
   let(:issue2) { load_issue('SP-2', board: board) }
   let(:issue10) { load_issue('SP-10', board: board) }
 
-  context 'select_aging_issues' do
+  describe '#select_aging_issues' do
     it 'selects only aging issues' do
       view.issues = [issue1, issue2, issue10]
       board.cycletime = mock_cycletime_config stub_values: [
@@ -33,7 +33,7 @@ describe DailyView do
     end
   end
 
-  context 'issue_sorter' do
+  describe '#issue_sorter' do
     it 'sorts by priority name first' do
       input = [
         [issue1, 'Lowest', 50],
@@ -83,7 +83,7 @@ describe DailyView do
     end
   end
 
-  context 'make_title_line' do
+  describe '#make_title_line' do
     it 'is not expedited' do
       issue = load_issue('SP-1', board: board)
       board.cycletime = mock_cycletime_config stub_values: [
@@ -114,7 +114,7 @@ describe DailyView do
     end
   end
 
-  context 'make_parent_lines' do
+  describe '#make_parent_lines' do
     it 'returns nothing when no parent' do
       expect(view.make_parent_lines issue1).to be_empty
     end
@@ -141,7 +141,7 @@ describe DailyView do
     end
   end
 
-  context 'make_stats_lines' do
+  describe '#make_stats_lines' do
     it 'returns happy path' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2024-01-02', nil]
@@ -295,7 +295,7 @@ describe DailyView do
     end
   end
 
-  context 'make_blocked_stalled_lines' do
+  describe '#make_blocked_stalled_lines' do
     it 'renders stalled by inactivity' do
       issue = empty_issue created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
@@ -378,7 +378,7 @@ describe DailyView do
     end
   end
 
-  context 'history_text' do
+  describe '#history_text' do
     let(:review_status) { board.possible_statuses.find_by_id! 10_011 }
     let(:done_status) { board.possible_statuses.find_by_id! 10_002 }
 
@@ -431,7 +431,7 @@ describe DailyView do
     end
   end
 
-  context 'make_child_lines' do
+  describe '#make_child_lines' do
     it 'returns empty for no children' do
       parent = empty_issue created: '2024-01-01', board: board
       expect(view.make_child_lines parent).to be_empty
@@ -455,7 +455,7 @@ describe DailyView do
     end
   end
 
-  context 'make_not_visible_line' do
+  describe '#make_not_visible_line' do
     it 'returns nil when status is in a visible column (kanban)' do
       # SP-1 is in 'In Progress' which is a visible column
       expect(view.make_not_visible_line(issue1)).to be_nil
@@ -521,7 +521,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  context 'make_sprints_lines' do
+  describe '#make_sprints_lines' do
     it 'returns empty if and it is not a scrum board' do
       board.raw['type'] = 'kanban'
       expect(view.make_sprints_lines issue1).to be_empty

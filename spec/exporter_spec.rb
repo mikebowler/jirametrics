@@ -12,7 +12,7 @@ describe Exporter do
   end
   let(:exporter) { described_class.new file_system: file_system }
 
-  context 'configure' do
+  describe '.configure' do
     it 'prints a friendly error and exits when the log file cannot be written' do
       allow(File).to receive(:open).with('jirametrics.log', 'w').and_raise(Errno::EACCES)
       expect { described_class.configure { nil } }
@@ -21,7 +21,7 @@ describe Exporter do
     end
   end
 
-  context 'target_path' do
+  describe '#target_path' do
     it 'works with no file separator at end' do
       Dir.rmdir TARGET_PATH if File.exist? TARGET_PATH
       exporter.target_path TARGET_PATH
@@ -37,7 +37,7 @@ describe Exporter do
     end
   end
 
-  context 'jira_config' do
+  describe '#jira_config' do
     it 'raises exception if file not found' do
       expect { exporter.jira_config 'not-found.json' }.to raise_error(
         'Unable to load Jira configuration file and cannot continue: "not-found.json"'
@@ -58,7 +58,7 @@ describe Exporter do
     end
   end
 
-  context 'project' do
+  describe '#project' do
     it 'has jira_config set' do
       exporter.target_path TARGET_PATH
       expect { exporter.project }.to raise_error 'jira_config not set'
@@ -72,7 +72,7 @@ describe Exporter do
     end
   end
 
-  context 'holiday_dates' do
+  describe '#holiday_dates' do
     it 'allows simple dates' do
       expect(exporter.holiday_dates '2022-02-03').to eq([Date.parse('2022-02-03')])
     end
@@ -89,7 +89,7 @@ describe Exporter do
     end
   end
 
-  context 'each_project_config' do
+  describe '#each_project_config' do
     it 'matches all projects' do
       exporter.instance_variable_set :@jira_config, {}
 
@@ -115,7 +115,7 @@ describe Exporter do
     end
   end
 
-  context 'download' do
+  describe '#download' do
     it 'fails if download block is missing' do
       exporter.jira_config 'spec/testdata/jira-config.json'
       exporter.project name: 'foo'
@@ -125,7 +125,7 @@ describe Exporter do
     end
   end
 
-  context 'info' do
+  describe '#info' do
     it 'does not match on any issue' do
       exporter.info 'SP-1', name_filter: '*'
       expect(file_system.log_messages).to match_strings([
@@ -134,7 +134,7 @@ describe Exporter do
     end
   end
 
-  context 'filter_issues' do
+  describe '#filter_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }
     let(:issue2) { load_issue 'SP-2', board: board }

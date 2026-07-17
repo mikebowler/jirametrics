@@ -40,7 +40,7 @@ describe WipByColumnChart do
     issue
   end
 
-  context 'column_stats' do
+  describe '#column_stats' do
     it 'returns one ColumnStats per visible column' do
       chart.issues = []
       expect(chart.column_stats.size).to eq board.visible_columns.size
@@ -130,7 +130,7 @@ describe WipByColumnChart do
       expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
     end
 
-    context 'show_recommendations' do
+    describe '#show_recommendations' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
       # Issue B is in Ready for 600s then moves to In Progress for 400s.
       # Ready column: WIP=1 for 400s (40%), WIP=2 for 600s (60%) — total 1000s
@@ -224,7 +224,7 @@ describe WipByColumnChart do
       end
     end
 
-    context 'trim_zero_end_columns' do
+    describe '#trim_zero_end_columns' do
       it 'removes a leading all-zero column' do
         # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window
         issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'

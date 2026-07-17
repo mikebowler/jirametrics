@@ -25,7 +25,7 @@ describe BoardMovementCalculator do
     create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6, 8], today: today.to_s, key: 'SP-2'
   end
 
-  context 'age_data_for' do
+  describe '#age_data_for' do
     it 'has no issues' do
       calculator = described_class.new board: board, issues: [], today: today
       expect(calculator.age_data_for percentage: 100).to eq [0, 0, 0, 0]
@@ -47,7 +47,7 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'ages_of_issues_when_leaving_column' do
+  describe '#ages_of_issues_when_leaving_column' do
     it 'handles no issues' do
       calculator = described_class.new board: board, issues: [], today: today
       actual = calculator.ages_of_issues_when_leaving_column column_index: 1, today: today
@@ -88,7 +88,7 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'stack_data' do
+  describe '#stack_data' do
     it 'stacks' do
       calculator = described_class.new board: board, issues: [], today: today
       inputs = [
@@ -104,7 +104,7 @@ describe BoardMovementCalculator do
     end
   end
 
-  context 'forecasted_days_remaining_and_message' do
+  describe '#forecasted_days_remaining_and_message' do
     # The 85% ages across this table with issue1 and issue2 is 1, 2, 4
 
     it 'is already done' do

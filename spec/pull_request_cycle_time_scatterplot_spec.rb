@@ -19,7 +19,7 @@ describe PullRequestCycleTimeScatterplot do
     GroupingRules.new.tap { |r| r.label = 'my-repo' }
   end
 
-  context 'cycletime_unit' do
+  describe '#cycletime_unit' do
     it 'defaults to :days' do
       expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
     end
@@ -53,7 +53,7 @@ describe PullRequestCycleTimeScatterplot do
     end
   end
 
-  context 'y_value' do
+  describe '#y_value' do
     before { chart.timezone_offset = '+00:00' }
 
     it 'returns days by default' do
@@ -79,7 +79,7 @@ describe PullRequestCycleTimeScatterplot do
     end
   end
 
-  context 'label_cycletime' do
+  describe '#label_cycletime' do
     it 'labels days singular' do
       expect(chart.label_cycletime(1)).to eq '1 day'
     end
@@ -104,7 +104,7 @@ describe PullRequestCycleTimeScatterplot do
     end
   end
 
-  context 'title_value' do
+  describe '#title_value' do
     it 'uses days by default' do
       expect(chart.title_value(pull_request, rules: rules)).to eq 'SP-42 | Fix the bug | my-repo | Age:3 days'
     end

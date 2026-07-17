@@ -26,7 +26,7 @@ describe SprintBurndown do
     }, timezone_offset: '+00:00')
   end
 
-  context 'options' do
+  describe '#options=' do
     it 'handles points_only' do
       sprint_burndown.options = :points_only
       expect([sprint_burndown.use_story_points, sprint_burndown.use_story_counts]).to eq([true, false])
@@ -47,7 +47,7 @@ describe SprintBurndown do
     end
   end
 
-  context 'changes_for_one_issue' do
+  describe '#changes_for_one_issue' do
     let(:issue) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
 
     it 'returns empty list for no changes' do
@@ -100,7 +100,7 @@ describe SprintBurndown do
     end
   end
 
-  context 'data_set_by_story_points' do
+  describe '#data_set_by_story_points' do
     let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
     let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 
@@ -271,7 +271,7 @@ describe SprintBurndown do
     end
   end
 
-  context 'data_set_by_story_counts' do
+  describe '#data_set_by_story_counts' do
     let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
     let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 

@@ -10,7 +10,7 @@ describe CycletimeScatterplot do
     end
   end
 
-  context 'data_for_issue' do
+  describe '#data_for_issue' do
     it 'gets data' do
       board = load_complete_sample_board
       issue = load_issue('SP-10', board: board)
@@ -32,7 +32,7 @@ describe CycletimeScatterplot do
     end
   end
 
-  context 'label_days' do
+  describe '#label_days' do
     it 'returns singular for 1' do
       expect(chart.label_days 1).to eq '1 day'
     end
@@ -78,7 +78,7 @@ describe CycletimeScatterplot do
      ])
   end
 
-  context 'group_issues' do
+  describe '#group_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }
 
@@ -92,7 +92,7 @@ describe CycletimeScatterplot do
     end
   end
 
-  context 'x_value' do
+  describe '#x_value' do
     it 'returns the stop time from cycletime' do
       board = load_complete_sample_board
       issue = load_issue('SP-10', board: board)
@@ -101,7 +101,7 @@ describe CycletimeScatterplot do
     end
   end
 
-  context 'y_value' do
+  describe '#y_value' do
     it 'returns the cycletime in days' do
       board = load_complete_sample_board
       issue = load_issue('SP-10', board: board)
@@ -110,7 +110,7 @@ describe CycletimeScatterplot do
     end
   end
 
-  context 'title_value' do
+  describe '#title_value' do
     it 'formats key, summary, and cycletime' do
       board = load_complete_sample_board
       issue = load_issue('SP-10', board: board)

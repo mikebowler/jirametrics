@@ -23,7 +23,7 @@ describe DailyWipChart do
     chart
   end
 
-  context 'configure_rule' do
+  describe '#configure_rule' do
     it 'uses RawJavascript for color pairs' do
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
@@ -35,7 +35,7 @@ describe DailyWipChart do
     end
   end
 
-  context 'run' do
+  describe '#run' do
     it 'sets x-axis min and max to the full date range' do
       chart = described_class.new(empty_config_block)
       chart.file_system = MockFileSystem.new
@@ -55,7 +55,7 @@ describe DailyWipChart do
     end
   end
 
-  context 'group_issues_by_active_dates' do
+  describe '#group_issues_by_active_dates' do
     it 'returns nothing when no issues' do
       chart.issues = []
       expect(chart.group_issues_by_active_dates).to be_empty
@@ -128,7 +128,7 @@ describe DailyWipChart do
     end
   end
 
-  context 'select_possible_rules' do
+  describe '#select_possible_rules' do
     it 'returns empty for no data' do
       expect(chart.select_possible_rules issue_rules_by_active_date: {}).to be_empty
     end
@@ -219,7 +219,7 @@ describe DailyWipChart do
     end
   end
 
-  context 'make_data_set' do
+  describe '#make_data_set' do
     it 'positive' do
       rule = DailyGroupingRules.new
       rule.label = 'foo'
@@ -330,7 +330,7 @@ describe DailyWipChart do
     end
   end
 
-  context 'trend_line_data_set' do
+  describe '#trend_line_data_set' do
     let(:sample_data) do
       [
         {

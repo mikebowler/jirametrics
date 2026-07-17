@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe ColumnsConfig do
-  context 'run' do
+  describe '#run' do
     it 'executes the original block that had been passed in, in its own context' do
       columns = described_class.new file_config: nil, block: ->(_) { self.class.to_s }
       expect(columns.run).to eq('ColumnsConfig')
@@ -33,7 +33,7 @@ describe ColumnsConfig do
     end
   end
 
-  context 'column_entry_times' do
+  describe '#column_entry_times' do
     it 'succeeds' do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil

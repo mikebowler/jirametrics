@@ -5,7 +5,7 @@ require './spec/spec_helper'
 describe ChartBase do
   let(:chart_base) { described_class.new }
 
-  context 'label_days' do
+  describe '#label_days' do
     it 'is singular for one' do
       expect(chart_base.label_days(1)).to eq '1 day'
     end
@@ -15,7 +15,7 @@ describe ChartBase do
     end
   end
 
-  context 'label_issues' do
+  describe '#label_issues' do
     it 'is singular for one' do
       expect(chart_base.label_issues(1)).to eq '1 issue'
     end
@@ -25,7 +25,7 @@ describe ChartBase do
     end
   end
 
-  context 'daily_chart_dataset' do
+  describe '#daily_chart_dataset' do
     let(:issue1) { load_issue('SP-1') }
 
     it 'handles the simple positive case' do
@@ -98,7 +98,7 @@ describe ChartBase do
     end
   end
 
-  context 'board_columns' do
+  describe '#current_board' do
     let(:raw_board) { { 'type' => 'scrum', 'columnConfig' => { 'columns' => [] } } }
     let(:aging_chart) do
       # Not all charts have a board_id. Use one that does.
@@ -133,7 +133,7 @@ describe ChartBase do
     end
   end
 
-  context 'completed_issues_in_range' do
+  describe '#completed_issues_in_range' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue('SP-1', board: board) }
 
@@ -158,7 +158,7 @@ describe ChartBase do
     end
   end
 
-  context 'stagger_label_positions' do
+  describe '#stagger_label_positions' do
     before { chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31') }
 
     it 'returns empty for no datetimes' do
@@ -199,7 +199,7 @@ describe ChartBase do
     end
   end
 
-  context 'normalize_annotation_datetime' do
+  describe '#normalize_annotation_datetime' do
     before { chart_base.timezone_offset = '-05:00' }
 
     it 'appends timezone to a plain date' do
@@ -224,7 +224,7 @@ describe ChartBase do
     end
   end
 
-  context 'date_annotation' do
+  describe '#date_annotation' do
     before do
       chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31')
       chart_base.timezone_offset = '+00:00'
@@ -306,7 +306,7 @@ describe ChartBase do
     end
   end
 
-  context 'holidays' do
+  describe '#holidays' do
     it 'handles Tues-Thu in the same week' do
       chart_base.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-03')
       chart_base.holiday_dates = []
@@ -326,7 +326,7 @@ describe ChartBase do
     end
   end
 
-  context 'format_integer' do
+  describe '#format_integer' do
     it 'formats for three digits or less' do
       expect(chart_base.format_integer 5).to eq '5'
       expect(chart_base.format_integer 500).to eq '500'
@@ -343,7 +343,7 @@ describe ChartBase do
     end
   end
 
-  context 'format_status' do
+  describe '#format_status' do
     let(:board) do
       load_complete_sample_board.tap do |board|
         today = Date.parse('2021-12-17')
@@ -385,7 +385,7 @@ describe ChartBase do
     end
   end
 
-  context 'link_to_issue' do
+  describe '#link_to_issue' do
     let(:issue1) { load_issue('SP-1') }
 
     it 'handles easy case' do
@@ -410,7 +410,7 @@ describe ChartBase do
     expect(chart_base.random_color).to match(/^#[0-9a-fA-F]{6}$/)
   end
 
-  context 'to_human_readable' do
+  describe '#to_human_readable' do
     it 'returns small numbers unchanged' do
       expect(chart_base.to_human_readable(999)).to eq '999'
     end

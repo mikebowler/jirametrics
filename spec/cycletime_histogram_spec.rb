@@ -9,7 +9,7 @@ describe CycletimeHistogram do
   let(:issue10) { load_issue 'SP-10', board: board }
   let(:chart) { described_class.new(empty_config_block) }
 
-  context 'histogram_data_for' do
+  describe '#histogram_data_for' do
     it 'handles no issues' do
       expect(chart.histogram_data_for items: []).to be_empty
     end
@@ -24,7 +24,7 @@ describe CycletimeHistogram do
     end
   end
 
-  context 'stats_for' do
+  describe '#stats_for' do
     it 'handles no issues' do
       expect(chart.stats_for histogram_data: {}, percentiles: []).to eq({})
     end
@@ -105,7 +105,7 @@ describe CycletimeHistogram do
     end
   end
 
-  context 'data_set_for' do
+  describe '#data_set_for' do
     it 'handles no data' do
       expect(chart.data_set_for histogram_data: {}, label: 'foo', color: 'red').to eq({
         backgroundColor: 'red',
@@ -146,13 +146,13 @@ describe CycletimeHistogram do
     end
   end
 
-  context 'sort_items' do
+  describe '#sort_items' do
     it 'sorts by key_as_i' do
       expect(chart.sort_items([issue10, issue1, issue2])).to eq([issue1, issue2, issue10])
     end
   end
 
-  context 'label_for_item' do
+  describe '#label_for_item' do
     it 'formats issue key and summary without hint' do
       expect(chart.label_for_item(issue1, hint: nil)).to eq("#{issue1.key} : #{issue1.summary}")
     end

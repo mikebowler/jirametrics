@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe DailyWipByBlockedStalledChart do
-  context 'grouping_rules' do
+  describe '#grouping_rules' do
     let(:chart) do
       chart = described_class.new nil
       chart.date_range = to_date('2022-01-01')..to_date('2022-02-01')

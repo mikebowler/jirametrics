@@ -17,7 +17,7 @@ describe ThroughputByCompletedResolutionChart do
     expect(chart.description_text).to be_nil
   end
 
-  context 'default_grouping_rules' do
+  describe '#default_grouping_rules' do
     let(:done_status) do
       Status.new(name: 'Done', id: 10_002, category_name: 'Done', category_id: 3, category_key: 'done')
     end

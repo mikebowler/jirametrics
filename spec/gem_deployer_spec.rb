@@ -32,7 +32,7 @@ describe GemDeployer do
     allow(deployer).to receive(:current_version).and_return(Gem::Version.new('2.99.0'))
   end
 
-  context 'changelog_section' do
+  describe '#changelog_section' do
     it 'finds the section for the current version' do
       expect(deployer.changelog_section).to start_with '# v2.99.0'
     end
@@ -51,7 +51,7 @@ describe GemDeployer do
     end
   end
 
-  context 'release_notes' do
+  describe '#release_notes' do
     it 'strips markdown links leaving just the text' do
       expect(deployer.release_notes).to include 'major bug'
       expect(deployer.release_notes).not_to include '{% link'
@@ -73,7 +73,7 @@ describe GemDeployer do
     end
   end
 
-  context 'increment_prerelease' do
+  describe '#increment_prerelease' do
     it 'increments the pre number' do
       expect(deployer.send(:increment_prerelease, '2.30.1pre4')).to eq '2.30.1pre5'
     end
@@ -87,7 +87,7 @@ describe GemDeployer do
     end
   end
 
-  context 'increment_stable_to_prerelease' do
+  describe '#increment_stable_to_prerelease' do
     it 'increments the patch component for a three-part version' do
       expect(deployer.send(:increment_stable_to_prerelease, '2.30.1')).to eq '2.30.2pre1'
     end
@@ -97,7 +97,7 @@ describe GemDeployer do
     end
   end
 
-  context 'calculate_prerelease_version' do
+  describe '#calculate_prerelease_version' do
     before do
       allow(deployer).to receive_messages(
         gemspec_version_string: gemspec_str,
@@ -146,7 +146,7 @@ describe GemDeployer do
     end
   end
 
-  context 'prereleases_to_yank' do
+  describe '#prereleases_to_yank' do
     let(:all_versions) do
       [
         { version: Gem::Version.new('2.99pre1'), prerelease: true },
