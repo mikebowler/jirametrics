@@ -25,12 +25,6 @@ Metrics/MethodLength:
 Metrics/AbcSize:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
-  Max: 25 # Probably way too high but unsure where the cutoff should be. The default was too low.
-
-Metrics/PerceivedComplexity:
-  Max: 25 # Probably way too high but unsure where the cutoff should be. The default was too low.
-
 Style/Documentation:
   Enabled: false
 
