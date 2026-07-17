@@ -2,12 +2,6 @@
 
 require './spec/spec_helper'
 
-class Issue
-  def three arg1
-    "three-#{arg1}"
-  end
-end
-
 describe SelfOrIssueDispatcher do
   describe 'method_missing and responds_to_missing?' do
     # Note that the way we test responds_to_missing? is by calling respond_to? Non-intuitive.
@@ -21,6 +15,18 @@ describe SelfOrIssueDispatcher do
       project_config.load_all_boards
       FileConfig.new project_config: project_config, block: nil
     end
+
+    # The dispatcher checks ::Issue.method_defined?, so give Issue a throwaway method for the
+    # duration of these examples and remove it after, rather than monkey-patching it permanently.
+    before do
+      Issue.class_eval do
+        def three arg1
+          "three-#{arg1}"
+        end
+      end
+    end
+
+    after { Issue.class_eval { remove_method :three } }
 
     it 'calls a method without config and no args' do
       columns = ColumnsConfig.new file_config: file, block: nil
