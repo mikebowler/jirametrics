@@ -900,24 +900,11 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#blocked_stalled_by_date' do
-    it 'handles no changes' do
+    # Behaviour is covered in blocked_stalled_by_date_builder_spec. Here we only confirm that
+    # Issue delegates and resolves the builder's inputs (the stream and the date range).
+    it 'delegates to BlockedStalledByDateBuilder' do
       issue = empty_issue created: '2021-10-01', board: board
-      actual = issue.blocked_stalled_by_date(
-        date_range: to_date('2021-10-02')..to_date('2021-10-04'),
-        chart_end_time: to_time('2021-10-04T23:59:59')
-      )
-      expect(actual.transform_values(&:as_symbol)).to eq({
-        to_date('2021-10-02') => :active,
-        to_date('2021-10-03') => :active,
-        to_date('2021-10-04') => :active
-      })
-    end
-
-    it 'tracks blocked over multiple days' do
-      issue = empty_issue created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-02')..to_date('2021-10-04'),
         chart_end_time: to_time('2021-10-04T23:59:59')
@@ -926,67 +913,6 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
         to_date('2021-10-02') => :active,
         to_date('2021-10-03') => :blocked,
         to_date('2021-10-04') => :blocked
-      })
-    end
-
-    it 'tracks blocked then unblocked' do
-      issue = empty_issue created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
-
-      actual = issue.blocked_stalled_by_date(
-        date_range: to_date('2021-10-02')..to_date('2021-10-04'),
-        chart_end_time: to_time('2021-10-04T23:59:59')
-      )
-      expect(actual.transform_values(&:as_symbol)).to eq({
-        to_date('2021-10-02') => :active,
-        to_date('2021-10-03') => :blocked,
-        to_date('2021-10-04') => :active
-      })
-    end
-
-    it 'handles a date range that covers time before the issue starts and after it finishes' do
-      issue = empty_issue created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-02')
-
-      actual = issue.blocked_stalled_by_date(
-        date_range: to_date('2021-09-30')..to_date('2021-10-03'),
-        chart_end_time: to_time('2021-10-04T23:59:59')
-      )
-      expect(actual.transform_values(&:as_symbol)).to eq({
-        to_date('2021-09-30') => :active,
-        to_date('2021-10-01') => :active,
-        to_date('2021-10-02') => :blocked,
-        to_date('2021-10-03') => :blocked
-      })
-    end
-
-    it 'handles complex case' do
-      issue = empty_issue created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
-      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
-
-      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-09')
-      add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-11')
-
-      actual = issue.blocked_stalled_by_date(
-        date_range: to_date('2021-10-01')..to_date('2021-10-12'),
-        chart_end_time: to_time('2021-10-12T23:59:59')
-      )
-      expect(actual.transform_values(&:as_symbol)).to eq({
-        to_date('2021-10-01') => :active,  # created and therefore active
-        to_date('2021-10-02') => :stalled, # no activity for the next five days so start tracking stalled
-        to_date('2021-10-03') => :stalled, # no change
-        to_date('2021-10-04') => :stalled, # no change
-        to_date('2021-10-05') => :stalled, # no change
-        to_date('2021-10-06') => :stalled, # no change
-        to_date('2021-10-07') => :blocked, # blocked and unblocked same day
-        to_date('2021-10-08') => :active,
-        to_date('2021-10-09') => :blocked, # becomes blocked
-        to_date('2021-10-10') => :blocked, # No changes on this day, should still be blocked
-        to_date('2021-10-11') => :active, # block cleared
-        to_date('2021-10-12') => :active
       })
     end
   end

@@ -381,48 +381,10 @@ class Issue
   # If the day was stalled for the entire day then it's stalled
   # If there was no activity at all on this day then the last change from the previous day carries over
   def blocked_stalled_by_date date_range:, chart_end_time:, settings: nil
-    results = {}
-    current_date = nil
-    blocked_stalled_changes = blocked_stalled_changes(end_time: chart_end_time, settings: settings)
-    blocked_stalled_changes.each do |change|
-      current_date = change.time.to_date
-
-      winning_change, _last_change = results[current_date]
-      if winning_change.nil? ||
-        change.blocked? ||
-        (change.active? && (winning_change.active? || winning_change.stalled?)) ||
-        (change.stalled? && winning_change.stalled?)
-
-        winning_change = change
-      end
-
-      results[current_date] = [winning_change, change]
-    end
-
-    last_populated_date = nil
-    (results.keys.min..results.keys.max).each do |date|
-      if results.key? date
-        last_populated_date = date
-      else
-        _winner, last = results[last_populated_date]
-        results[date] = [last, last]
-      end
-    end
-    results = results.transform_values(&:first)
-
-    # The requested date range may span outside the actual changes we find in the changelog
-    date_of_first_change = blocked_stalled_changes[0].time.to_date
-    date_of_last_change = blocked_stalled_changes[-1].time.to_date
-    date_range.each do |date|
-      results[date] = blocked_stalled_changes[0] if date < date_of_first_change
-      results[date] = blocked_stalled_changes[-1] if date > date_of_last_change
-    end
-
-    # To make the code simpler, we've been accumulating data for every date. Now remove anything
-    # that isn't in the requested date_range
-    results.select! { |date, _value| date_range.include? date }
-
-    results
+    BlockedStalledByDateBuilder.new(
+      blocked_stalled_changes: blocked_stalled_changes(end_time: chart_end_time, settings: settings),
+      date_range: date_range
+    ).build
   end
 
   def blocked_stalled_changes end_time:, settings: nil
