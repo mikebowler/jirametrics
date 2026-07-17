@@ -20,32 +20,18 @@ describe PullRequestCycleTimeScatterplot do
   end
 
   describe '#cycletime_unit' do
-    it 'defaults to :days' do
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
-    end
-
-    it 'defaults y_axis_title to days' do
+    it 'defaults to days' do
       expect(chart.y_axis_title).to eq 'Cycle time in days'
     end
 
-    it 'updates y_axis_title when unit changes' do
+    it 'reflects :minutes in the axis title' do
+      chart.cycletime_unit :minutes
+      expect(chart.y_axis_title).to eq 'Cycle time in minutes'
+    end
+
+    it 'reflects :hours in the axis title' do
       chart.cycletime_unit :hours
       expect(chart.y_axis_title).to eq 'Cycle time in hours'
-    end
-
-    it 'accepts :minutes' do
-      chart.cycletime_unit :minutes
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :minutes
-    end
-
-    it 'accepts :hours' do
-      chart.cycletime_unit :hours
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :hours
-    end
-
-    it 'accepts :days' do
-      chart.cycletime_unit :days
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
     end
 
     it 'raises for invalid units' do

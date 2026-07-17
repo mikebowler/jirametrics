@@ -17,7 +17,9 @@ describe FileConfig do
     project_config
   end
   let(:file_config) do
-    described_class.new project_config: project_config, block: empty_config_block, today: to_date('2024-01-01')
+    described_class.new(
+      project_config: project_config, block: empty_config_block, today: to_date('2024-01-01'), issues: []
+    )
   end
 
   describe 'conversions' do
@@ -64,7 +66,7 @@ describe FileConfig do
       end
 
       issues = [load_issue('SP-1'), load_issue('SP-10')]
-      file_config.instance_variable_set :@issues, issues
+      file_config.issues.replace(issues)
 
       expect(file_config.prepare_grid).to eq([
         ['SP-1', 'Create new draft event'],
@@ -80,7 +82,7 @@ describe FileConfig do
       end
 
       issues = [load_issue('SP-1'), load_issue('SP-10')]
-      file_config.instance_variable_set :@issues, issues
+      file_config.issues.replace(issues)
 
       expect(file_config.prepare_grid).to eq([
         %w[id summary],
@@ -99,7 +101,7 @@ describe FileConfig do
       end
 
       issues = [load_issue('SP-1'), load_issue('SP-10')]
-      file_config.instance_variable_set :@issues, issues
+      file_config.issues.replace(issues)
 
       expect(file_config.prepare_grid).to eq([
         ['SP-10', 'Check in people at an event']

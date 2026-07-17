@@ -16,30 +16,16 @@ describe PullRequestCycleTimeHistogram do
   end
 
   describe '#cycletime_unit' do
-    it 'defaults to :days' do
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
-    end
-
-    it 'defaults x_axis_title to days' do
+    it 'defaults to days' do
       expect(chart.x_axis_title).to eq 'Cycle time in days'
     end
 
-    it 'accepts :minutes' do
+    it 'reflects :minutes in the axis title' do
       chart.cycletime_unit :minutes
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :minutes
+      expect(chart.x_axis_title).to eq 'Cycle time in minutes'
     end
 
-    it 'accepts :hours' do
-      chart.cycletime_unit :hours
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :hours
-    end
-
-    it 'accepts :days' do
-      chart.cycletime_unit :days
-      expect(chart.instance_variable_get(:@cycletime_unit)).to eq :days
-    end
-
-    it 'updates x_axis_title when unit changes' do
+    it 'reflects :hours in the axis title' do
       chart.cycletime_unit :hours
       expect(chart.x_axis_title).to eq 'Cycle time in hours'
     end

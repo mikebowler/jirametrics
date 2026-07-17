@@ -5,11 +5,12 @@ require 'csv'
 class FileConfig
   attr_reader :project_config, :issues
 
-  def initialize project_config:, block:, today: Date.today
+  def initialize project_config:, block:, today: Date.today, issues: nil
     @project_config = project_config
     @block = block
     @columns = nil
     @today = today
+    @issues = issues
   end
 
   def run
