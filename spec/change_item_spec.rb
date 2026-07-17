@@ -36,18 +36,20 @@ describe ChangeItem do
       'toString' => 'Blocked'
     }
 
-    expect(change).to be_flagged
-    expect(change.field).to eq 'Flagged'
-    expect(change.value).to eq 'Blocked'
-    expect(change).not_to be_status
-    expect(change).not_to be_priority
-    expect(change).not_to be_resolution
-    expect(change).not_to be_artificial
+    aggregate_failures do
+      expect(change).to be_flagged
+      expect(change.field).to eq 'Flagged'
+      expect(change.value).to eq 'Blocked'
+      expect(change).not_to be_status
+      expect(change).not_to be_priority
+      expect(change).not_to be_resolution
+      expect(change).not_to be_artificial
 
-    expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
-        'field_id: "customfield_10021")'
-    )
+      expect(change.to_s).to eq(
+        'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
+          'field_id: "customfield_10021")'
+      )
+    end
   end
 
   it 'parses multiple ids for Sprint' do
@@ -60,9 +62,11 @@ describe ChangeItem do
       'toString' => 'Scrum Sprint 10, Scrum Sprint 11'
     }
 
-    expect(change).to be_sprint
-    expect(change.old_value_id).to eq [2]
-    expect(change.value_id).to eq [2, 3]
+    aggregate_failures do
+      expect(change).to be_sprint
+      expect(change.old_value_id).to eq [2]
+      expect(change.value_id).to eq [2, 3]
+    end
   end
 
   it 'supports artificial' do
@@ -76,11 +80,13 @@ describe ChangeItem do
       'toString' => 'Blocked'
     }
 
-    expect(change).to be_artificial
-    expect(change.to_s).to eq(
-      'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
-      'field_id: "customfield_10021", artificial)'
-    )
+    aggregate_failures do
+      expect(change).to be_artificial
+      expect(change.to_s).to eq(
+        'ChangeItem(field: "Flagged", value: "Blocked":0, time: "2021-09-06 04:33:55 +0000", ' \
+        'field_id: "customfield_10021", artificial)'
+      )
+    end
   end
 
   describe '#initialize' do
