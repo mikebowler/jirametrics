@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './spec/mock_file_system'
 
 describe GithubGateway do
   let(:file_system) { MockFileSystem.new }

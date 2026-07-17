@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require './spec/spec_helper'
-require './spec/mock_estimation_configuration'
 
 describe EstimateAccuracyChart do
   let(:board) { sample_board }
