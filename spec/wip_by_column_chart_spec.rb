@@ -135,8 +135,10 @@ describe WipByColumnChart do
         expect(stats[1].wip_history).to eq [[0, 500], [2, 500]]
       end
     end
+  end
 
-    describe '#show_recommendations' do
+  describe '#show_recommendations' do
+    context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
       # Issue B is in Ready for 600s then moves to In Progress for 400s.
       # Ready column: WIP=1 for 400s (40%), WIP=2 for 600s (60%) — total 1000s
@@ -145,19 +147,17 @@ describe WipByColumnChart do
       #   85th percentile lands at WIP=2  → recommended max = 2
       # In Progress: WIP=0 for 600s, WIP=1 for 400s
       #   85th percentile → cumulative WIP=0: 60%, WIP=1: 100% → recommended = 1
-
-      def two_issue_setup
+      before do
         issue_a = issue_in_ready key: 'SP-1' # stays in Ready all 1000s
 
         issue_b = issue_in_ready key: 'SP-2'
         add_mock_change issue: issue_b, field: 'status',
           value: 'In Progress', value_id: 3,
           time: to_time('2021-06-01T00:06:40') # 400s in
-        [issue_a, issue_b]
+        chart.issues = [issue_a, issue_b]
       end
 
       it 'recommendations are not shown by default' do
-        chart.issues = two_issue_setup
         output = chart.run
         aggregate_failures do
           expect(output).not_to include('rec: ')
@@ -166,7 +166,6 @@ describe WipByColumnChart do
       end
 
       it 'computes the 85th-percentile WIP per column' do
-        chart.issues = two_issue_setup
         stats = chart.column_stats
 
         recs = chart.send(:compute_recommendations, stats)
@@ -180,7 +179,6 @@ describe WipByColumnChart do
       end
 
       it 'draws recommendation lines and texts when enabled' do
-        chart.issues = two_issue_setup
         chart.show_recommendations
         output = chart.run
 
@@ -191,7 +189,6 @@ describe WipByColumnChart do
       end
 
       it 'suggests adding a limit when none exists' do
-        chart.issues = two_issue_setup
         chart.show_recommendations
         output = chart.run
 
@@ -202,133 +199,133 @@ describe WipByColumnChart do
           expect(output).to include("Lower the WIP limit for 'In Progress' from 3 to 1")
         end
       end
+    end
 
-      it 'recommends removing a column when 85% of time is at WIP=0' do
-        # Issue passes through In Progress briefly (100s) but Ready is empty for 900s
-        # Ready: WIP=0 for 900s (90%), WIP=1 for 100s (10%) → 85th pct at WIP=0
-        issue = issue_in_ready key: 'SP-1'
-        add_mock_change issue: issue, field: 'status',
-          value: 'In Progress', value_id: 3,
-          time: to_time('2021-06-01T00:15:20') # 920s into the 1000s window
+    it 'recommends removing a column when 85% of time is at WIP=0' do
+      # Issue passes through In Progress briefly (100s) but Ready is empty for 900s
+      # Ready: WIP=0 for 900s (90%), WIP=1 for 100s (10%) → 85th pct at WIP=0
+      issue = issue_in_ready key: 'SP-1'
+      add_mock_change issue: issue, field: 'status',
+        value: 'In Progress', value_id: 3,
+        time: to_time('2021-06-01T00:15:20') # 920s into the 1000s window
 
-        chart.issues = [issue]
-        chart.show_recommendations
-        output = chart.run
+      chart.issues = [issue]
+      chart.show_recommendations
+      output = chart.run
 
-        aggregate_failures do
-          expect(output).to include("Almost nothing passes through column 'In Progress'")
-          expect(output).not_to include("Lower the WIP limit for 'In Progress'")
-          expect(output).not_to include("Add a WIP limit to column 'In Progress'")
-        end
-      end
-
-      it 'suggests adding a limit when there is no existing limit' do
-        # Done has min=nil, max=nil — use mock cycletime so the issue counts as in-WIP
-        issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
-        add_mock_change issue: issue, field: 'status',
-          value: 'Done', value_id: 10_002,
-          time: to_time('2021-05-31T12:00:00')
-        board.cycletime = mock_cycletime_config stub_values: [
-          ['SP-1', '2021-05-31T12:00:00', nil]
-        ]
-
-        chart.issues = [issue]
-        chart.show_recommendations
-        output = chart.run
-
-        expect(output).to include("Add a WIP limit to column 'Done'")
+      aggregate_failures do
+        expect(output).to include("Almost nothing passes through column 'In Progress'")
+        expect(output).not_to include("Lower the WIP limit for 'In Progress'")
+        expect(output).not_to include("Add a WIP limit to column 'In Progress'")
       end
     end
 
-    describe '#trim_zero_end_columns' do
-      it 'removes a leading all-zero column' do
-        # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window
-        issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
-        add_mock_change issue: issue, field: 'status',
-          value: 'In Progress', value_id: 3,
-          time: to_time('2021-05-31T12:00:00')
+    it 'suggests adding a limit when there is no existing limit' do
+      # Done has min=nil, max=nil — use mock cycletime so the issue counts as in-WIP
+      issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+      add_mock_change issue: issue, field: 'status',
+        value: 'Done', value_id: 10_002,
+        time: to_time('2021-05-31T12:00:00')
+      board.cycletime = mock_cycletime_config stub_values: [
+        ['SP-1', '2021-05-31T12:00:00', nil]
+      ]
 
-        chart.issues = [issue]
-        output = chart.run
+      chart.issues = [issue]
+      chart.show_recommendations
+      output = chart.run
 
-        aggregate_failures do
-          expect(output).not_to include('"Ready"')
-          expect(output).to include('"In Progress"')
-        end
-      end
+      expect(output).to include("Add a WIP limit to column 'Done'")
+    end
+  end
 
-      it 'removes a trailing all-zero column' do
-        # Issue stays in Ready the whole window — Done (index 3) stays at WIP=0
-        issue = issue_in_ready key: 'SP-1'
+  describe '#trim_zero_end_columns' do
+    it 'removes a leading all-zero column' do
+      # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window
+      issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+      add_mock_change issue: issue, field: 'status',
+        value: 'In Progress', value_id: 3,
+        time: to_time('2021-05-31T12:00:00')
 
-        chart.issues = [issue]
-        output = chart.run
+      chart.issues = [issue]
+      output = chart.run
 
-        aggregate_failures do
-          expect(output).not_to include('"Done"')
-          expect(output).to include('"Ready"')
-        end
-      end
-
-      it 'keeps an all-zero column in the middle' do
-        # Issues in Ready and Review but nothing in In Progress (index 1)
-        issue_a = issue_in_ready key: 'SP-1'
-
-        issue_b = empty_issue created: '2021-05-31', board: board, key: 'SP-2'
-        add_mock_change issue: issue_b, field: 'status',
-          value: 'Review', value_id: 10_011,
-          time: to_time('2021-05-31T12:00:00')
-
-        chart.issues = [issue_a, issue_b]
-        output = chart.run
-
-        aggregate_failures do
-          expect(output).to include('"Ready"')
-          expect(output).to include('"In Progress"')
-          expect(output).to include('"Review"')
-          expect(output).not_to include('"Done"')
-        end
+      aggregate_failures do
+        expect(output).not_to include('"Ready"')
+        expect(output).to include('"In Progress"')
       end
     end
 
-    context 'with started and stopped times from the cycletime config' do
-      it 'excludes an issue that has not yet started at the window boundary' do
-        issue = issue_in_ready key: 'SP-1'
-        board.cycletime = mock_cycletime_config stub_values: [
-          ['SP-1', '2021-06-01T00:08:20', nil] # starts 500s into the window
-        ]
+    it 'removes a trailing all-zero column' do
+      # Issue stays in Ready the whole window — Done (index 3) stays at WIP=0
+      issue = issue_in_ready key: 'SP-1'
 
-        chart.issues = [issue]
-        stats = chart.column_stats
+      chart.issues = [issue]
+      output = chart.run
 
-        # Issue is not in WIP for the first 500s, then enters Ready
-        expect(stats[0].wip_history).to eq [[0, 500], [1, 500]]
+      aggregate_failures do
+        expect(output).not_to include('"Done"')
+        expect(output).to include('"Ready"')
       end
+    end
 
-      it 'removes an issue from WIP when it stops within the window' do
-        issue = issue_in_ready key: 'SP-1'
-        board.cycletime = mock_cycletime_config stub_values: [
-          ['SP-1', '2021-05-31T12:00:00', '2021-06-01T00:08:20'] # stops 500s into the window
-        ]
+    it 'keeps an all-zero column in the middle' do
+      # Issues in Ready and Review but nothing in In Progress (index 1)
+      issue_a = issue_in_ready key: 'SP-1'
 
-        chart.issues = [issue]
-        stats = chart.column_stats
+      issue_b = empty_issue created: '2021-05-31', board: board, key: 'SP-2'
+      add_mock_change issue: issue_b, field: 'status',
+        value: 'Review', value_id: 10_011,
+        time: to_time('2021-05-31T12:00:00')
 
-        # Issue is in Ready for the first 500s, then leaves WIP
-        expect(stats[0].wip_history).to eq [[0, 500], [1, 500]]
+      chart.issues = [issue_a, issue_b]
+      output = chart.run
+
+      aggregate_failures do
+        expect(output).to include('"Ready"')
+        expect(output).to include('"In Progress"')
+        expect(output).to include('"Review"')
+        expect(output).not_to include('"Done"')
       end
+    end
+  end
 
-      it 'excludes an issue that was already done before the window opened' do
-        issue = issue_in_ready key: 'SP-1'
-        board.cycletime = mock_cycletime_config stub_values: [
-          ['SP-1', '2021-05-31T10:00:00', '2021-05-31T23:00:00'] # done before window
-        ]
+  context 'with started and stopped times from the cycletime config' do
+    it 'excludes an issue that has not yet started at the window boundary' do
+      issue = issue_in_ready key: 'SP-1'
+      board.cycletime = mock_cycletime_config stub_values: [
+        ['SP-1', '2021-06-01T00:08:20', nil] # starts 500s into the window
+      ]
 
-        chart.issues = [issue]
-        stats = chart.column_stats
+      chart.issues = [issue]
+      stats = chart.column_stats
 
-        expect(stats.all? { |s| s.wip_history.all? { |wip, _| wip.zero? } }).to be true
-      end
+      # Issue is not in WIP for the first 500s, then enters Ready
+      expect(stats[0].wip_history).to eq [[0, 500], [1, 500]]
+    end
+
+    it 'removes an issue from WIP when it stops within the window' do
+      issue = issue_in_ready key: 'SP-1'
+      board.cycletime = mock_cycletime_config stub_values: [
+        ['SP-1', '2021-05-31T12:00:00', '2021-06-01T00:08:20'] # stops 500s into the window
+      ]
+
+      chart.issues = [issue]
+      stats = chart.column_stats
+
+      # Issue is in Ready for the first 500s, then leaves WIP
+      expect(stats[0].wip_history).to eq [[0, 500], [1, 500]]
+    end
+
+    it 'excludes an issue that was already done before the window opened' do
+      issue = issue_in_ready key: 'SP-1'
+      board.cycletime = mock_cycletime_config stub_values: [
+        ['SP-1', '2021-05-31T10:00:00', '2021-05-31T23:00:00'] # done before window
+      ]
+
+      chart.issues = [issue]
+      stats = chart.column_stats
+
+      expect(stats.all? { |s| s.wip_history.all? { |wip, _| wip.zero? } }).to be true
     end
   end
 end
