@@ -615,55 +615,64 @@ class ProjectConfig
   end
 
   def discard_changes_before status_becomes: nil, &block
-    cycletimes_touched = Set.new
-    if status_becomes
-      status_becomes = [status_becomes] unless status_becomes.is_a? Array
+    block = discard_block_for(status_becomes) if status_becomes
+    apply_discard_block block
+  end
 
-      status_becomes.each { |status_name| validate_discard_status status_name }
+  # Build the block that, for an issue, returns the time it most recently entered one of the
+  # status_becomes statuses (or nil).
+  def discard_block_for status_becomes
+    status_becomes = [status_becomes] unless status_becomes.is_a? Array
+    status_becomes.each { |status_name| validate_discard_status status_name }
+    ->(issue) { last_matching_status_time issue, status_becomes }
+  end
 
-      block = lambda do |issue|
-        trigger_statuses = status_becomes.collect do |status_name|
-          if status_name == :backlog
-            issue.board.backlog_statuses
-          else
-            possible_statuses.find_all_by_name status_name
-          end
-        end.flatten
+  def last_matching_status_time issue, status_becomes
+    trigger_status_ids = trigger_status_ids_for issue, status_becomes
+    return if trigger_status_ids.empty?
 
-        next if trigger_statuses.empty?
+    time = nil
+    issue.status_changes.each do |change|
+      time = change.time if trigger_status_ids.include?(change.value_id) # && change.artificial? == false
+    end
+    time
+  end
 
-        trigger_status_ids = trigger_statuses.collect(&:id)
-
-        time = nil
-        issue.status_changes.each do |change|
-          time = change.time if trigger_status_ids.include?(change.value_id) # && change.artificial? == false
-        end
-        time
+  def trigger_status_ids_for issue, status_becomes
+    status_becomes.collect do |status_name|
+      if status_name == :backlog
+        issue.board.backlog_statuses
+      else
+        possible_statuses.find_all_by_name status_name
       end
-    end
+    end.flatten.collect(&:id)
+  end
 
+  def apply_discard_block block
+    cycletimes_touched = Set.new
     file_system.diagnostic "discard_changes_before: processing #{issues.size} issues"
-    issues.each do |issue|
-      cutoff_time = block.call(issue)
-      next if cutoff_time.nil?
+    issues.each { |issue| discard_changes_for_issue issue, block, cycletimes_touched }
+    cycletimes_touched.each(&:flush_cache)
+  end
 
-      original_start_time = issue.started_stopped_times.first
-      next if original_start_time.nil?
+  def discard_changes_for_issue issue, block, cycletimes_touched
+    cutoff_time = block.call(issue)
+    return if cutoff_time.nil?
 
-      issue.discard_changes_before cutoff_time
-      cycletimes_touched << issue.board.cycletime
+    original_start_time = issue.started_stopped_times.first
+    return if original_start_time.nil?
 
-      next unless cutoff_time
-      next if original_start_time > cutoff_time # ie the cutoff would have made no difference.
+    issue.discard_changes_before cutoff_time
+    cycletimes_touched << issue.board.cycletime
 
-      (@discarded_changes_data ||= []) << {
-        cutoff_time: cutoff_time,
-        original_start_time: original_start_time,
-        issue: issue
-      }
-    end
+    return unless cutoff_time # a user-supplied block may return false rather than nil
+    return if original_start_time > cutoff_time # ie the cutoff would have made no difference.
 
-    cycletimes_touched.each { |c| c.flush_cache }
+    (@discarded_changes_data ||= []) << {
+      cutoff_time: cutoff_time,
+      original_start_time: original_start_time,
+      issue: issue
+    }
   end
 
   def stringify_keys value

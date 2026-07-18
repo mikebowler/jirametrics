@@ -168,9 +168,67 @@ describe ProjectConfig do
       ]
 
       project_config.discard_changes_before status_becomes: 'Backlog'
-      expect(issue1.changes.collect(&:time)).to eq [
-        to_time('2022-01-03')
+      aggregate_failures do
+        expect(issue1.changes.collect(&:time)).to eq [to_time('2022-01-03')]
+        expect(project_config.discarded_changes_data).to eq [
+          { cutoff_time: to_time('2022-01-02'), original_start_time: to_time('2022-01-01'), issue: issue1 }
+        ]
+      end
+    end
+
+    it 'does not record a discard whose cutoff predates the issue start' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-06')
+
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.load_all_boards
+      project_config.issues << issue1
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-01-05'), nil]
       ]
+
+      project_config.discard_changes_before status_becomes: 'Backlog'
+      expect(project_config.discarded_changes_data).to be_nil
+    end
+
+    it 'processes every issue, skipping ones with no matching status' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      issue2 = empty_issue created: '2022-01-01', board: board, key: 'SP-2'
+      issue2.changes.clear
+      add_mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
+
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.load_all_boards
+      project_config.issues << issue1 << issue2
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-01-01'), nil],
+        [issue2, to_time('2022-01-01'), nil]
+      ]
+
+      project_config.discard_changes_before status_becomes: 'Backlog'
+      expect(project_config.discarded_changes_data.map { |entry| entry[:issue] }).to eq [issue2]
+    end
+
+    it 'uses the named status, not the backlog statuses, for a non-backlog status name' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-01')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02')
+
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.load_all_boards
+      project_config.issues << issue1
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-01-01'), nil]
+      ]
+
+      project_config.discard_changes_before status_becomes: 'In Progress'
+      expect(project_config.discarded_changes_data.first[:cutoff_time]).to eq to_time('2022-01-02')
     end
 
     it 'discards for block provided' do
