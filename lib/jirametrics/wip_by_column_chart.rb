@@ -184,8 +184,8 @@ class WipByColumnChart < ChartBase
       started_time, stopped_time = issue.board.cycletime.started_stopped_times(issue)
       next unless started_time
 
-      # Issue starts within the window: add an explicit event to enter WIP in its current column
-      if started_time > time_range.begin && started_time <= time_range.end
+      # Enter WIP in whatever column the issue was in as of its start time.
+      if within_window?(started_time)
         last_change = issue.status_changes.reverse.find { |c| c.time <= started_time }
         events << [started_time, issue, last_change ? status_to_column[last_change.value_id] : nil]
       end
