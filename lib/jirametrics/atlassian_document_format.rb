@@ -35,7 +35,11 @@ class AtlassianDocumentFormat
 
   # ADF is Atlassian Document Format
   # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-  def adf_node_to_html node
+  #
+  # Flat node-type dispatch: ~25 trivial branches mapping an ADF node type to its [prefix, suffix]
+  # pair (adf_node_render does the recursion). The complexity here is breadth, not depth — a lookup
+  # table would only trade a scannable case for a hash plus indirection, so we keep the case.
+  def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']
@@ -81,7 +85,8 @@ class AtlassianDocumentFormat
     end
   end
 
-  def adf_node_to_text node
+  # Flat node-type dispatch, same reasoning as adf_node_to_html: breadth, not depth. Kept as a case.
+  def adf_node_to_text node # rubocop:disable Metrics/CyclomaticComplexity
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']
