@@ -1,119 +1,5 @@
 # frozen_string_literal: true
 
-class SprintSummaryStats
-  attr_accessor :started, :added, :changed, :removed, :completed, :remaining, :points_values_changed
-
-  def initialize
-    @added = 0
-    @completed = 0
-    @removed = 0
-    @started = 0
-    @remaining = 0
-    @points_values_changed = false
-  end
-end
-
-# A "measure" decides how a sprint burndown accumulates and describes each change. Story points
-# track a running estimate total; story counts track how many issues are in the sprint. The loop
-# skeleton in SprintBurndown#build_sprint_data_set is identical for both - only the measure differs.
-class StoryPointsMeasure
-  attr_reader :summary_stats
-
-  def initialize
-    @summary_stats = SprintSummaryStats.new
-    @summary_stats.completed = 0.0
-    @estimate = 0.0
-    @issues_currently_in_sprint = []
-  end
-
-  def value = @estimate
-
-  def update_state change_data
-    case change_data.action
-    when :enter_sprint
-      @issues_currently_in_sprint << change_data.issue.key
-      @estimate += change_data.estimate
-    when :leave_sprint
-      @issues_currently_in_sprint.delete change_data.issue.key
-      @estimate -= change_data.estimate
-    when :story_points
-      @estimate += change_data.value if @issues_currently_in_sprint.include? change_data.issue.key
-    end
-  end
-
-  def record change_data
-    case change_data.action
-    when :story_points
-      return nil unless @issues_currently_in_sprint.include? change_data.issue.key
-
-      @summary_stats.points_values_changed = true
-      old_estimate = change_data.estimate - change_data.value
-      "Story points changed from #{old_estimate} points to #{change_data.estimate} points"
-    when :enter_sprint
-      @summary_stats.added += change_data.estimate
-      "Added to sprint with #{points_label change_data.estimate}"
-    when :issue_stopped
-      @estimate -= change_data.estimate
-      @issues_currently_in_sprint.delete change_data.issue.key
-      @summary_stats.completed += change_data.estimate
-      "Completed with #{points_label change_data.estimate}"
-    when :leave_sprint
-      @summary_stats.removed += change_data.estimate
-      "Removed from sprint with #{points_label change_data.estimate}"
-    else
-      raise "Unexpected action: #{change_data.action}"
-    end
-  end
-
-  def points_label estimate
-    "#{estimate || 'no'} points"
-  end
-
-  def started_title = "Sprint started with #{@estimate} points"
-  def ended_title = "Sprint ended with #{@estimate} points unfinished"
-  def active_title = "Sprint still active. #{@estimate} points still in progress."
-  def records_started_when_unwritten? = true
-end
-
-class StoryCountMeasure
-  attr_reader :summary_stats
-
-  def initialize
-    @summary_stats = SprintSummaryStats.new
-    @issues_currently_in_sprint = []
-  end
-
-  def value = @issues_currently_in_sprint.size
-
-  def update_state change_data
-    case change_data.action
-    when :enter_sprint
-      @issues_currently_in_sprint << change_data.issue.key
-    when :leave_sprint, :issue_stopped
-      @issues_currently_in_sprint.delete change_data.issue.key
-    end
-  end
-
-  def record change_data
-    case change_data.action
-    when :enter_sprint
-      @summary_stats.added += 1
-      'Added to sprint'
-    when :issue_stopped
-      @summary_stats.completed += 1
-      'Completed'
-    when :leave_sprint
-      @summary_stats.removed += 1
-      'Removed from sprint'
-    end
-  end
-
-  def started_title = "Sprint started with #{value} stories"
-  def ended_title = "Sprint ended with #{value} stories unfinished"
-  def active_title = "Sprint still active. #{value} issues in progress."
-  def records_started_when_unwritten? = false
-end
-
 class SprintBurndown < ChartBase
   attr_reader :use_story_points, :use_story_counts, :summary_stats
   attr_accessor :board_id
@@ -283,13 +169,13 @@ class SprintBurndown < ChartBase
 
   def data_set_by_story_points sprint:, change_data_for_sprint:
     build_sprint_data_set(
-      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: StoryPointsMeasure.new
+      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: SprintPointsMeasure.new
     )
   end
 
   def data_set_by_story_counts sprint:, change_data_for_sprint:
     build_sprint_data_set(
-      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: StoryCountMeasure.new
+      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: SprintCountMeasure.new
     )
   end
 
