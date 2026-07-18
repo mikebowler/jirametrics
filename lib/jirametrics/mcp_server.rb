@@ -343,23 +343,37 @@ class McpServer
       }
     )
 
-    def self.build_row issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                       end_time, filter
+    def self.call(server_context:, days_back: nil, project: nil, project_name: nil,
+                  completed_status: nil, completed_resolution: nil, **history_args)
+      project ||= project_name
+      filter = McpServer::HistoryFilter.from(**history_args)
+
+      rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
+        build_row(issue, name, project_data, days_back, completed_status, completed_resolution, filter)
+      end
+      rows.sort_by! { |r| -r[:completed_date].to_time.to_i }
+
+      McpServer.render_rows(rows, empty: 'No completed work found.') { |r| format_line(r) }
+    end
+
+    def self.build_row issue, project_name, project_data, days_back, completed_status, completed_resolution, filter
+      started, stopped = issue.started_stopped_times
+      return nil unless stopped
+
       completed_date = stopped.to_date
-      return nil if cutoff && completed_date < cutoff
+      return nil if past_cutoff?(completed_date, project_data[:today], days_back)
 
       status_at_done, resolution_at_done = issue.status_resolution_at_done
-      return nil if completed_status && status_at_done&.name != completed_status
-      return nil if completed_resolution && completed_resolution != resolution_at_done
-      return nil unless McpServer.matches_history?(issue, end_time, filter)
+      return nil unless matches_completion?(status_at_done, resolution_at_done,
+                                            completed_status, completed_resolution)
+      return nil unless McpServer.matches_history?(issue, project_data[:end_time], filter)
 
-      cycle_time = started ? (completed_date - started.to_date).to_i + 1 : nil
       {
         key: issue.key,
         summary: issue.summary,
         type: issue.type,
         completed_date: completed_date,
-        cycle_time_days: cycle_time,
+        cycle_time_days: started ? (completed_date - started.to_date).to_i + 1 : nil,
         flow_efficiency: McpServer.flow_efficiency_percent(issue, stopped),
         status_at_done: status_at_done&.name,
         resolution_at_done: resolution_at_done,
@@ -367,45 +381,25 @@ class McpServer
       }
     end
 
-    def self.call(server_context:, days_back: nil, project: nil, project_name: nil,
-                  completed_status: nil, completed_resolution: nil, **history_args)
-      project ||= project_name
-      filter = McpServer::HistoryFilter.from(**history_args)
-      rows = []
-      allowed_projects = McpServer.resolve_projects(server_context, project)
+    def self.past_cutoff? completed_date, today, days_back
+      return false unless days_back
 
-      server_context[:projects].each do |project_name, project_data|
-        next if allowed_projects && !allowed_projects.include?(project_name)
+      completed_date < today - days_back
+    end
 
-        today = project_data[:today]
-        cutoff = today - days_back if days_back
+    def self.matches_completion? status_at_done, resolution_at_done, completed_status, completed_resolution
+      return false if completed_status && status_at_done&.name != completed_status
+      return false if completed_resolution && completed_resolution != resolution_at_done
 
-        project_data[:issues].each do |issue|
-          started, stopped = issue.started_stopped_times
-          next unless stopped
+      true
+    end
 
-          row = build_row(issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                          project_data[:end_time], filter)
-          rows << row if row
-        end
-      end
-
-      rows.sort_by! { |r| -r[:completed_date].to_time.to_i }
-
-      if rows.empty?
-        text = 'No completed work found.'
-      else
-        lines = rows.map do |r|
-          ct = r[:cycle_time_days] ? "#{r[:cycle_time_days]}d" : 'unknown'
-          fe = r[:flow_efficiency] ? " | FE: #{r[:flow_efficiency]}%" : ''
-          completion = [r[:status_at_done], r[:resolution_at_done]].compact.join(' / ')
-          "#{r[:key]} | #{r[:project]} | #{r[:type]} | #{r[:completed_date]} | " \
-            "Cycle time: #{ct}#{fe} | #{completion} | #{r[:summary]}"
-        end
-        text = lines.join("\n")
-      end
-
-      MCP::Tool::Response.new([{ type: 'text', text: text }])
+    def self.format_line row
+      ct = row[:cycle_time_days] ? "#{row[:cycle_time_days]}d" : 'unknown'
+      fe = row[:flow_efficiency] ? " | FE: #{row[:flow_efficiency]}%" : ''
+      completion = [row[:status_at_done], row[:resolution_at_done]].compact.join(' / ')
+      "#{row[:key]} | #{row[:project]} | #{row[:type]} | #{row[:completed_date]} | " \
+        "Cycle time: #{ct}#{fe} | #{completion} | #{row[:summary]}"
     end
   end
 
