@@ -277,4 +277,83 @@ describe McpServer do
       end
     end
   end
+
+  describe '.flow_efficiency_percent' do
+    def flow active, total
+      time = to_time('2024-01-01')
+      issue = instance_double(Issue)
+      allow(issue).to receive(:flow_efficiency_numbers).with(end_time: time).and_return([active, total])
+      described_class.flow_efficiency_percent(issue, time)
+    end
+
+    it 'returns active/total as a percentage rounded to one decimal' do
+      expect(flow(1.0, 3.0)).to eq 33.3 # 1/3 * 100, rounded to 1dp (not 33, not 33.33)
+    end
+
+    it 'returns nil when there is no total time' do
+      aggregate_failures do
+        expect(flow(0.0, 0.0)).to be_nil   # zero
+        expect(flow(1.0, -1.0)).to be_nil  # negative
+      end
+    end
+  end
+
+  describe '.matches_history?' do
+    def hist_change field:, value:
+      Data.define(:field, :value).new(field:, value:)
+    end
+
+    def bsc_change blocked: false, stalled: false
+      Struct.new(:is_blocked, :is_stalled) do
+        def blocked? = is_blocked
+        def stalled? = is_stalled
+      end.new(blocked, stalled)
+    end
+
+    def matches? changes: [], bsc: [], **flags
+      time = to_time('2024-01-01')
+      issue = instance_double(Issue, changes: changes)
+      allow(issue).to receive(:blocked_stalled_changes).with(end_time: time).and_return(bsc)
+      described_class.matches_history?(
+        issue, time,
+        flags[:history_field], flags[:history_value],
+        flags[:ever_blocked], flags[:ever_stalled], flags[:currently_blocked], flags[:currently_stalled]
+      )
+    end
+
+    it 'matches when no filters are set' do
+      expect(matches?).to be true
+    end
+
+    it 'applies the history filter only when both a field and a value are given' do
+      aggregate_failures do
+        expect(matches?(history_field: 'priority')).to be true # value missing -> filter skipped
+        expect(matches?(history_value: 'High')).to be true     # field missing -> filter skipped
+      end
+    end
+
+    it 'requires some change to have matched the history field AND value' do
+      matching = [hist_change(field: 'priority', value: 'High')]
+      aggregate_failures do
+        expect(matches?(changes: matching, history_field: 'priority', history_value: 'High')).to be true
+        expect(matches?(changes: matching, history_field: 'priority', history_value: 'Low')).to be false # value
+        expect(matches?(changes: matching, history_field: 'status', history_value: 'High')).to be false  # field
+        expect(matches?(changes: [], history_field: 'priority', history_value: 'High')).to be false
+      end
+    end
+
+    it 'delegates to the blocked/stalled predicate when any blocked/stalled flag is set' do
+      # each flag independently enters the block, so each arm of the || guard is exercised
+      aggregate_failures do
+        expect(matches?(bsc: [bsc_change(blocked: true)], ever_blocked: true)).to be true
+        expect(matches?(bsc: [bsc_change(blocked: false)], ever_blocked: true)).to be false
+        expect(matches?(bsc: [bsc_change(stalled: true)], ever_stalled: true)).to be true
+        expect(matches?(bsc: [bsc_change(stalled: false)], ever_stalled: true)).to be false
+        expect(matches?(bsc: [bsc_change(blocked: true)], currently_blocked: true)).to be true
+        expect(matches?(bsc: [bsc_change(blocked: false)], currently_blocked: true)).to be false
+        expect(matches?(bsc: [bsc_change(stalled: true)], currently_stalled: true)).to be true
+        expect(matches?(bsc: [bsc_change(stalled: false)], currently_stalled: true)).to be false
+      end
+    end
+  end
 end
