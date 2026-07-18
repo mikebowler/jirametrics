@@ -130,23 +130,10 @@ class CumulativeFlowDiagram < ChartBase
 
     fill_colors = active_rules.zip(border_colors).map { |rules, border| fill_color_for(rules, border) }
 
-    # Datasets in reversed order: rightmost column first (bottom of stack), leftmost last (top).
-    data_sets = columns.each_with_index.map do |name, col_index|
-      col_windows = correction_windows
-        .select { |w| w[:column_index] == col_index }
-        .map { |w| { start_date: w[:start_date].to_s, end_date: w[:end_date].to_s } }
-
-      {
-        label: active_rules[col_index].label || name,
-        label_hint: active_rules[col_index].label_hint,
-        data: date_range.map { |date| { x: date.to_s, y: daily_marginals[date][col_index] } },
-        backgroundColor: fill_colors[col_index],
-        borderColor: border_colors[col_index],
-        fill: true,
-        tension: 0,
-        segment: Segment.new(col_windows)
-      }
-    end.reverse
+    data_sets = build_data_sets(
+      columns: columns, correction_windows: correction_windows, active_rules: active_rules,
+      daily_marginals: daily_marginals, fill_colors: fill_colors, border_colors: border_colors
+    )
 
     # Correction windows for the afterDraw hatch plugin, with dataset index in
     # Chart.js dataset array (reversed: done column = index 0).
@@ -168,6 +155,27 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   private
+
+  # One Chart.js dataset per active column, in reversed order: rightmost column first (bottom of
+  # the stack), leftmost last (top).
+  def build_data_sets columns:, correction_windows:, active_rules:, daily_marginals:, fill_colors:, border_colors:
+    columns.each_with_index.map do |name, col_index|
+      col_windows = correction_windows
+        .select { |w| w[:column_index] == col_index }
+        .map { |w| { start_date: w[:start_date].to_s, end_date: w[:end_date].to_s } }
+
+      {
+        label: active_rules[col_index].label || name,
+        label_hint: active_rules[col_index].label_hint,
+        data: date_range.map { |date| { x: date.to_s, y: daily_marginals[date][col_index] } },
+        backgroundColor: fill_colors[col_index],
+        borderColor: border_colors[col_index],
+        fill: true,
+        tension: 0,
+        segment: Segment.new(col_windows)
+      }
+    end.reverse
+  end
 
   def parse_theme_color color
     return color unless color.is_a?(Array)

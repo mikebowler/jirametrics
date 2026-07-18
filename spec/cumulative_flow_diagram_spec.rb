@@ -203,4 +203,38 @@ describe CumulativeFlowDiagram do
       # rubocop:enable RSpec/NestedGroups
     end
   end
+
+  describe '#build_data_sets' do
+    it 'builds one coloured dataset per column, reversed, with correction-window segments' do
+      chart.date_range = Date.parse('2021-06-01')..Date.parse('2021-06-02')
+      rule = Struct.new(:label, :label_hint)
+      result = chart.send(
+        :build_data_sets,
+        columns: %w[Ready Done],
+        correction_windows: [
+          { column_index: 0, start_date: Date.parse('2021-06-01'), end_date: Date.parse('2021-06-02') }
+        ],
+        active_rules: [rule.new(nil, 'ready hint'), rule.new('DoneLabel', nil)],
+        daily_marginals: { Date.parse('2021-06-01') => [3, 1], Date.parse('2021-06-02') => [2, 2] },
+        fill_colors: %w[fill0 fill1],
+        border_colors: %w[border0 border1]
+      )
+
+      aggregate_failures do
+        # Reversed: rightmost column (Done) first. Done keeps its label; Ready falls back to the column name.
+        expect(result.map { |ds| ds[:label] }).to eq %w[DoneLabel Ready]
+        expect(result.map { |ds| ds[:label_hint] }).to eq [nil, 'ready hint']
+        expect(result.map { |ds| ds[:backgroundColor] }).to eq %w[fill1 fill0]
+        expect(result.map { |ds| ds[:borderColor] }).to eq %w[border1 border0]
+        expect(result.map { |ds| [ds[:fill], ds[:tension]] }).to eq [[true, 0], [true, 0]]
+        expect(result.map { |ds| ds[:data] }).to eq [
+          [{ x: '2021-06-01', y: 1 }, { x: '2021-06-02', y: 2 }],
+          [{ x: '2021-06-01', y: 3 }, { x: '2021-06-02', y: 2 }]
+        ]
+        # Only the Ready column (index 0) had a correction window, so only its segment carries the dates.
+        expect(result[0][:segment].to_json).not_to include('2021-06-01')
+        expect(result[1][:segment].to_json).to include('["2021-06-01", "2021-06-02"]')
+      end
+    end
+  end
 end
