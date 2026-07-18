@@ -99,17 +99,7 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   def run
-    all_columns = current_board.visible_columns
-
-    column_rules_list = all_columns.map do |column|
-      rules = CfdColumnRules.new
-      @column_rules_block&.call(column, rules)
-      rules
-    end
-
-    active_pairs   = all_columns.zip(column_rules_list).reject { |_, rules| rules.ignored? }
-    active_columns = active_pairs.map(&:first)
-    active_rules   = active_pairs.map(&:last)
+    active_columns, active_rules = active_columns_and_rules(current_board.visible_columns)
 
     cfd = CfdDataBuilder.new(
       board: current_board,
@@ -150,6 +140,18 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   private
+
+  # Build each column's rules (through the config block, if one was given) and drop the ignored
+  # columns, returning the surviving columns and their rules as parallel arrays.
+  def active_columns_and_rules all_columns
+    column_rules_list = all_columns.map do |column|
+      rules = CfdColumnRules.new
+      @column_rules_block&.call(column, rules)
+      rules
+    end
+    active_pairs = all_columns.zip(column_rules_list).reject { |_, rules| rules.ignored? }
+    [active_pairs.map(&:first), active_pairs.map(&:last)]
+  end
 
   # Convert per-date cumulative totals to marginal band heights for Chart.js stacking.
   # cumulative[i] = issues that reached column i or further; marginal[i] = cumulative[i] -

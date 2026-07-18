@@ -201,6 +201,36 @@ describe CumulativeFlowDiagram do
     end
   end
 
+  describe '#active_columns_and_rules' do
+    it 'pairs each column with its rules and drops the ignored ones' do
+      chart = described_class.new(proc do
+        column_rules do |col, rule|
+          rule.ignore if col.name == 'Done'
+          rule.label = 'WIP' if col.name == 'In Progress'
+        end
+      end)
+      column = Struct.new(:name)
+      columns = ['Ready', 'In Progress', 'Done'].map { |name| column.new(name) }
+
+      active_columns, active_rules = chart.send(:active_columns_and_rules, columns)
+      aggregate_failures do
+        expect(active_columns.map(&:name)).to eq ['Ready', 'In Progress']
+        expect(active_rules.map(&:label)).to eq [nil, 'WIP']
+      end
+    end
+
+    it 'keeps every column with default rules when no column_rules block is configured' do
+      column = Struct.new(:name)
+      columns = %w[Ready Done].map { |name| column.new(name) }
+
+      active_columns, active_rules = chart.send(:active_columns_and_rules, columns)
+      aggregate_failures do
+        expect(active_columns.map(&:name)).to eq %w[Ready Done]
+        expect(active_rules.map(&:label)).to eq [nil, nil]
+      end
+    end
+  end
+
   describe '#marginal_band_heights' do
     it 'converts per-date cumulative totals into marginal band heights, keeping the last column' do
       daily_counts = {
