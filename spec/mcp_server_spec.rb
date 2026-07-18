@@ -7,6 +7,34 @@ describe McpServer do
   # Board from the complete sample: Ready(10001), In Progress(3), Review(10011), Done(10002).
   let(:board) { load_complete_sample_board }
 
+  # The four filtering handlers read real Issue objects. Build them on the complete-sample board and
+  # drive the started/stopped state through a stubbed cycletime (MockCycleTimeConfig keys by issue key,
+  # so one config carries every issue at once). started_stopped_times is what sorts an issue into aging
+  # (started, not stopped), completed (stopped), or unstarted (neither).
+  def handler_issue key:, created:, status_name:, summary: 'Do the thing'
+    status = board.possible_statuses.find_all_by_name(status_name).first
+    raise "No status named #{status_name}" unless status
+
+    issue = empty_issue created: created, board: board, key: key, creation_status: status
+    issue.raw['fields']['summary'] = summary
+    issue
+  end
+
+  def wire_cycletime(*tuples)
+    board.cycletime = mock_cycletime_config stub_values: tuples
+  end
+
+  # Each project shares the same today/end_time here — enough for these characterizations.
+  def server_context projects:, aggregates: {}, today: '2024-01-15', end_time: '2024-01-15'
+    {
+      projects: projects.transform_values do |issues|
+        { issues: issues, today: to_date(today), end_time: to_time(end_time) }
+      end,
+      aggregates: aggregates,
+      timezone_offset: '+00:00'
+    }
+  end
+
   describe '.resolve_projects' do
     it 'returns nil (no filter) when no project is given' do
       expect(described_class.resolve_projects({ aggregates: {} }, nil)).to be_nil
@@ -394,6 +422,160 @@ describe McpServer do
     it 'omits the aggregate section when the context has no aggregates key' do
       text = call_context(projects: { 'SP' => { issues: [1], today: to_date('2024-01-15') } }).content.first[:text]
       expect(text).to eq 'SP | 1 issues | Data through: 2024-01-15'
+    end
+  end
+
+  describe McpServer::AgingWorkTool do
+    def aging_text context, **args
+      described_class.call(server_context: context, **args).content.first[:text]
+    end
+
+    it 'formats a started, unfinished issue as one line with age and flow efficiency' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [issue, '2024-01-05', nil]
+      response = described_class.call(server_context: server_context(projects: { 'SP' => [issue] }))
+      # Age = (today 01-15 - started 01-05) + 1 = 11 days. FE 100% because the whole window is active.
+      expect(response.content).to eq [{
+        type: 'text',
+        text: 'SP-1 | SP | Bug | In Progress | Age: 11d | FE: 100.0% | Do the thing'
+      }]
+    end
+
+    it 'includes only started, unfinished issues (excluding unstarted and completed ones ahead of them)' do
+      completed = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'completed'
+      unstarted = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'unstarted'
+      aging = handler_issue key: 'SP-3', created: '2024-01-01', status_name: 'In Progress', summary: 'aging'
+      wire_cycletime [completed, '2024-01-05', '2024-01-10'], [unstarted, nil, nil], [aging, '2024-01-05', nil]
+      # completed and unstarted are dropped even though they come first in iteration order.
+      text = aging_text(server_context(projects: { 'SP' => [completed, unstarted, aging] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[aging]
+    end
+
+    it 'returns a not-found message when no issue is aging' do
+      completed = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done'
+      wire_cycletime [completed, '2024-01-05', '2024-01-10']
+      expect(aging_text(server_context(projects: { 'SP' => [completed] }))).to eq 'No aging work found.'
+    end
+
+    it 'sorts oldest (highest age) first' do
+      younger = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'younger'
+      older = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'older'
+      wire_cycletime [younger, '2024-01-10', nil], [older, '2024-01-03', nil]
+      text = aging_text(server_context(projects: { 'SP' => [younger, older] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[older younger]
+    end
+
+    it 'filters out issues younger than min_age_days' do
+      young = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'young'
+      old = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'old'
+      wire_cycletime [young, '2024-01-14', nil], [old, '2024-01-05', nil]
+      # young age = (15-14)+1 = 2; old age = 11. min_age_days 3 keeps only old.
+      text = aging_text(server_context(projects: { 'SP' => [young, old] }), min_age_days: 3)
+      expect(text).to eq 'SP-2 | SP | Bug | In Progress | Age: 11d | FE: 100.0% | old'
+    end
+
+    it 'filters by current_status' do
+      in_progress = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'ip'
+      review = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Review', summary: 'rev'
+      wire_cycletime [in_progress, '2024-01-05', nil], [review, '2024-01-05', nil]
+      text = aging_text(server_context(projects: { 'SP' => [in_progress, review] }), current_status: 'Review')
+      expect(text).to eq 'SP-2 | SP | Bug | Review | Age: 11d | FE: 100.0% | rev'
+    end
+
+    it 'filters by current_column (status id mapped through the board)' do
+      review = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Review', summary: 'rev'
+      in_progress = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'ip'
+      wire_cycletime [review, '2024-01-05', nil], [in_progress, '2024-01-05', nil]
+      # The excluded Review issue comes first, so a break (rather than skip) would wrongly drop the match.
+      text = aging_text(server_context(projects: { 'SP' => [review, in_progress] }), current_column: 'In Progress')
+      expect(text).to eq 'SP-2 | SP | Bug | In Progress | Age: 11d | FE: 100.0% | ip'
+    end
+
+    it 'restricts to the named project, accepting the project_name alias' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'sp'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-01', status_name: 'In Progress', summary: 'foo'
+      wire_cycletime [sp_issue, '2024-01-05', nil], [foo_issue, '2024-01-05', nil]
+      context = server_context(projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue] })
+      expect(aging_text(context, project_name: 'FOO'))
+        .to eq 'FOO-1 | FOO | Bug | In Progress | Age: 11d | FE: 100.0% | foo'
+    end
+
+    it 'expands an aggregate name to its constituent projects' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'sp'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-01', status_name: 'In Progress', summary: 'foo'
+      bar_issue = handler_issue key: 'BAR-1', created: '2024-01-01', status_name: 'In Progress', summary: 'bar'
+      wire_cycletime [sp_issue, '2024-01-05', nil], [foo_issue, '2024-01-05', nil], [bar_issue, '2024-01-05', nil]
+      context = server_context(
+        projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue], 'BAR' => [bar_issue] },
+        aggregates: { 'Some' => %w[SP FOO] }
+      )
+      text = aging_text(context, project: 'Some')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to contain_exactly('sp', 'foo')
+    end
+
+    it 'applies the history filter, keeping only issues whose change history matched' do
+      unmatched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'unmatched'
+      matched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'matched'
+      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      wire_cycletime [unmatched, '2024-01-05', nil], [matched, '2024-01-05', nil]
+      # The unmatched issue is first, so a break would wrongly drop the matching one behind it.
+      context = server_context(projects: { 'SP' => [unmatched, matched] })
+      text = aging_text(context, history_field: 'priority', history_value: 'High')
+      expect(text).to eq 'SP-2 | SP | Bug | In Progress | Age: 11d | FE: 100.0% | matched'
+    end
+
+    # These four exercise each blocked/stalled flag through the handler, proving it forwards the flag
+    # (and the data end_time) into matches_history?. A blocked issue is one with a Flagged change;
+    # a stalled issue is one left inactive past the stalled threshold (5 days).
+    it 'filters by ever_blocked' do
+      blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'blocked'
+      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      clear = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'clear'
+      add_mock_change(issue: clear, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      wire_cycletime [blocked, '2024-01-05', nil], [clear, '2024-01-05', nil]
+      text = aging_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[blocked]
+    end
+
+    it 'filters by currently_blocked' do
+      still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'still'
+      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'cleared'
+      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      wire_cycletime [still, '2024-01-05', nil], [cleared, '2024-01-05', nil]
+      # 'cleared' was blocked earlier but unflagged before the end date, so only 'still' is current.
+      text = aging_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[still]
+    end
+
+    it 'filters by ever_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'In Progress', summary: 'active'
+      wire_cycletime [stalled, '2024-01-02', nil], [active, '2024-01-13', nil]
+      # 'stalled' sat untouched from 01-02 to the 01-15 end date (>5 days); 'active' was created 01-13.
+      text = aging_text(server_context(projects: { 'SP' => [stalled, active] }), ever_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+
+    it 'filters by currently_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'revived'
+      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      wire_cycletime [stalled, '2024-01-02', nil], [revived, '2024-01-01', nil]
+      # 'revived' stalled early but had activity on 01-14, so it is not stalled as of the 01-15 end date.
+      text = aging_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+
+    it 'omits the flow-efficiency segment when it cannot be computed' do
+      # Started after the data end_time -> flow_efficiency_numbers returns no total, so FE is nil.
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [issue, '2024-01-20', nil]
+      text = aging_text(server_context(projects: { 'SP' => [issue] }, today: '2024-01-25', end_time: '2024-01-15'))
+      expect(text).to eq 'SP-1 | SP | Bug | In Progress | Age: 6d | Do the thing'
     end
   end
 end
