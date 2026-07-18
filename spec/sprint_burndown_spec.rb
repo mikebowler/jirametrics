@@ -106,19 +106,29 @@ describe SprintBurndown do
 
     it 'handles an empty active sprint' do
       change_data = []
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
-        { x: '2022-04-11T23:59:59+0000', y: 0.0, title: 'Sprint still active. 0.0 points still in progress.' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
+          { x: '2022-04-11T23:59:59+0000', y: 0.0, title: 'Sprint still active. 0.0 points still in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0.0, added: 0, removed: 0, completed: 0.0, remaining: 0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an empty completed sprint' do
       change_data = []
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0 points unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0.0, added: 0, removed: 0, completed: 0.0, remaining: 0.0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles complex case with active sprint' do
@@ -151,12 +161,17 @@ describe SprintBurndown do
           time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, estimate: 4.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
-        { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0 points to 5.0 points' },
-        { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' },
-        { x: '2022-04-11T23:59:59+0000', y: 21.0, title: 'Sprint still active. 21.0 points still in progress.' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 17.0, title: 'SP-1 Story points changed from 0.0 points to 5.0 points' },
+          { x: '2022-03-28T00:00:00+0000', y: 21.0, title: 'SP-2 Added to sprint with 4.0 points' },
+          { x: '2022-04-11T23:59:59+0000', y: 21.0, title: 'Sprint still active. 21.0 points still in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 12.0, added: 4.0, removed: 0, completed: 0.0, remaining: 0, points_values_changed: true
+        )
+      end
     end
 
     it 'ignores changes after sprint end' do
@@ -177,10 +192,15 @@ describe SprintBurndown do
           time: to_time('2022-04-11'), action: :story_points, value: -2.0, issue: issue1, estimate: 3.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0 points unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 5.0, title: 'Sprint ended with 5.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 5.0, added: 0, removed: 0, completed: 0.0, remaining: 5.0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an issue being removed mid-sprint' do
@@ -201,11 +221,16 @@ describe SprintBurndown do
           time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, estimate: 5.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
-        { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Removed from sprint with 5.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Removed from sprint with 5.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 12.0, added: 0, removed: 5.0, completed: 0.0, remaining: 7.0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an issue being completed mid-sprint' do
@@ -226,11 +251,16 @@ describe SprintBurndown do
           time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, estimate: 5.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
-        { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 5.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 12.0, title: 'Sprint started with 12.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 5.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 12.0, added: 0, removed: 0, completed: 5.0, remaining: 7.0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an issue with zero points being completed mid-sprint' do
@@ -251,11 +281,86 @@ describe SprintBurndown do
           time: to_time('2022-03-27'), action: :issue_stopped, value: 0.0, issue: issue1, estimate: 0.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 7.0, title: 'Sprint started with 7.0 points' },
-        { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 0.0 points' },
-        { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 7.0, title: 'Sprint started with 7.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 7.0, title: 'SP-1 Completed with 0.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 7.0, title: 'Sprint ended with 7.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 7.0, added: 0, removed: 0, completed: 0.0, remaining: 7.0, points_values_changed: false
+        )
+      end
+    end
+
+    it 'includes a change that lands exactly on the sprint start time' do
+      change_data = [
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-26T00:00:00'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
+        )
       ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0.0, title: 'Sprint started with 0.0 points' },
+          { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'SP-1 Added to sprint with 5.0 points' },
+          { x: '2022-04-11T23:59:59+0000', y: 5.0, title: 'Sprint still active. 5.0 points still in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0.0, added: 5.0, removed: 0, completed: 0.0, remaining: 0, points_values_changed: false
+        )
+      end
+    end
+
+    it 'ignores story point changes for an issue after it has completed' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :issue_stopped, value: -5.0, issue: issue1, estimate: 5.0
+        ),
+        # SP-1 is no longer in the sprint, so this later points change must be ignored.
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-28'), action: :story_points, value: 3.0, issue: issue1, estimate: 8.0
+        )
+      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 0.0, title: 'SP-1 Completed with 5.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 5.0, added: 0, removed: 0, completed: 5.0, remaining: 0.0, points_values_changed: false
+        )
+      end
+    end
+
+    it 'ignores story point changes for an issue after it has been removed from the sprint' do
+      sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
+      change_data = [
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-24'), action: :enter_sprint, value: 5.0, issue: issue1, estimate: 5.0
+        ),
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-27'), action: :leave_sprint, value: -5.0, issue: issue1, estimate: 5.0
+        ),
+        # SP-1 is no longer in the sprint, so this later points change must be ignored.
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-28'), action: :story_points, value: 3.0, issue: issue1, estimate: 8.0
+        )
+      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_points(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 5.0, title: 'Sprint started with 5.0 points' },
+          { x: '2022-03-27T00:00:00+0000', y: 0.0, title: 'SP-1 Removed from sprint with 5.0 points' },
+          { x: '2022-04-10T00:00:00+0000', y: 0.0, title: 'Sprint ended with 0.0 points unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 5.0, added: 0, removed: 5.0, completed: 0.0, remaining: 0.0, points_values_changed: false
+        )
+      end
     end
 
     it 'raises error if an illegal action is passed in' do
@@ -277,19 +382,29 @@ describe SprintBurndown do
 
     it 'handles an empty active sprint' do
       change_data = []
-      expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
-        { x: '2022-04-11T23:59:59+0000', y: 0, title: 'Sprint still active. 0 issues in progress.' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
+          { x: '2022-04-11T23:59:59+0000', y: 0, title: 'Sprint still active. 0 issues in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0, added: 0, removed: 0, completed: 0, remaining: 0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an empty completed sprint' do
       change_data = []
       sprint.raw['completeDate'] = '2022-04-10T00:00:00z'
-      expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
-        { x: '2022-04-10T00:00:00+0000', y: 0, title: 'Sprint ended with 0 stories unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
+          { x: '2022-04-10T00:00:00+0000', y: 0, title: 'Sprint ended with 0 stories unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0, added: 0, removed: 0, completed: 0, remaining: 0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles complex case with active sprint' do
@@ -306,11 +421,16 @@ describe SprintBurndown do
           time: to_time('2022-03-28'), action: :enter_sprint, value: nil, issue: issue2, estimate: 4.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 1.0, title: 'Sprint started with 1 stories' },
-        { x: '2022-03-28T00:00:00+0000', y: 2.0, title: 'SP-2 Added to sprint' },
-        { x: '2022-04-11T23:59:59+0000', y: 2.0, title: 'Sprint still active. 2 issues in progress.' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 1.0, title: 'Sprint started with 1 stories' },
+          { x: '2022-03-28T00:00:00+0000', y: 2.0, title: 'SP-2 Added to sprint' },
+          { x: '2022-04-11T23:59:59+0000', y: 2.0, title: 'Sprint still active. 2 issues in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 1, added: 1, removed: 0, completed: 0, remaining: 0, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an issue being removed mid-sprint' do
@@ -331,11 +451,16 @@ describe SprintBurndown do
           time: to_time('2022-03-27'), action: :leave_sprint, value: nil, issue: issue1, estimate: 5.0
         )
       ]
-      expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
-        { x: '2022-03-27T00:00:00+0000', y: 1, title: 'SP-1 Removed from sprint' },
-        { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
-      ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
+          { x: '2022-03-27T00:00:00+0000', y: 1, title: 'SP-1 Removed from sprint' },
+          { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 2, added: 0, removed: 1, completed: 0, remaining: 1, points_values_changed: false
+        )
+      end
     end
 
     it 'handles an issue being completed mid-sprint and should ignore one after sprint end' do
@@ -366,11 +491,34 @@ describe SprintBurndown do
         )
 
       ]
-      expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
-        { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
-        { x: '2022-03-28T00:00:00+0000', y: 1, title: 'SP-1 Completed' },
-        { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 2, title: 'Sprint started with 2 stories' },
+          { x: '2022-03-28T00:00:00+0000', y: 1, title: 'SP-1 Completed' },
+          { x: '2022-04-10T00:00:00+0000', y: 1, title: 'Sprint ended with 1 stories unfinished' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 2, added: 0, removed: 0, completed: 1, remaining: 1, points_values_changed: false
+        )
+      end
+    end
+
+    it 'includes a change that lands exactly on the sprint start time' do
+      change_data = [
+        SprintIssueChangeData.new(
+          time: to_time('2022-03-26T00:00:00'), action: :enter_sprint, value: nil, issue: issue1, estimate: 5.0
+        )
       ]
+      aggregate_failures do
+        expect(sprint_burndown.data_set_by_story_counts(change_data_for_sprint: change_data, sprint: sprint)).to eq [
+          { x: '2022-03-26T00:00:00+0000', y: 0, title: 'Sprint started with 0 stories' },
+          { x: '2022-03-26T00:00:00+0000', y: 1, title: 'SP-1 Added to sprint' },
+          { x: '2022-04-11T23:59:59+0000', y: 1, title: 'Sprint still active. 1 issues in progress.' }
+        ]
+        expect(sprint_burndown.summary_stats[sprint]).to have_attributes(
+          started: 0, added: 1, removed: 0, completed: 0, remaining: 0, points_values_changed: false
+        )
+      end
     end
   end
 end

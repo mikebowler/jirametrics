@@ -14,7 +14,7 @@ class SprintSummaryStats
 end
 
 class SprintBurndown < ChartBase
-  attr_reader :use_story_points, :use_story_counts
+  attr_reader :use_story_points, :use_story_counts, :summary_stats
   attr_accessor :board_id
 
   def initialize
