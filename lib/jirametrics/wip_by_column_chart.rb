@@ -231,21 +231,30 @@ class WipByColumnChart < ChartBase
     prev_time = time_range.begin
 
     events.each do |time, issue, new_col|
-      elapsed = (time - prev_time).to_i
-      if elapsed.positive?
-        wip_counts.each_with_index { |wip, idx| column_wip_seconds[idx][wip] += elapsed }
-        prev_time = time
-      end
-
-      old_col = current_column[issue]
-      wip_counts[old_col] -= 1 unless old_col.nil?
-      wip_counts[new_col] += 1 unless new_col.nil?
-      current_column[issue] = new_col
+      prev_time = accumulate_wip_seconds(column_wip_seconds, wip_counts, prev_time, time)
+      apply_event(wip_counts, current_column, issue, new_col)
     end
-
-    elapsed = (time_range.end - prev_time).to_i
-    wip_counts.each_with_index { |wip, idx| column_wip_seconds[idx][wip] += elapsed } if elapsed.positive?
+    accumulate_wip_seconds(column_wip_seconds, wip_counts, prev_time, time_range.end)
 
     column_wip_seconds
+  end
+
+  # Attribute the seconds between prev_time and time to each column's current WIP level, then return
+  # the new prev_time. A zero-length gap changes nothing and leaves prev_time where it was.
+  def accumulate_wip_seconds column_wip_seconds, wip_counts, prev_time, time
+    elapsed = (time - prev_time).to_i
+    return prev_time unless elapsed.positive?
+
+    wip_counts.each_with_index { |wip, idx| column_wip_seconds[idx][wip] += elapsed }
+    time
+  end
+
+  # Move the issue out of its old column and into new_col, keeping wip_counts and current_column in
+  # sync. A nil column means the issue isn't on the board — ie entering or leaving WIP.
+  def apply_event wip_counts, current_column, issue, new_col
+    old_col = current_column[issue]
+    wip_counts[old_col] -= 1 unless old_col.nil?
+    wip_counts[new_col] += 1 unless new_col.nil?
+    current_column[issue] = new_col
   end
 end

@@ -319,6 +319,52 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#accumulate_wip_seconds' do
+    def accumulate wip_counts, prev_time, time
+      column_wip_seconds = Array.new(wip_counts.size) { Hash.new(0) }
+      new_prev = chart.send(
+        :accumulate_wip_seconds, column_wip_seconds, wip_counts, to_time(prev_time), to_time(time)
+      )
+      [column_wip_seconds, new_prev]
+    end
+
+    it 'attributes the elapsed seconds to each column at its current WIP level, and returns the new time' do
+      column_wip_seconds, new_prev = accumulate([2, 0, 1], '2021-06-01T00:00:00', '2021-06-01T00:06:40')
+      aggregate_failures do
+        expect(column_wip_seconds).to eq [{ 2 => 400 }, { 0 => 400 }, { 1 => 400 }]
+        expect(new_prev).to eq to_time('2021-06-01T00:06:40')
+        expect(column_wip_seconds[0][2]).to be_an(Integer) # integer seconds
+      end
+    end
+
+    it 'changes nothing and keeps the previous time when no time has elapsed' do
+      column_wip_seconds, new_prev = accumulate([1], '2021-06-01T00:06:40', '2021-06-01T00:06:40')
+      aggregate_failures do
+        expect(column_wip_seconds).to eq [{}]
+        expect(new_prev).to eq to_time('2021-06-01T00:06:40')
+      end
+    end
+  end
+
+  describe '#apply_event' do
+    def apply wip_counts, current_column, issue, new_col
+      chart.send(:apply_event, wip_counts, current_column, issue, new_col)
+      [wip_counts, current_column]
+    end
+
+    it 'moves the issue out of its old column and into the new one' do
+      expect(apply([1, 0], { a: 0 }, :a, 1)).to eq [[0, 1], { a: 1 }]
+    end
+
+    it 'only increments when the issue enters from a nil column' do
+      expect(apply([0, 0], { a: nil }, :a, 0)).to eq [[1, 0], { a: 0 }]
+    end
+
+    it 'only decrements when the issue leaves to a nil column' do
+      expect(apply([1, 0], { a: 0 }, :a, nil)).to eq [[0, 0], { a: nil }]
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
