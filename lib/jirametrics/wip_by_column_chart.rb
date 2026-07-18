@@ -211,8 +211,7 @@ class WipByColumnChart < ChartBase
   # after the window opens, up to and including when it closes, at or after the issue started, and
   # strictly before it stopped.
   def in_wip_and_within_window? change, started_time, stopped_time
-    return false unless change.time > time_range.begin
-    return false if change.time > time_range.end
+    return false unless within_window?(change.time)
     return false unless change.time >= started_time
     return false if stopped_time && change.time >= stopped_time
 
