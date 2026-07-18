@@ -357,3 +357,43 @@ describe McpServer do
     end
   end
 end
+
+describe McpServer::ListProjectsTool do
+  # ListProjectsTool only reads issues.size, so the issue objects can be anything countable.
+  # **context lets a test omit the :aggregates key entirely (exercises the `|| {}` fallback).
+  def call_context(**context)
+    described_class.call(server_context: context)
+  end
+
+  it 'lists each project with its issue count and data end date as a text response' do
+    response = call_context(
+      projects: {
+        'SP' => { issues: [1, 2, 3], today: to_date('2024-01-15') },
+        'FOO' => { issues: [1], today: to_date('2024-01-10') }
+      },
+      aggregates: {}
+    )
+    expect(response.content).to eq [{
+      type: 'text',
+      text: "SP | 3 issues | Data through: 2024-01-15\nFOO | 1 issues | Data through: 2024-01-10"
+    }]
+  end
+
+  it 'appends aggregate groups, comma-joined, when present' do
+    text = call_context(
+      projects: { 'SP' => { issues: [1], today: to_date('2024-01-15') } },
+      aggregates: { 'Everything' => %w[SP FOO] }
+    ).content.first[:text]
+    expect(text).to eq(
+      "SP | 1 issues | Data through: 2024-01-15\n" \
+      "\n" \
+      "Aggregate groups (can be used as a project filter):\n" \
+      'Everything | includes: SP, FOO'
+    )
+  end
+
+  it 'omits the aggregate section when the context has no aggregates key' do
+    text = call_context(projects: { 'SP' => { issues: [1], today: to_date('2024-01-15') } }).content.first[:text]
+    expect(text).to eq 'SP | 1 issues | Data through: 2024-01-15'
+  end
+end
