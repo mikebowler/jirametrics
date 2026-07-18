@@ -266,8 +266,8 @@ describe McpServer do
       end.new(blocked, stalled)
     end
 
-    def matches? bsc, ever_blocked: nil, ever_stalled: nil, currently_blocked: nil, currently_stalled: nil
-      McpServer.matches_blocked_stalled?(bsc, ever_blocked, ever_stalled, currently_blocked, currently_stalled)
+    def matches? bsc, **flags
+      McpServer.matches_blocked_stalled?(bsc, McpServer::HistoryFilter.from(**flags))
     end
 
     it 'matches everything when no blocked/stalled filter is set' do
@@ -342,11 +342,7 @@ describe McpServer do
       time = to_time('2024-01-01')
       issue = instance_double(Issue, changes: changes)
       allow(issue).to receive(:blocked_stalled_changes).with(end_time: time).and_return(bsc)
-      described_class.matches_history?(
-        issue, time,
-        flags[:history_field], flags[:history_value],
-        flags[:ever_blocked], flags[:ever_stalled], flags[:currently_blocked], flags[:currently_stalled]
-      )
+      described_class.matches_history?(issue, time, McpServer::HistoryFilter.from(**flags))
     end
 
     it 'matches when no filters are set' do

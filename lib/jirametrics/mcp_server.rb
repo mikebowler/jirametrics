@@ -65,6 +65,27 @@ class McpServer
     }
   }.freeze
 
+  # Bundles the six history + blocked/stalled query parameters that every tool accepts, so they travel
+  # as one argument instead of a six-long positional tail through matches_history? and the handlers.
+  HistoryFilter = Data.define(
+    :history_field, :history_value, :ever_blocked, :ever_stalled, :currently_blocked, :currently_stalled
+  ) do
+    def self.from(history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
+                  currently_blocked: nil, currently_stalled: nil, **)
+      new(
+        history_field: history_field, history_value: history_value,
+        ever_blocked: ever_blocked, ever_stalled: ever_stalled,
+        currently_blocked: currently_blocked, currently_stalled: currently_stalled
+      )
+    end
+
+    def history? = !!(history_field && history_value)
+
+    def blocked_stalled? = !!(ever_blocked || ever_stalled || currently_blocked || currently_stalled)
+
+    def matches_change?(changes) = changes.any? { |c| c.field == history_field && c.value == history_value }
+  end
+
   def self.resolve_projects server_context, project_filter
     return nil if project_filter.nil?
 
@@ -144,25 +165,28 @@ class McpServer
     total_time.positive? ? (active_time / total_time * 100).round(1) : nil
   end
 
-  def self.matches_blocked_stalled?(bsc, ever_blocked, ever_stalled, currently_blocked, currently_stalled)
-    return false if ever_blocked && bsc.none?(&:blocked?)
-    return false if ever_stalled && bsc.none?(&:stalled?)
-    return false if currently_blocked && !bsc.last&.blocked?
-    return false if currently_stalled && !bsc.last&.stalled?
+  def self.matches_blocked?(bsc, filter)
+    return false if filter.ever_blocked && bsc.none?(&:blocked?)
+    return false if filter.currently_blocked && !bsc.last&.blocked?
 
     true
   end
 
-  def self.matches_history?(issue, end_time, history_field, history_value,
-                            ever_blocked, ever_stalled, currently_blocked, currently_stalled)
-    return false if history_field && history_value &&
-                    issue.changes.none? { |c| c.field == history_field && c.value == history_value }
+  def self.matches_stalled?(bsc, filter)
+    return false if filter.ever_stalled && bsc.none?(&:stalled?)
+    return false if filter.currently_stalled && !bsc.last&.stalled?
 
-    if ever_blocked || ever_stalled || currently_blocked || currently_stalled
-      bsc = issue.blocked_stalled_changes(end_time: end_time)
-      return false unless matches_blocked_stalled?(bsc, ever_blocked, ever_stalled,
-                                                   currently_blocked, currently_stalled)
-    end
+    true
+  end
+
+  def self.matches_blocked_stalled?(bsc, filter)
+    matches_blocked?(bsc, filter) && matches_stalled?(bsc, filter)
+  end
+
+  def self.matches_history?(issue, end_time, filter)
+    return false if filter.history? && !filter.matches_change?(issue.changes)
+    return false if filter.blocked_stalled? &&
+                    !matches_blocked_stalled?(issue.blocked_stalled_changes(end_time: end_time), filter)
 
     true
   end
@@ -221,10 +245,9 @@ class McpServer
     )
 
     def self.call(server_context:, min_age_days: nil, project: nil, project_name: nil,
-                  current_status: nil, current_column: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil, **)
+                  current_status: nil, current_column: nil, **history_args)
       project ||= project_name
+      filter = McpServer::HistoryFilter.from(**history_args)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -240,11 +263,7 @@ class McpServer
 
           age = (today - started.to_date).to_i + 1
           next if min_age_days && age < min_age_days
-          unless McpServer.matches_history?(issue, project_data[:end_time],
-                                            history_field, history_value, ever_blocked, ever_stalled,
-                                            currently_blocked, currently_stalled)
-            next
-          end
+          next unless McpServer.matches_history?(issue, project_data[:end_time], filter)
 
           rows << {
             key: issue.key,
@@ -303,17 +322,14 @@ class McpServer
     )
 
     def self.build_row issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                       end_time, history_field, history_value, ever_blocked, ever_stalled,
-                       currently_blocked, currently_stalled
+                       end_time, filter
       completed_date = stopped.to_date
       return nil if cutoff && completed_date < cutoff
 
       status_at_done, resolution_at_done = issue.status_resolution_at_done
       return nil if completed_status && status_at_done&.name != completed_status
       return nil if completed_resolution && completed_resolution != resolution_at_done
-      return nil unless McpServer.matches_history?(issue, end_time,
-                                                   history_field, history_value, ever_blocked, ever_stalled,
-                                                   currently_blocked, currently_stalled)
+      return nil unless McpServer.matches_history?(issue, end_time, filter)
 
       cycle_time = started ? (completed_date - started.to_date).to_i + 1 : nil
       {
@@ -330,10 +346,9 @@ class McpServer
     end
 
     def self.call(server_context:, days_back: nil, project: nil, project_name: nil,
-                  completed_status: nil, completed_resolution: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil, **)
+                  completed_status: nil, completed_resolution: nil, **history_args)
       project ||= project_name
+      filter = McpServer::HistoryFilter.from(**history_args)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -348,8 +363,7 @@ class McpServer
           next unless stopped
 
           row = build_row(issue, project_name, started, stopped, cutoff, completed_status, completed_resolution,
-                          project_data[:end_time], history_field, history_value, ever_blocked, ever_stalled,
-                          currently_blocked, currently_stalled)
+                          project_data[:end_time], filter)
           rows << row if row
         end
       end
@@ -397,9 +411,9 @@ class McpServer
     )
 
     def self.call(server_context:, project: nil, project_name: nil, current_status: nil, current_column: nil,
-                  history_field: nil, history_value: nil, ever_blocked: nil, ever_stalled: nil,
-                  currently_blocked: nil, currently_stalled: nil, **)
+                  **history_args)
       project ||= project_name
+      filter = McpServer::HistoryFilter.from(**history_args)
       rows = []
       allowed_projects = McpServer.resolve_projects(server_context, project)
 
@@ -411,11 +425,7 @@ class McpServer
           next if started || stopped
           next if current_status && issue.status.name != current_status
           next if current_column && McpServer.column_name_for(issue.board, issue.status.id) != current_column
-          unless McpServer.matches_history?(issue, project_data[:end_time],
-                                            history_field, history_value, ever_blocked, ever_stalled,
-                                            currently_blocked, currently_stalled)
-            next
-          end
+          next unless McpServer.matches_history?(issue, project_data[:end_time], filter)
 
           rows << {
             key: issue.key,
