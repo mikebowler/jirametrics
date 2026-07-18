@@ -74,6 +74,10 @@
   --sprint-burndown-sprint-color-6: #56B4E9;  /* Okabe-Ito sky blue */
   --sprint-burndown-sprint-color-7: #F0E442;  /* Okabe-Ito yellow */
 
+  --cfd-triangle-color: #333333;                          /* dark triangle on light background */
+  --cfd-arrival-rate-line-color: rgba(255,138,101,0.85);  /* orange */
+  --cfd-departure-rate-line-color: rgba(128,203,196,0.85);  /* teal */
+
   --sprint-color: #56B4E9;  /* Okabe-Ito sky blue */
 
   --daily-view-selected-issue-background: lightgray;
@@ -253,6 +257,7 @@ html[data-theme="dark"] {
   --expedited-chart-dot-expedite-started-color: #E69F00;
   --expedited-chart-dot-expedite-stopped-color: #2DCB9A;
   --sprint-burndown-sprint-color-1: #56B4E9;  /* sky blue */
+  --cfd-triangle-color: #ffffff;  /* light triangle on dark background */
   --sprint-burndown-sprint-color-3: #2DCB9A;  /* lighter bluish green */
   --sprint-burndown-sprint-color-4: #CC79A7;  /* reddish purple (vermilion → orange conflicts with color-2) */
   --sprint-burndown-sprint-color-5: #F0E442;  /* yellow */
@@ -407,6 +412,7 @@ html[data-theme="light"] {
     --expedited-chart-dot-expedite-stopped-color: #2DCB9A;
 
     --sprint-burndown-sprint-color-1: #56B4E9;  /* sky blue */
+    --cfd-triangle-color: #ffffff;  /* light triangle on dark background */
     --sprint-burndown-sprint-color-3: #2DCB9A;  /* lighter bluish green */
     --sprint-burndown-sprint-color-4: #CC79A7;  /* reddish purple (vermilion → orange conflicts with color-2) */
     --sprint-burndown-sprint-color-5: #F0E442;  /* yellow */

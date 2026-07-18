@@ -129,12 +129,9 @@ describe CumulativeFlowDiagram do
 
       # rubocop:disable RSpec/NestedGroups
       describe '#triangle_color' do
-        it 'uses a dark/light pair by default' do
+        it 'defaults to the CSS variable' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
-          aggregate_failures do
-            expect(output).to include('"#333333"')
-            expect(output).to include('"#ffffff"')
-          end
+          expect(output).to include('--cfd-triangle-color')
         end
 
         it 'uses the configured color' do
@@ -152,9 +149,9 @@ describe CumulativeFlowDiagram do
       end
 
       describe '#arrival_rate_line_color' do
-        it 'uses the default orange when not configured' do
+        it 'defaults to the CSS variable' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
-          expect(output).to include('"rgba(255,138,101,0.85)"')
+          expect(output).to include('--cfd-arrival-rate-line-color')
         end
 
         it 'uses the configured color' do
@@ -172,14 +169,14 @@ describe CumulativeFlowDiagram do
 
         it 'suppresses the line when nil is passed' do
           output = chart_with_rules { arrival_rate_line_color nil }.run
-          expect(output).not_to include('"rgba(255,138,101,0.85)"')
+          expect(output).not_to include('--cfd-arrival-rate-line-color')
         end
       end
 
       describe '#departure_rate_line_color' do
-        it 'uses the default teal when not configured' do
+        it 'defaults to the CSS variable' do
           output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
-          expect(output).to include('"rgba(128,203,196,0.85)"')
+          expect(output).to include('--cfd-departure-rate-line-color')
         end
 
         it 'uses the configured color' do
@@ -197,7 +194,7 @@ describe CumulativeFlowDiagram do
 
         it 'suppresses the line when nil is passed' do
           output = chart_with_rules { departure_rate_line_color nil }.run
-          expect(output).not_to include('"rgba(128,203,196,0.85)"')
+          expect(output).not_to include('--cfd-departure-rate-line-color')
         end
       end
       # rubocop:enable RSpec/NestedGroups

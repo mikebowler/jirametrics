@@ -73,6 +73,12 @@ class CumulativeFlowDiagram < ChartBase
         See also: This article on <a href="https://blog.mikebowler.ca/2026/03/27/cumulative-flow-diagram/">how to read a CFD</a>.
       </div>#{'      '}
     HTML
+    # Defaults come from CSS variables (theme handled in CSS). The config block below can still
+    # override any of them, or set one to nil to switch off that line/triangle.
+    @triangle_color = CssVariable['--cfd-triangle-color']
+    @arrival_rate_line_color = CssVariable['--cfd-arrival-rate-line-color']
+    @departure_rate_line_color = CssVariable['--cfd-departure-rate-line-color']
+
     instance_eval(&block)
   end
 
@@ -146,10 +152,6 @@ class CumulativeFlowDiagram < ChartBase
         fill_color: fill_colors[w[:column_index]]
       }
     end
-
-    @triangle_color = parse_theme_color(['#333333', '#ffffff']) unless instance_variable_defined?(:@triangle_color)
-    @arrival_rate_line_color = 'rgba(255,138,101,0.85)' unless instance_variable_defined?(:@arrival_rate_line_color)
-    @departure_rate_line_color = 'rgba(128,203,196,0.85)' unless instance_variable_defined?(:@departure_rate_line_color)
 
     wrap_and_render(binding, __FILE__)
   end
