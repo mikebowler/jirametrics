@@ -94,6 +94,13 @@ Each chart class in `lib/jirametrics/` has a matching ERB template in `lib/jiram
 
 Tests must always be written for new or modified functionality. There are no exceptions to this rule.
 
+A passing `rake` is necessary but **not sufficient** — untested code passes it trivially. Every new or
+changed behaviour ships with a spec that asserts its real output. Code that merely *runs* is not
+thereby tested: a chart that renders, or an MCP tool that returns text when you call it live, is a
+demo, not a spec ("it worked when I ran it" ≠ tested). Framework-coupled code — MCP tool handlers,
+downloaders, anything awkward to fixture — is **not** exempt; awkwardness to test is the reason bugs
+hide there, not a reason to skip.
+
 ## Known Gotchas
 
 ### Timezone consistency
