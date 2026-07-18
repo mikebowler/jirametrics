@@ -248,6 +248,77 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#compute_wip_seconds' do
+    # window is 2021-06-01T00:00:00 .. 00:16:40 = 1000 seconds, across 4 columns. compute_wip_seconds
+    # only ever uses an issue as a hash key, so plain symbols stand in for real issues here.
+    def compute current_column, events
+      timed = events.map { |time, issue, col| [to_time(time), issue, col] }
+      chart.send(:compute_wip_seconds, Array.new(4), current_column, timed)
+    end
+
+    it 'attributes the whole window to each column at its starting WIP level' do
+      result = compute({ a: 0, b: nil }, []) # b is not in WIP, so it is not counted anywhere
+      aggregate_failures do
+        expect(result).to eq [{ 1 => 1000 }, { 0 => 1000 }, { 0 => 1000 }, { 0 => 1000 }]
+        expect(result[0][1]).to be_an(Integer) # integer seconds, from the final stretch
+      end
+    end
+
+    it 'splits time across the old and new column when an issue moves' do
+      result = compute({ a: 0 }, [['2021-06-01T00:06:40', :a, 1]]) # move at the 400s mark
+      aggregate_failures do
+        expect(result).to eq [{ 1 => 400, 0 => 600 }, { 0 => 400, 1 => 600 }, { 0 => 1000 }, { 0 => 1000 }]
+        expect(result[0][1]).to be_an(Integer) # integer seconds, from the in-loop accumulation
+      end
+    end
+
+    it 'drops the issue out of WIP when it moves to a nil column' do
+      result = compute({ a: 0 }, [['2021-06-01T00:06:40', :a, nil]])
+      expect(result).to eq [{ 1 => 400, 0 => 600 }, { 0 => 1000 }, { 0 => 1000 }, { 0 => 1000 }]
+    end
+
+    it 'tracks an issue moving through several columns in sequence' do
+      result = compute({ a: 0 }, [
+        ['2021-06-01T00:05:00', :a, 1], # 300s: column 0 -> 1
+        ['2021-06-01T00:10:00', :a, 2]  # 600s: column 1 -> 2 (relies on the current_column update)
+      ])
+      expect(result).to eq [
+        { 1 => 300, 0 => 700 },
+        { 0 => 700, 1 => 300 },
+        { 0 => 600, 1 => 400 },
+        { 0 => 1000 }
+      ]
+    end
+
+    it 'counts multiple issues sharing a column as a higher WIP level' do
+      result = compute({ a: 0, b: 0 }, [])
+      expect(result).to eq [{ 2 => 1000 }, { 0 => 1000 }, { 0 => 1000 }, { 0 => 1000 }]
+    end
+
+    it 'does not advance time for simultaneous events sharing a timestamp' do
+      result = compute({ a: 0, b: 0 }, [
+        ['2021-06-01T00:06:40', :a, 1], # both at the 400s mark; the second event has zero elapsed
+        ['2021-06-01T00:06:40', :b, 1]
+      ])
+      expect(result).to eq [
+        { 2 => 400, 0 => 600 },
+        { 0 => 400, 2 => 600 },
+        { 0 => 1000 },
+        { 0 => 1000 }
+      ]
+    end
+
+    it 'brings an issue into WIP when it enters from no column (nil old column)' do
+      result = compute({ a: nil }, [['2021-06-01T00:06:40', :a, 0]]) # enters column 0 at the 400s mark
+      expect(result).to eq [{ 0 => 400, 1 => 600 }, { 0 => 1000 }, { 0 => 1000 }, { 0 => 1000 }]
+    end
+
+    it 'adds no final stretch when the last event lands exactly on the window end' do
+      result = compute({ a: 0 }, [['2021-06-01T00:16:40', :a, 1]]) # event at the 1000s window end
+      expect(result).to eq [{ 1 => 1000 }, { 0 => 1000 }, { 0 => 1000 }, { 0 => 1000 }]
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
