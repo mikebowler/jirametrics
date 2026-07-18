@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.files       = Dir['lib/**/*.{rb,json,css,erb,js}'] + Dir['bin/*']
   spec.homepage    = 'https://jirametrics.org'
   spec.license     = 'Apache-2.0'
-  spec.required_ruby_version = '>= 3.0.0'
+  spec.required_ruby_version = '>= 3.4.0'
   spec.add_dependency 'mcp'
   spec.add_dependency 'random-word', '~> 2.1.1'
   spec.add_dependency 'require_all', '~> 3.0.0'

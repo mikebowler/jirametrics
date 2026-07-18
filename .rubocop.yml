@@ -5,10 +5,18 @@ plugins:
 
 AllCops:
   NewCops: enable
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.4
 
 Style/MethodDefParentheses:
   Enabled: false
+
+# We keep paren-less method definitions (above), but anonymous forwarding (&, ...) *requires*
+# parentheses and reads cryptically. Prefer the explicit named form (&block, *args): it's
+# self-documenting, consistent with our def style, and kinder to someone reading the code cold.
+Naming/BlockForwarding:
+  EnforcedStyle: explicit
+Style/ArgumentsForwarding:
+  EnforcedStyle: explicit
 
 Layout/FirstArrayElementIndentation:
   Enabled: false
