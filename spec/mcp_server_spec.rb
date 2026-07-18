@@ -720,4 +720,135 @@ describe McpServer do
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
     end
   end
+
+  describe McpServer::NotYetStartedTool do
+    def unstarted_text context, **args
+      described_class.call(server_context: context, **args).content.first[:text]
+    end
+
+    it 'formats an unstarted issue with its creation date' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog'
+      wire_cycletime [issue, nil, nil]
+      response = described_class.call(server_context: server_context(projects: { 'SP' => [issue] }))
+      expect(response.content).to eq [{
+        type: 'text',
+        text: 'SP-1 | SP | Bug | Backlog | Created: 2024-01-01 | Do the thing'
+      }]
+    end
+
+    it 'includes only issues that are neither started nor stopped, even when excluded ones come first' do
+      started = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'started'
+      stopped = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'stopped'
+      completed = handler_issue key: 'SP-3', created: '2024-01-01', status_name: 'Backlog', summary: 'completed'
+      unstarted = handler_issue key: 'SP-4', created: '2024-01-01', status_name: 'Backlog', summary: 'unstarted'
+      wire_cycletime(
+        [started, '2024-01-05', nil], [stopped, nil, '2024-01-10'],
+        [completed, '2024-01-05', '2024-01-10'], [unstarted, nil, nil]
+      )
+      text = unstarted_text(server_context(projects: { 'SP' => [started, stopped, completed, unstarted] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[unstarted]
+    end
+
+    it 'returns a not-found message when everything has started' do
+      started = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog'
+      wire_cycletime [started, '2024-01-05', nil]
+      expect(unstarted_text(server_context(projects: { 'SP' => [started] }))).to eq 'No unstarted work found.'
+    end
+
+    it 'sorts by creation date, oldest first' do
+      newer = handler_issue key: 'SP-1', created: '2024-01-10', status_name: 'Backlog', summary: 'newer'
+      older = handler_issue key: 'SP-2', created: '2024-01-03', status_name: 'Backlog', summary: 'older'
+      wire_cycletime [newer, nil, nil], [older, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [newer, older] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[older newer]
+    end
+
+    it 'restricts to the named project, accepting the project_name alias' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'sp'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-01', status_name: 'Backlog', summary: 'foo'
+      wire_cycletime [sp_issue, nil, nil], [foo_issue, nil, nil]
+      context = server_context(projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue] })
+      expect(unstarted_text(context, project_name: 'FOO'))
+        .to eq 'FOO-1 | FOO | Bug | Backlog | Created: 2024-01-01 | foo'
+    end
+
+    it 'expands an aggregate name to its constituent projects' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'sp'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-01', status_name: 'Backlog', summary: 'foo'
+      bar_issue = handler_issue key: 'BAR-1', created: '2024-01-01', status_name: 'Backlog', summary: 'bar'
+      wire_cycletime [sp_issue, nil, nil], [foo_issue, nil, nil], [bar_issue, nil, nil]
+      context = server_context(
+        projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue], 'BAR' => [bar_issue] },
+        aggregates: { 'Some' => %w[SP FOO] }
+      )
+      text = unstarted_text(context, project: 'Some')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to contain_exactly('sp', 'foo')
+    end
+
+    it 'filters by current_status (excluded issue first)' do
+      backlog = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'backlog'
+      review = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Review', summary: 'review'
+      wire_cycletime [backlog, nil, nil], [review, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [backlog, review] }), current_status: 'Review')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[review]
+    end
+
+    it 'filters by current_column (excluded issue first)' do
+      review = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Review', summary: 'review'
+      in_progress = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'ip'
+      wire_cycletime [review, nil, nil], [in_progress, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [review, in_progress] }), current_column: 'In Progress')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[ip]
+    end
+
+    it 'applies the history filter, keeping only issues whose change history matched (unmatched first)' do
+      unmatched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'unmatched'
+      matched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'matched'
+      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      wire_cycletime [unmatched, nil, nil], [matched, nil, nil]
+      context = server_context(projects: { 'SP' => [unmatched, matched] })
+      text = unstarted_text(context, history_field: 'priority', history_value: 'High')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[matched]
+    end
+
+    # Blocked/stalled forwarding, on unstarted issues (their history still records flags and gaps).
+    it 'filters by ever_blocked' do
+      blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'blocked'
+      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      clear = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Backlog', summary: 'clear'
+      wire_cycletime [blocked, nil, nil], [clear, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[blocked]
+    end
+
+    it 'filters by currently_blocked' do
+      still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'still'
+      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'cleared'
+      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      wire_cycletime [still, nil, nil], [cleared, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[still]
+    end
+
+    it 'filters by ever_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Backlog', summary: 'active'
+      wire_cycletime [stalled, nil, nil], [active, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [stalled, active] }), ever_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+
+    it 'filters by currently_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'revived'
+      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      wire_cycletime [stalled, nil, nil], [revived, nil, nil]
+      text = unstarted_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+  end
 end
