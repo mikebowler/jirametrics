@@ -5,21 +5,147 @@ require './spec/spec_helper'
 describe IssuePrinter do
   let(:board) { sample_board }
   let(:issue1) { load_issue 'SP-1', board: board }
+  let(:printer) { described_class.new(issue1) }
 
-  it 'prints a simple issue' do
-    issue1.board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, nil, nil]
-    ]
+  describe '#header_line' do
+    it 'shows the key, type, and compacted summary' do
+      expect(printer.header_line).to eq "SP-1 (Story): Create new draft event\n"
+    end
+  end
 
-    expect(described_class.new(issue1).to_s).to eq <<~TEXT
-      SP-1 (Story): Create new draft event
-        History:
-          2021-06-18 18:41:29 +0000 [priority] "Medium" (Artificial entry)
-          2021-06-18 18:41:29 +0000 [  status] "Backlog":10000 (Artificial entry)
-          2021-06-18 18:43:34 +0000 [  status] "Backlog":10000 -> "Selected for Development":10001 (Author: Mike Bowler)
-          2021-06-18 18:44:21 +0000 [  status] "Selected for Development":10001 -> "In Progress":3 (Author: Mike Bowler)
-          2021-08-29 18:04:39 +0000 [ Flagged] "Impediment" (Author: Mike Bowler)
-    TEXT
+  describe '#assignee_line' do
+    it 'is empty when there is no assignee' do
+      issue1.raw['fields']['assignee'] = nil
+      expect(printer.assignee_line).to eq ''
+    end
+
+    it 'shows the assignee name and email' do
+      issue1.raw['fields']['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
+      expect(printer.assignee_line).to eq %(  [assignee] "Barney Rubble" <barney@rubble.com>\n)
+    end
+  end
+
+  describe '#links_section' do
+    it 'is empty when there are no issue links' do
+      issue1.raw['fields']['issuelinks'] = nil
+      expect(printer.links_section).to eq ''
+    end
+
+    it 'renders outward and inward links and skips links with neither' do
+      issue1.raw['fields']['issuelinks'] = [
+        { 'type' => { 'outward' => 'Cloned by' }, 'outwardIssue' => { 'key' => 'ABC456' } },
+        { 'type' => { 'inward' => 'Clones' }, 'inwardIssue' => { 'key' => 'ABC123' } },
+        { 'type' => {} }
+      ]
+      expect(printer.links_section).to eq "  [link] Cloned by ABC456\n  [link] Clones ABC123\n"
+    end
+  end
+
+  describe '#cycletime_warning' do
+    it 'is empty when the board has a cycletime' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      expect(printer.cycletime_warning).to eq ''
+    end
+
+    it 'warns when the board has no cycletime' do
+      issue1.board.cycletime = nil
+      expect(printer.cycletime_warning)
+        .to eq "  Unable to determine start/end times as board #{issue1.board.id} has no cycletime specified\n"
+    end
+  end
+
+  describe '#start_stop_entries' do
+    it 'is empty when the board has no cycletime' do
+      issue1.board.cycletime = nil
+      expect(printer.start_stop_entries).to eq []
+    end
+
+    it 'marks both the start and finish when both are known' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2021-01-01'), to_time('2021-01-05')]
+      ]
+      expect(printer.start_stop_entries).to eq [
+        [to_time('2021-01-01'), nil, 'vvvv Started here vvvv', true],
+        [to_time('2021-01-05'), nil, '^^^^ Finished here ^^^^', true]
+      ]
+    end
+
+    it 'omits the finish marker when there is no stop time' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2021-01-01'), nil]
+      ]
+      expect(printer.start_stop_entries).to eq [
+        [to_time('2021-01-01'), nil, 'vvvv Started here vvvv', true]
+      ]
+    end
+
+    it 'is empty when the cycletime has neither a start nor a stop time' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      expect(printer.start_stop_entries).to eq []
+    end
+  end
+
+  describe '#discarded_change_entries' do
+    it 'is empty when nothing was discarded' do
+      allow(issue1).to receive(:discarded_change_times).and_return(nil)
+      expect(printer.discarded_change_entries).to eq []
+    end
+
+    it 'marks each discarded change time' do
+      allow(issue1).to receive(:discarded_change_times).and_return([to_time('2021-01-01'), to_time('2021-01-02')])
+      expect(printer.discarded_change_entries).to eq [
+        [to_time('2021-01-01'), nil, '^^^^ Changes discarded ^^^^', true],
+        [to_time('2021-01-02'), nil, '^^^^ Changes discarded ^^^^', true]
+      ]
+    end
+  end
+
+  describe '#change_entries' do
+    it 'builds an entry per change, flagging artificial vs real' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      add_mock_change(issue: issue1, field: 'priority', value: 'Low', time: '2021-01-02', artificial: false)
+      entries = printer.change_entries
+      aggregate_failures do
+        expect(entries.first).to eq [to_time('2021-01-01'), 'priority', '"High" (Artificial entry)', true]
+        expect(entries.map { |entry| entry[3] }).to eq [true, false]
+      end
+    end
+
+    it 'appends discarded changes after the normal ones' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      discarded = mock_change(field: 'priority', value: 'Old', time: '2021-01-03', artificial: true)
+      allow(issue1).to receive(:discarded_changes).and_return([discarded])
+      expect(printer.change_entries.map { |entry| entry[0] }).to eq [to_time('2021-01-01'), to_time('2021-01-03')]
+    end
+  end
+
+  describe '#build_history' do
+    it 'combines start/stop, discarded, and change entries in that order' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2021-01-01'), nil]]
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-05', artificial: true)
+      allow(issue1).to receive(:discarded_change_times).and_return([to_time('2021-01-03')])
+      expect(printer.build_history.map { |entry| entry[0] }).to eq [
+        to_time('2021-01-01'), to_time('2021-01-03'), to_time('2021-01-05')
+      ]
+    end
+  end
+
+  describe '#render_history' do
+    it 'sorts, right-justifies types to the widest, and dashes nil types' do
+      history = [
+        [to_time('2021-01-02T00:00:00'), 'flag', 'second', false],
+        [to_time('2021-01-01T00:00:00'), 'status', 'first', false],
+        [to_time('2021-01-03T00:00:00'), nil, 'marker', true]
+      ]
+      expect(printer.render_history(history)).to eq(
+        "    2021-01-01 00:00:00 +0000 [status] first\n" \
+        "    2021-01-02 00:00:00 +0000 [  flag] second\n" \
+        "    2021-01-03 00:00:00 +0000 [------] marker\n"
+      )
+    end
   end
 
   describe '#create_change_message' do
