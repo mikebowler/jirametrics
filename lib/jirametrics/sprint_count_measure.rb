@@ -39,5 +39,4 @@ class SprintCountMeasure
   def started_title = "Sprint started with #{value} stories"
   def ended_title = "Sprint ended with #{value} stories unfinished"
   def active_title = "Sprint still active. #{value} issues in progress."
-  def records_started_when_unwritten? = false
 end

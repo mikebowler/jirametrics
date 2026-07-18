@@ -222,11 +222,8 @@ class SprintBurndown < ChartBase
   end
 
   def append_closing_points data_set, measure, sprint, start_written
-    unless start_written
-      # Nothing in the change stream triggered the sprint-start marker, so write it now.
-      measure.summary_stats.started = measure.value if measure.records_started_when_unwritten?
-      data_set << { y: measure.value, x: chart_format(sprint.start_time), title: measure.started_title }
-    end
+    # Nothing in the change stream triggered the sprint-start marker, so write it now.
+    data_set << sprint_start_point(measure, sprint) unless start_written
 
     if sprint.completed_time
       data_set << { y: measure.value, x: chart_format(sprint.completed_time), title: measure.ended_title }

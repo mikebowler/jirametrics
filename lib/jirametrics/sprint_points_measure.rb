@@ -59,5 +59,4 @@ class SprintPointsMeasure
   def started_title = "Sprint started with #{@estimate} points"
   def ended_title = "Sprint ended with #{@estimate} points unfinished"
   def active_title = "Sprint still active. #{@estimate} points still in progress."
-  def records_started_when_unwritten? = true
 end
