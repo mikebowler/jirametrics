@@ -851,4 +851,139 @@ describe McpServer do
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
     end
   end
+
+  describe McpServer::StatusTimeAnalysisTool do
+    describe '.select_issues' do
+      def selects? issue_state, started:, stopped:
+        issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+        wire_cycletime [issue, started, stopped]
+        described_class.select_issues(issue, issue_state)
+      end
+
+      # The result only ever feeds an `unless` guard, so its contract is truthiness, not a strict boolean.
+      it "'aging' selects issues that are started but not stopped" do
+        aggregate_failures do
+          expect(selects?('aging', started: '2024-01-05', stopped: nil)).to be_truthy
+          expect(selects?('aging', started: '2024-01-05', stopped: '2024-01-10')).to be_falsey
+          expect(selects?('aging', started: nil, stopped: nil)).to be_falsey
+        end
+      end
+
+      it "'completed' selects any stopped issue" do
+        aggregate_failures do
+          expect(selects?('completed', started: '2024-01-05', stopped: '2024-01-10')).to be_truthy
+          expect(selects?('completed', started: nil, stopped: '2024-01-10')).to be_truthy
+          expect(selects?('completed', started: '2024-01-05', stopped: nil)).to be_falsey
+        end
+      end
+
+      it "'not_started' selects issues that are neither started nor stopped" do
+        aggregate_failures do
+          expect(selects?('not_started', started: nil, stopped: nil)).to be_truthy
+          expect(selects?('not_started', started: '2024-01-05', stopped: nil)).to be_falsey
+          expect(selects?('not_started', started: nil, stopped: '2024-01-10')).to be_falsey
+        end
+      end
+
+      it "'all' (and any other value) selects every issue" do
+        aggregate_failures do
+          expect(selects?('all', started: nil, stopped: nil)).to be_truthy
+          expect(selects?('all', started: '2024-01-05', stopped: '2024-01-10')).to be_truthy
+        end
+      end
+    end
+
+    def analysis_text context, **args
+      described_class.call(server_context: context, **args).content.first[:text]
+    end
+
+    it 'reports average, total, and issue count per status, grouped by status name' do
+      # No status changes, so the whole span (created 01-01 -> end 01-15 = 14 days) sits in the current status.
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [issue, nil, nil]
+      response = described_class.call(server_context: server_context(projects: { 'SP' => [issue] }))
+      expect(response.content).to eq [{
+        type: 'text',
+        text: 'Status: In Progress | Avg: 14.0d | Total: 14.0d | Issues: 1'
+      }]
+    end
+
+    it 'averages the total time across the issues that visited a status' do
+      long = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      short = handler_issue key: 'SP-2', created: '2024-01-11', status_name: 'In Progress'
+      wire_cycletime [long, nil, nil], [short, nil, nil]
+      # 14 days + 4 days = 18 total, averaged over 2 issues = 9.
+      text = analysis_text(server_context(projects: { 'SP' => [long, short] }))
+      expect(text).to eq 'Status: In Progress | Avg: 9.0d | Total: 18.0d | Issues: 2'
+    end
+
+    it 'groups by status name (not board column) by default' do
+      # Status id 10001 is named 'Selected for Development' but lives in the 'Ready' column, so the
+      # grouping key reveals whether time_per_status (name) or time_per_column (column) was used.
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Selected for Development'
+      wire_cycletime [issue, nil, nil]
+      text = analysis_text(server_context(projects: { 'SP' => [issue] }))
+      expect(text).to eq 'Status: Selected for Development | Avg: 14.0d | Total: 14.0d | Issues: 1'
+    end
+
+    it 'groups by board column, and labels rows Column, when group_by is column' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Selected for Development'
+      wire_cycletime [issue, nil, nil]
+      text = analysis_text(server_context(projects: { 'SP' => [issue] }), group_by: 'column')
+      expect(text).to eq 'Column: Ready | Avg: 14.0d | Total: 14.0d | Issues: 1'
+    end
+
+    it 'forces column grouping when the column alias parameter is given' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Selected for Development'
+      wire_cycletime [issue, nil, nil]
+      text = analysis_text(server_context(projects: { 'SP' => [issue] }), column: 'ignored')
+      expect(text).to eq 'Column: Ready | Avg: 14.0d | Total: 14.0d | Issues: 1'
+    end
+
+    it 'restricts issues to the requested state (dropping excluded ones ahead of kept ones)' do
+      completed = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Review'
+      aging = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [completed, '2024-01-05', '2024-01-10'], [aging, '2024-01-05', nil]
+      # 'completed' is excluded and comes first, so a break rather than a skip would lose 'aging' behind it.
+      text = analysis_text(server_context(projects: { 'SP' => [completed, aging] }), issue_state: 'aging')
+      expect(text).to eq 'Status: In Progress | Avg: 14.0d | Total: 14.0d | Issues: 1'
+    end
+
+    it 'rounds average and total days to one decimal place' do
+      # created 01-01 00:00 -> end 01-15 08:00 = 14 days 8 hours = 14.333... days.
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [issue, nil, nil]
+      text = analysis_text(server_context(projects: { 'SP' => [issue] }, end_time: '2024-01-15T08:00:00'))
+      expect(text).to eq 'Status: In Progress | Avg: 14.3d | Total: 14.3d | Issues: 1'
+    end
+
+    it 'restricts to the named project' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-11', status_name: 'Review'
+      wire_cycletime [sp_issue, nil, nil], [foo_issue, nil, nil]
+      context = server_context(projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue] })
+      expect(analysis_text(context, project_name: 'FOO')).to eq 'Status: Review | Avg: 4.0d | Total: 4.0d | Issues: 1'
+    end
+
+    it 'sorts rows by descending average time' do
+      # Insert the quicker status first so insertion order differs from the sorted (descending) order.
+      quick = handler_issue key: 'SP-1', created: '2024-01-11', status_name: 'Review'
+      slow = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [quick, nil, nil], [slow, nil, nil]
+      text = analysis_text(server_context(projects: { 'SP' => [quick, slow] }))
+      expect(text.lines.map(&:chomp)).to eq [
+        'Status: In Progress | Avg: 14.0d | Total: 14.0d | Issues: 1',
+        'Status: Review | Avg: 4.0d | Total: 4.0d | Issues: 1'
+      ]
+    end
+
+    it 'returns a not-found message when no issue contributes any time' do
+      completed = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done'
+      wire_cycletime [completed, '2024-01-05', '2024-01-10']
+      response = described_class.call(
+        server_context: server_context(projects: { 'SP' => [completed] }), issue_state: 'aging'
+      )
+      expect(response.content).to eq [{ type: 'text', text: 'No data found.' }]
+    end
+  end
 end
