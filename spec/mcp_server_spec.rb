@@ -9,30 +9,30 @@ describe McpServer do
 
   describe '.resolve_projects' do
     it 'returns nil (no filter) when no project is given' do
-      expect(McpServer.resolve_projects({ aggregates: {} }, nil)).to be_nil
+      expect(described_class.resolve_projects({ aggregates: {} }, nil)).to be_nil
     end
 
     it 'wraps a plain project name in a one-element allow-list' do
-      expect(McpServer.resolve_projects({ aggregates: {} }, 'SP')).to eq ['SP']
+      expect(described_class.resolve_projects({ aggregates: {} }, 'SP')).to eq ['SP']
     end
 
     it 'expands an aggregate name to its constituent projects' do
       context = { aggregates: { 'Everything' => %w[SP FOO] } }
-      expect(McpServer.resolve_projects(context, 'Everything')).to eq %w[SP FOO]
+      expect(described_class.resolve_projects(context, 'Everything')).to eq %w[SP FOO]
     end
 
     it 'treats a missing aggregates key as no aggregates' do
-      expect(McpServer.resolve_projects({}, 'SP')).to eq ['SP']
+      expect(described_class.resolve_projects({}, 'SP')).to eq ['SP']
     end
   end
 
   describe '.column_name_for' do
     it 'returns the visible column that owns the status id' do
-      expect(McpServer.column_name_for(board, 3)).to eq 'In Progress'
+      expect(described_class.column_name_for(board, 3)).to eq 'In Progress'
     end
 
     it 'returns nil when no visible column owns the status id' do
-      expect(McpServer.column_name_for(board, 999_999)).to be_nil
+      expect(described_class.column_name_for(board, 999_999)).to be_nil
     end
   end
 
