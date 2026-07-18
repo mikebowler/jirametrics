@@ -57,7 +57,7 @@ class SprintBurndown < ChartBase
     charts_to_generate = []
     charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
     charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
-    charts_to_generate.each do |data_method, y_axis_title| # rubocop:disable Style/HashEachMethods
+    charts_to_generate.each do |data_method, y_axis_title|
       @summary_stats.clear
       data_sets = []
       sprints.each_with_index do |sprint, index|

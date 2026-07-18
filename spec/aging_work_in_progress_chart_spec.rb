@@ -267,8 +267,8 @@ describe AgingWorkInProgressChart do
       ]
 
       expect(chart.adjust_bar_data input).to eq [
-        [ 2,  4,  2, 0], # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets
-        [ 6,  7,  7, 0], # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets
+        [ 2,  4,  2, 0],
+        [ 6,  7,  7, 0],
         [14, 14, 15, 0],
         [20, 22, 21, 0]
       ]

@@ -44,7 +44,7 @@ class Exporter
 
       exporter.filter_issues issues, ignore_issues
 
-      discard_changes_before status_becomes: (starting_status || :backlog) # rubocop:disable Style/RedundantParentheses
+      discard_changes_before status_becomes: (starting_status || :backlog)
 
       file do
         file_suffix '.html'

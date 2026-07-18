@@ -166,7 +166,7 @@ describe Exporter do
     it 'passes the issue to the lambda' do
       received = []
       issues = [issue1, issue2]
-      exporter.filter_issues issues, ->(issue) { received << issue; false } # rubocop:disable Style/Semicolon
+      exporter.filter_issues issues, ->(issue) { received << issue; false }
       expect(received).to eq [issue1, issue2]
     end
   end

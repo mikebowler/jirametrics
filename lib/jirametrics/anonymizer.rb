@@ -35,7 +35,7 @@ class Anonymizer < ChartBase
     # cautious and try five times.
     5.times do |i|
       return RandomWord.phrases.next.tr('_', ' ')
-    rescue # rubocop:disable Style/RescueStandardError -- We don't care what exception was thrown.
+    rescue
       @file_system.log "Random word blew up on attempt #{i + 1}"
     end
   end

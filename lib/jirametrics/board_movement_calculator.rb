@@ -84,7 +84,7 @@ class BoardMovementCalculator
       # Skip if it was already done by the time it got to this column or it became done when it got to this column
       next if issue_done && issue_done <= this_column_start
 
-      end_date = case # rubocop:disable Style/EmptyCaseCondition
+      end_date = case
       when next_column_start.nil?
         # If this is the last column then base age against today
         today

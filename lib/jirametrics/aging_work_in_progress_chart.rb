@@ -65,7 +65,7 @@ class AgingWorkInProgressChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
-  def show_all_columns show = true # rubocop:disable Style/OptionalBooleanParameter
+  def show_all_columns show = true
     @show_all_columns = show
   end
 

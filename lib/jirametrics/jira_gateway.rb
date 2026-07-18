@@ -90,7 +90,7 @@ class JiraGateway
   def parse_response command:, result:
     begin
       json = JSON.parse(result)
-    rescue # rubocop:disable Style/RescueStandardError
+    rescue
       message = "Unable to parse results from #{sanitize_message(command)}"
       @file_system.error message, more: result
       raise message

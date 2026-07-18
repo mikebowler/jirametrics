@@ -32,14 +32,12 @@ describe ProjectConfig do
         [column.name, column.status_ids, column.min, column.max]
       end
 
-      # rubocop:disable Layout/ExtraSpacing
       expect(contents).to eq [
         ['Ready',       [10_001],   1,   4],
         ['In Progress',      [3], nil,   3],
         ['Review',      [10_011], nil,   3],
         ['Done',        [10_002], nil, nil]
       ]
-      # rubocop:enable Layout/ExtraSpacing
     end
   end
 

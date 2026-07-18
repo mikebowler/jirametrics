@@ -14,7 +14,7 @@ class DependencyChart < ChartBase
       @merge_bidirectional = keep.to_sym
     end
 
-    def get_merge_bidirectional # rubocop:disable Naming/AccessorMethodName
+    def get_merge_bidirectional
       @merge_bidirectional
     end
 
@@ -141,7 +141,6 @@ class DependencyChart < ChartBase
           l.name == link.name && l.origin.key == link.other_issue.key && l.other_issue.key == link.origin.key
         end
         if opposite
-          # rubocop:disable Style/GuardClause
           if link_rules.get_merge_bidirectional.to_sym == link.direction
             # We keep this one and discard the opposite
             links_to_ignore << opposite
@@ -149,7 +148,6 @@ class DependencyChart < ChartBase
             # We keep the opposite and discard this one
             next
           end
-          # rubocop:enable Style/GuardClause
         end
       end
 
@@ -185,7 +183,7 @@ class DependencyChart < ChartBase
       stdin.close
       return stdout.read
     end
-  rescue # rubocop:disable Style/RescueStandardError
+  rescue
     message = 'Unable to generate the dependency chart because graphviz could not be found in the path.'
     file_system.log message, also_write_to_stderr: true
     message

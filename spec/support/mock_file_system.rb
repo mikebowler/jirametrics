@@ -74,11 +74,11 @@ class MockFileSystem < FileSystem
     if results == :not_mocked
       super
     else
-      results.each { |file| yield file } # rubocop:disable Style/ExplicitBlockArgument
+      results.each { |file| yield file }
     end
   end
 
-  def log message, more: nil, also_write_to_stderr: false # rubocop:disable Lint/UnusedMethodArgument
+  def log message, more: nil, also_write_to_stderr: false
     # Ignore blank lines and whitespace on either end
     message = message.strip
     return if message == ''

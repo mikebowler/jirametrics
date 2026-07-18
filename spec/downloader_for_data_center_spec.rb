@@ -47,7 +47,7 @@ describe DownloaderForDataCenter do
         file_system: file_system,
         jira_gateway: jira_gateway
       )
-      expect(instance).to be_instance_of DownloaderForDataCenter # rubocop:disable RSpec/DescribedClass
+      expect(instance).to be_instance_of DownloaderForDataCenter
     end
   end
 

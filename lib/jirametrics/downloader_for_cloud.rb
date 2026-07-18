@@ -130,7 +130,7 @@ class DownloaderForCloud < Downloader
     issue_datas
   end
 
-  def attach_worklogs_to_issues issue_datas:, issue_jsons:, max_results: 100 # rubocop:disable Lint/UnusedMethodArgument
+  def attach_worklogs_to_issues issue_datas:, issue_jsons:, max_results: 100
     issue_jsons.each do |issue_json|
       worklog = issue_json['fields']['worklog']
       next unless worklog

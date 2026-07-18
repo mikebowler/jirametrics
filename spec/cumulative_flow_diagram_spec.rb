@@ -127,10 +127,9 @@ describe CumulativeFlowDiagram do
         end
       end
 
-      # rubocop:disable RSpec/NestedGroups
       describe '#triangle_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          output = chart_with_rules {}.run
           expect(output).to include('--cfd-triangle-color')
         end
 
@@ -150,7 +149,7 @@ describe CumulativeFlowDiagram do
 
       describe '#arrival_rate_line_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          output = chart_with_rules {}.run
           expect(output).to include('--cfd-arrival-rate-line-color')
         end
 
@@ -175,7 +174,7 @@ describe CumulativeFlowDiagram do
 
       describe '#departure_rate_line_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run # rubocop:disable Lint/EmptyBlock
+          output = chart_with_rules {}.run
           expect(output).to include('--cfd-departure-rate-line-color')
         end
 
@@ -197,7 +196,6 @@ describe CumulativeFlowDiagram do
           expect(output).not_to include('--cfd-departure-rate-line-color')
         end
       end
-      # rubocop:enable RSpec/NestedGroups
     end
   end
 

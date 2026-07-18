@@ -9,7 +9,7 @@ describe ValueEquality do
     stub_const('TestValueEquality', Class.new do
       include ValueEquality
 
-      def initialize a, b # rubocop:disable Naming/MethodParameterName
+      def initialize a, b
         @a = a
         @b = b
       end

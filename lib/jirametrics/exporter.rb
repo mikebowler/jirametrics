@@ -8,7 +8,7 @@ class Exporter
 
   def self.configure &block
     logfile_name = 'jirametrics.log'
-    logfile = File.open(logfile_name, 'w') # rubocop:disable Style/FileOpen -- long-lived handle kept on the FileSystem
+    logfile = File.open(logfile_name, 'w')
   rescue Errno::EACCES
     # FileSystem can't be used here — it hasn't been created yet (it depends on this logfile).
     warn "Error: Cannot write to #{File.expand_path(logfile_name)}. " \
@@ -84,7 +84,7 @@ class Exporter
           selected << [project, subtask] if key == subtask.key
         end
       end
-    rescue => e # rubocop:disable Style/RescueStandardError
+    rescue => e
       # This happens when we're attempting to load an aggregated project because it hasn't been
       # properly initialized. Since we don't care about aggregated projects, we just ignore it.
       raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'

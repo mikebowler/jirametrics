@@ -24,11 +24,11 @@ class TrendLineCalculator
   def horizontal? = @slope.zero?
   def vertical? = @slope.nan? || @slope.infinite?
 
-  def calc_y x: # rubocop:disable Naming/MethodParameterName
+  def calc_y x:
     ((x * @slope) + @offset).to_i
   end
 
-  def line_crosses_at y: # rubocop:disable Naming/MethodParameterName
+  def line_crosses_at y:
     raise "line will never cross #{y}. Trend is perfectly horizontal" if horizontal?
 
     ((y.to_f - @offset) / @slope).to_i

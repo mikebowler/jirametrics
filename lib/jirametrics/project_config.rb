@@ -326,7 +326,7 @@ class ProjectConfig
       .each { |status| possible_statuses.historical_status_mappings[status.to_s] = status.category }
 
     possible_statuses
-  rescue => e # rubocop:disable Style/RescueStandardError
+  rescue => e
     file_system.warning "Unable to load status history due to #{e.message.inspect}. If this is because of a " \
       'malformed file then it should be fixed on the next download.'
   end
@@ -498,7 +498,7 @@ class ProjectConfig
 
       # We'll have some issues that are in the list that weren't part of the initial query. Once we've
       # attached them in the appropriate places, remove any that aren't part of that initial set.
-      issues.reject! { |i| !i.in_initial_query? } # rubocop:disable Style/InverseMethods
+      issues.reject! { |i| !i.in_initial_query? }
       file_system.diagnostic "Retained #{issues.size} primary issues"
       @issues = issues
       attach_github_prs

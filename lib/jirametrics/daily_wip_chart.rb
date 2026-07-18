@@ -61,14 +61,14 @@ class DailyWipChart < ChartBase
   def default_header_text = 'Daily WIP'
   def default_description_text = ''
 
-  def default_grouping_rules issue:, rules: # rubocop:disable Lint/UnusedMethodArgument
+  def default_grouping_rules issue:, rules:
     raise 'If you use this class directly then you must provide grouping_rules'
   end
 
   def select_possible_rules issue_rules_by_active_date
     possible_rules = []
     issue_rules_by_active_date.each_pair do |_date, issues_rules_list|
-      issues_rules_list.each do |_issue, rules| # rubocop:disable Style/HashEachMethods
+      issues_rules_list.each do |_issue, rules|
         possible_rules << rules unless possible_rules.any? { |r| r.group == rules.group }
       end
     end

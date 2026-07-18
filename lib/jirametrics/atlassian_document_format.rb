@@ -35,7 +35,7 @@ class AtlassianDocumentFormat
 
   # ADF is Atlassian Document Format
   # https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/
-  def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity
+  def adf_node_to_html node
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']

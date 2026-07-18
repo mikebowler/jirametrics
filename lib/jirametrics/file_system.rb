@@ -70,7 +70,7 @@ class FileSystem
     # set up. Quick escape here so that we don't dump the error twice.
     return if logfile == $stdout
 
-    $stderr.puts message # rubocop:disable Style/StderrPuts
+    $stderr.puts message
   end
 
   def log_start message
@@ -98,7 +98,7 @@ class FileSystem
   def end_progress
     return if log_only
 
-    $stderr.puts '' # rubocop:disable Style/StderrPuts
+    $stderr.puts ''
   end
 
   # In some Jira instances, a sizeable portion of the JSON is made up of empty fields. I've seen
