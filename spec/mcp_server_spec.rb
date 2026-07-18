@@ -26,6 +26,199 @@ describe McpServer do
     end
   end
 
+  # time_per_status/column only read a handful of methods off the issue, so drive them with
+  # controlled doubles. One day = 86_400 seconds.
+  def fake_status name, id: nil
+    Data.define(:name, :id).new(name:, id:)
+  end
+
+  def fake_change time:, value: nil, value_id: nil, old_value: nil, old_value_id: nil
+    Data.define(:time, :value, :value_id, :old_value, :old_value_id)
+      .new(time: to_time(time), value:, value_id:, old_value:, old_value_id:)
+  end
+
+  def fake_issue created:, status:, changes: [], stopped: nil, issue_board: nil
+    Data.define(:status_changes, :started_stopped_times, :created, :status, :board).new(
+      status_changes: changes, started_stopped_times: [nil, stopped && to_time(stopped)],
+      created: to_time(created), status:, board: issue_board
+    )
+  end
+
+  describe '.time_per_status' do
+    def time_per_status issue, end_time
+      described_class.time_per_status(issue, to_time(end_time))
+    end
+
+    it 'puts the whole span in the current status when there are no changes' do
+      issue = fake_issue created: '2024-01-01', status: fake_status('To Do')
+      expect(time_per_status(issue, '2024-01-11')).to eq({ 'To Do' => 864_000.0 }) # 10 days
+    end
+
+    it 'records nothing when a change-less issue was created at the end time' do
+      issue = fake_issue created: '2024-01-11', status: fake_status('To Do')
+      expect(time_per_status(issue, '2024-01-11')).to eq({})
+    end
+
+    it 'splits the span across the pre-first, between, and final statuses' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Review'),
+        changes: [
+          fake_change(time: '2024-01-03', value: 'In Progress', old_value: 'To Do'),
+          fake_change(time: '2024-01-06', value: 'Review', old_value: 'In Progress')
+        ]
+      )
+      expect(time_per_status(issue, '2024-01-11')).to eq(
+        'To Do' => 172_800.0,        # created -> first change (2 days), from old_value
+        'In Progress' => 259_200.0,  # between changes (3 days), from prev value
+        'Review' => 432_000.0        # last change -> end (5 days), from last value
+      )
+    end
+
+    it 'ends the final span at the stop time when the issue stopped before the end time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Done'), stopped: '2024-01-05',
+        changes: [fake_change(time: '2024-01-03', value: 'Done', old_value: 'To Do')]
+      )
+      expect(time_per_status(issue, '2024-01-11')).to eq(
+        'To Do' => 172_800.0, 'Done' => 172_800.0 # final span ends at stop (01-03 -> 01-05), not end
+      )
+    end
+
+    it 'ends the final span at the end time when the issue stopped after it' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Done'), stopped: '2024-01-20',
+        changes: [fake_change(time: '2024-01-03', value: 'Done', old_value: 'To Do')]
+      )
+      expect(time_per_status(issue, '2024-01-11')).to eq(
+        'To Do' => 172_800.0, 'Done' => 691_200.0 # final span capped at end (01-03 -> 01-11)
+      )
+    end
+
+    it 'skips zero-length spans' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('In Progress'),
+        changes: [fake_change(time: '2024-01-01', value: 'In Progress', old_value: 'To Do')]
+      )
+      expect(time_per_status(issue, '2024-01-06')).to eq({ 'In Progress' => 432_000.0 }) # no 'To Do'
+    end
+
+    it 'skips a zero-length span between two changes at the same time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('B'),
+        changes: [
+          fake_change(time: '2024-01-03', value: 'A', old_value: 'To Do'),
+          fake_change(time: '2024-01-03', value: 'B', old_value: 'A') # same instant -> 'A' gets nothing
+        ]
+      )
+      expect(time_per_status(issue, '2024-01-06')).to eq('To Do' => 172_800.0, 'B' => 259_200.0)
+    end
+
+    it 'skips the final span when the last change lands on the end time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('A'),
+        changes: [fake_change(time: '2024-01-03', value: 'A', old_value: 'To Do')]
+      )
+      expect(time_per_status(issue, '2024-01-03')).to eq({ 'To Do' => 172_800.0 }) # no 'A'
+    end
+  end
+
+  describe '.time_per_column' do
+    def time_per_column issue, end_time
+      described_class.time_per_column(issue, to_time(end_time))
+    end
+
+    it 'maps each span to its board column via the status id' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Review', id: 10_011), issue_board: board,
+        changes: [
+          fake_change(time: '2024-01-03', value_id: 3, old_value_id: 10_001),
+          fake_change(time: '2024-01-06', value_id: 10_011, old_value_id: 3)
+        ]
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq(
+        'Ready' => 172_800.0,        # old_value_id 10001 -> Ready
+        'In Progress' => 259_200.0,  # prev value_id 3 -> In Progress
+        'Review' => 432_000.0        # last value_id 10011 -> Review
+      )
+    end
+
+    it 'falls back to the raw status value when the id maps to no column' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Elsewhere', id: 999_999), issue_board: board,
+        changes: []
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq({ 'Elsewhere' => 864_000.0 })
+    end
+
+    it 'records nothing when a change-less issue was created at the end time' do
+      issue = fake_issue created: '2024-01-11', status: fake_status('x', id: 3), issue_board: board
+      expect(time_per_column(issue, '2024-01-11')).to eq({})
+    end
+
+    it 'uses the status id (not the whole status) to look up a change-less column' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('Ignored Name', id: 3), issue_board: board, changes: []
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq({ 'In Progress' => 864_000.0 }) # id 3 -> In Progress
+    end
+
+    it 'falls back to raw values at every position when ids map to no column' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('x', id: 666_666), issue_board: board,
+        changes: [
+          fake_change(time: '2024-01-03', value: 'MidS', value_id: 999_999, old_value: 'InitS', old_value_id: 888_888),
+          fake_change(time: '2024-01-06', value: 'FinalS', value_id: 777_777, old_value: 'MidS', old_value_id: 999_999)
+        ]
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq(
+        'InitS' => 172_800.0, 'MidS' => 259_200.0, 'FinalS' => 432_000.0
+      )
+    end
+
+    it 'skips a zero-length span between two changes at the same time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('r', id: 10_011), issue_board: board,
+        changes: [
+          fake_change(time: '2024-01-03', value_id: 3, old_value_id: 10_001),
+          fake_change(time: '2024-01-03', value_id: 10_011, old_value_id: 3) # same instant -> In Progress gets nothing
+        ]
+      )
+      expect(time_per_column(issue, '2024-01-06')).to eq('Ready' => 172_800.0, 'Review' => 259_200.0)
+    end
+
+    it 'skips the final span when the last change lands on the end time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('ip', id: 3), issue_board: board,
+        changes: [fake_change(time: '2024-01-03', value_id: 3, old_value_id: 10_001)]
+      )
+      expect(time_per_column(issue, '2024-01-03')).to eq({ 'Ready' => 172_800.0 }) # no In Progress
+    end
+
+    it 'ends the final span at the stop time when the issue stopped before the end time' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('d', id: 10_002), issue_board: board, stopped: '2024-01-05',
+        changes: [fake_change(time: '2024-01-03', value_id: 10_002, old_value_id: 10_001)]
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq('Ready' => 172_800.0, 'Done' => 172_800.0) # 01-03->01-05
+    end
+
+    it 'ends the final span at the end time when the issue stopped after it' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('d', id: 10_002), issue_board: board, stopped: '2024-01-20',
+        changes: [fake_change(time: '2024-01-03', value_id: 10_002, old_value_id: 10_001)]
+      )
+      expect(time_per_column(issue, '2024-01-11')).to eq('Ready' => 172_800.0, 'Done' => 691_200.0) # 01-03->01-11
+    end
+
+    it 'skips a zero-length initial span' do
+      issue = fake_issue(
+        created: '2024-01-01', status: fake_status('ip', id: 3), issue_board: board,
+        changes: [fake_change(time: '2024-01-01', value_id: 3, old_value_id: 10_001)] # change at creation
+      )
+      expect(time_per_column(issue, '2024-01-06')).to eq({ 'In Progress' => 432_000.0 }) # no Ready
+    end
+  end
+
   describe '.column_name_for' do
     it 'returns the visible column that owns the status id' do
       expect(described_class.column_name_for(board, 3)).to eq 'In Progress'
