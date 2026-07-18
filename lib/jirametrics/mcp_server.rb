@@ -97,18 +97,25 @@ class McpServer
     board.visible_columns.find { |c| c.status_ids.include?(status_id) }&.name
   end
 
-  # The shared spine of every query tool: resolve the project filter, skip disallowed projects, and
-  # hand each issue (with its project name and data) to the block, collecting the non-nil rows it returns.
-  def self.collect_rows server_context, project
+  # The shared iteration spine of every query tool: resolve the project filter, skip disallowed projects,
+  # and yield each surviving issue with its project name and data.
+  def self.each_allowed_issue server_context, project
     allowed_projects = resolve_projects(server_context, project)
-    rows = []
     server_context[:projects].each do |project_name, project_data|
       next if allowed_projects && !allowed_projects.include?(project_name)
 
       project_data[:issues].each do |issue|
-        row = yield issue, project_name, project_data
-        rows << row if row
+        yield issue, project_name, project_data
       end
+    end
+  end
+
+  # Collects the non-nil rows a block returns for each allowed issue (the row-oriented tools).
+  def self.collect_rows server_context, project
+    rows = []
+    each_allowed_issue(server_context, project) do |issue, project_name, project_data|
+      row = yield issue, project_name, project_data
+      rows << row if row
     end
     rows
   end
@@ -504,42 +511,45 @@ class McpServer
       project ||= project_name
       group_by = 'column' if column
 
-      totals = Hash.new { |h, k| h[k] = { total_seconds: 0.0, visit_count: 0 } }
-      allowed_projects = McpServer.resolve_projects(server_context, project)
+      totals = accumulate_times(server_context, project, issue_state, group_by)
+      rows = totals.map { |name, data| summary_row(name, data) }.sort_by { |r| -r[:avg_days] }
 
-      server_context[:projects].each do |project_name, project_data|
-        next if allowed_projects && !allowed_projects.include?(project_name)
+      McpServer.render_rows(rows, empty: 'No data found.') { |r| format_line(r, group_by) }
+    end
 
-        project_data[:issues].each do |issue|
-          next unless select_issues(issue, issue_state)
+    def self.accumulate_times server_context, project, issue_state, group_by
+      totals = Hash.new { |hash, key| hash[key] = { total_seconds: 0.0, visit_count: 0 } }
+      McpServer.each_allowed_issue(server_context, project) do |issue, _name, project_data|
+        next unless select_issues(issue, issue_state)
 
-          time_map = if group_by == 'column'
-                       McpServer.time_per_column(issue, project_data[:end_time])
-                     else
-                       McpServer.time_per_status(issue, project_data[:end_time])
-                     end
-
-          time_map.each do |name, seconds|
-            totals[name][:total_seconds] += seconds
-            totals[name][:visit_count] += 1
-          end
+        time_map_for(issue, project_data[:end_time], group_by).each do |name, seconds|
+          totals[name][:total_seconds] += seconds
+          totals[name][:visit_count] += 1
         end
       end
+      totals
+    end
 
-      return MCP::Tool::Response.new([{ type: 'text', text: 'No data found.' }]) if totals.empty?
-
-      rows = totals.map do |name, data|
-        total_days = (data[:total_seconds] / 86_400.0).round(1)
-        avg_days = (data[:total_seconds] / data[:visit_count] / 86_400.0).round(1)
-        { name: name, total_days: total_days, avg_days: avg_days, visit_count: data[:visit_count] }
+    def self.time_map_for issue, end_time, group_by
+      if group_by == 'column'
+        McpServer.time_per_column(issue, end_time)
+      else
+        McpServer.time_per_status(issue, end_time)
       end
-      rows.sort_by! { |r| -r[:avg_days] }
+    end
 
+    def self.summary_row name, data
+      {
+        name: name,
+        total_days: (data[:total_seconds] / 86_400.0).round(1),
+        avg_days: (data[:total_seconds] / data[:visit_count] / 86_400.0).round(1),
+        visit_count: data[:visit_count]
+      }
+    end
+
+    def self.format_line row, group_by
       label = group_by == 'column' ? 'Column' : 'Status'
-      lines = rows.map do |r|
-        "#{label}: #{r[:name]} | Avg: #{r[:avg_days]}d | Total: #{r[:total_days]}d | Issues: #{r[:visit_count]}"
-      end
-      MCP::Tool::Response.new([{ type: 'text', text: lines.join("\n") }])
+      "#{label}: #{row[:name]} | Avg: #{row[:avg_days]}d | Total: #{row[:total_days]}d | Issues: #{row[:visit_count]}"
     end
   end
 
