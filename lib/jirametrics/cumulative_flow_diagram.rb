@@ -123,14 +123,7 @@ class CumulativeFlowDiagram < ChartBase
     correction_windows = cfd[:correction_windows]
     column_count       = columns.size
 
-    # Convert cumulative totals to marginal band heights for Chart.js stacking.
-    # cumulative[i] = issues that reached column i or further.
-    # marginal[i]   = cumulative[i] - cumulative[i+1]  (last column: marginal = cumulative)
-    daily_marginals = daily_counts.transform_values do |cumulative|
-      cumulative.each_with_index.map do |count, i|
-        i < column_count - 1 ? count - cumulative[i + 1] : count
-      end
-    end
+    daily_marginals = marginal_band_heights(daily_counts, column_count)
 
     border_colors = active_rules.map { |rules| rules.color || random_color }
 
@@ -157,6 +150,17 @@ class CumulativeFlowDiagram < ChartBase
   end
 
   private
+
+  # Convert per-date cumulative totals to marginal band heights for Chart.js stacking.
+  # cumulative[i] = issues that reached column i or further; marginal[i] = cumulative[i] -
+  # cumulative[i + 1] (the last column keeps its cumulative total).
+  def marginal_band_heights daily_counts, column_count
+    daily_counts.transform_values do |cumulative|
+      cumulative.each_with_index.map do |count, i|
+        i < column_count - 1 ? count - cumulative[i + 1] : count
+      end
+    end
+  end
 
   # One Chart.js dataset per active column, in reversed order: rightmost column first (bottom of
   # the stack), leftmost last (top).

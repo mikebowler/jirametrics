@@ -201,6 +201,19 @@ describe CumulativeFlowDiagram do
     end
   end
 
+  describe '#marginal_band_heights' do
+    it 'converts per-date cumulative totals into marginal band heights, keeping the last column' do
+      daily_counts = {
+        Date.parse('2021-06-01') => [10, 6, 2],
+        Date.parse('2021-06-02') => [8, 8, 5]
+      }
+      expect(chart.send(:marginal_band_heights, daily_counts, 3)).to eq(
+        Date.parse('2021-06-01') => [4, 4, 2], # 10-6, 6-2, then 2 kept as-is
+        Date.parse('2021-06-02') => [0, 3, 5]  # 8-8, 8-5, then 5 kept as-is
+      )
+    end
+  end
+
   describe '#build_data_sets' do
     it 'builds one coloured dataset per column, reversed, with correction-window segments' do
       chart.date_range = Date.parse('2021-06-01')..Date.parse('2021-06-02')
