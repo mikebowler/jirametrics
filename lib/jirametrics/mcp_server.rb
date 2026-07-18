@@ -430,42 +430,34 @@ class McpServer
                   **history_args)
       project ||= project_name
       filter = McpServer::HistoryFilter.from(**history_args)
-      rows = []
-      allowed_projects = McpServer.resolve_projects(server_context, project)
 
-      server_context[:projects].each do |project_name, project_data|
-        next if allowed_projects && !allowed_projects.include?(project_name)
-
-        project_data[:issues].each do |issue|
-          started, stopped = issue.started_stopped_times
-          next if started || stopped
-          next if current_status && issue.status.name != current_status
-          next if current_column && McpServer.column_name_for(issue.board, issue.status.id) != current_column
-          next unless McpServer.matches_history?(issue, project_data[:end_time], filter)
-
-          rows << {
-            key: issue.key,
-            summary: issue.summary,
-            status: issue.status.name,
-            type: issue.type,
-            created: issue.created.to_date,
-            project: project_name
-          }
-        end
+      rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
+        build_row(issue, name, project_data, current_status, current_column, filter)
       end
-
       rows.sort_by! { |r| r[:created] }
 
-      if rows.empty?
-        text = 'No unstarted work found.'
-      else
-        lines = rows.map do |r|
-          "#{r[:key]} | #{r[:project]} | #{r[:type]} | #{r[:status]} | Created: #{r[:created]} | #{r[:summary]}"
-        end
-        text = lines.join("\n")
-      end
+      McpServer.render_rows(rows, empty: 'No unstarted work found.') { |r| format_line(r) }
+    end
 
-      MCP::Tool::Response.new([{ type: 'text', text: text }])
+    def self.build_row issue, project_name, project_data, current_status, current_column, filter
+      started, stopped = issue.started_stopped_times
+      return nil if started || stopped
+      return nil unless McpServer.matches_current_state?(issue, current_status, current_column)
+      return nil unless McpServer.matches_history?(issue, project_data[:end_time], filter)
+
+      {
+        key: issue.key,
+        summary: issue.summary,
+        status: issue.status.name,
+        type: issue.type,
+        created: issue.created.to_date,
+        project: project_name
+      }
+    end
+
+    def self.format_line row
+      "#{row[:key]} | #{row[:project]} | #{row[:type]} | #{row[:status]} | " \
+        "Created: #{row[:created]} | #{row[:summary]}"
     end
   end
 
