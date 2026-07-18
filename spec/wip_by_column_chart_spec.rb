@@ -365,6 +365,43 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#wip_percentages' do
+    it 'pairs each WIP level with its percentage of the column total' do
+      result = chart.send(:wip_percentages, [[1, 250], [3, 750]], 1000.0)
+      expect(result).to eq [{ 'wip' => 1, 'pct' => 25.0 }, { 'wip' => 3, 'pct' => 75.0 }]
+    end
+
+    it 'returns an empty list for an empty history' do
+      expect(chart.send(:wip_percentages, [], 1000.0)).to eq []
+    end
+  end
+
+  describe '#max_wip_level' do
+    def stat wip_levels
+      WipByColumnChart::ColumnStats.new(wip_history: wip_levels.map { |wip| [wip, 100] })
+    end
+
+    it 'returns the highest WIP level reached across every column' do
+      # highest level (3) is neither first nor last in the flattened list, to pin it to max
+      expect(chart.send(:max_wip_level, [stat([1, 3]), stat([2])])).to eq 3
+    end
+
+    it 'returns 0 when no column has any history' do
+      expect(chart.send(:max_wip_level, [stat([]), stat([])])).to eq 0
+    end
+  end
+
+  describe '#wip_limits' do
+    def stat min, max
+      WipByColumnChart::ColumnStats.new(min_wip_limit: min, max_wip_limit: max)
+    end
+
+    it 'maps each column to its min and max WIP limits, in order' do
+      result = chart.send(:wip_limits, [stat(1, 4), stat(nil, 3)])
+      expect(result).to eq [{ 'min' => 1, 'max' => 4 }, { 'min' => nil, 'max' => 3 }]
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).

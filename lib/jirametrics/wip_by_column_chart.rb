@@ -64,10 +64,10 @@ class WipByColumnChart < ChartBase
       total = stat.wip_history.sum { |_wip, seconds| seconds }.to_f
       next [] if total.zero?
 
-      stat.wip_history.collect { |wip, seconds| { 'wip' => wip, 'pct' => format_pct(seconds, total) } }
+      wip_percentages(stat.wip_history, total)
     end
-    @max_wip = stats.flat_map { |s| s.wip_history.collect { |wip, _| wip } }.max || 0
-    @wip_limits = stats.collect { |s| { 'min' => s.min_wip_limit, 'max' => s.max_wip_limit } }
+    @max_wip = max_wip_level(stats)
+    @wip_limits = wip_limits(stats)
     @recommendations = @show_recommendations ? compute_recommendations(stats) : Array.new(stats.size)
 
     trim_zero_end_columns
@@ -142,6 +142,22 @@ class WipByColumnChart < ChartBase
         "Raise the WIP limit for '#{name}' from #{max} to #{rec}"
       end
     end
+  end
+
+  # Turn a column's WIP history into render rows: each WIP level with the percentage of the column's
+  # total time spent there.
+  def wip_percentages wip_history, total
+    wip_history.collect { |wip, seconds| { 'wip' => wip, 'pct' => format_pct(seconds, total) } }
+  end
+
+  # The highest WIP level reached in any column, or 0 when there's no data.
+  def max_wip_level stats
+    stats.flat_map { |stat| stat.wip_history.collect { |wip, _seconds| wip } }.max || 0
+  end
+
+  # The configured min/max WIP limits for each column, in column order.
+  def wip_limits stats
+    stats.collect { |stat| { 'min' => stat.min_wip_limit, 'max' => stat.max_wip_limit } }
   end
 
   def format_pct seconds, total
