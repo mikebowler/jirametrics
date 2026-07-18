@@ -97,6 +97,37 @@ class McpServer
     board.visible_columns.find { |c| c.status_ids.include?(status_id) }&.name
   end
 
+  # The shared spine of every query tool: resolve the project filter, skip disallowed projects, and
+  # hand each issue (with its project name and data) to the block, collecting the non-nil rows it returns.
+  def self.collect_rows server_context, project
+    allowed_projects = resolve_projects(server_context, project)
+    rows = []
+    server_context[:projects].each do |project_name, project_data|
+      next if allowed_projects && !allowed_projects.include?(project_name)
+
+      project_data[:issues].each do |issue|
+        row = yield issue, project_name, project_data
+        rows << row if row
+      end
+    end
+    rows
+  end
+
+  # Renders already-sorted rows as a text Response: the empty-message when there are none, otherwise
+  # each row formatted by the block and newline-joined.
+  def self.render_rows rows, empty:, &block
+    text = rows.empty? ? empty : rows.map(&block).join("\n")
+    MCP::Tool::Response.new([{ type: 'text', text: text }])
+  end
+
+  # Shared current-state filter for the aging and not-yet-started tools.
+  def self.matches_current_state? issue, current_status, current_column
+    return false if current_status && issue.status.name != current_status
+    return false if current_column && column_name_for(issue.board, issue.status.id) != current_column
+
+    true
+  end
+
   def self.time_per_column issue, end_time
     changes = issue.status_changes
     _, stopped = issue.started_stopped_times
@@ -248,48 +279,39 @@ class McpServer
                   current_status: nil, current_column: nil, **history_args)
       project ||= project_name
       filter = McpServer::HistoryFilter.from(**history_args)
-      rows = []
-      allowed_projects = McpServer.resolve_projects(server_context, project)
 
-      server_context[:projects].each do |project_name, project_data|
-        next if allowed_projects && !allowed_projects.include?(project_name)
-
-        today = project_data[:today]
-        project_data[:issues].each do |issue|
-          started, stopped = issue.started_stopped_times
-          next unless started && !stopped
-          next if current_status && issue.status.name != current_status
-          next if current_column && McpServer.column_name_for(issue.board, issue.status.id) != current_column
-
-          age = (today - started.to_date).to_i + 1
-          next if min_age_days && age < min_age_days
-          next unless McpServer.matches_history?(issue, project_data[:end_time], filter)
-
-          rows << {
-            key: issue.key,
-            summary: issue.summary,
-            status: issue.status.name,
-            type: issue.type,
-            age_days: age,
-            flow_efficiency: McpServer.flow_efficiency_percent(issue, project_data[:end_time]),
-            project: project_name
-          }
-        end
+      rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
+        build_row(issue, name, project_data, min_age_days, current_status, current_column, filter)
       end
-
       rows.sort_by! { |r| -r[:age_days] }
 
-      if rows.empty?
-        text = 'No aging work found.'
-      else
-        lines = rows.map do |r|
-          fe = r[:flow_efficiency] ? " | FE: #{r[:flow_efficiency]}%" : ''
-          "#{r[:key]} | #{r[:project]} | #{r[:type]} | #{r[:status]} | Age: #{r[:age_days]}d#{fe} | #{r[:summary]}"
-        end
-        text = lines.join("\n")
-      end
+      McpServer.render_rows(rows, empty: 'No aging work found.') { |r| format_line(r) }
+    end
 
-      MCP::Tool::Response.new([{ type: 'text', text: text }])
+    def self.build_row issue, project_name, project_data, min_age_days, current_status, current_column, filter
+      started, stopped = issue.started_stopped_times
+      return nil unless started && !stopped
+      return nil unless McpServer.matches_current_state?(issue, current_status, current_column)
+
+      age = (project_data[:today] - started.to_date).to_i + 1
+      return nil if min_age_days && age < min_age_days
+      return nil unless McpServer.matches_history?(issue, project_data[:end_time], filter)
+
+      {
+        key: issue.key,
+        summary: issue.summary,
+        status: issue.status.name,
+        type: issue.type,
+        age_days: age,
+        flow_efficiency: McpServer.flow_efficiency_percent(issue, project_data[:end_time]),
+        project: project_name
+      }
+    end
+
+    def self.format_line row
+      fe = row[:flow_efficiency] ? " | FE: #{row[:flow_efficiency]}%" : ''
+      "#{row[:key]} | #{row[:project]} | #{row[:type]} | #{row[:status]} | " \
+        "Age: #{row[:age_days]}d#{fe} | #{row[:summary]}"
     end
   end
 
