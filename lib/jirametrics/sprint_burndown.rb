@@ -13,6 +13,107 @@ class SprintSummaryStats
   end
 end
 
+# A "measure" decides how a sprint burndown accumulates and describes each change. Story points
+# track a running estimate total; story counts track how many issues are in the sprint. The loop
+# skeleton in SprintBurndown#build_sprint_data_set is identical for both - only the measure differs.
+class StoryPointsMeasure
+  attr_reader :summary_stats
+
+  def initialize
+    @summary_stats = SprintSummaryStats.new
+    @summary_stats.completed = 0.0
+    @estimate = 0.0
+    @issues_currently_in_sprint = []
+  end
+
+  def value = @estimate
+
+  def update_state change_data
+    case change_data.action
+    when :enter_sprint
+      @issues_currently_in_sprint << change_data.issue.key
+      @estimate += change_data.estimate
+    when :leave_sprint
+      @issues_currently_in_sprint.delete change_data.issue.key
+      @estimate -= change_data.estimate
+    when :story_points
+      @estimate += change_data.value if @issues_currently_in_sprint.include? change_data.issue.key
+    end
+  end
+
+  def record change_data
+    case change_data.action
+    when :story_points
+      return nil unless @issues_currently_in_sprint.include? change_data.issue.key
+
+      @summary_stats.points_values_changed = true
+      old_estimate = change_data.estimate - change_data.value
+      "Story points changed from #{old_estimate} points to #{change_data.estimate} points"
+    when :enter_sprint
+      @summary_stats.added += change_data.estimate
+      "Added to sprint with #{points_label change_data.estimate}"
+    when :issue_stopped
+      @estimate -= change_data.estimate
+      @issues_currently_in_sprint.delete change_data.issue.key
+      @summary_stats.completed += change_data.estimate
+      "Completed with #{points_label change_data.estimate}"
+    when :leave_sprint
+      @summary_stats.removed += change_data.estimate
+      "Removed from sprint with #{points_label change_data.estimate}"
+    else
+      raise "Unexpected action: #{change_data.action}"
+    end
+  end
+
+  def points_label estimate
+    "#{estimate || 'no'} points"
+  end
+
+  def started_title = "Sprint started with #{@estimate} points"
+  def ended_title = "Sprint ended with #{@estimate} points unfinished"
+  def active_title = "Sprint still active. #{@estimate} points still in progress."
+  def records_started_when_unwritten? = true
+end
+
+class StoryCountMeasure
+  attr_reader :summary_stats
+
+  def initialize
+    @summary_stats = SprintSummaryStats.new
+    @issues_currently_in_sprint = []
+  end
+
+  def value = @issues_currently_in_sprint.size
+
+  def update_state change_data
+    case change_data.action
+    when :enter_sprint
+      @issues_currently_in_sprint << change_data.issue.key
+    when :leave_sprint, :issue_stopped
+      @issues_currently_in_sprint.delete change_data.issue.key
+    end
+  end
+
+  def record change_data
+    case change_data.action
+    when :enter_sprint
+      @summary_stats.added += 1
+      'Added to sprint'
+    when :issue_stopped
+      @summary_stats.completed += 1
+      'Completed'
+    when :leave_sprint
+      @summary_stats.removed += 1
+      'Removed from sprint'
+    end
+  end
+
+  def started_title = "Sprint started with #{value} stories"
+  def ended_title = "Sprint ended with #{value} stories unfinished"
+  def active_title = "Sprint still active. #{value} issues in progress."
+  def records_started_when_unwritten? = false
+end
+
 class SprintBurndown < ChartBase
   attr_reader :use_story_points, :use_story_counts, :summary_stats
   attr_accessor :board_id
@@ -181,181 +282,72 @@ class SprintBurndown < ChartBase
   end
 
   def data_set_by_story_points sprint:, change_data_for_sprint:
-    summary_stats = SprintSummaryStats.new
-    summary_stats.completed = 0.0
-
-    estimate = 0.0
-    start_data_written = false
-    data_set = []
-
-    issues_currently_in_sprint = []
-
-    change_data_for_sprint.each do |change_data|
-      if start_data_written == false && change_data.time >= sprint.start_time
-        data_set << {
-          y: estimate,
-          x: chart_format(sprint.start_time),
-          title: "Sprint started with #{estimate} points"
-        }
-        summary_stats.started = estimate
-        start_data_written = true
-      end
-
-      break if sprint.completed_time && change_data.time > sprint.completed_time
-
-      case change_data.action
-      when :enter_sprint
-        issues_currently_in_sprint << change_data.issue.key
-        estimate += change_data.estimate
-      when :leave_sprint
-        issues_currently_in_sprint.delete change_data.issue.key
-        estimate -= change_data.estimate
-      when :story_points
-        estimate += change_data.value if issues_currently_in_sprint.include? change_data.issue.key
-      end
-
-      next unless change_data.time >= sprint.start_time
-
-      message = nil
-      case change_data.action
-      when :story_points
-        next unless issues_currently_in_sprint.include? change_data.issue.key
-
-        old_estimate = change_data.estimate - change_data.value
-        message = "Story points changed from #{old_estimate} points to #{change_data.estimate} points"
-        summary_stats.points_values_changed = true
-      when :enter_sprint
-        message = "Added to sprint with #{change_data.estimate || 'no'} points"
-        summary_stats.added += change_data.estimate
-      when :issue_stopped
-        estimate -= change_data.estimate
-        message = "Completed with #{change_data.estimate || 'no'} points"
-        issues_currently_in_sprint.delete change_data.issue.key
-        summary_stats.completed += change_data.estimate
-      when :leave_sprint
-        message = "Removed from sprint with #{change_data.estimate || 'no'} points"
-        summary_stats.removed += change_data.estimate
-      else
-        raise "Unexpected action: #{change_data.action}"
-      end
-
-      data_set << {
-        y: estimate,
-        x: chart_format(change_data.time),
-        title: "#{change_data.issue.key} #{message}"
-      }
-    end
-
-    unless start_data_written
-      # There was nothing that triggered us to write the sprint started block so do it now.
-      data_set << {
-        y: estimate,
-        x: chart_format(sprint.start_time),
-        title: "Sprint started with #{estimate} points"
-      }
-      summary_stats.started = estimate
-    end
-
-    if sprint.completed_time
-      data_set << {
-        y: estimate,
-        x: chart_format(sprint.completed_time),
-        title: "Sprint ended with #{estimate} points unfinished"
-      }
-      summary_stats.remaining = estimate
-    end
-
-    unless sprint.completed_at?(time_range.end)
-      data_set << {
-        y: estimate,
-        x: chart_format(time_range.end),
-        title: "Sprint still active. #{estimate} points still in progress."
-      }
-    end
-
-    @summary_stats[sprint] = summary_stats
-    data_set
+    build_sprint_data_set(
+      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: StoryPointsMeasure.new
+    )
   end
 
   def data_set_by_story_counts sprint:, change_data_for_sprint:
-    summary_stats = SprintSummaryStats.new
+    build_sprint_data_set(
+      sprint: sprint, change_data_for_sprint: change_data_for_sprint, measure: StoryCountMeasure.new
+    )
+  end
 
+  # Walks the sprint's change stream once. The measure decides how each change accumulates and reads
+  # out; the loop structure is shared by both the story-points and story-counts views.
+  def build_sprint_data_set sprint:, change_data_for_sprint:, measure:
     data_set = []
-    issues_currently_in_sprint = []
-    start_data_written = false
+    start_written = false
 
     change_data_for_sprint.each do |change_data|
-      if start_data_written == false && change_data.time >= sprint.start_time
-        data_set << {
-          y: issues_currently_in_sprint.size,
-          x: chart_format(sprint.start_time),
-          title: "Sprint started with #{issues_currently_in_sprint.size} stories"
-        }
-        summary_stats.started = issues_currently_in_sprint.size
-        start_data_written = true
+      if start_pending?(start_written, change_data, sprint)
+        data_set << sprint_start_point(measure, sprint)
+        start_written = true
       end
+      break if past_sprint_end?(change_data, sprint)
 
-      break if sprint.completed_time && change_data.time > sprint.completed_time
-
-      case change_data.action
-      when :enter_sprint
-        issues_currently_in_sprint << change_data.issue.key
-      when :leave_sprint, :issue_stopped
-        issues_currently_in_sprint.delete change_data.issue.key
-      end
-
+      measure.update_state change_data
       next unless change_data.time >= sprint.start_time
 
-      message = nil
-      case change_data.action
-      when :enter_sprint
-        message = 'Added to sprint'
-        summary_stats.added += 1
-      when :issue_stopped
-        message = 'Completed'
-        summary_stats.completed += 1
-      when :leave_sprint
-        message = 'Removed from sprint'
-        summary_stats.removed += 1
-      end
-
-      next unless message
-
-      data_set << {
-        y: issues_currently_in_sprint.size,
-        x: chart_format(change_data.time),
-        title: "#{change_data.issue.key} #{message}"
-      }
+      message = measure.record change_data
+      data_set << change_point(measure, change_data, message) if message
     end
 
-    unless start_data_written
-      # There was nothing that triggered us to write the sprint started block so do it now.
-      data_set << {
-        y: issues_currently_in_sprint.size,
-        x: chart_format(sprint.start_time),
-        title: "Sprint started with #{issues_currently_in_sprint.size || 'no'} stories"
-      }
+    append_closing_points data_set, measure, sprint, start_written
+    @summary_stats[sprint] = measure.summary_stats
+    data_set
+  end
+
+  def start_pending? start_written, change_data, sprint
+    !start_written && change_data.time >= sprint.start_time
+  end
+
+  def past_sprint_end? change_data, sprint
+    sprint.completed_time && change_data.time > sprint.completed_time
+  end
+
+  def sprint_start_point measure, sprint
+    measure.summary_stats.started = measure.value
+    { y: measure.value, x: chart_format(sprint.start_time), title: measure.started_title }
+  end
+
+  def change_point measure, change_data, message
+    { y: measure.value, x: chart_format(change_data.time), title: "#{change_data.issue.key} #{message}" }
+  end
+
+  def append_closing_points data_set, measure, sprint, start_written
+    unless start_written
+      # Nothing in the change stream triggered the sprint-start marker, so write it now.
+      measure.summary_stats.started = measure.value if measure.records_started_when_unwritten?
+      data_set << { y: measure.value, x: chart_format(sprint.start_time), title: measure.started_title }
     end
 
     if sprint.completed_time
-      data_set << {
-        y: issues_currently_in_sprint.size,
-        x: chart_format(sprint.completed_time),
-        title: "Sprint ended with #{issues_currently_in_sprint.size} stories unfinished"
-      }
-      summary_stats.remaining = issues_currently_in_sprint.size
+      data_set << { y: measure.value, x: chart_format(sprint.completed_time), title: measure.ended_title }
+      measure.summary_stats.remaining = measure.value
     end
+    return if sprint.completed_at?(time_range.end)
 
-    unless sprint.completed_at?(time_range.end)
-      # If the sprint is still active then we draw one final line to the end of the time range
-      data_set << {
-        y: issues_currently_in_sprint.size,
-        x: chart_format(time_range.end),
-        title: "Sprint still active. #{issues_currently_in_sprint.size} issues in progress."
-      }
-    end
-
-    @summary_stats[sprint] = summary_stats
-    data_set
+    data_set << { y: measure.value, x: chart_format(time_range.end), title: measure.active_title }
   end
 end
