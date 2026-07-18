@@ -196,12 +196,15 @@ class WipByColumnChart < ChartBase
         events << [change.time, issue, status_to_column[change.value_id]]
       end
 
-      # Issue stops within the window: add an explicit event to exit WIP
-      if stopped_time && stopped_time > time_range.begin && stopped_time <= time_range.end
-        events << [stopped_time, issue, nil]
-      end
+      events << [stopped_time, issue, nil] if within_window?(stopped_time)
     end
     events.sort_by!(&:first)
+  end
+
+  # True when a (present) time falls inside the chart window: after it opens, up to and including
+  # when it closes.
+  def within_window? time
+    time && time > time_range.begin && time <= time_range.end
   end
 
   # A status change counts if it happened inside the window and while the issue was actively in WIP:

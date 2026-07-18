@@ -137,6 +137,31 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#within_window?' do
+    # chart window is 2021-06-01T00:00:00 .. 2021-06-01T00:16:40
+    def within? time
+      chart.send(:within_window?, time && to_time(time))
+    end
+
+    it 'is falsey for a nil time' do
+      expect(within?(nil)).to be_falsey
+    end
+
+    it 'excludes the window start, includes just after' do
+      aggregate_failures do
+        expect(within?('2021-06-01T00:00:00')).to be_falsey
+        expect(within?('2021-06-01T00:00:01')).to be_truthy
+      end
+    end
+
+    it 'includes the window end, excludes just after' do
+      aggregate_failures do
+        expect(within?('2021-06-01T00:16:40')).to be_truthy
+        expect(within?('2021-06-01T00:16:41')).to be_falsey
+      end
+    end
+  end
+
   describe '#in_wip_and_within_window?' do
     # chart window is 2021-06-01T00:00:00 .. 2021-06-01T00:16:40
     def in_window? time, started:, stopped:
