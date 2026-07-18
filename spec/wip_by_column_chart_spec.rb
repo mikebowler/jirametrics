@@ -402,6 +402,70 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#run' do
+    # run's data assembly is normally reachable only through the HTML wrap_and_render produces.
+    # Stub that out and we can assert the instance variables run builds directly, with no ERB or
+    # binding machinery in play.
+    def run_ivars
+      allow(chart).to receive(:wrap_and_render).and_return('')
+      chart.run
+      %i[column_names wip_data max_wip wip_limits recommendations recommendation_texts header_text]
+        .to_h { |name| [name, chart.instance_variable_get(:"@#{name}")] }
+    end
+
+    before { chart.issues = [issue_in_ready(key: 'SP-1')] } # one issue, in Ready for the whole 1000s window
+
+    it 'builds the per-column data for the board, trimming trailing empty columns' do
+      ivars = run_ivars
+      aggregate_failures do
+        expect(ivars[:header_text]).to eq "WIP by column on board: #{board.name}"
+        expect(ivars[:column_names]).to eq ['Ready'] # In Progress/Review/Done are all-zero and trimmed
+        expect(ivars[:wip_data]).to eq [[{ 'wip' => 1, 'pct' => 100.0 }]]
+        expect(ivars[:max_wip]).to eq 1
+        expect(ivars[:wip_limits]).to eq [{ 'min' => 1, 'max' => 4 }]
+      end
+    end
+
+    it 'produces empty per-column data (and keeps every column) for a zero-length window' do
+      chart.time_range = to_time('2021-06-01T00:00:00')..to_time('2021-06-01T00:00:00')
+      ivars = run_ivars
+      aggregate_failures do
+        expect(ivars[:wip_data]).to eq [[], [], [], []] # every column's total time is zero
+        expect(ivars[:max_wip]).to eq 0
+        expect(ivars[:column_names]).to eq ['Ready', 'In Progress', 'Review', 'Done'] # nothing trimmed
+      end
+    end
+
+    it 'reports fractional percentages when a column sits at more than one WIP level' do
+      issue_b = issue_in_ready key: 'SP-2'
+      add_mock_change issue: issue_b, field: 'status',
+        value: 'In Progress', value_id: 3,
+        time: to_time('2021-06-01T00:06:40') # moves out of Ready at the 400s mark
+      chart.issues = [issue_in_ready(key: 'SP-1'), issue_b]
+
+      ivars = run_ivars
+      # Ready holds both issues for 400s (WIP 2, 40%) then just one for 600s (WIP 1, 60%)
+      expect(ivars[:wip_data][0]).to eq [{ 'wip' => 1, 'pct' => 60.0 }, { 'wip' => 2, 'pct' => 40.0 }]
+    end
+
+    it 'leaves recommendations empty unless they are enabled' do
+      ivars = run_ivars
+      aggregate_failures do
+        expect(ivars[:recommendations]).to eq [nil]
+        expect(ivars[:recommendation_texts]).to eq []
+      end
+    end
+
+    it 'computes recommendations and their texts when enabled' do
+      chart.show_recommendations
+      ivars = run_ivars
+      aggregate_failures do
+        expect(ivars[:recommendations]).to eq [1]
+        expect(ivars[:recommendation_texts]).to eq ["Lower the WIP limit for 'Ready' from 4 to 1"]
+      end
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
