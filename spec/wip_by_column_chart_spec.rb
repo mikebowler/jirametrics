@@ -200,6 +200,54 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#column_as_of' do
+    # board status→column map: 10001→0 (Ready), 3→1 (In Progress), 10011→2 (Review)
+    let(:status_to_column) { { 10_001 => 0, 3 => 1, 10_011 => 2 } }
+
+    def status_change time, value_id
+      Struct.new(:time, :value_id).new(to_time(time), value_id)
+    end
+
+    def issue_with *changes
+      Struct.new(:status_changes).new(changes)
+    end
+
+    def column_as_of issue, time
+      chart.send(:column_as_of, issue, to_time(time), status_to_column)
+    end
+
+    it 'returns nil when the issue has no status changes' do
+      expect(column_as_of(issue_with, '2021-06-01T00:10:00')).to be_nil
+    end
+
+    it 'returns nil when every status change is after the given time' do
+      issue = issue_with status_change('2021-06-01T00:10:00', 3)
+      expect(column_as_of(issue, '2021-06-01T00:05:00')).to be_nil
+    end
+
+    it 'includes a change at exactly the given time, excludes one just after' do
+      aggregate_failures do
+        expect(column_as_of(issue_with(status_change('2021-06-01T00:10:00', 3)), '2021-06-01T00:10:00')).to eq 1
+        expect(column_as_of(issue_with(status_change('2021-06-01T00:10:01', 3)), '2021-06-01T00:10:00')).to be_nil
+      end
+    end
+
+    it 'uses the most recent change at or before the time, not the earliest' do
+      issue = issue_with(
+        status_change('2021-06-01T00:02:00', 10_001), # Ready, column 0
+        status_change('2021-06-01T00:05:00', 3)       # In Progress, column 1
+      )
+      expect(column_as_of(issue, '2021-06-01T00:10:00')).to eq 1
+    end
+
+    it 'maps the change value_id through the column map' do
+      aggregate_failures do
+        expect(column_as_of(issue_with(status_change('2021-06-01T00:05:00', 10_001)), '2021-06-01T00:10:00')).to eq 0
+        expect(column_as_of(issue_with(status_change('2021-06-01T00:05:00', 10_011)), '2021-06-01T00:10:00')).to eq 2
+      end
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).

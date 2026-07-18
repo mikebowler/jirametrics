@@ -173,8 +173,7 @@ class WipByColumnChart < ChartBase
         next
       end
 
-      last_change = issue.status_changes.reverse.find { |c| c.time <= time_range.begin }
-      hash[issue] = last_change ? status_to_column[last_change.value_id] : nil
+      hash[issue] = column_as_of(issue, time_range.begin, status_to_column)
     end
   end
 
@@ -186,8 +185,7 @@ class WipByColumnChart < ChartBase
 
       if within_window?(started_time)
         # add an explicit event to enter WIP in its current column
-        last_change = issue.status_changes.reverse.find { |c| c.time <= started_time }
-        events << [started_time, issue, last_change ? status_to_column[last_change.value_id] : nil]
+        events << [started_time, issue, column_as_of(issue, started_time, status_to_column)]
       end
 
       issue.status_changes.each do |change|
@@ -216,6 +214,13 @@ class WipByColumnChart < ChartBase
     return false if stopped_time && change.time >= stopped_time
 
     true
+  end
+
+  # The column the issue was displayed in as of the given time: the column of its most recent
+  # status change at or before that time, or nil if it hadn't changed status yet.
+  def column_as_of issue, time, status_to_column
+    last_change = issue.status_changes.reverse.find { |change| change.time <= time }
+    last_change ? status_to_column[last_change.value_id] : nil
   end
 
   def compute_wip_seconds columns, current_column, events
