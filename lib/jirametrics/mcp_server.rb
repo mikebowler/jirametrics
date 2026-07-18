@@ -135,67 +135,44 @@ class McpServer
     true
   end
 
-  def self.time_per_column issue, end_time
+  # Walks an issue's status timeline as spans (created -> first change, between consecutive changes,
+  # last change -> effective end) and sums each span's duration under a bucket name. The bucket for a
+  # span is chosen by the block, given the (status_name, status_id) that describe the status held during
+  # that span: for the opening span that's the first change's old value, and thereafter the change's value.
+  def self.accumulate_spans issue, end_time
     changes = issue.status_changes
     _, stopped = issue.started_stopped_times
     effective_end = stopped && stopped < end_time ? stopped : end_time
-    board = issue.board
-
     result = Hash.new(0.0)
 
     if changes.empty?
-      col = column_name_for(board, issue.status.id) || issue.status.name
-      duration = effective_end - issue.created
-      result[col] += duration if duration.positive?
+      add_span(result, yield(issue.status.name, issue.status.id), effective_end - issue.created)
       return result
     end
 
     first_change = changes.first
-    initial_col = column_name_for(board, first_change.old_value_id) || first_change.old_value
-    initial_duration = first_change.time - issue.created
-    result[initial_col] += initial_duration if initial_duration.positive?
+    add_span(result, yield(first_change.old_value, first_change.old_value_id), first_change.time - issue.created)
 
     changes.each_cons(2) do |prev_change, next_change|
-      col = column_name_for(board, prev_change.value_id) || prev_change.value
-      duration = next_change.time - prev_change.time
-      result[col] += duration if duration.positive?
+      add_span(result, yield(prev_change.value, prev_change.value_id), next_change.time - prev_change.time)
     end
 
     last_change = changes.last
-    final_col = column_name_for(board, last_change.value_id) || last_change.value
-    final_duration = effective_end - last_change.time
-    result[final_col] += final_duration if final_duration.positive?
-
+    add_span(result, yield(last_change.value, last_change.value_id), effective_end - last_change.time)
     result
   end
 
+  def self.add_span result, name, duration
+    result[name] += duration if duration.positive?
+  end
+
+  def self.time_per_column issue, end_time
+    board = issue.board
+    accumulate_spans(issue, end_time) { |name, id| column_name_for(board, id) || name }
+  end
+
   def self.time_per_status issue, end_time
-    changes = issue.status_changes
-    _, stopped = issue.started_stopped_times
-    effective_end = stopped && stopped < end_time ? stopped : end_time
-
-    result = Hash.new(0.0)
-
-    if changes.empty?
-      duration = effective_end - issue.created
-      result[issue.status.name] += duration if duration.positive?
-      return result
-    end
-
-    first_change = changes.first
-    initial_duration = first_change.time - issue.created
-    result[first_change.old_value] += initial_duration if initial_duration.positive?
-
-    changes.each_cons(2) do |prev_change, next_change|
-      duration = next_change.time - prev_change.time
-      result[prev_change.value] += duration if duration.positive?
-    end
-
-    last_change = changes.last
-    final_duration = effective_end - last_change.time
-    result[last_change.value] += final_duration if final_duration.positive?
-
-    result
+    accumulate_spans(issue, end_time) { |name, _id| name }
   end
 
   def self.flow_efficiency_percent issue, end_time
