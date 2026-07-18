@@ -578,4 +578,146 @@ describe McpServer do
       expect(text).to eq 'SP-1 | SP | Bug | In Progress | Age: 6d | Do the thing'
     end
   end
+
+  describe McpServer::CompletedWorkTool do
+    def completed_text context, **args
+      described_class.call(server_context: context, **args).content.first[:text]
+    end
+
+    it 'formats a completed issue with cycle time, flow efficiency, and completion status' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done'
+      wire_cycletime [issue, '2024-01-05', '2024-01-10']
+      response = described_class.call(server_context: server_context(projects: { 'SP' => [issue] }))
+      # Cycle time = (stopped 01-10 - started 01-05) + 1 = 6 days. Completion is the status at done ('Done').
+      expect(response.content).to eq [{
+        type: 'text',
+        text: 'SP-1 | SP | Bug | 2024-01-10 | Cycle time: 6d | FE: 100.0% | Done | Do the thing'
+      }]
+    end
+
+    it 'includes only stopped issues, even when an unfinished one comes first' do
+      aging = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'aging'
+      completed = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'completed'
+      wire_cycletime [aging, '2024-01-05', nil], [completed, '2024-01-05', '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [aging, completed] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[completed]
+    end
+
+    it 'returns a not-found message when nothing has completed' do
+      aging = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress'
+      wire_cycletime [aging, '2024-01-05', nil]
+      expect(completed_text(server_context(projects: { 'SP' => [aging] }))).to eq 'No completed work found.'
+    end
+
+    it 'sorts most recently completed first' do
+      older = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'older'
+      newer = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'newer'
+      wire_cycletime [older, '2024-01-05', '2024-01-08'], [newer, '2024-01-05', '2024-01-12']
+      text = completed_text(server_context(projects: { 'SP' => [older, newer] }))
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[newer older]
+    end
+
+    it 'restricts to the named project, accepting the project_name alias' do
+      sp_issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'sp'
+      foo_issue = handler_issue key: 'FOO-1', created: '2024-01-01', status_name: 'Done', summary: 'foo'
+      wire_cycletime [sp_issue, '2024-01-05', '2024-01-10'], [foo_issue, '2024-01-05', '2024-01-10']
+      context = server_context(projects: { 'SP' => [sp_issue], 'FOO' => [foo_issue] })
+      expect(completed_text(context, project_name: 'FOO').split(' | ')).to include('FOO-1', 'foo')
+    end
+
+    it 'filters out issues completed before the days_back cutoff' do
+      recent = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'recent'
+      old = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'old'
+      wire_cycletime [recent, '2024-01-05', '2024-01-12'], [old, '2024-01-05', '2024-01-08']
+      # today 01-15, days_back 5 -> cutoff 01-10; 'old' completed 01-08 falls before it.
+      text = completed_text(server_context(projects: { 'SP' => [recent, old] }), days_back: 5)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[recent]
+    end
+
+    it 'filters by completed_status (the status the issue was in when it finished)' do
+      done = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'done'
+      review = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Review', summary: 'review'
+      wire_cycletime [done, '2024-01-05', '2024-01-10'], [review, '2024-01-05', '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [done, review] }), completed_status: 'Done')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[done]
+    end
+
+    it 'filters by completed_resolution (matched by value, not identity) and joins status with resolution' do
+      resolved = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'resolved'
+      add_mock_change(issue: resolved, field: 'resolution', value: "Won't Do", time: '2024-01-09')
+      unresolved = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'unresolved'
+      wire_cycletime [resolved, '2024-01-05', '2024-01-10'], [unresolved, '2024-01-05', '2024-01-10']
+      # The filter value is a distinct string object from the one on the change, so an identity (equal?)
+      # comparison would wrongly reject it — the match must be by value.
+      filter = +"Won't Do"
+      text = completed_text(server_context(projects: { 'SP' => [resolved, unresolved] }), completed_resolution: filter)
+      expect(text).to eq "SP-1 | SP | Bug | 2024-01-10 | Cycle time: 6d | FE: 100.0% | Done / Won't Do | resolved"
+    end
+
+    it 'keeps resolved issues (and shows the resolution) when no resolution filter is given' do
+      resolved = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'resolved'
+      add_mock_change(issue: resolved, field: 'resolution', value: 'Fixed', time: '2024-01-09')
+      wire_cycletime [resolved, '2024-01-05', '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [resolved] }))
+      expect(text).to eq 'SP-1 | SP | Bug | 2024-01-10 | Cycle time: 6d | FE: 100.0% | Done / Fixed | resolved'
+    end
+
+    it 'reports unknown cycle time and omits flow efficiency when the issue never started' do
+      issue = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done'
+      wire_cycletime [issue, nil, '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [issue] }))
+      expect(text).to eq 'SP-1 | SP | Bug | 2024-01-10 | Cycle time: unknown | Done | Do the thing'
+    end
+
+    it 'applies the history filter' do
+      matched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'matched'
+      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      unmatched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'unmatched'
+      wire_cycletime [matched, '2024-01-05', '2024-01-10'], [unmatched, '2024-01-05', '2024-01-10']
+      context = server_context(projects: { 'SP' => [matched, unmatched] })
+      text = completed_text(context, history_field: 'priority', history_value: 'High')
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[matched]
+    end
+
+    # As with aging work, each blocked/stalled flag must be forwarded (with the data end_time) into
+    # matches_history?. Here the issues are all completed (they carry a stop time).
+    it 'filters by ever_blocked' do
+      blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'blocked'
+      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      clear = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Done', summary: 'clear'
+      wire_cycletime [blocked, '2024-01-05', '2024-01-10'], [clear, '2024-01-13', '2024-01-14']
+      text = completed_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[blocked]
+    end
+
+    it 'filters by currently_blocked' do
+      still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'still'
+      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'cleared'
+      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      wire_cycletime [still, '2024-01-05', '2024-01-10'], [cleared, '2024-01-05', '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[still]
+    end
+
+    it 'filters by ever_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Done', summary: 'active'
+      wire_cycletime [stalled, '2024-01-02', '2024-01-10'], [active, '2024-01-13', '2024-01-14']
+      text = completed_text(server_context(projects: { 'SP' => [stalled, active] }), ever_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+
+    it 'filters by currently_stalled' do
+      stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'stalled'
+      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'revived'
+      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      wire_cycletime [stalled, '2024-01-02', '2024-01-10'], [revived, '2024-01-01', '2024-01-10']
+      text = completed_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
+      expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
+    end
+  end
 end
