@@ -190,12 +190,8 @@ class WipByColumnChart < ChartBase
         events << [started_time, issue, last_change ? status_to_column[last_change.value_id] : nil]
       end
 
-      # Status changes while the issue is actively in WIP and within the window
       issue.status_changes.each do |change|
-        next unless change.time > time_range.begin
-        next if change.time > time_range.end
-        next unless change.time >= started_time
-        next if stopped_time && change.time >= stopped_time
+        next unless in_wip_and_within_window?(change, started_time, stopped_time)
 
         events << [change.time, issue, status_to_column[change.value_id]]
       end
@@ -206,6 +202,18 @@ class WipByColumnChart < ChartBase
       end
     end
     events.sort_by!(&:first)
+  end
+
+  # A status change counts if it happened inside the window and while the issue was actively in WIP:
+  # after the window opens, up to and including when it closes, at or after the issue started, and
+  # strictly before it stopped.
+  def in_wip_and_within_window? change, started_time, stopped_time
+    return false unless change.time > time_range.begin
+    return false if change.time > time_range.end
+    return false unless change.time >= started_time
+    return false if stopped_time && change.time >= stopped_time
+
+    true
   end
 
   def compute_wip_seconds columns, current_column, events

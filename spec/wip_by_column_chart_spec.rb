@@ -137,6 +137,44 @@ describe WipByColumnChart do
     end
   end
 
+  describe '#in_wip_and_within_window?' do
+    # chart window is 2021-06-01T00:00:00 .. 2021-06-01T00:16:40
+    def in_window? time, started:, stopped:
+      change = Struct.new(:time).new(to_time(time))
+      chart.send(:in_wip_and_within_window?, change, to_time(started), stopped && to_time(stopped))
+    end
+
+    it 'excludes a change at the window start, includes one just after' do
+      aggregate_failures do
+        expect(in_window?('2021-06-01T00:00:00', started: '2021-06-01T00:00:00', stopped: nil)).to be false
+        expect(in_window?('2021-06-01T00:00:01', started: '2021-06-01T00:00:00', stopped: nil)).to be true
+      end
+    end
+
+    it 'includes a change at the window end, excludes one just after' do
+      aggregate_failures do
+        expect(in_window?('2021-06-01T00:16:40', started: '2021-06-01T00:00:00', stopped: nil)).to be true
+        expect(in_window?('2021-06-01T00:16:41', started: '2021-06-01T00:00:00', stopped: nil)).to be false
+      end
+    end
+
+    it 'includes a change at the start time, excludes one just before' do
+      aggregate_failures do
+        expect(in_window?('2021-06-01T00:08:20', started: '2021-06-01T00:08:20', stopped: nil)).to be true
+        expect(in_window?('2021-06-01T00:08:19', started: '2021-06-01T00:08:20', stopped: nil)).to be false
+      end
+    end
+
+    it 'excludes a change at or after the stop time, includes one just before' do
+      window = { started: '2021-06-01T00:00:00', stopped: '2021-06-01T00:08:20' }
+      aggregate_failures do
+        expect(in_window?('2021-06-01T00:08:19', **window)).to be true
+        expect(in_window?('2021-06-01T00:08:20', **window)).to be false
+        expect(in_window?('2021-06-01T00:08:21', **window)).to be false
+      end
+    end
+  end
+
   describe '#show_recommendations' do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
