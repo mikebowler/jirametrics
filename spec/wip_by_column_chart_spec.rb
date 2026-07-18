@@ -404,13 +404,21 @@ describe WipByColumnChart do
 
   describe '#run' do
     # run's data assembly is normally reachable only through the HTML wrap_and_render produces.
-    # Stub that out and we can assert the instance variables run builds directly, with no ERB or
-    # binding machinery in play.
+    # Stub that out, capturing the binding run hands it, and we can read the values the ERB template
+    # would see — exactly, and without pulling ERB into the test.
     def run_ivars
-      allow(chart).to receive(:wrap_and_render).and_return('')
+      captured_binding = nil
+      allow(chart).to receive(:wrap_and_render) { |render_binding, _file| captured_binding = render_binding }
       chart.run
-      %i[column_names wip_data max_wip wip_limits recommendations recommendation_texts header_text]
-        .to_h { |name| [name, chart.instance_variable_get(:"@#{name}")] }
+      {
+        header_text: captured_binding.eval('@header_text'),
+        column_names: captured_binding.eval('@column_names'),
+        wip_data: captured_binding.eval('@wip_data'),
+        max_wip: captured_binding.eval('@max_wip'),
+        wip_limits: captured_binding.eval('@wip_limits'),
+        recommendations: captured_binding.eval('@recommendations'),
+        recommendation_texts: captured_binding.eval('@recommendation_texts')
+      }
     end
 
     before { chart.issues = [issue_in_ready(key: 'SP-1')] } # one issue, in Ready for the whole 1000s window
