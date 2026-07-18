@@ -174,6 +174,12 @@ describe IssuePrinter do
       expect(printer.create_change_message(change: change, issue: issue1)).to include('(Author: ')
     end
 
+    it 'names the author of a non-artificial change' do
+      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false)
+      allow(change).to receive(:author).and_return('Mike Bowler')
+      expect(printer.create_change_message(change: change, issue: issue1)).to eq '"High" (Author: Mike Bowler)'
+    end
+
     context 'with sprint changes' do
       it 'shows added sprint id when added to a new sprint' do
         change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
@@ -212,6 +218,37 @@ describe IssuePrinter do
     end
   end
 
+  describe '#format_change_values' do
+    it 'formats a status change with value and old ids' do
+      change = mock_change(field: 'status', value: 'In Progress', value_id: 3,
+                           old_value: 'Backlog', old_value_id: 10_000, time: '2021-01-01', artificial: true)
+      expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"In Progress":3', '"Backlog":10000']
+    end
+
+    it 'has a nil old value for a status change with no prior status' do
+      change = mock_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-01', artificial: true)
+      expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"In Progress":3', nil]
+    end
+
+    it 'formats a sprint change with the sprint name, ids, and additions' do
+      change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+                           old_value: '', old_value_id: '', time: '2021-01-01', artificial: true)
+      expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"Sprint 1" [10] (added: [10])', nil]
+    end
+
+    it 'formats a plain change through compact_text' do
+      change = mock_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01', artificial: true)
+      expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"High"', '"Low"']
+    end
+
+    it 'shows both additions and removals for a sprint moved between sprints' do
+      change = mock_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
+                           old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: true)
+      expect(printer.format_change_values(change: change, issue: issue1))
+        .to eq ['"Sprint 2" [20] (added: [20]) (removed: [10])', nil]
+    end
+  end
+
   describe '#sort_history!' do
     let(:printer) { described_class.new(issue1) }
     let(:t1) { to_time '2021-01-01' }
@@ -233,6 +270,18 @@ describe IssuePrinter do
       history = [[t1, 'status', 'detail', false], [t1, 'priority', 'detail2', false]]
       printer.sort_history!(history)
       expect(history.map { |e| e[1] }).to eq %w[priority status]
+    end
+
+    it 'sorts by time even when the types would sort the opposite way' do
+      history = [[t2, 'a', 'later', false], [t1, 'b', 'earlier', false]]
+      printer.sort_history!(history)
+      expect(history.map(&:first)).to eq [t1, t2]
+    end
+
+    it 'moves a nil-type entry to the end even when it starts first' do
+      history = [[t1, nil, 'marker', true], [t1, 'status', 'detail', false]]
+      printer.sort_history!(history)
+      expect(history.map { |e| e[1] }).to eq ['status', nil]
     end
   end
 
