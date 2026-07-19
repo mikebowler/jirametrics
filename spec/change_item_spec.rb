@@ -159,10 +159,13 @@ describe ChangeItem do
       end
     end
 
-    it 'raises if a non-sprint change unexpectedly carries more than one id' do
-      expect do
-        described_class.new time: time, author_raw: nil, raw: { 'field' => 'status', 'to' => '5, 6' }
-      end.to raise_error(/Expected a single id for a non-sprint change but found \[5, 6\]/)
+    # Non-sprint fields such as Watchers and Markets carry comma-separated text or bracketed lists in
+    # real data. Those must NOT be split into a list - to_i just yields the leading number (0 here).
+    it 'does not split comma-separated text on non-sprint fields' do
+      aggregate_failures do
+        expect(change_for('Watchers', to: 'Alice, Bob, Carol').value_id).to eq 0
+        expect(change_for('Markets', to: '[25802, 25803]').value_id).to eq 0
+      end
     end
 
     it 'tolerates a change with the to and from keys entirely absent' do
