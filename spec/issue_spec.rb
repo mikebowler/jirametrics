@@ -1161,6 +1161,8 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
         issue.board.project_config = project_config
         issue.raw['fields']['customfield_2'] = 'ABC-2'
         expect(issue.parent_key).to eq 'ABC-2'
+        # customfield_1 is simply absent, so it is skipped silently (no warning).
+        expect(exporter.file_system.log_messages).to be_empty
       end
 
       it 'determines single custom fields from settings and get the parent from there' do
@@ -1179,6 +1181,18 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
           'Custom field "customfield_1" should point to a parent id but found "BadData"'
         ])
       end
+
+      it 'does not consult custom fields when a parent link is already found' do
+        project_config.settings['customfield_parent_links'] = 'customfield_1'
+        issue.board.project_config = project_config
+        issue.raw['fields']['parent'] = { 'key' => 'ABC-1' }
+        issue.raw['fields']['customfield_1'] = 'ABC-9' # would win if custom fields were consulted
+        expect(issue.parent_key).to eq 'ABC-1'
+      end
+    end
+
+    it 'returns nil without error when there is no project config' do
+      expect(issue.parent_key(project_config: nil)).to be_nil
     end
   end
 

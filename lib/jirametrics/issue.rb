@@ -498,34 +498,31 @@ class Issue
     # Although Atlassian is trying to standardize on one way to determine the parent, today it's a mess.
     # We try a variety of ways to get the parent and hopefully one of them will work. See this link:
     # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
-
     fields = @raw['fields']
 
-    # At some point in the future, this will be the only way to retrieve the parent so we try this first.
-    parent = fields['parent']&.[]('key')
-
-    # The epic field
-    parent = fields['epic']&.[]('key') if parent.nil?
-
-    # Otherwise the parent link will be stored in one of the custom fields. We've seen different custom fields
-    # used for parent_link vs epic_link so we have to support more than one.
-    if parent.nil? && project_config
-      custom_field_names = project_config.settings['customfield_parent_links']
-      custom_field_names = [custom_field_names] if custom_field_names.is_a? String
-
-      custom_field_names&.each do |field_name|
-        parent = fields[field_name]
-        next if parent.nil?
-        break if looks_like_issue_key? parent
-
-        project_config.file_system.log(
-          "Custom field #{field_name.inspect} should point to a parent id but found #{parent.inspect}"
-        )
-        parent = nil
-      end
-    end
-
+    # The 'parent' field will eventually be the only way; the 'epic' field is the older form. Failing
+    # both, the parent link may be stored in a custom field.
+    parent = fields['parent']&.[]('key') || fields['epic']&.[]('key')
+    parent ||= parent_from_custom_fields(fields, project_config) if project_config
     parent
+  end
+
+  def parent_from_custom_fields fields, project_config
+    # We've seen different custom fields used for parent_link vs epic_link, so we try each configured
+    # one until we find a value that looks like an issue key.
+    custom_field_names = project_config.settings['customfield_parent_links']
+    custom_field_names = [custom_field_names] if custom_field_names.is_a? String
+
+    custom_field_names&.each do |field_name|
+      parent = fields[field_name]
+      next if parent.nil?
+      return parent if looks_like_issue_key? parent
+
+      project_config.file_system.log(
+        "Custom field #{field_name.inspect} should point to a parent id but found #{parent.inspect}"
+      )
+    end
+    nil
   end
 
   def in_initial_query?
