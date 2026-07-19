@@ -403,7 +403,7 @@ class ProjectConfig
     return start unless no_earlier
 
     no_earlier = to_time(no_earlier.to_s)
-    start < no_earlier ? no_earlier : start
+    [start, no_earlier].max
   end
 
   def load_users
@@ -489,37 +489,44 @@ class ProjectConfig
 
       load_data if all_boards.empty?
 
-      timezone_offset = exporter.timezone_offset
-
       issues_path = File.join @target_path, "#{get_file_prefix}_issues"
-      if File.exist?(issues_path) && File.directory?(issues_path)
-        file_system.diagnostic "Loading issues from #{issues_path}"
-        issues = load_issues_from_issues_directory path: issues_path, timezone_offset: timezone_offset
-        file_system.diagnostic "Loaded #{issues.size} issues from disk"
-      else
+      # File.directory? is already false for a path that doesn't exist, so no need to also check File.exist?.
+      unless File.directory?(issues_path)
         file_system.log "Can't find directory #{issues_path}. Has a download been done?", also_write_to_stderr: true
         return IssueCollection.new
       end
 
-      # Attach related issues
-      file_system.diagnostic 'Starting attach phase'
-      issues_by_key = issues.to_h { |i| [i.key, i] }
-      issues.each do |i|
-        attach_subtasks issue: i, issues_by_key: issues_by_key
-        attach_parent issue: i, issues_by_key: issues_by_key
-        attach_linked_issues issue: i, issues_by_key: issues_by_key
-      end
-      file_system.diagnostic 'Attach phase complete'
-
-      # We'll have some issues that are in the list that weren't part of the initial query. Once we've
-      # attached them in the appropriate places, remove any that aren't part of that initial set.
-      issues.reject! { |i| !i.in_initial_query? }
-      file_system.diagnostic "Retained #{issues.size} primary issues"
-      @issues = issues
+      @issues = build_issues_from_directory(issues_path)
       attach_github_prs
     end
 
     @issues
+  end
+
+  def build_issues_from_directory issues_path
+    file_system.diagnostic "Loading issues from #{issues_path}"
+    issues = load_issues_from_issues_directory path: issues_path, timezone_offset: exporter.timezone_offset
+    file_system.diagnostic "Loaded #{issues.size} issues from disk"
+
+    attach_related_issues issues
+
+    # We'll have some issues that are in the list that weren't part of the initial query. Once we've
+    # attached them in the appropriate places, remove any that aren't part of that initial set.
+    issues.select!(&:in_initial_query?)
+    file_system.diagnostic "Retained #{issues.size} primary issues"
+    issues
+  end
+
+  # Wire up subtasks, parents and linked issues now that we have the whole set loaded.
+  def attach_related_issues issues
+    file_system.diagnostic 'Starting attach phase'
+    issues_by_key = issues.to_h { |issue| [issue.key, issue] }
+    issues.each do |issue|
+      attach_subtasks issue: issue, issues_by_key: issues_by_key
+      attach_parent issue: issue, issues_by_key: issues_by_key
+      attach_linked_issues issue: issue, issues_by_key: issues_by_key
+    end
+    file_system.diagnostic 'Attach phase complete'
   end
 
   def attach_subtasks issue:, issues_by_key:

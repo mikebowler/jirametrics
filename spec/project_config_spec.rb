@@ -730,6 +730,143 @@ describe ProjectConfig do
         "The board declaration for board 1 must come before the first usage of 'issues' in the configuration"
       )
     end
+
+    context 'when loading issues from a directory on disk' do
+      let(:loaded_config) do
+        described_class.new(
+          exporter: exporter, target_path: 'spec/complete_sample/', jira_config: nil, block: nil, name: 'sample'
+        ).tap do |config|
+          exporter.file_system.when_loading(
+            file: 'spec/complete_sample/sample_board_1_configuration.json', json: :not_mocked
+          )
+          exporter.file_system.when_loading file: 'spec/complete_sample/sample_statuses.json', json: :not_mocked
+          exporter.file_system.when_loading file: 'spec/complete_sample/sample_meta.json', json: :not_mocked
+          exporter.file_system.when_foreach root: 'spec/complete_sample/sample_issues', result: :not_mocked
+          [1, 2, 5, 7, 8, 11].each do |num|
+            exporter.file_system.when_loading(
+              file: "spec/complete_sample/sample_issues/SP-#{num}.json", json: :not_mocked
+            )
+          end
+
+          config.file_prefix 'sample'
+          config.load_status_category_mappings
+          config.load_all_boards
+          config.board id: 1 do
+            cycletime do
+              start_at first_time_in_status_category(:indeterminate)
+              stop_at first_time_in_status_category(:done)
+            end
+          end
+          config.time_range = to_time('2021-06-01')..to_time('2021-09-01')
+        end
+      end
+
+      it 'loads every issue from the directory' do
+        expect(loaded_config.issues.collect(&:key)).to contain_exactly(
+          'SP-1', 'SP-2', 'SP-5', 'SP-7', 'SP-8', 'SP-11'
+        )
+      end
+
+      it 'memoizes the loaded issues so a second call returns the same collection' do
+        first_load = loaded_config.issues
+        expect(loaded_config.issues).to be(first_load)
+      end
+
+      it 'attaches github pull requests after loading' do
+        allow(loaded_config).to receive(:attach_github_prs)
+        loaded_config.issues
+        expect(loaded_config).to have_received(:attach_github_prs)
+      end
+
+      it 'logs its progress through the load and attach phases' do
+        loaded_config.issues
+        expect(exporter.file_system.log_messages).to include(
+          a_string_matching(%r{\[diag\] Loading issues from .*sample_issues}),
+          '[diag] Loaded 6 issues from disk',
+          '[diag] Starting attach phase',
+          '[diag] Attach phase complete',
+          '[diag] Retained 6 primary issues'
+        )
+      end
+
+      it 'drops issues that were not part of the initial query' do
+        config = loaded_config # trigger the setup, which mocks SP-1 as :not_mocked
+        raw = JSON.parse(file_read('spec/complete_sample/sample_issues/SP-1.json'))
+        raw['exporter'] = { 'in_initial_query' => false }
+        exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-1.json', json: raw
+
+        expect(config.issues.collect(&:key)).to contain_exactly('SP-2', 'SP-5', 'SP-7', 'SP-8', 'SP-11')
+      end
+
+      it 'attaches related issues, resolving references by key against the loaded set' do
+        config = loaded_config # trigger the setup, which mocks SP-2 as :not_mocked
+        raw = JSON.parse(file_read('spec/complete_sample/sample_issues/SP-2.json'))
+        raw['fields']['subtasks'] = [{ 'key' => 'SP-1' }]
+        raw['fields']['parent'] = { 'key' => 'SP-5' }
+        raw['fields']['issuelinks'] = [{
+          'id' => '10001',
+          'type' => { 'name' => 'Blocks', 'inward' => 'is blocked by', 'outward' => 'blocks' },
+          'inwardIssue' => {
+            'key' => 'SP-7',
+            'fields' => {
+              'summary' => 'Linked issue',
+              'status' => {
+                'name' => 'Done', 'id' => '10002',
+                'statusCategory' => { 'id' => 3, 'key' => 'done', 'name' => 'Done' }
+              },
+              'priority' => { 'name' => 'Medium', 'id' => '3' },
+              'issuetype' => { 'name' => 'Story', 'id' => '10001', 'subtask' => false }
+            }
+          }
+        }]
+        exporter.file_system.when_loading file: 'spec/complete_sample/sample_issues/SP-2.json', json: raw
+
+        sp2 = config.issues.find { |issue| issue.key == 'SP-2' }
+        aggregate_failures do
+          expect(sp2.subtasks.collect(&:key)).to eq ['SP-1']
+          expect(sp2.parent.key).to eq 'SP-5'
+          # The linked issue's placeholder is swapped for the real loaded SP-7 object.
+          expect(sp2.issue_links.first.other_issue).to be(config.issues.find { |issue| issue.key == 'SP-7' })
+        end
+      end
+    end
+
+    it 'returns an empty memoized collection while downloading' do
+      config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'downloading'
+      )
+      allow(exporter).to receive(:downloading?).and_return(true)
+      first_call = config.issues
+      aggregate_failures do
+        expect(first_call.collect(&:key)).to eq []
+        expect(config.issues).to be(first_call)
+      end
+    end
+
+    it 'raises when an aggregated project reaches issues without any wired in' do
+      config = described_class.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: 'agg'
+      )
+      allow(config).to receive(:aggregated_project?).and_return(true)
+      expect { config.issues }.to raise_error(/This is an aggregated project/)
+    end
+
+    it 'loads data and warns when the issues directory is absent' do
+      config = described_class.new(
+        exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil, name: 'missing'
+      )
+      allow(config).to receive(:data_downloaded?).and_return(true)
+      allow(config).to receive(:load_data)
+      config.file_prefix 'nonexistent'
+      # all_boards is empty so load_data must run; spec/testdata/nonexistent_issues is not a real directory.
+      result = config.issues
+      aggregate_failures do
+        expect(config).to have_received(:load_data)
+        expect(result.collect(&:key)).to eq []
+        expect(exporter.file_system.log_messages)
+          .to include(a_string_matching(/Can't find directory .*nonexistent_issues/))
+      end
+    end
   end
 
   describe '#find_default_board' do
