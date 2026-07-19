@@ -58,16 +58,19 @@ class AgingWorkTable < ChartBase
   end
 
   def select_aging_issues
-    aging_issues = @issues.select do |issue|
-      started, stopped = issue.started_stopped_times
-      next false if started.nil? || stopped
-      next true if issue.blocked_on_date?(@today, end_time: time_range.end) || issue.expedited?
-
-      age = (@today - started.to_date).to_i + 1
-      age > @age_cutoff
-    end
+    aging_issues = @issues.select { |issue| aging_issue? issue }
     @any_scrum_boards = aging_issues.any? { |issue| issue.board.scrum? }
-    aging_issues.sort { |a, b| b.board.cycletime.age(b, today: @today) <=> a.board.cycletime.age(a, today: @today) }
+    aging_issues.sort_by { |issue| -issue.board.cycletime.age(issue, today: @today) }
+  end
+
+  # An issue is "aging" if it's in progress and either flagged as needing attention (blocked or
+  # expedited) or older than the configured cutoff.
+  def aging_issue? issue
+    cycletime = issue.board.cycletime
+    return false unless cycletime.in_progress?(issue)
+    return true if issue.blocked_on_date?(@today, end_time: time_range.end) || issue.expedited?
+
+    cycletime.age(issue, today: @today) > @age_cutoff
   end
 
   def expedited_text issue

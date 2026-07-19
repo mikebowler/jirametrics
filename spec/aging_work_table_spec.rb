@@ -152,6 +152,63 @@ describe AgingWorkTable do
         expect(table.age_cutoff).to eq 5 # Pull it back out just to verify that we can.
       end
     end
+
+    it 'ignores an issue that has not started' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      table.issues = [issue1]
+      expect(table.select_aging_issues).to be_empty
+    end
+
+    it 'includes a blocked issue even when it is younger than the cutoff' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-30', nil]] # age 2
+      table.age_cutoff 5
+      allow(issue1).to receive(:blocked_on_date?).and_return(true)
+      table.issues = [issue1]
+      expect(table.select_aging_issues).to eq [issue1]
+    end
+
+    it 'includes an expedited issue even when it is younger than the cutoff' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-30', nil]] # age 2
+      table.age_cutoff 5
+      allow(issue1).to receive(:expedited?).and_return(true)
+      table.issues = [issue1]
+      expect(table.select_aging_issues).to eq [issue1]
+    end
+
+    it 'excludes an issue exactly at the cutoff but includes one past it' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2021-01-27', nil], # age 5, equal to the cutoff
+        [issue2, '2021-01-26', nil]  # age 6, past the cutoff
+      ]
+      table.age_cutoff 5
+      table.issues = [issue1, issue2]
+      expect(table.select_aging_issues).to eq [issue2]
+    end
+
+    it 'sorts the aging issues oldest first' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2021-01-20', nil], # age 12
+        [issue2, '2021-01-10', nil]  # age 22, older
+      ]
+      table.issues = [issue1, issue2]
+      expect(table.select_aging_issues).to eq [issue2, issue1]
+    end
+
+    it 'flags scrum when at least one aging issue is on a scrum board' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil], [issue2, '2021-01-02', nil]]
+      allow(board).to receive(:scrum?).and_return(true, false) # first issue scrum, second not
+      table.issues = [issue1, issue2]
+      table.select_aging_issues
+      expect(table.any_scrum_boards).to be true
+    end
+
+    it 'does not flag scrum when no aging issue is on a scrum board' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
+      allow(board).to receive(:scrum?).and_return(false)
+      table.issues = [issue1]
+      table.select_aging_issues
+      expect(table.any_scrum_boards).to be false
+    end
   end
 
   describe '#fix_versions_text' do
