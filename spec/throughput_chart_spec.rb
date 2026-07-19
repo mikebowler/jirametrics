@@ -137,6 +137,94 @@ describe ThroughputChart do
         end
       end
     end
+
+    it 'labels a single-day period with "on" rather than "between"' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1]
+      board.cycletime = default_cycletime_config
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-12')..Date.parse('2021-10-12')],
+        completed_issues: [issue1]
+      )
+      expect(dataset.first[:title].first).to eq '1 items closed on 2021-10-12'
+    end
+
+    it 'skips issues with no stop date without dropping later ones in the same period' do
+      issue1.changes.clear # never completed -> no stop date
+      issue2.changes.clear
+      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1, issue2]
+      board.cycletime = default_cycletime_config
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
+        completed_issues: [issue1, issue2]
+      )
+      aggregate_failures do
+        expect(dataset.first[:y]).to eq 1
+        expect(dataset.first[:title]).to include 'SP-2 : Update existing event'
+      end
+    end
+
+    it 'excludes issues whose stop date falls outside the period' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-20T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1]
+      board.cycletime = default_cycletime_config
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2021-10-11')..Date.parse('2021-10-17')],
+        completed_issues: [issue1]
+      )
+      expect(dataset.first[:y]).to eq 0
+    end
+
+    it 'excludes a completed issue that is not in issue_periods (custom mode)' do
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue2.changes.clear
+      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1, issue2]
+      board.cycletime = default_cycletime_config
+      jan31 = Date.parse('2026-01-31')
+      subject.issue_periods = { issue1 => jan31 } # issue2 deliberately absent
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2026-01-01')..jan31],
+        completed_issues: [issue1, issue2]
+      )
+      # issue2 is not in issue_periods, so it is simply excluded (looked up, not fetched).
+      expect(dataset[0][:y]).to eq 1
+    end
+
+    it 'skips an issue with no stop date even in custom mode' do
+      issue1.changes.clear # no stop date
+      issue2.changes.clear
+      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+
+      subject = described_class.new empty_config_block
+      subject.issues = [issue1, issue2]
+      board.cycletime = default_cycletime_config
+      jan31 = Date.parse('2026-01-31')
+      subject.issue_periods = { issue1 => jan31, issue2 => jan31 }
+
+      dataset = subject.throughput_dataset(
+        periods: [Date.parse('2026-01-01')..jan31],
+        completed_issues: [issue1, issue2]
+      )
+      # issue1 maps to this period but has no stop date, so it is skipped; only issue2 counts.
+      expect(dataset[0][:y]).to eq 1
+    end
   end
 
   describe '#calculate_custom_periods' do
