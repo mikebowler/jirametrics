@@ -387,22 +387,23 @@ class ProjectConfig
     start = to_time(json['date_start'] || json['time_start']) # date_start is the current format. Time is the old.
     stop  = to_time(json['date_end'] || json['time_end'], end_of_day: true)
 
-    # If no_earlier_than was set then make sure it's applied here.
-    if download_config
-      download_config.run
-      no_earlier = download_config.no_earlier_than
-      if no_earlier
-        no_earlier = to_time(no_earlier.to_s)
-        start = no_earlier if start < no_earlier
-      end
-    end
-
-    @time_range = start..stop
-
+    @time_range = clamp_to_no_earlier_than(start)..stop
     @jira_url = json['jira_url']
   rescue Errno::ENOENT
     file_system.log "Can't load #{filename}. Have you done a download?", also_write_to_stderr: true
     raise
+  end
+
+  # If the download was configured with a no_earlier_than, the data can't start before it.
+  def clamp_to_no_earlier_than start
+    return start unless download_config
+
+    download_config.run
+    no_earlier = download_config.no_earlier_than
+    return start unless no_earlier
+
+    no_earlier = to_time(no_earlier.to_s)
+    start < no_earlier ? no_earlier : start
   end
 
   def load_users

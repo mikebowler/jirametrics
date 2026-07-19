@@ -659,6 +659,44 @@ describe ProjectConfig do
       project_config.load_project_metadata
       expect(project_config.time_range).to eq to_time('2024-01-01')..to_time('2024-04-01T23:59:59')
     end
+
+    it 'reads the data version and jira url from the metadata' do
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
+        'version' => 3, 'jira_url' => 'https://example.atlassian.net',
+        'date_start' => '2024-01-01', 'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      aggregate_failures do
+        expect(project_config.data_version).to eq 3
+        expect(project_config.jira_url).to eq 'https://example.atlassian.net'
+      end
+    end
+
+    it 'defaults the data version to 1 when the metadata omits it' do
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
+        'date_start' => '2024-01-01', 'date_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.data_version).to eq 1
+    end
+
+    it 'falls back to the old time_start/time_end fields when the date_ fields are absent' do
+      project_config.file_prefix 'sample'
+      exporter.file_system.when_loading file: 'spec/testdata/sample_meta.json', json: {
+        'time_start' => '2024-01-01', 'time_end' => '2024-04-01'
+      }
+      project_config.load_project_metadata
+      expect(project_config.time_range).to eq to_time('2024-01-01')..to_time('2024-04-01T23:59:59')
+    end
+
+    it 'logs and re-raises when the metadata file is missing' do
+      # 'missing_meta.json' is never mocked, so the load raises Errno::ENOENT.
+      project_config.file_prefix 'missing'
+      expect { project_config.load_project_metadata }.to raise_error(Errno::ENOENT)
+      expect(exporter.file_system.log_messages).to include(a_string_matching(/Can't load .*missing_meta\.json/))
+    end
   end
 
   describe '#issues' do
