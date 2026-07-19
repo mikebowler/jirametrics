@@ -121,7 +121,54 @@ describe CfdDataBuilder do
 
       result = build(issues: [issue1])
 
-      expect(result[:correction_windows].first[:end_date]).to eq date_range.end
+      expect(result[:correction_windows].size).to eq 1
+      window = result[:correction_windows].first
+      expect(window[:start_date]).to eq Date.parse('2021-07-04')
+      expect(window[:end_date]).to eq date_range.end
+      expect(window[:column_index]).to eq 2 # held at the Review high-water mark
+    end
+
+    it 'closes the correction window when the issue moves forward past its high-water mark' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      # Reaches Review (col 2), drops to In Progress (col 1), then jumps forward to Done (col 3)
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-02T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+        value_id: 3, time: '2021-07-04T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'Done',
+        value_id: 10_002, time: '2021-07-06T10:00:00')
+
+      result = build(issues: [issue1])
+
+      expect(result[:correction_windows].size).to eq 1
+      window = result[:correction_windows].first
+      expect(window[:start_date]).to eq Date.parse('2021-07-04')
+      expect(window[:end_date]).to eq Date.parse('2021-07-06')
+      expect(window[:column_index]).to eq 2 # closed at the old high-water mark, before advancing to Done
+    end
+
+    it 'ignores status changes for statuses that are not on a visible column' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-02T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
+        value_id: 10_000, time: '2021-07-04T10:00:00') # not on a visible column
+
+      result = build(issues: [issue1])
+
+      # The off-board move is skipped, so it is not treated as a backwards move.
+      expect(result[:correction_windows]).to be_empty
+    end
+
+    it 'produces nothing for an issue that never started' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-02T10:00:00')
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+
+      result = build(issues: [issue1])
+
+      expect(result[:correction_windows]).to be_empty
     end
 
     it 'records one correction window for multiple consecutive backwards moves' do
@@ -136,7 +183,21 @@ describe CfdDataBuilder do
       result = build(issues: [issue1])
 
       expect(result[:correction_windows].size).to eq 1
-      expect(result[:correction_windows].first[:start_date]).to eq Date.parse('2021-07-04')
+      window = result[:correction_windows].first
+      expect(window[:start_date]).to eq Date.parse('2021-07-04')
+      expect(window[:end_date]).to eq date_range.end # stays open through both backwards moves
+    end
+
+    it 'does not open or close a window when re-entering the high-water column without a backwards move' do
+      issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-02T10:00:00')
+      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+        value_id: 10_011, time: '2021-07-04T10:00:00')
+
+      result = build(issues: [issue1])
+
+      expect(result[:correction_windows]).to be_empty
     end
 
     it 'returns empty correction_windows when there are no backwards moves' do
