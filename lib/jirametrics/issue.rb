@@ -220,8 +220,8 @@ class Issue
   end
 
   def visible_status_changes_in_active_sprint visible_status_ids
-    status_changes.filter_map do |change|
-      change if visible_status_ids.include?(change.value_id) && in_active_sprint_at?(change.time)
+    status_changes.select do |change|
+      visible_status_ids.include?(change.value_id) && in_active_sprint_at?(change.time)
     end
   end
 
@@ -247,6 +247,10 @@ class Issue
   # A sprint the issue was added to: its start (all we care about is whether it started) and the change
   # that added it.
   SprintMembership = Data.define(:sprint_id, :sprint_start, :change)
+
+  # Like SprintMembership but also tracks when this issue was added, used while pairing sprint entries
+  # and exits in #sprint_entry_events.
+  TrackedSprint = Data.define(:sprint_id, :sprint_start, :add_time, :change)
 
   # If this issue is ever in an active sprint, returns the change where it was first added to that
   # sprint (whether or not the sprint was active at that moment). It's a reasonable proxy for 'ready'
@@ -639,36 +643,47 @@ class Issue
   # Returns [[effective_time, change_item]] for each moment the issue entered an active sprint.
   # Skips sprints that were removed before they activated.
   def sprint_entry_events
-    data_clazz = Struct.new(:sprint_id, :sprint_start, :add_time, :change)
     events = []
     in_sprint = []
 
     @changes.each do |change|
       next unless change.sprint?
 
-      (change.value_id - change.old_value_id).each do |sprint_id|
-        sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
-        in_sprint << data_clazz.new(sprint_id, sprint_start, change.time, change) if sprint_start
-      end
-
-      (change.old_value_id - change.value_id).each do |sprint_id|
-        data = in_sprint.find { |d| d.sprint_id == sprint_id }
-        next unless data
-
-        in_sprint.delete(data)
-        next if data.sprint_start >= change.time # sprint hadn't activated before removal
-
-        effective_time = [data.add_time, data.sprint_start].max
-        events << [effective_time, sprint_change_at(effective_time, data.change)]
-      end
+      add_tracked_sprints(in_sprint, change)
+      close_tracked_sprints(in_sprint, change, events)
     end
 
-    in_sprint.each do |data|
-      effective_time = [data.add_time, data.sprint_start].max
-      events << [effective_time, sprint_change_at(effective_time, data.change)]
-    end
-
+    # Anything still tracked at the end never left, so its entry is the moment it started (or was added).
+    in_sprint.each { |tracked| events << sprint_entry_event_for(tracked) }
     events
+  end
+
+  # Records each sprint this change newly joined, but only those we know eventually started.
+  def add_tracked_sprints in_sprint, change
+    (change.value_id - change.old_value_id).each do |sprint_id|
+      sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
+      in_sprint << TrackedSprint.new(sprint_id:, sprint_start:, add_time: change.time, change:) if sprint_start
+    end
+  end
+
+  # Emits an entry for each sprint this change left, unless it was removed before ever activating.
+  def close_tracked_sprints in_sprint, change, events
+    (change.old_value_id - change.value_id).each do |sprint_id|
+      tracked = in_sprint.find { |candidate| candidate.sprint_id == sprint_id }
+      next unless tracked
+
+      in_sprint.delete(tracked)
+      next if tracked.sprint_start >= change.time # sprint hadn't activated before removal
+
+      events << sprint_entry_event_for(tracked)
+    end
+  end
+
+  # The moment the issue was effectively in an active sprint - the later of when it was added and when
+  # the sprint started - paired with the change that best represents that moment.
+  def sprint_entry_event_for tracked
+    effective_time = [tracked.add_time, tracked.sprint_start].max
+    [effective_time, sprint_change_at(effective_time, tracked.change)]
   end
 
   def sprint_change_at effective_time, change

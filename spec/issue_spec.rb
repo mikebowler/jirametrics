@@ -97,7 +97,8 @@ describe Issue do
     end
 
     it 'falls back to id 0 when no status matches the name' do
-      expect(issue.send(:guess_status_id, 'Nonexistent', [])).to eq ['0', 'No known status named "Nonexistent". Using id 0.']
+      expect(issue.send(:guess_status_id, 'Nonexistent',
+[])).to eq ['0', 'No known status named "Nonexistent". Using id 0.']
     end
   end
 
@@ -128,7 +129,7 @@ describe Issue do
       change = issue.changes.reverse.find(&:status?)
       aggregate_failures do
         expect(change.value_id).to eq 10_001
-        expect(exporter.file_system.log_messages.join).not_to match(/without a 'to' id/)
+        expect(exporter.file_system.log_messages.join).not_to include("without a 'to' id")
       end
     end
 
@@ -136,7 +137,7 @@ describe Issue do
       issue = issue_from_history_items({ 'field' => 'assignee', 'toString' => 'Frodo' })
       aggregate_failures do
         expect(issue.changes.any? { |change| change.field == 'assignee' }).to be true
-        expect(exporter.file_system.log_messages.join).not_to match(/without a 'to' id/)
+        expect(exporter.file_system.log_messages.join).not_to include("without a 'to' id")
       end
     end
 
@@ -1789,6 +1790,145 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
       issue.discard_changes_before(to_time('2021-10-05'))
       expect(issue.changes.map(&:value)).not_to include('Selected for Development')
+    end
+  end
+
+  describe '#sprint_entry_events' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
+    def add_board_sprint id:, state:, start: nil
+      raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}" }
+      raw['activatedDate'] = "#{start}T00:00:00.000Z" if start
+      board.sprints << Sprint.new(raw: raw, timezone_offset: '+00:00')
+    end
+
+    def sprint_change value_id:, time:, old_value_id: ''
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint', value_id: value_id,
+        old_value_id: old_value_id, time: time, field_id: 'customfield_10020')
+    end
+
+    def events = issue.send(:sprint_entry_events)
+
+    it 'emits the add time when the issue joined a sprint that had already started' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-01'
+      sprint_change value_id: '10', time: '2021-10-03'
+      aggregate_failures do
+        expect(events.size).to eq 1
+        effective_time, representative = events.first
+        expect(effective_time).to eq to_time('2021-10-03') # max(add 10-03, start 10-01)
+        expect(representative.time).to eq to_time('2021-10-03')
+        expect(representative.artificial?).to be false # the real join change
+      end
+    end
+
+    it 'emits the sprint start time when the issue joined before the sprint started' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-05'
+      sprint_change value_id: '10', time: '2021-10-03'
+      aggregate_failures do
+        expect(events.size).to eq 1
+        effective_time, representative = events.first
+        expect(effective_time).to eq to_time('2021-10-05') # max(add 10-03, start 10-05)
+        expect(representative.time).to eq to_time('2021-10-05')
+        expect(representative.artificial?).to be true # a fabricated "sprint activated" change
+      end
+    end
+
+    it 'emits nothing for a sprint that never started' do
+      add_board_sprint id: 10, state: 'future'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(events).to be_empty
+    end
+
+    it 'emits an entry when the issue is removed after the sprint had activated' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-05'
+      aggregate_failures do
+        expect(events.size).to eq 1
+        expect(events.first.first).to eq to_time('2021-10-02') # max(add 10-01, start 10-02)
+      end
+    end
+
+    it 'emits the add time on removal when the issue joined after the sprint had started' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-03' # joined after the sprint started
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-08'
+      aggregate_failures do
+        expect(events.size).to eq 1
+        effective_time, representative = events.first
+        expect(effective_time).to eq to_time('2021-10-03') # max(add 10-03, start 10-02)
+        expect(representative.time).to eq to_time('2021-10-03')
+        expect(representative.artificial?).to be false # effective time equals the join change
+      end
+    end
+
+    it 'emits nothing when the issue is removed before the sprint activated (strictly later start)' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-10'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-05'
+      expect(events).to be_empty
+    end
+
+    it 'emits nothing when removed exactly as the sprint activated' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-05'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-05'
+      expect(events).to be_empty
+    end
+
+    it 'keeps checking later removals in a change even after one is skipped' do
+      # Both sprints are removed in one change and both start after the removal, so both are skipped.
+      add_board_sprint id: 10, state: 'active', start: '2021-10-10'
+      add_board_sprint id: 11, state: 'active', start: '2021-10-11'
+      sprint_change value_id: '10, 11', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '10, 11', time: '2021-10-05'
+      expect(events).to be_empty
+    end
+
+    it 'ignores a removal for a sprint that was never added' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-05'
+      expect(events).to be_empty
+    end
+
+    it 'keeps processing a removal even when an earlier named sprint was never tracked' do
+      # Sprint 9 was never added; sprint 10 was, but started after the removal so it must be skipped.
+      # Abandoning the loop at sprint 9 would leave sprint 10 to leak out on the final flush.
+      add_board_sprint id: 10, state: 'active', start: '2021-10-10'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '9, 10', time: '2021-10-05'
+      expect(events).to be_empty
+    end
+
+    it 'does not double-count a sprint that is merely restated in a later change' do
+      # Sprint 10 starts after the restating change, so wrongly treating it as removed there would drop it.
+      add_board_sprint id: 10, state: 'active', start: '2021-10-06'
+      add_board_sprint id: 11, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-02'
+      sprint_change value_id: '10, 11', old_value_id: '10', time: '2021-10-04' # adds 11, keeps 10
+      expect(events.size).to eq 2
+    end
+
+    it 'removes exactly the sprint named in the change, not just the first or last tracked' do
+      # The removed sprint (11) sits between two others that start after the removal; finding the wrong
+      # one would skip it (its start is later) and change the emitted set.
+      add_board_sprint id: 10, state: 'active', start: '2021-10-10'
+      add_board_sprint id: 11, state: 'active', start: '2021-10-02'
+      add_board_sprint id: 12, state: 'active', start: '2021-10-10'
+      sprint_change value_id: '10, 11, 12', time: '2021-10-01'
+      sprint_change value_id: '10, 12', old_value_id: '10, 11, 12', time: '2021-10-05' # removes only 11
+      # 11 emits on removal (started 10-02); 10 and 12 stay and emit on flush (started 10-10).
+      expect(events.map(&:first)).to contain_exactly(
+        to_time('2021-10-02'), to_time('2021-10-10'), to_time('2021-10-10')
+      )
+    end
+
+    it 'consults the sprint data on the issue when the board has no record of the sprint' do
+      issue.raw['fields']['customfield_10020'] = [
+        { 'id' => '10', 'state' => 'closed', 'startDate' => '2021-10-02T00:00:00.000Z' }
+      ]
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(events.map(&:first)).to eq [to_time('2021-10-03')]
     end
   end
 
