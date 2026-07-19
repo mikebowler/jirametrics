@@ -1702,6 +1702,21 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       issue2.discard_changes_before(real_status_change.time - 1)
       expect(issue2.discarded_change_times).to be_nil
     end
+
+    it 'keeps a non-status change even when it is before the cutoff' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-05')
+      issue.discard_changes_before(to_time('2021-10-03'))
+      expect(issue.changes.select(&:priority?).map(&:value)).to include('high')
+    end
+
+    it 'removes a real status change strictly before the cutoff' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
+      issue.discard_changes_before(to_time('2021-10-05'))
+      expect(issue.changes.map(&:value)).not_to include('Selected for Development')
+    end
   end
 
   describe '#load_comments_into_changes' do

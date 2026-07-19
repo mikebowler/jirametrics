@@ -551,15 +551,17 @@ class Issue
   def discard_changes_before cutoff_time
     rejected_any = false
     @changes.reject! do |change|
-      reject = change.status? && change.time <= cutoff_time && change.artificial? == false
-      if reject
-        (@discarded_changes ||= []) << change
-        rejected_any = true
-      end
-      reject
+      next false unless discardable_before? change, cutoff_time
+
+      (@discarded_changes ||= []) << change
+      rejected_any = true
     end
 
     (@discarded_change_times ||= []) << cutoff_time if rejected_any
+  end
+
+  def discardable_before? change, cutoff_time
+    change.status? && change.time <= cutoff_time && change.artificial? == false
   end
 
   def dump
