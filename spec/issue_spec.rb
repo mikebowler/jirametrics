@@ -75,7 +75,80 @@ describe Issue do
     end
   end
 
+  describe '#guess_status_id' do
+    let(:issue) { empty_issue created: '2021-10-01', board: sample_board }
+
+    def status name:, id:
+      Status.new(name: name, id: id, category_name: 'ToDo', category_key: 'new', category_id: 2)
+    end
+
+    it 'uses the id of the single matching status' do
+      matches = [status(name: 'Doing', id: 42)]
+      expect(issue.send(:guess_status_id, 'Doing', matches)).to eq ['42', 'Guessed id 42 from status name.']
+    end
+
+    it 'falls back to id 0 and lists the candidates when several statuses share the name' do
+      matches = [status(name: 'Doing', id: 42), status(name: 'Doing', id: 43)]
+      guessed_id, note = issue.send(:guess_status_id, 'Doing', matches)
+      aggregate_failures do
+        expect(guessed_id).to eq '0'
+        expect(note).to eq 'Multiple statuses named "Doing" exist (ids: 42, 43); cannot disambiguate. Using id 0.'
+      end
+    end
+
+    it 'falls back to id 0 when no status matches the name' do
+      expect(issue.send(:guess_status_id, 'Nonexistent', [])).to eq ['0', 'No known status named "Nonexistent". Using id 0.']
+    end
+  end
+
   describe '#load_history_into_changes' do
+    def issue_from_history_items *items, author: nil
+      history = { 'created' => '2021-08-29T18:00:00+00:00', 'items' => items }
+      history['author'] = author if author
+      raw = {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [history] },
+        'fields' => {
+          'created' => '2021-08-29T18:00:00+00:00',
+          'updated' => '2021-09-29T18:00:00+00:00',
+          'status' => {
+            'name' => 'In Progress', 'id' => '10001',
+            'statusCategory' => { 'name' => 'In Progress', 'id' => 3, 'key' => 'indeterminate' }
+          },
+          'creator' => { 'displayName' => 'Tolkien' }
+        }
+      }
+      board = sample_board
+      board.project_config = project_config
+      described_class.new raw: raw, board: board
+    end
+
+    it 'keeps the real id of a status change that already has a to field' do
+      issue = issue_from_history_items({ 'field' => 'status', 'to' => '10001', 'toString' => 'In Progress' })
+      change = issue.changes.reverse.find(&:status?)
+      aggregate_failures do
+        expect(change.value_id).to eq 10_001
+        expect(exporter.file_system.log_messages.join).not_to match(/without a 'to' id/)
+      end
+    end
+
+    it 'does not backfill a non-status change that is missing a to field' do
+      issue = issue_from_history_items({ 'field' => 'assignee', 'toString' => 'Frodo' })
+      aggregate_failures do
+        expect(issue.changes.any? { |change| change.field == 'assignee' }).to be true
+        expect(exporter.file_system.log_messages.join).not_to match(/without a 'to' id/)
+      end
+    end
+
+    it 'records the author of each change from its history entry' do
+      issue = issue_from_history_items(
+        { 'field' => 'status', 'to' => '10001', 'toString' => 'In Progress' },
+        author: { 'displayName' => 'Frodo' }
+      )
+      change = issue.changes.reverse.find(&:status?)
+      expect(change.author).to eq 'Frodo'
+    end
+
     it 'continues even when the history does not have items (seen in prod)' do
       raw = {
         'key' => 'SP-1',
@@ -169,7 +242,7 @@ describe Issue do
         expect(status_change.value_id).to eq 0
         expect(status_change.value).to eq 'Development'
         expect(exporter.file_system.log_messages).to match_strings [
-          /Issue SP-1 has a status change without a 'to' id.*To Do.*Development/
+          /Issue SP-1 has a status change without a 'to' id.*To Do.*Development.*No known status named "Development"/
         ]
       end
     end

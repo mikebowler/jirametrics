@@ -713,27 +713,35 @@ class Issue
       created = parse_time(history['created'])
 
       history['items']&.each do |item|
-        if item['field'] == 'status' && item['to'].nil?
-          to_name = item['toString']
-          matches = board.possible_statuses.find_all_by_name(to_name)
-          guessed_id, id_note = if matches.length == 1
-                                  [matches.first.id.to_s, "Guessed id #{matches.first.id} from status name."]
-                                elsif matches.length > 1
-                                  ['0',
-                                   "Multiple statuses named #{to_name.inspect} exist " \
-                                   "(ids: #{matches.map(&:id).join(', ')}); cannot disambiguate. Using id 0."]
-                                else
-                                  ['0', "No known status named #{to_name.inspect}. Using id 0."]
-          end
-          board.project_config.file_system.warning(
-            "Issue #{key} has a status change without a 'to' id " \
-            "(from #{item['fromString'].inspect} to #{to_name.inspect}). #{id_note}"
-          )
-          item = item.merge('to' => guessed_id)
-        end
-
+        item = backfill_missing_status_id(item) if item['field'] == 'status' && item['to'].nil?
         @changes << ChangeItem.new(raw: item, time: created, author_raw: history['author'])
       end
+    end
+  end
+
+  # Jira sometimes reports a status change with a name but no id. Guess the id from the name (when we
+  # can) and return a copy of the item with a 'to' filled in, logging what we did.
+  def backfill_missing_status_id item
+    to_name = item['toString']
+    matches = board.possible_statuses.find_all_by_name(to_name)
+    guessed_id, id_note = guess_status_id(to_name, matches)
+    board.project_config.file_system.warning(
+      "Issue #{key} has a status change without a 'to' id " \
+      "(from #{item['fromString'].inspect} to #{to_name.inspect}). #{id_note}"
+    )
+    item.merge('to' => guessed_id)
+  end
+
+  # Returns [id_as_string, explanation]. A single name match gives that id; anything else falls back to
+  # id 0 because we can't safely disambiguate.
+  def guess_status_id to_name, matches
+    if matches.length == 1
+      [matches.first.id.to_s, "Guessed id #{matches.first.id} from status name."]
+    elsif matches.length > 1
+      ['0', "Multiple statuses named #{to_name.inspect} exist " \
+            "(ids: #{matches.map(&:id).join(', ')}); cannot disambiguate. Using id 0."]
+    else
+      ['0', "No known status named #{to_name.inspect}. Using id 0."]
     end
   end
 
