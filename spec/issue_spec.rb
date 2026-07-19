@@ -729,6 +729,90 @@ time: '2021-10-02')
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
+    def add_sprint id:, state:, start: nil
+      raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}", 'originBoardId' => 2 }
+      raw['startDate'] = "#{start}T00:00:00.000Z" if start
+      issue.board.sprints << Sprint.new(raw: raw, timezone_offset: '+00:00')
+    end
+
+    def sprint_change value_id:, time:, old_value_id: ''
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint', value_id: value_id, old_value_id: old_value_id,
+        time: time, field_id: 'customfield_10020'
+      )
+    end
+
+    it 'returns the earliest add when the issue joined more than one active sprint' do
+      add_sprint id: 10, state: 'active', start: '2021-10-04'
+      add_sprint id: 11, state: 'active', start: '2021-10-01'
+      sprint_change value_id: '11', time: '2021-10-02' # joins sprint 11
+      sprint_change value_id: '11, 10', old_value_id: '11', time: '2021-10-05' # also joins sprint 10
+
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-02')
+    end
+
+    it 'removes the correct sprint when several are in play, not just the first one tracked' do
+      add_sprint id: 10, state: 'active', start: '2021-10-06' # starts after the removal below
+      add_sprint id: 11, state: 'pending'                     # never starts
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '10, 11', old_value_id: '10', time: '2021-10-03'
+      sprint_change value_id: '10', old_value_id: '10, 11', time: '2021-10-04' # removes only sprint 11
+
+      # Sprint 11 (removed, never started) is dropped; sprint 10 stays and later starts, so the add matches.
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-01')
+    end
+
+    it 'ignores a removal for a sprint that was never recorded as added' do
+      add_sprint id: 10, state: 'active', start: '2021-10-04'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-03'
+
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
+    it 'returns the earliest add even when a later add is recorded to the results first' do
+      add_sprint id: 10, state: 'active', start: '2021-10-02'
+      add_sprint id: 11, state: 'active', start: '2021-10-01'
+      sprint_change value_id: '11', time: '2021-10-01'                          # joins sprint 11 (earliest add)
+      sprint_change value_id: '11, 10', old_value_id: '11', time: '2021-10-03'  # joins sprint 10
+      sprint_change value_id: '11', old_value_id: '11, 10', time: '2021-10-06'  # leaves 10 after it started
+
+      # Sprint 10's add (10-03) matches via the removal path and is recorded first; sprint 11's add
+      # (10-01) matches at the very end. The earliest, 10-01, must still win.
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-01')
+    end
+
+    it 'removes the sprint that was actually left, even when it is not the last one tracked' do
+      add_sprint id: 10, state: 'active', start: '2021-10-06' # starts after leaving it below
+      add_sprint id: 11, state: 'active', start: '2021-10-01'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '10, 11', old_value_id: '10', time: '2021-10-02'
+      sprint_change value_id: '11', old_value_id: '10, 11', time: '2021-10-04' # leaves sprint 10
+
+      # Sprint 10 (left before it started) drops out; sprint 11 stays and matches at its add (10-02).
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-02')
+    end
+
+    it 'processes every removed sprint in a change, not just up to the first unknown one' do
+      add_sprint id: 10, state: 'active', start: '2021-10-06' # starts after the removal
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '', old_value_id: '99, 10', time: '2021-10-04' # removes unknown 99, then 10
+
+      # 99 was never added (skipped); 10 must still be removed, and since it starts after the removal
+      # nothing matches.
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
+    it 'checks every removed sprint even after one was removed before it started' do
+      add_sprint id: 10, state: 'active', start: '2021-10-06'
+      add_sprint id: 11, state: 'active', start: '2021-10-07'
+      sprint_change value_id: '10', time: '2021-10-01'
+      sprint_change value_id: '10, 11', old_value_id: '10', time: '2021-10-02'
+      sprint_change value_id: '', old_value_id: '10, 11', time: '2021-10-04' # removes both, each before its start
+
+      # Both sprints were removed before either started, so neither add matches.
+      expect(issue.first_time_added_to_active_sprint&.time).to be_nil
+    end
+
     it 'does not match when added to a future sprint' do
       issue.board.sprints << Sprint.new(raw: {
         'id' => 10,
