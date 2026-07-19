@@ -293,6 +293,38 @@ describe DailyView do
         ]
       ]
     end
+
+    it 'shows cycletime instead of age when the issue is done' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-02', '2024-01-05']
+      ]
+
+      status = board.possible_statuses.find_all_by_name('In Progress').first
+      expect(view.make_stats_lines issue: issue1, done: true).to eq [
+        [
+          "<img src='#{issue1.priority_url}' class='icon' /> <b>Medium</b>",
+          'Cycletime: <b>4 days</b>',
+          "Status: <b>#{view.format_status status, board: board}</b>",
+          'Column: <b>In Progress</b>'
+        ]
+      ]
+    end
+
+    it 'joins multiple labels with a space' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.raw['fields']['labels'] = %w[foo bar]
+
+      line = view.make_stats_lines(issue: issue1, done: false).first
+      expect(line.last).to eq "Labels: <span class='label'>foo</span> <span class='label'>bar</span>"
+    end
+
+    it 'lists the component names' do
+      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.raw['fields']['components'] = [{ 'name' => 'Backend' }, { 'name' => 'Frontend' }]
+
+      line = view.make_stats_lines(issue: issue1, done: false).first
+      expect(line.last).to eq "Components: <span class='label'>Backend</span> <span class='label'>Frontend</span>"
+    end
   end
 
   describe '#make_blocked_stalled_lines' do

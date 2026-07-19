@@ -135,17 +135,8 @@ class DailyView < ChartBase
 
   def make_stats_lines issue:, done:
     line = []
-
     line << "<img src='#{issue.priority_url}' class='icon' /> <b>#{issue.priority_name}</b>"
-
-    if done
-      cycletime = issue.board.cycletime.cycletime(issue)
-
-      line << "Cycletime: <b>#{label_days cycletime}</b>"
-    else
-      age = issue.board.cycletime.age(issue, today: date_range.end)
-      line << "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
-    end
+    line << progress_line(issue, done)
     line << "Status: <b>#{format_status issue.status, board: issue.board}</b>"
 
     column = issue.board.visible_columns.find { |c| c.status_ids.include?(issue.status.id) }
@@ -155,29 +146,47 @@ class DailyView < ChartBase
       line << "Assignee: <img src='#{issue.assigned_to_icon_url}' class='icon' /> <b>#{issue.assigned_to}</b>"
     end
 
-    if issue.due_date
-      today = date_range.end
-      days = (issue.due_date - today).to_i
-      relative =
-        if days.zero? then 'today'
-        elsif days.positive? then "in #{label_days days}"
-        else "#{label_days(-days)} ago"
-        end
-      content = "#{issue.due_date} (#{relative})"
-      content = "<span style='background: var(--warning-banner)'>#{content}</span>" if days.negative?
-      line << "Due: <b>#{content}</b>"
-    end
-
-    block = lambda do |collection, label|
-      unless collection.empty?
-        text = collection.collect { |l| "<span class='label'>#{l}</span>" }.join(' ')
-        line << "#{label} #{text}"
-      end
-    end
-    block.call issue.labels, 'Labels:'
-    block.call issue.component_names, 'Components:'
+    due = due_date_line(issue)
+    line << due if due
+    line.concat label_lines(issue)
 
     [line]
+  end
+
+  # 'Cycletime: ...' for finished issues, otherwise 'Age: ...' (or '(Not Started)' when it hasn't started).
+  def progress_line issue, done
+    if done
+      "Cycletime: <b>#{label_days issue.board.cycletime.cycletime(issue)}</b>"
+    else
+      age = issue.board.cycletime.age(issue, today: date_range.end)
+      "Age: <b>#{age ? label_days(age) : '(Not Started)'}</b>"
+    end
+  end
+
+  # 'Due: ...' with a relative 'today/in N days/N days ago' hint, highlighted when overdue. nil when
+  # the issue has no due date.
+  def due_date_line issue
+    return nil unless issue.due_date
+
+    days = (issue.due_date - date_range.end).to_i
+    relative =
+      if days.zero? then 'today'
+      elsif days.positive? then "in #{label_days days}"
+      else "#{label_days(-days)} ago"
+      end
+    content = "#{issue.due_date} (#{relative})"
+    content = "<span style='background: var(--warning-banner)'>#{content}</span>" if days.negative?
+    "Due: <b>#{content}</b>"
+  end
+
+  # One 'Labels: ...' and/or 'Components: ...' line, each listing its non-empty collection as label spans.
+  def label_lines issue
+    { 'Labels:' => issue.labels, 'Components:' => issue.component_names }.filter_map do |label, collection|
+      next if collection.empty?
+
+      spans = collection.collect { |item| "<span class='label'>#{item}</span>" }.join(' ')
+      "#{label} #{spans}"
+    end
   end
 
   def make_child_lines issue
