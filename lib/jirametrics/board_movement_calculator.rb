@@ -63,6 +63,11 @@ class BoardMovementCalculator
     data
   end
 
+  # This method is an inherently sequential run of guard clauses feeding a single age calculation.
+  # Pulling pieces out (the skip rules, the end-date case) would scatter the linear "compute the column
+  # times -> apply the skip rules -> pick the end date -> age" story across single-use methods and read
+  # worse, not better, so we keep it whole and accept the complexity here.
+  # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def ages_of_issues_when_leaving_column column_index:, today:
     this_column = board.visible_columns[column_index]
     next_column = board.visible_columns[column_index + 1]
@@ -84,20 +89,20 @@ class BoardMovementCalculator
       # Skip if it was already done by the time it got to this column or it became done when it got to this column
       next if issue_done && issue_done <= this_column_start
 
-      end_date = case
-      when next_column_start.nil?
-        # If this is the last column then base age against today
-        today
-      when issue_done && issue_done < next_column_start
-        # it completed while in this column
-        issue_done.to_date
-      else
-        # It passed through this whole column
-        next_column_start.to_date
-      end
+      end_date = if next_column_start.nil?
+                   # If this is the last column then base age against today
+                   today
+                 elsif issue_done && issue_done < next_column_start
+                   # it completed while in this column
+                   issue_done.to_date
+                 else
+                   # It passed through this whole column
+                   next_column_start.to_date
+                 end
       (end_date - issue_start.to_date).to_i + 1
     end.sort
   end
+  # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
   # Figure out what column this is issue is currently in and what time it entered that column. We need this for
   # aging and forecasting purposes

@@ -86,6 +86,47 @@ describe BoardMovementCalculator do
       actual = calculator.ages_of_issues_when_leaving_column column_index: 2, today: today
       expect(actual).to eq [4]
     end
+
+    # These drive the per-issue skip rules directly: column entry comes from explicit status changes and
+    # the start/stop times from a stubbed cycletime, so each rule can be isolated. Every issue must be done
+    # (a stop time) or the constructor's `issue.done?` filter drops it before this method runs. Column 1 is
+    # In Progress (this column) and Review is the next column.
+    def issue_entering(statuses)
+      start_status = board.possible_statuses.find_by_id(10_001)
+      empty_issue(created: '2024-10-01', board: board, creation_status: start_status).tap do |issue|
+        issue.changes.clear
+        statuses.each do |name, id, time|
+          add_mock_change(issue: issue, field: 'status', value: name, value_id: id, time: time)
+        end
+        # done? reads the current status (raw field), not the changes, so mark it Done to survive the
+        # constructor's `issue.done?` filter. The cycletime stub still drives start/stop for the method.
+        issue.status = board.possible_statuses.find_by_id(10_002)
+      end
+    end
+
+    it 'skips a done issue when we cannot tell it started' do
+      issue = issue_entering([['In Progress', 3, '2024-10-05'], ['Done', 10_002, '2024-10-06']])
+      board.cycletime = mock_cycletime_config stub_values: [[issue, nil, '2024-10-06']] # done, never started
+      calculator = described_class.new board: board, issues: [issue], today: today
+      expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq []
+    end
+
+    it 'returns 0 when the issue left this column before it started' do
+      issue = issue_entering(
+        [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-03'], ['Done', 10_002, '2024-10-04']]
+      )
+      # Started (per the cycletime) only after it had already reached Review.
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-05', '2024-10-06']]
+      calculator = described_class.new board: board, issues: [issue], today: today
+      expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq [0]
+    end
+
+    it 'skips an issue that was already done by the time it reached this column' do
+      issue = issue_entering([['In Progress', 3, '2024-10-10'], ['Done', 10_002, '2024-10-11']])
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-05']] # done before 10-10
+      calculator = described_class.new board: board, issues: [issue], today: today
+      expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq []
+    end
   end
 
   describe '#stack_data' do
