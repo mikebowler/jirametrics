@@ -373,12 +373,12 @@ class ChartBase
     @cycletime || issue.board.cycletime
   end
 
-  def seam_start type = 'chart'
-    "\n<!-- seam-start | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->\n"
-  end
-
-  def seam_end type = 'chart'
-    "\n<!-- seam-end | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->"
+  # seam_start and seam_end bracket each chart's HTML with a marker comment the stitcher uses to
+  # reassemble the report. Generated because only the start/end word differs.
+  %w[start end].each do |position|
+    define_method "seam_#{position}" do |type = 'chart'|
+      "\n<!-- seam-#{position} | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->\n"
+    end
   end
 
   def render_axis_title axis_direction
