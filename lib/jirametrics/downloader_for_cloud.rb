@@ -212,19 +212,35 @@ class DownloaderForCloud < Downloader
 
   def download_issues board:
     log "  Downloading primary issues for board #{board.id} from #{jira_instance_type}", both: true
+    path = ensure_issues_directory
+    issue_data_hash = search_for_issues jql: build_jql(board), board_id: board.id, path: path
+
+    download_all_issues board: board, path: path, issue_data_hash: issue_data_hash
+
+    delete_issues_from_cache_that_are_not_in_server(
+      issue_data_hash: issue_data_hash, path: path
+    )
+  end
+
+  def ensure_issues_directory
     path = File.join(@target_path, "#{file_prefix}_issues/")
     unless @file_system.dir_exist?(path)
       log "  Creating path #{path}"
       @file_system.mkdir(path)
     end
+    path
+  end
 
-    filter_id = @board_id_to_filter_id[board.id]
-    jql = make_jql(filter_id: filter_id)
+  def build_jql board
+    jql = make_jql(filter_id: @board_id_to_filter_id[board.id])
     intercept_jql = @download_config.project_config.settings['intercept_jql']
-    jql = intercept_jql.call jql if intercept_jql
+    intercept_jql ? intercept_jql.call(jql) : jql
+  end
 
-    issue_data_hash = search_for_issues jql: jql, board_id: board.id, path: path
-
+  # Downloads the primary issues, then repeatedly follows related issues (parents, subtasks, links)
+  # until no new ones turn up. `in_related_phase` is false for the first pass and true thereafter,
+  # which controls the once-only "Identifying related issues" announcement and the loop diagnostics.
+  def download_all_issues board:, path:, issue_data_hash:
     checked_for_related = Set.new
     in_related_phase = false
 
@@ -235,48 +251,20 @@ class DownloaderForCloud < Downloader
         @file_system.diagnostic "Download loop: #{issue_data_hash.size} total known, " \
                                 "#{stale.size} stale, #{checked_for_related.size} link-scanned"
       end
-      unless stale.empty?
-        log_start '  Downloading more issues ' unless in_related_phase
-        stale.each_slice(100) do |slice|
-          slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: !in_related_phase)
-          progress_dot
-          slice.each do |data|
-            next unless data.issue
-
-            @file_system.save_json(
-              json: data.issue.raw, filename: data.cache_path
-            )
-            # Set the timestamp on the file to match the updated one so that we don't have
-            # to parse the file just to find the timestamp
-            @file_system.utime time: data.issue.updated, file: data.cache_path
-
-            collect_or_log_related(
-              issue: data.issue, found_in_primary_query: data.found_in_primary_query,
-              related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash
-            )
-            checked_for_related << data.key
-          end
-        end
-        end_progress unless in_related_phase
-      end
+      download_stale_issues(
+        stale: stale, board: board, in_related_phase: in_related_phase,
+        checked_for_related: checked_for_related, related_issue_keys: related_issue_keys,
+        issue_data_hash: issue_data_hash
+      )
 
       scan_cached_issues_for_related(
         issue_data_hash: issue_data_hash, board: board,
         checked_for_related: checked_for_related, related_issue_keys: related_issue_keys
       )
-
-      # Remove all the ones we already have
-      related_issue_keys.reject! { |key| issue_data_hash[key] }
-
-      related_issue_keys.each do |key|
-        data = DownloadIssueData.new key: key
-        data.found_in_primary_query = false
-        data.up_to_date = false
-        data.cache_path = File.join(path, "#{key}-#{board.id}.json")
-        issue_data_hash[key] = data
-      end
+      register_related_issues(
+        related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash, path: path, board: board
+      )
       break if related_issue_keys.empty?
-
       next if in_related_phase
 
       in_related_phase = true
@@ -285,10 +273,52 @@ class DownloaderForCloud < Downloader
     end
 
     end_progress if in_related_phase
+  end
 
-    delete_issues_from_cache_that_are_not_in_server(
-      issue_data_hash: issue_data_hash, path: path
-    )
+  def download_stale_issues stale:, board:, in_related_phase:, checked_for_related:, related_issue_keys:,
+                            issue_data_hash:
+    return if stale.empty?
+
+    log_start '  Downloading more issues ' unless in_related_phase
+    stale.each_slice(100) do |slice|
+      slice = bulk_fetch_issues(issue_datas: slice, board: board, in_initial_query: !in_related_phase)
+      progress_dot
+      save_fetched_issues(
+        slice: slice, checked_for_related: checked_for_related,
+        related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash
+      )
+    end
+    end_progress unless in_related_phase
+  end
+
+  def save_fetched_issues slice:, checked_for_related:, related_issue_keys:, issue_data_hash:
+    slice.each do |data|
+      next unless data.issue
+
+      @file_system.save_json(json: data.issue.raw, filename: data.cache_path)
+      # Set the timestamp on the file to match the updated one so that we don't have
+      # to parse the file just to find the timestamp
+      @file_system.utime time: data.issue.updated, file: data.cache_path
+
+      collect_or_log_related(
+        issue: data.issue, found_in_primary_query: data.found_in_primary_query,
+        related_issue_keys: related_issue_keys, issue_data_hash: issue_data_hash
+      )
+      checked_for_related << data.key
+    end
+  end
+
+  def register_related_issues related_issue_keys:, issue_data_hash:, path:, board:
+    # Remove all the ones we already have
+    related_issue_keys.reject! { |key| issue_data_hash[key] }
+
+    related_issue_keys.each do |key|
+      data = DownloadIssueData.new key: key
+      data.found_in_primary_query = false
+      data.up_to_date = false
+      data.cache_path = File.join(path, "#{key}-#{board.id}.json")
+      issue_data_hash[key] = data
+    end
   end
 
   def delete_issues_from_cache_that_are_not_in_server issue_data_hash:, path:
