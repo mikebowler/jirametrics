@@ -334,6 +334,30 @@ describe ChartBase do
       chart_base.holiday_dates = [Date.parse('2022-02-04')]
       expect(chart_base.holidays).to eq [Date.parse('2022-02-04')..Date.parse('2022-02-06')]
     end
+
+    it 'treats a single isolated holiday as a one-day range' do
+      chart_base.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-04') # Tue-Fri
+      chart_base.holiday_dates = [Date.parse('2022-02-02')] # Wed only
+      expect(chart_base.holidays).to eq [Date.parse('2022-02-02')..Date.parse('2022-02-02')]
+    end
+
+    it 'includes a non-working run that ends the date range' do
+      # Regression: a range ending on a weekend used to be dropped entirely because the run was only
+      # flushed when a following working day appeared.
+      chart_base.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-06') # Tue-Sun
+      chart_base.holiday_dates = []
+      expect(chart_base.holidays).to eq [Date.parse('2022-02-05')..Date.parse('2022-02-06')]
+    end
+
+    it 'returns a separate range for each non-contiguous run' do
+      chart_base.date_range = Date.parse('2022-02-01')..Date.parse('2022-02-14') # ends on a working Monday
+      chart_base.holiday_dates = [Date.parse('2022-02-02')] # isolated Wed
+      expect(chart_base.holidays).to eq [
+        Date.parse('2022-02-02')..Date.parse('2022-02-02'), # the Wed holiday
+        Date.parse('2022-02-05')..Date.parse('2022-02-06'), # first weekend
+        Date.parse('2022-02-12')..Date.parse('2022-02-13')  # second weekend
+      ]
+    end
   end
 
   describe '#format_integer' do

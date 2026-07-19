@@ -146,25 +146,17 @@ class ChartBase
     erb.result(binding)
   end
 
+  # Returns the non-working stretches (weekends and holidays) within the range, each as a Date range of
+  # consecutive days.
   def holidays date_range: @date_range
-    result = []
-    start_date = nil
-    end_date = nil
+    date_range
+      .select { |date| non_working_day?(date) }
+      .slice_when { |previous_date, date| date != previous_date + 1 }
+      .collect { |run| run.first..run.last }
+  end
 
-    date_range.each do |date|
-      if date.saturday? || date.sunday? || holiday_dates.include?(date)
-        if start_date.nil?
-          start_date = date
-        else
-          end_date = date
-        end
-      elsif start_date
-        result << (start_date..(end_date || start_date))
-        start_date = nil
-        end_date = nil
-      end
-    end
-    result
+  def non_working_day? date
+    date.saturday? || date.sunday? || holiday_dates.include?(date)
   end
 
   def working_days_annotation
