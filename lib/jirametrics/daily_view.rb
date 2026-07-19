@@ -83,28 +83,38 @@ class DailyView < ChartBase
     )[today]
     return [] if blocked_stalled.active?
 
-    lines = []
     if blocked_stalled.blocked?
-      marker = color_block '--blocked-color'
-      lines << ["#{marker} Blocked by flag"] if blocked_stalled.flag
-      lines << ["#{marker} Blocked by status: #{blocked_stalled.status}"] if blocked_stalled.blocked_by_status?
-      blocked_stalled.blocking_issue_keys&.each do |key|
-        blocking_issue = issues.find_by_key key: key, include_hidden: true
-        if blocking_issue
-          lines << "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: " \
-            "#{make_issue_label issue: blocking_issue, done: blocking_issue.done?}</div>"
-          lines << blocking_issue
-          lines << '</section>'
-        else
-          lines << ["#{marker} Blocked by issue: #{key} (no description found)"]
-        end
-      end
+      blocked_lines blocked_stalled
     elsif blocked_stalled.stalled_by_status?
-      lines << ["#{color_block '--stalled-color'} Stalled by status: #{blocked_stalled.status}"]
+      [["#{color_block '--stalled-color'} Stalled by status: #{blocked_stalled.status}"]]
     else
-      lines << ["#{color_block '--stalled-color'} Stalled by inactivity: #{blocked_stalled.stalled_days} days"]
+      [["#{color_block '--stalled-color'} Stalled by inactivity: #{blocked_stalled.stalled_days} days"]]
+    end
+  end
+
+  def blocked_lines blocked_stalled
+    marker = color_block '--blocked-color'
+    lines = []
+    lines << ["#{marker} Blocked by flag"] if blocked_stalled.flag
+    lines << ["#{marker} Blocked by status: #{blocked_stalled.status}"] if blocked_stalled.blocked_by_status?
+    blocked_stalled.blocking_issue_keys&.each do |key|
+      lines.concat blocking_issue_lines(key, marker)
     end
     lines
+  end
+
+  # The lines for one blocking issue: a foldable section embedding the issue when we have it, or a plain
+  # "no description found" line when we only know its key.
+  def blocking_issue_lines key, marker
+    blocking_issue = issues.find_by_key key: key, include_hidden: true
+    return [["#{marker} Blocked by issue: #{key} (no description found)"]] unless blocking_issue
+
+    [
+      "<section><div class=\"foldable startFolded\">#{marker} Blocked by issue: " \
+        "#{make_issue_label issue: blocking_issue, done: blocking_issue.done?}</div>",
+      blocking_issue,
+      '</section>'
+    ]
   end
 
   def make_issue_label issue:, done:
