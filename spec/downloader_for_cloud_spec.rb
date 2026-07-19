@@ -654,9 +654,11 @@ describe DownloaderForCloud do
 
       call_count = 0
       received_keys = []
-      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+      received_calls = []
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, board:, in_initial_query:|
         call_count += 1
         received_keys << issue_datas.map(&:key)
+        received_calls << { board: board, in_initial_query: in_initial_query }
         issue_datas.each do |d|
           d.up_to_date = true
           d.issue = d.key == 'ABC-123' ? primary_issue : linked_issue
@@ -668,8 +670,200 @@ describe DownloaderForCloud do
 
       downloader.download_issues board: board
 
-      expect(call_count).to eq(2)
-      expect(received_keys[1]).to contain_exactly('ABC-LINKED')
+      aggregate_failures do
+        expect(call_count).to eq(2)
+        expect(received_keys[1]).to contain_exactly('ABC-LINKED')
+        # The board is forwarded on every call; in_initial_query is true only for the primary pass.
+        expect(received_calls).to eq([
+          { board: board, in_initial_query: true },
+          { board: board, in_initial_query: false }
+        ])
+      end
+    end
+
+    it 'logs both download phases (primary then related) and saves each issue to its cache path' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+
+      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
+      ]
+      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-02', board: board)
+
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc123.json')
+      )
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = d.key == 'ABC-123' ? primary_issue : linked_issue
+        end
+        issue_datas
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      aggregate_failures do
+        expect(file_system.log_messages).to eq([
+          'Downloading primary issues for board 2 from Jira Cloud',
+          'Creating path spec/testdata/sample_issues/',
+          '[Debug] mkdir spec/testdata/sample_issues/',
+          'Downloading more issues',
+          '[Debug] utime 2025-01-01 00:00:00 +0000 abc123.json',
+          '[Progress] 1 dots',
+          # Related phase: the transition is announced, then the loop logs its diagnostic each pass.
+          'Identifying related issues (parents, subtasks, links) for board 2',
+          'Downloading more issues',
+          '[diag] Download loop: 2 total known, 1 stale, 1 link-scanned',
+          '[Debug] utime 2025-01-02 00:00:00 +0000 spec/testdata/sample_issues/ABC-LINKED-2.json',
+          '[Progress] 1 dots'
+        ])
+        expect(file_system.saved_json).to eq(
+          'abc123.json' => JSON.generate(primary_issue.raw),
+          'spec/testdata/sample_issues/ABC-LINKED-2.json' => JSON.generate(linked_issue.raw)
+        )
+      end
+    end
+
+    it 'builds the jql from the board filter and passes it, the board id, and the path to the search' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      allow(downloader).to receive(:make_jql).with(filter_id: 123).and_return('SENTINEL-JQL')
+      captured = nil
+      allow(downloader).to receive(:search_for_issues) do |jql:, board_id:, path:|
+        captured = { jql: jql, board_id: board_id, path: path }
+        {}
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(captured).to eq(jql: 'SENTINEL-JQL', board_id: 2, path: 'spec/testdata/sample_issues/')
+    end
+
+    it 'runs the jql through intercept_jql when the project configures one' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      allow(downloader).to receive(:make_jql).and_return('BASE-JQL')
+      download_config.project_config.settings['intercept_jql'] = ->(jql) { "#{jql} AND intercepted" }
+      captured_jql = nil
+      allow(downloader).to receive(:search_for_issues) do |jql:, **|
+        captured_jql = jql
+        {}
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(captured_jql).to eq 'BASE-JQL AND intercepted'
+    end
+
+    it 'skips a fetched result that has no issue' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc.json')
+      )
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = nil
+        end
+        issue_datas
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      expect(file_system.saved_json).to be_empty
+    end
+
+    it 'keeps saving later results after skipping one that has no issue' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      second_issue = empty_issue(key: 'ABC-2', created: '2025-01-01', board: board)
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-1' => DownloadIssueData.new(key: 'ABC-1', up_to_date: false, cache_path: 'abc1.json'),
+        'ABC-2' => DownloadIssueData.new(key: 'ABC-2', up_to_date: false, cache_path: 'abc2.json')
+      )
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = (d.key == 'ABC-2' ? second_issue : nil)
+        end
+        issue_datas
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      # ABC-1 has no issue and is skipped; ABC-2, which comes after it, is still saved.
+      expect(file_system.saved_json).to eq('abc2.json' => JSON.generate(second_issue.raw))
+    end
+
+    it 'does not recreate the issues directory when it already exists' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues/', result: true
+      allow(downloader).to receive(:search_for_issues).and_return({})
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      # No "Creating path" / mkdir because the directory is reported as already present.
+      expect(file_system.log_messages).to eq(['Downloading primary issues for board 2 from Jira Cloud'])
+    end
+
+    it 'does not re-fetch a linked issue already known and up to date from the primary query' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue.raw['fields']['issuelinks'] = [
+        { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
+      ]
+      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-02', board: board)
+      linked_cache = 'spec/testdata/sample_issues/ABC-LINKED-2.json'
+      allow(downloader).to receive(:search_for_issues).and_return(
+        'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc.json'),
+        'ABC-LINKED' => DownloadIssueData.new(key: 'ABC-LINKED', up_to_date: true, cache_path: linked_cache)
+      )
+      file_system.when_loading file: linked_cache, json: linked_issue.raw
+      fetched = []
+      allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
+        fetched << issue_datas.map(&:key)
+        issue_datas.each do |d|
+          d.up_to_date = true
+          d.issue = primary_issue
+        end
+        issue_datas
+      end
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: []
+
+      downloader.download_issues board: board
+
+      # ABC-LINKED is already in the hash and up to date, so the dedup drops it — only ABC-123 is fetched.
+      expect(fetched).to eq [['ABC-123']]
+    end
+
+    it 'deletes cached issue files that the server no longer returns' do
+      board = sample_board
+      board.raw['id'] = 2
+      downloader.board_id_to_filter_id[2] = 123
+      allow(downloader).to receive(:search_for_issues).and_return({})
+      file_system.when_foreach root: 'spec/testdata/sample_issues/', result: ['STALE-1-2.json']
+
+      downloader.download_issues board: board
+
+      expect(file_system.log_messages).to include('[Debug] unlink spec/testdata/sample_issues/STALE-1-2.json')
     end
 
     it 'only follows links one hop out from primary issues and logs what it skips' do
