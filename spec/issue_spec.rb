@@ -1296,6 +1296,41 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       ]
       expect(actual).to eq [false, true]
     end
+
+    it 'stays expedited for dates well after the start when it never turns off' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = ['high']
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+
+      expect(issue.expedited_on_date?(to_date('2021-10-05'))).to be true
+    end
+
+    it 'ignores non-priority changes between expedite events' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = ['high']
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+      add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+
+      expect(issue.expedited_on_date?(to_date('2021-10-04'))).to be true
+    end
+
+    it 'returns false when the board has no project config' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config = nil
+      expect(issue.expedited_on_date?(to_date('2021-10-03'))).to be false
+    end
+
+    it 'is expedited on a date inside any one of several expedite windows' do
+      issue = empty_issue created: '2021-10-01', board: board
+      issue.board.project_config.settings['expedited_priority_names'] = ['high']
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: '',     time: '2021-10-03T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-05T00:01:00')
+      add_mock_change(issue: issue, field: 'priority', value: '',     time: '2021-10-06T00:01:00')
+
+      # 2021-10-02 is inside the first window but not the second.
+      expect(issue.expedited_on_date?(to_date('2021-10-02'))).to be true
+    end
   end
 
   describe 'sorting' do

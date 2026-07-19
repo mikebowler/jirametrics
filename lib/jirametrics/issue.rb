@@ -434,26 +434,30 @@ class Issue
   end
 
   def expedited_on_date? date
-    expedited_start = nil
     return false unless @board&.project_config
 
+    expedited_ranges.any? { |range| range.cover?(date) }
+  end
+
+  # The date ranges during which this issue sat at an expedited priority. A range that never closes
+  # (the issue was never de-prioritised) is endless.
+  def expedited_ranges
     expedited_names = @board.project_config.settings['expedited_priority_names']
+    ranges = []
+    started_on = nil
 
     changes.each do |change|
       next unless change.priority?
 
       if expedited_names.include? change.value
-        expedited_start = change.time.to_date if expedited_start.nil?
-      else
-        return true if expedited_start && (expedited_start..change.time.to_date).cover?(date)
-
-        expedited_start = nil
+        started_on ||= change.time.to_date
+      elsif started_on
+        ranges << (started_on..change.time.to_date)
+        started_on = nil
       end
     end
-
-    return false if expedited_start.nil?
-
-    expedited_start <= date
+    ranges << (started_on..) if started_on
+    ranges
   end
 
   # Return the last time there was any activity on this ticket. Starting from "now" and going backwards
