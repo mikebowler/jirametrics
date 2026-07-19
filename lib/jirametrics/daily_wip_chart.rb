@@ -77,22 +77,26 @@ class DailyWipChart < ChartBase
 
   def group_issues_by_active_dates
     hash = {}
-
     @issues.each do |issue|
-      start, stop = cycletime_for_issue(issue).started_stopped_dates(issue)
-      next if start.nil? && stop.nil?
-
-      # If it stopped but never started then assume it started at creation so the data points
-      # will be available for the config.
-      start = issue.created.to_date if stop && start.nil?
-      start = @date_range.begin if start < @date_range.begin
-
-      start.upto(stop || @date_range.end) do |date|
+      active_dates_for(issue)&.each do |date|
         rule = configure_rule issue: issue, date: date
         (hash[date] ||= []) << [issue, rule] unless rule.ignored?
       end
     end
     hash
+  end
+
+  # The range of dates an issue is "active" on the chart: from when it started - or its creation, if it
+  # stopped without a recorded start - through when it stopped, or the end of the range if still open.
+  # Returns nil when the issue neither started nor stopped.
+  def active_dates_for issue
+    start, stop = cycletime_for_issue(issue).started_stopped_dates(issue)
+    return nil if start.nil? && stop.nil?
+
+    # Past the guard, a nil start means it only stopped, so treat creation as the start.
+    start = issue.created.to_date if start.nil?
+    start = @date_range.begin if start < @date_range.begin
+    start..(stop || @date_range.end)
   end
 
   def make_data_set grouping_rule:, issue_rules_by_active_date:, label_suffix: ''

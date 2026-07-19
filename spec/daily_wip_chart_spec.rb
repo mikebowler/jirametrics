@@ -128,6 +128,69 @@ describe DailyWipChart do
         ['2022-01-03', 'SP-1', 'foo', 'blue', 0]
       ])
     end
+
+    it 'runs an issue that started but never stopped through to the end of the range' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-04-01T11:00:00'), nil] # started near the end, never stopped
+      ]
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
+        rules.label = 'foo'
+        rules.color = 'blue'
+      end
+
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
+        ['2022-04-01', 'SP-1', 'foo', 'blue', 0],
+        ['2022-04-02', 'SP-1', 'foo', 'blue', 0] # date_range.end
+      ])
+    end
+
+    it 'keeps processing later issues after skipping one that never started or stopped' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, nil, nil], # skipped
+        [issue2, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
+      ]
+      chart.issues = [issue1, issue2]
+      chart.grouping_rules do |_issue, rules|
+        rules.label = 'foo'
+        rules.color = 'blue'
+      end
+
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
+        ['2022-02-02', 'SP-2', 'foo', 'blue', 0]
+      ])
+    end
+
+    it 'passes the issue to the grouping rules' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
+      ]
+      chart.issues = [issue1]
+      chart.grouping_rules do |issue, rules|
+        rules.label = issue.key
+        rules.color = 'blue'
+      end
+
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
+        ['2022-02-02', 'SP-1', 'SP-1', 'blue', 0]
+      ])
+    end
+
+    it 'passes each active date to the grouping rules as current_date' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-03T14:00:00')]
+      ]
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
+        rules.label = rules.current_date.to_s
+        rules.color = 'blue'
+      end
+
+      expect(flatten_issue_groups chart.group_issues_by_active_dates).to eq([
+        ['2022-02-02', 'SP-1', '2022-02-02', 'blue', 0],
+        ['2022-02-03', 'SP-1', '2022-02-03', 'blue', 0]
+      ])
+    end
   end
 
   describe '#select_possible_rules' do
