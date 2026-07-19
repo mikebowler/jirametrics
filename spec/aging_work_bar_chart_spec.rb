@@ -173,6 +173,91 @@ describe AgingWorkBarChart do
           color: CssVariable['--blocked-color'], title: 'Blocked by issues: SP-10')
       ]
     end
+
+    # A flag on then off, giving a single blocked span from 01-02T01 to 01-02T02.
+    def flagged_issue
+      chart.settings = board.project_config.settings
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
+      empty_issue(created: '2021-01-01', board: board).tap do |issue|
+        add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
+        add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-01-02T02:00:00')
+      end
+    end
+
+    it 'excludes a span that ends before the issue started' do
+      issue = flagged_issue
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: to_time('2021-01-03'))
+      expect(ranges).to be_empty
+    end
+
+    it 'includes a span whose end is exactly the issue start time' do
+      issue = flagged_issue
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: to_time('2021-01-02T02:00:00'))
+      expect(ranges.size).to eq 1
+    end
+
+    it 'uses a custom blocked color from settings' do
+      issue = flagged_issue
+      chart.settings['blocked_color'] = '#abcdef'
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
+      expect(ranges.first.color).to eq CssVariable['#abcdef']
+    end
+
+    # A status change into a stalled status and back out, giving a stalled span from 01-02 to 01-03.
+    def stalled_issue
+      board.possible_statuses << Status.new(
+        name: 'Waiting', id: 11, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+      )
+      chart.settings = board.project_config.settings
+      chart.settings['stalled_statuses'] = status_collection_for(board: board, names: ['Waiting'])
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
+      empty_issue(created: '2021-01-01', board: board).tap do |issue|
+        add_mock_change(issue: issue, field: 'status', value: 'Waiting', value_id: 11, time: '2021-01-02')
+        add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-03')
+      end
+    end
+
+    it 'uses the stalled color for a stalled span' do
+      issue = stalled_issue
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
+      expect(ranges).to eq [
+        BarChartRange.new(start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
+          color: CssVariable['--stalled-color'], title: 'Stalled by status: Waiting')
+      ]
+    end
+
+    it 'uses a custom stalled color from settings' do
+      issue = stalled_issue
+      chart.settings['stalled_color'] = '#123456'
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
+      expect(ranges.first.color).to eq CssVariable['#123456']
+    end
+
+    it 'emits separate ranges when a blocked span runs straight into a stalled span' do
+      board.possible_statuses << Status.new(
+        name: 'Blocked', id: 10, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+      )
+      board.possible_statuses << Status.new(
+        name: 'Waiting', id: 11, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
+      )
+      chart.settings = board.project_config.settings
+      chart.settings['blocked_statuses'] = status_collection_for(board: board, names: ['Blocked'])
+      chart.settings['stalled_statuses'] = status_collection_for(board: board, names: ['Waiting'])
+      chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
+      chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
+      chart.timezone_offset = '+0000'
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-01-02')
+      add_mock_change(issue: issue, field: 'status', value: 'Waiting', value_id: 11, time: '2021-01-03')
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-04')
+
+      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
+      expect(ranges.collect(&:color)).to eq [CssVariable['--blocked-color'], CssVariable['--stalled-color']]
+    end
   end
 
   describe '#sort_by_age!' do
