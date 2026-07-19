@@ -589,6 +589,10 @@ class ProjectConfig
   # It's ok if there are multiple files for the same issue. We load the newest one and map all the other
   # board ids appropriately.
   def group_filenames_and_board_ids path:
+    group_files_by_issue_key(path).values.to_h { |list| resolve_key_files(list, path) }
+  end
+
+  def group_files_by_issue_key path
     hash = {}
     file_system.foreach(path) do |filename|
       # Matches either FAKE-123.json or FAKE-123-456.json
@@ -596,32 +600,21 @@ class ProjectConfig
         (hash[key] ||= []) << [filename, board_id&.to_i || :unknown]
       end
     end
+    hash
+  end
 
-    result = {}
-    hash.values.collect do |list|
-      if list.size == 1
-        filename, board_id = *list.first
-        result[filename] = board_id == :unknown ? board_id : [board_id]
-      else
-        max_time = nil
-        max_board_id = nil
-        max_filename = nil
-        all_board_ids = []
-
-        list.each do |filename, board_id|
-          mtime = File.mtime(File.join(path, filename))
-          if max_time.nil? || mtime > max_time
-            max_time = mtime
-            max_board_id = board_id
-            max_filename = filename
-          end
-          all_board_ids << board_id unless board_id == :unknown
-        end
-
-        result[max_filename] = all_board_ids
-      end
+  # Given all the files that share an issue key, returns the [filename, board_ids] pair for the result.
+  # A lone file keeps its own board id; when the same issue was exported for several boards we keep the
+  # newest file and associate every known board id with it.
+  def resolve_key_files list, path
+    if list.size == 1
+      filename, board_id = *list.first
+      [filename, board_id == :unknown ? board_id : [board_id]]
+    else
+      newest_filename, = list.max_by { |filename, _| File.mtime(File.join(path, filename)) }
+      board_ids = list.filter_map { |_, board_id| board_id unless board_id == :unknown }
+      [newest_filename, board_ids]
     end
-    result
   end
 
   def anonymize

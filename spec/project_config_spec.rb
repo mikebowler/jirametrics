@@ -363,6 +363,16 @@ describe ProjectConfig do
       })
     end
 
+    it 'keys the result on the most recently modified file even when it is not first' do
+      # 456 is older than 789, so 789's filename must win even though 456 sorts/iterates first.
+      FileUtils.touch File.join(issue_path, 'FAKE-123-456.json'), mtime: Time.now - 2000
+      FileUtils.touch File.join(issue_path, 'FAKE-123-789.json'), mtime: Time.now - 1000
+
+      expect(project_config.group_filenames_and_board_ids path: issue_path).to eq({
+        'FAKE-123-789.json' => [456, 789]
+      })
+    end
+
     it 'complex example with multiple keys' do
       FileUtils.touch File.join(issue_path, 'FAKE-333-444.json'), mtime: Time.now - 1000
       FileUtils.touch File.join(issue_path, 'FAKE-123-456.json'), mtime: Time.now - 1000
