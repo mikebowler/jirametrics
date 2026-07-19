@@ -37,10 +37,7 @@ class DailyView < ChartBase
   end
 
   def select_aging_issues
-    aging_issues = issues.select do |issue|
-      started_at, stopped_at = issue.started_stopped_times
-      started_at && !stopped_at
-    end
+    aging_issues = issues.select { |issue| issue.board.cycletime.in_progress?(issue) }
 
     today = date_range.end
     aging_issues.collect do |issue|

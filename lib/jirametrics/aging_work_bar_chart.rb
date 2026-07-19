@@ -102,10 +102,10 @@ class AgingWorkBarChart < ChartBase
 
   def select_aging_issues issues:
     issues.select do |issue|
-      started_time, stopped_time = issue.started_stopped_times
-      next false unless started_time && stopped_time.nil?
+      cycletime = issue.board.cycletime
+      next false unless cycletime.in_progress?(issue)
 
-      age = (date_range.end - started_time.to_date).to_i + 1
+      age = cycletime.age(issue, today: date_range.end)
       !(@age_cutoff && @age_cutoff >= age)
     end
   end
