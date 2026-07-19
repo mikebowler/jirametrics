@@ -161,7 +161,8 @@ class DailyWipChart < ChartBase
     (@trend_lines ||= []) << [group_labels, line_color]
   end
 
-  def trend_line_data_set data:, group_labels:, color:
+  # Sums the daily WIP across every dataset whose label is in group_labels, giving { date => total_wip }.
+  def daily_wip_totals data, group_labels
     day_wip_hash = {}
     data.each do |top_level|
       next unless group_labels.include? top_level[:label]
@@ -171,8 +172,11 @@ class DailyWipChart < ChartBase
         day_wip_hash[date] = (day_wip_hash[date] || 0) + datapoint[:y]
       end
     end
+    day_wip_hash
+  end
 
-    points = day_wip_hash
+  def trend_line_data_set data:, group_labels:, color:
+    points = daily_wip_totals(data, group_labels)
       .collect { |date, wip| [date.jd, wip] }
       .sort_by(&:first)
 

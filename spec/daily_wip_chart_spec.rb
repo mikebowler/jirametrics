@@ -498,5 +498,38 @@ describe DailyWipChart do
         type: 'line'
       )
     end
+
+    it 'clamps the trend line to the maximum daily wip' do
+      # A rising trend extrapolated to the end of the range is capped at the highest daily wip (200).
+      data = [{ label: 'cat', data: [
+        { x: to_date('2022-01-02'), y: 1 },
+        { x: to_date('2022-02-01'), y: 50 },
+        { x: to_date('2022-03-01'), y: 200 }
+      ] }]
+      result = chart.trend_line_data_set data: data, group_labels: ['cat'], color: 'red'
+      expect(result[:data].last[:y]).to eq 200
+    end
+  end
+
+  describe '#daily_wip_totals' do
+    it 'sums the daily wip across every dataset whose label is in group_labels' do
+      data = [
+        { label: 'a', data: [{ x: to_date('2024-01-01'), y: 3 }, { x: to_date('2024-01-02'), y: 4 }] },
+        { label: 'b', data: [{ x: to_date('2024-01-01'), y: 10 }] }, # same date as 'a' -> summed
+        { label: 'c', data: [{ x: to_date('2024-01-01'), y: 99 }] }  # not in group_labels -> excluded
+      ]
+      expect(chart.daily_wip_totals(data, %w[a b])).to eq(
+        to_date('2024-01-01') => 13, # 3 + 10
+        to_date('2024-01-02') => 4
+      )
+    end
+
+    it 'keeps processing later datasets after skipping one not in group_labels' do
+      data = [
+        { label: 'skip', data: [{ x: to_date('2024-01-01'), y: 99 }] },
+        { label: 'keep', data: [{ x: to_date('2024-01-01'), y: 5 }] }
+      ]
+      expect(chart.daily_wip_totals(data, ['keep'])).to eq(to_date('2024-01-01') => 5)
+    end
   end
 end
