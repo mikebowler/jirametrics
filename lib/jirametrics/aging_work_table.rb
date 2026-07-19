@@ -124,36 +124,36 @@ class AgingWorkTable < ChartBase
   end
 
   def dates_text issue
-    date = date_range.end
-    due = issue.due_date
+    days_remaining, error = @calculators[issue.board.id].forecasted_days_remaining_and_message(
+      issue: issue, today: @today
+    )
     message = nil
+    message, error = due_date_status(issue, days_remaining, error) unless error
 
-    calculator = @calculators[issue.board.id]
-    days_remaining, error = calculator.forecasted_days_remaining_and_message issue: issue, today: @today
+    forecast_line days_remaining, error, message
+  end
 
-    unless error
-      if due
-        if due < date
-          message = "Due: <b>#{due}</b> (#{label_days (@today - due).to_i} ago)"
-          error = 'Overdue'
-        elsif due == date
-          message = 'Due: <b>today</b>'
-        else
-          error = 'Due date at risk' if date_range.end + days_remaining > due
-          message = "Due: <b>#{due}</b> (#{label_days (due - @today).to_i})"
-        end
-      else
-        "#{label_days days_remaining} left."
-      end
+  # Returns [message, error] describing where the due date sits relative to today and the forecast:
+  # overdue, due today, or a future date that may be at risk. Only called when the forecast succeeded.
+  def due_date_status issue, days_remaining, error
+    due = issue.due_date
+    return [nil, error] unless due
+
+    date = date_range.end
+    if due < date
+      ["Due: <b>#{due}</b> (#{label_days (@today - due).to_i} ago)", 'Overdue']
+    elsif due == date
+      ['Due: <b>today</b>', error]
+    else
+      at_risk = date_range.end + days_remaining > due
+      ["Due: <b>#{due}</b> (#{label_days (due - @today).to_i})", at_risk ? 'Due date at risk' : error]
     end
+  end
 
+  def forecast_line days_remaining, error, message
     text = +''
     text << "<span title='#{error}' style='color: red'>ⓘ </span>" if error
-    if days_remaining
-      text << "#{label_days days_remaining} left"
-    else
-      text << 'Unable to forecast'
-    end
+    text << (days_remaining ? "#{label_days days_remaining} left" : 'Unable to forecast')
     text << ' | ' << message if message
     text
   end

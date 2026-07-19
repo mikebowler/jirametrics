@@ -353,5 +353,22 @@ describe AgingWorkTable do
         "<span title='Overdue' style='color: red'>ⓘ </span>3 days left | Due: <b>2021-01-30</b> (1 day ago)"
       )
     end
+
+    it 'handles a due date beyond the forecast without flagging it at risk' do
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      issue.raw['fields']['duedate'] = (today + 100).to_s
+      table.initialize_calculator
+      expect(table.dates_text issue).to eq '3 days left | Due: <b>2021-05-11</b> (100 days)'
+    end
+
+    it 'skips the due-date detail when the forecast itself errored' do
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      issue.raw['fields']['duedate'] = (today + 1).to_s # would be flagged at-risk if the due logic ran
+      table.initialize_calculator
+      allow_any_instance_of(BoardMovementCalculator) # rubocop:disable RSpec/AnyInstance -- @calculators is private
+        .to receive(:forecasted_days_remaining_and_message).and_return([nil, 'No forecast'])
+
+      expect(table.dates_text(issue)).to eq "<span title='No forecast' style='color: red'>ⓘ </span>Unable to forecast"
+    end
   end
 end
