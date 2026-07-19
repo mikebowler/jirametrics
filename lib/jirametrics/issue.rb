@@ -248,6 +248,11 @@ class Issue
   # time. Although it seems like an odd thing to calculate, it's a reasonable proxy
   # for 'ready' in cases where the team doesn't have an explicit 'ready' status.
   # You'd be better off with an explicit 'ready' but sometimes that's not an option.
+  # This is one cohesive algorithm: the add and remove phases are tightly coupled through all_datas
+  # (a removal has to find what an addition recorded, and whether the sprint started while we were in
+  # it reaches across both). Splitting it would scatter that shared state across several methods and
+  # read worse, so we keep it whole and accept the complexity here.
+  # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def first_time_added_to_active_sprint
     unless board.scrum?
       raise 'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
@@ -292,6 +297,7 @@ class Issue
 
     matching_changes.min_by(&:time)
   end
+  # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
   def find_sprint_start_end sprint_id:, change:
     # There are two different places that sprint data could be found. In theory all
