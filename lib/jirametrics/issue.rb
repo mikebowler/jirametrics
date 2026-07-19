@@ -251,12 +251,11 @@ class Issue
   # sprint (whether or not the sprint was active at that moment). It's a reasonable proxy for 'ready'
   # when a team has no explicit 'ready' status -- you'd be better off with one, but sometimes that's
   # not an option. Only valid for Scrum boards.
-  #
-  # Kept whole rather than decomposed: the add and remove phases are tightly coupled through the tracked
-  # memberships (a removal finds what an addition recorded), so splitting would scatter that shared
-  # state and read worse.
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def first_time_added_to_active_sprint
+    # Why are complexity warnings disabled? Bottom line is that we felt the code would be less readable
+    # if we split it, so it's remaining as one longer method.
+
     unless board.scrum?
       raise 'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
           "issue=#{key}, board=#{board.inspect}"

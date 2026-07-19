@@ -63,12 +63,13 @@ class BoardMovementCalculator
     data
   end
 
-  # This method is an inherently sequential run of guard clauses feeding a single age calculation.
-  # Pulling pieces out (the skip rules, the end-date case) would scatter the linear "compute the column
-  # times -> apply the skip rules -> pick the end date -> age" story across single-use methods and read
-  # worse, not better, so we keep it whole and accept the complexity here.
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def ages_of_issues_when_leaving_column column_index:, today:
+    # Why are complexity warnings disabled? This is an inherently sequential run of guard clauses
+    # feeding a single age calculation. Pulling pieces out (the skip rules, the end-date case) would
+    # scatter the linear "compute the column times -> apply the skip rules -> pick the end date -> age"
+    # story across single-use methods and read worse, so we keep it whole.
+
     this_column = board.visible_columns[column_index]
     next_column = board.visible_columns[column_index + 1]
 
