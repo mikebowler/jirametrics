@@ -211,23 +211,24 @@ class Issue
     visible_status_ids = board.visible_columns.collect(&:status_ids).flatten
     return first_time_in_status(*visible_status_ids) unless board.scrum?
 
-    # For scrum boards, an issue is only visible when BOTH conditions are true simultaneously:
-    # 1. Its status is in a visible column
-    # 2. It is in an active sprint
-    # At each moment one condition becomes true, check if the other is already true.
-    candidates = []
-
-    status_changes.each do |change|
-      next unless visible_status_ids.include?(change.value_id)
-
-      candidates << change if in_active_sprint_at?(change.time)
-    end
-
-    sprint_entry_events.each do |effective_time, representative_change|
-      candidates << representative_change if in_visible_status_at?(effective_time, visible_status_ids)
-    end
-
+    # On scrum boards an issue is only visible when its status is in a visible column AND it is in an
+    # active sprint. Each source below is a moment when the second condition became true while the first
+    # already held; the earliest of them is when it first became visible.
+    candidates = visible_status_changes_in_active_sprint(visible_status_ids) +
+                 sprint_entries_while_in_visible_status(visible_status_ids)
     candidates.min_by(&:time)
+  end
+
+  def visible_status_changes_in_active_sprint visible_status_ids
+    status_changes.filter_map do |change|
+      change if visible_status_ids.include?(change.value_id) && in_active_sprint_at?(change.time)
+    end
+  end
+
+  def sprint_entries_while_in_visible_status visible_status_ids
+    sprint_entry_events.filter_map do |effective_time, representative_change|
+      representative_change if in_visible_status_at?(effective_time, visible_status_ids)
+    end
   end
 
   def reasons_not_visible_on_board

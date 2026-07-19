@@ -603,6 +603,22 @@ time: '2021-10-02')
         )
         expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-06')
       end
+
+      it 'returns the earliest visibility moment across both sources' do
+        # Visible from 10-01; joins the sprint at 10-03 (a candidate via the sprint-entry source) and
+        # has a later in-sprint status change at 10-05 (a candidate via the status-change source).
+        add_active_sprint id: 10, start_date: '2021-10-03'
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+          time: '2021-10-01')
+        add_mock_change(
+          issue: issue, field: 'Sprint', value: 'Sprint 10', value_id: '10',
+          time: '2021-10-03', field_id: 'customfield_10020'
+        )
+        add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3,
+          time: '2021-10-05')
+
+        expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-03')
+      end
     end
   end
 
