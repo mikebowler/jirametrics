@@ -576,16 +576,21 @@ describe ProjectConfig do
       end
     end
 
-    it 'continues even if load fails' do
+    it 'continues even if load fails, logging the exception to the file only' do
       project_config.file_prefix 'sample'
       exporter.file_system.when_loading file: 'spec/testdata/sample_status_history.json', json: 'xxx'
 
       project_config.load_status_history
+      messages = exporter.file_system.log_messages
+      warning, exception_detail = messages.last # a [message, more] pair; `more` is written to the file only
       aggregate_failures do
-        expect(exporter.file_system.log_messages).to match_strings [
-          'Loading historical statuses',
-          /^Warning: Unable to load status history/
-        ]
+        expect(messages.first).to eq 'Loading historical statuses'
+        expect(warning).to match(/^Warning: Unable to load status history/)
+        # The console message must not leak the raw exception; that goes to the file-only `more`.
+        expect(warning).not_to include('undefined method')
+        # The file-only detail carries both the message and the backtrace.
+        expect(exception_detail).to include('undefined method')
+        expect(exception_detail).to include('project_config.rb')
         expect(project_config.possible_statuses.historical_status_mappings).to be_empty
       end
     end

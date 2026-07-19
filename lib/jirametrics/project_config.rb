@@ -342,10 +342,14 @@ class ProjectConfig
     possible_statuses
   # This is an optional enrichment file. A malformed one surfaces as anything from a JSON::ParserError to
   # a TypeError/NoMethodError out of Status.from_raw, so we deliberately catch broadly, warn, and carry on
-  # without it rather than fail the whole export.
+  # without it rather than fail the whole export. The exception itself goes to the log file only (via
+  # `more`) so we don't lose it, while the console stays uncluttered.
   rescue => e # rubocop:disable Style/RescueStandardError
-    file_system.warning "Unable to load status history due to #{e.message.inspect}. If this is because of a " \
-      'malformed file then it should be fixed on the next download.'
+    file_system.warning(
+      'Unable to load status history. If this is because of a malformed file then it should be ' \
+      'fixed on the next download.',
+      more: [e.message, *e.backtrace].join("\n")
+    )
   end
 
   def load_sprints
