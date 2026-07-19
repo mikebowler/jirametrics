@@ -25,11 +25,13 @@ class ChangeItem
   def parse_value_ids
     return [@raw['to']&.to_i, @raw['from']&.to_i] unless sprint?
 
-    [parse_sprint_ids(@raw['to']), parse_sprint_ids(@raw['from'])]
+    [parse_multiple_integer_values(@raw['to']), parse_multiple_integer_values(@raw['from'])]
   end
 
-  # to_s handles all of nil (no previous/next sprint), a single id, and a comma-separated list.
-  def parse_sprint_ids raw_value
+  # Parses a comma-separated string of integers into a list. Sprint is the only field we currently parse
+  # this way, but the operation is generic - other fields may turn out to carry multiple ids too. to_s
+  # turns a nil (no value) into an empty list.
+  def parse_multiple_integer_values raw_value
     raw_value.to_s.split(', ').collect(&:to_i)
   end
 
