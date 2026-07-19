@@ -243,19 +243,18 @@ class Issue
     reasons_not_visible_on_board.empty?
   end
 
-  # If this issue will ever be in an active sprint then return the time that it
-  # was first added to that sprint, whether or not the sprint was active at that
-  # time. Although it seems like an odd thing to calculate, it's a reasonable proxy
-  # for 'ready' in cases where the team doesn't have an explicit 'ready' status.
-  # You'd be better off with an explicit 'ready' but sometimes that's not an option.
-  # A sprint the issue was added to: when that sprint started (all we care about is whether it did),
-  # and the change that added it.
+  # A sprint the issue was added to: its start (all we care about is whether it started) and the change
+  # that added it.
   SprintMembership = Data.define(:sprint_id, :sprint_start, :change)
 
-  # This is one cohesive algorithm: the add and remove phases are tightly coupled through memberships
-  # (a removal has to find what an addition recorded, and whether the sprint started while we were in
-  # it reaches across both). Splitting it would scatter that shared state across several methods and
-  # read worse, so we keep it whole and accept the complexity here.
+  # If this issue is ever in an active sprint, returns the change where it was first added to that
+  # sprint (whether or not the sprint was active at that moment). It's a reasonable proxy for 'ready'
+  # when a team has no explicit 'ready' status -- you'd be better off with one, but sometimes that's
+  # not an option. Only valid for Scrum boards.
+  #
+  # Kept whole rather than decomposed: the add and remove phases are tightly coupled through the tracked
+  # memberships (a removal finds what an addition recorded), so splitting would scatter that shared
+  # state and read worse.
   # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
   def first_time_added_to_active_sprint
     unless board.scrum?
