@@ -68,32 +68,40 @@ class CycleTimeConfig
     last_result = (@cache ||= {})[cache_key]
     return *last_result if last_result && settings['cache_cycletime_calculations']
 
-    started = @start_at.call(issue)
-    stopped = @stop_at.call(issue)
-
-    # Obscure edge case where some of the start_at and stop_at blocks might return false in place of nil.
-    # If they are false then explicitly make them nil.
-    started ||= nil
-    stopped ||= nil
-
-    # These are only here for backwards compatibility. Hopefully nobody will ever need them.
-    started = fabricate_change_item(started) if !started.nil? && !started.is_a?(ChangeItem)
-    stopped = fabricate_change_item(stopped) if !stopped.nil? && !stopped.is_a?(ChangeItem)
-
-    # In the case where started and stopped are exactly the same time, we pretend that
-    # it just stopped and never started. This allows us to have logic like 'in or right of'
-    # for the start and not have it conflict.
-    started = nil if started&.time == stopped&.time
+    started = resolve_change(@start_at, issue)
+    stopped = resolve_change(@stop_at, issue)
+    started = collapse_zero_length_start(started, stopped)
 
     result = [started, stopped]
-    if last_result && result != last_result
-      @file_system.error(
-        "Calculation mismatch; this could break caching. #{issue.inspect} new=#{result.inspect}, " \
-          "previous=#{last_result.inspect}"
-      )
-    end
+    warn_on_cache_mismatch(issue: issue, result: result, last_result: last_result)
     @cache[cache_key] = result
     result
+  end
+
+  # start_at/stop_at blocks should return a ChangeItem or nil. Older configs may instead return false
+  # (meaning "not found") or a bare Time; normalize both of those legacy forms to a ChangeItem or nil.
+  def resolve_change block, issue
+    change = block.call(issue)
+    change ||= nil
+    change = fabricate_change_item(change) if !change.nil? && !change.is_a?(ChangeItem)
+    change
+  end
+
+  # When start and stop land on the same instant, treat the issue as stopped-but-never-started so a
+  # zero-length span doesn't conflict with 'in or right of' start logic.
+  def collapse_zero_length_start started, stopped
+    return nil if started&.time == stopped&.time
+
+    started
+  end
+
+  def warn_on_cache_mismatch issue:, result:, last_result:
+    return unless last_result && result != last_result
+
+    @file_system.error(
+      "Calculation mismatch; this could break caching. #{issue.inspect} new=#{result.inspect}, " \
+        "previous=#{last_result.inspect}"
+    )
   end
 
   def started_stopped_times issue
