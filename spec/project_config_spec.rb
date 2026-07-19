@@ -463,11 +463,17 @@ describe ProjectConfig do
       expect(exporter.file_system.log_messages).to be_empty
     end
 
-    it 'guesses status id correctly' do
+    it 'guesses status id correctly and registers the status' do
       project_config.status_category_mapping status: 'Run', category: 'To Do'
-      expect(exporter.file_system.log_messages).to eq([
-        'status_category_mapping for "Run" has been mapped to id 101. If that\'s incorrect then specify the status_id.'
-      ])
+      status = project_config.possible_statuses.find_by_id(101)
+      aggregate_failures do
+        expect(status.name).to eq 'Run'
+        expect(status.category.name).to eq 'To Do'
+        expect(exporter.file_system.log_messages).to eq([
+          'status_category_mapping for "Run" has been mapped to id 101. ' \
+            "If that's incorrect then specify the status_id."
+        ])
+      end
     end
 
     # This is theoretically impossible and we haven't seen it in production yet, but this is Jira.
@@ -480,6 +486,27 @@ describe ProjectConfig do
           'Either fix the name or add an ID'
       )
       expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'does nothing while the exporter is downloading' do
+      allow(exporter).to receive(:downloading?).and_return(true)
+      project_config.status_category_mapping status: 'Run', category: 'To Do'
+      aggregate_failures do
+        expect(project_config.possible_statuses.find_by_id(101)).to be_nil
+        expect(exporter.file_system.log_messages).to be_empty
+      end
+    end
+
+    it 'registers the status with its category when an explicit category id matches' do
+      project_config.status_category_mapping status: 'Run:101', category: 'To Do:2'
+      status = project_config.possible_statuses.find_by_id(101)
+      aggregate_failures do
+        expect(status.name).to eq 'Run'
+        expect(status.category.name).to eq 'To Do'
+        expect(status.category.id).to eq 2
+        expect(status.category.key).to eq 'new'
+        expect(exporter.file_system.log_messages).to be_empty
+      end
     end
   end
 

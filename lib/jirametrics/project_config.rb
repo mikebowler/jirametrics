@@ -208,25 +208,45 @@ class ProjectConfig
     category, category_id = possible_statuses.parse_name_id category
 
     if status_id.nil?
-      guesses = find_ids_by_status_name_across_all_issues status
-      if guesses.empty?
-        file_system.warning "For status_category_mapping status: #{status.inspect}, category: #{category.inspect}\n" \
-          "Cannot guess status id for #{status.inspect} as no statuses found anywhere in the issues " \
-          "histories with that name. Since we can't find it, you probably don't need this mapping anymore so we're " \
-          "going to ignore it. If you really want it, then you'll need to specify a status id."
-        return
-      end
-
-      if guesses.size > 1
-        raise "Cannot guess status id as there are multiple ids for the name #{status.inspect}. Perhaps it's one " \
-          "of #{guesses.to_a.sort.inspect}. If you need this mapping then you must specify the status_id."
-      end
-
-      status_id = guesses.first
-      file_system.log "status_category_mapping for #{status.inspect} has been mapped to id #{status_id}. " \
-        "If that's incorrect then specify the status_id."
+      status_id = guess_status_id_for status, category
+      return if status_id.nil? # no id could be guessed; the mapping is ignored (already warned)
     end
 
+    found_category = resolve_category category, category_id
+    add_possible_status(
+      Status.new(
+        name: status, id: status_id,
+        category_name: category, category_id: found_category.id, category_key: found_category.key
+      )
+    )
+  end
+
+  # When a status is named but not given an id, guess it from the ids seen under that name across all
+  # issue histories. Returns nil (after warning) when none is found, or raises when it's ambiguous.
+  def guess_status_id_for status, category
+    guesses = find_ids_by_status_name_across_all_issues status
+    if guesses.empty?
+      file_system.warning "For status_category_mapping status: #{status.inspect}, category: #{category.inspect}\n" \
+        "Cannot guess status id for #{status.inspect} as no statuses found anywhere in the issues " \
+        "histories with that name. Since we can't find it, you probably don't need this mapping anymore so we're " \
+        "going to ignore it. If you really want it, then you'll need to specify a status id."
+      return nil
+    end
+
+    if guesses.size > 1
+      raise "Cannot guess status id as there are multiple ids for the name #{status.inspect}. Perhaps it's one " \
+        "of #{guesses.to_a.sort.inspect}. If you need this mapping then you must specify the status_id."
+    end
+
+    status_id = guesses.first
+    file_system.log "status_category_mapping for #{status.inspect} has been mapped to id #{status_id}. " \
+      "If that's incorrect then specify the status_id."
+    status_id
+  end
+
+  # Find the single status category with the given name, raising if there are none, several, or a
+  # supplied id that disagrees with the one we found.
+  def resolve_category category, category_id
     possible_categories = possible_statuses.find_all_categories_by_name category
     if possible_categories.empty?
       all = possible_statuses.find_all_categories.join(', ')
@@ -239,17 +259,11 @@ class ProjectConfig
     end
 
     found_category = possible_categories.first
-
     if category_id && category_id != found_category.id
       raise "ID is incorrect for status category #{category.inspect}. Did you mean #{found_category.id}?"
     end
 
-    add_possible_status(
-      Status.new(
-        name: status, id: status_id,
-        category_name: category, category_id: found_category.id, category_key: found_category.key
-      )
-    )
+    found_category
   end
 
   def add_possible_status status
