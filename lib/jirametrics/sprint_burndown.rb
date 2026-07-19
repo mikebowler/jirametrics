@@ -115,37 +115,26 @@ class SprintBurndown < ChartBase
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
   def changes_for_one_issue issue:, sprint:
     estimate = 0.0
-    ever_in_sprint = false
     currently_in_sprint = false
+    completed_has_been_tracked = false
     change_data = []
 
     estimate_display_name = current_board.estimation_configuration.display_name
-
     issue_completed_time = issue.started_stopped_times.last
-    completed_has_been_tracked = false
 
     issue.changes.each do |change|
       action = nil
       value = nil
 
       if change.sprint?
-        # We can get two sprint changes in a row that tell us the same thing so we have to verify
-        # that something actually changed.
         in_change_item = sprint_in_change_item(sprint, change)
-        if currently_in_sprint == false && in_change_item
-          action = :enter_sprint
-          ever_in_sprint = true
-          value = estimate
-        elsif currently_in_sprint && in_change_item == false
-          action = :leave_sprint
-          value = -estimate
-        end
+        action, value = sprint_change_action(in_change_item, currently_in_sprint, estimate)
         currently_in_sprint = in_change_item
-      elsif change.field == estimate_display_name && (issue_completed_time.nil? || change.time < issue_completed_time)
+      elsif estimate_change_before_completion?(change, estimate_display_name, issue_completed_time)
         action = :story_points
         estimate = change.value.to_f
         value = estimate - change.old_value.to_f
-      elsif completed_has_been_tracked == false && change.time == issue_completed_time
+      elsif reached_completion?(completed_has_been_tracked, change, issue_completed_time)
         completed_has_been_tracked = true
         action = :issue_stopped
         value = -estimate
@@ -158,9 +147,28 @@ class SprintBurndown < ChartBase
       )
     end
 
-    return [] unless ever_in_sprint
+    ever_entered_sprint?(change_data) ? change_data : []
+  end
 
-    change_data
+  # Two sprint changes in a row can say the same thing, so an event only fires when the membership
+  # actually flips: entering (was out, now in) or leaving (was in, now out).
+  def sprint_change_action in_change_item, currently_in_sprint, estimate
+    return [:enter_sprint, estimate] if currently_in_sprint == false && in_change_item
+    return [:leave_sprint, -estimate] if currently_in_sprint && in_change_item == false
+
+    [nil, nil]
+  end
+
+  def estimate_change_before_completion? change, estimate_display_name, issue_completed_time
+    change.field == estimate_display_name && (issue_completed_time.nil? || change.time < issue_completed_time)
+  end
+
+  def reached_completion? completed_has_been_tracked, change, issue_completed_time
+    completed_has_been_tracked == false && change.time == issue_completed_time
+  end
+
+  def ever_entered_sprint? change_data
+    change_data.any? { |data| data.action == :enter_sprint }
   end
 
   def sprint_in_change_item sprint, change_item
