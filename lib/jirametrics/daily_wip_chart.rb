@@ -104,37 +104,44 @@ class DailyWipChart < ChartBase
     display_label = "#{grouping_rule.label}#{label_suffix}"
 
     data = issue_rules_by_active_date.collect do |date, issue_rules|
-      issue_strings = issue_rules
-        .select { |_issue, rules| rules.group == grouping_rule.group }
-        .sort_by { |issue, _rules| issue.key_as_i }
-        .collect { |issue, rules| "#{issue.key} : #{issue.summary.strip} #{rules.issue_hint}" }
-      title_label = grouping_rule.label_hint || display_label
-      title = ["#{title_label} (#{label_issues issue_strings.size})"] + issue_strings
-
-      {
-        x: date,
-        y: positive ? issue_strings.size : -issue_strings.size,
-        title: title
-      }
+      datapoint_for date: date, issue_rules: issue_rules, grouping_rule: grouping_rule,
+                    display_label: display_label, positive: positive
     end
-
-    color = grouping_rule.color || random_color
-    background_color = if grouping_rule.highlight
-                         RawJavascript.new("createDiagonalPattern(#{color.to_json})")
-                       else
-                         color
-                       end
 
     {
       type: 'bar',
       label: display_label,
       label_hint: grouping_rule.label_hint,
       data: data,
-      backgroundColor: background_color,
+      backgroundColor: background_color_for(grouping_rule),
       borderColor: CssVariable['--wip-chart-border-color'],
       borderWidth: grouping_rule.color.to_s == 'var(--body-background)' ? 1 : 0,
       borderRadius: positive ? 0 : 5
     }
+  end
+
+  # One {x, y, title} point: the issues active on this date that belong to this rule's group, with a
+  # title listing them. y is negated for negative-priority groups so they render below the axis.
+  def datapoint_for date:, issue_rules:, grouping_rule:, display_label:, positive:
+    issue_strings = issue_strings_for issue_rules, grouping_rule
+    title_label = grouping_rule.label_hint || display_label
+    title = ["#{title_label} (#{label_issues issue_strings.size})"] + issue_strings
+
+    { x: date, y: positive ? issue_strings.size : -issue_strings.size, title: title }
+  end
+
+  def issue_strings_for issue_rules, grouping_rule
+    issue_rules
+      .select { |_issue, rules| rules.group == grouping_rule.group }
+      .sort_by { |issue, _rules| issue.key_as_i }
+      .collect { |issue, rules| "#{issue.key} : #{issue.summary.strip} #{rules.issue_hint}" }
+  end
+
+  def background_color_for grouping_rule
+    color = grouping_rule.color || random_color
+    return color unless grouping_rule.highlight
+
+    RawJavascript.new("createDiagonalPattern(#{color.to_json})")
   end
 
   def configure_rule issue:, date:

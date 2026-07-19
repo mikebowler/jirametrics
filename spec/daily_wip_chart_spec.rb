@@ -16,6 +16,7 @@ describe DailyWipChart do
   let(:board) { load_complete_sample_board }
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
+  let(:issue3) { empty_issue created: '2022-01-01', board: board, key: 'SP-9' }
 
   let(:chart) do
     chart = described_class.new empty_config_block
@@ -396,6 +397,65 @@ describe DailyWipChart do
         expect(data_set[:label]).to eq 'foo*'
         expect(data_set[:data].first[:title].first).to eq 'foo* (1 issue)'
       end
+    end
+
+    it 'treats a strictly positive group_priority as a positive bar' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.group_priority = 5
+
+      issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      aggregate_failures do
+        expect(data_set[:data].first[:y]).to eq 1
+        expect(data_set[:borderRadius]).to eq 0
+      end
+    end
+
+    it 'includes only the issues in the rule group, sorted by issue key' do
+      rule_a = DailyGroupingRules.new.tap { |r| r.label = 'a'; r.color = 'red'; r.group_priority = 0 }
+      rule_b = DailyGroupingRules.new.tap { |r| r.label = 'b'; r.color = 'blue'; r.group_priority = 0 }
+
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [[issue2, rule_a], [issue1, rule_a], [issue3, rule_b]]
+      }
+
+      data_set = chart.make_data_set grouping_rule: rule_a, issue_rules_by_active_date: issue_rules_by_active_date
+      titles = data_set[:data].first[:title]
+      aggregate_failures do
+        expect(titles.first).to eq 'a (2 issues)' # issue3 (rule_b) excluded
+        expect(titles[1]).to start_with 'SP-1'     # sorted ahead of SP-2 despite input order
+        expect(titles[2]).to start_with 'SP-2'
+      end
+    end
+
+    it 'strips the summary and appends the issue_hint in each title' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = 'red'
+      rule.group_priority = 0
+      rule.issue_hint = '(hint)'
+      allow(issue1).to receive(:summary).and_return('  padded summary  ')
+
+      issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set[:data].first[:title]).to eq ['foo (1 issue)', 'SP-1 : padded summary (hint)']
+    end
+
+    it 'falls back to a random color when the grouping rule has none' do
+      rule = DailyGroupingRules.new
+      rule.label = 'foo'
+      rule.color = nil
+      rule.group_priority = 0
+      allow(chart).to receive(:random_color).and_return('#abcdef')
+
+      issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
+
+      data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
+      expect(data_set[:backgroundColor]).to eq '#abcdef'
     end
   end
 
