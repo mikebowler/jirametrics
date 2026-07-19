@@ -340,7 +340,10 @@ class ProjectConfig
       .each { |status| possible_statuses.historical_status_mappings[status.to_s] = status.category }
 
     possible_statuses
-  rescue => e
+  # This is an optional enrichment file. A malformed one surfaces as anything from a JSON::ParserError to
+  # a TypeError/NoMethodError out of Status.from_raw, so we deliberately catch broadly, warn, and carry on
+  # without it rather than fail the whole export.
+  rescue => e # rubocop:disable Style/RescueStandardError
     file_system.warning "Unable to load status history due to #{e.message.inspect}. If this is because of a " \
       'malformed file then it should be fixed on the next download.'
   end
