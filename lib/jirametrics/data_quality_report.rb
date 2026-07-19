@@ -174,53 +174,63 @@ class DataQualityReport < ChartBase
   end
 
   def scan_for_backwards_movement entry:, backlog_statuses:
-    issue = entry.issue
-
     # Moving backwards through statuses is bad. Moving backwards through status categories is almost always worse.
     last_index = -1
-    issue.changes.each do |change|
+    entry.issue.changes.each do |change|
       next unless change.status?
 
       board = entry.issue.board
-      index = entry.issue.board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
+      index = column_index_for(board, change)
       if index.nil?
-        # If it's a backlog status then ignore it. Not supposed to be visible.
-        next if entry.issue.board.backlog_statuses.include?(board.possible_statuses.find_by_id(change.value_id))
-
-        detail = "Status #{format_status change, board: board} is not on the board"
-        if issue.board.possible_statuses.find_by_id(change.value_id).nil?
-          detail = "Status #{format_status change, board: board} cannot be found at all. Was it deleted?"
-        end
-
-        # If it's been moved back to backlog then it's on a different report. Ignore it here.
-        detail = nil if backlog_statuses.any? { |s| s.name == change.value }
-
-        entry.report(problem_key: :issue_not_visible_on_board, detail: detail) unless detail.nil?
+        report_status_not_on_board(entry: entry, change: change, board: board, backlog_statuses: backlog_statuses)
       elsif change.old_value.nil?
-        # Do nothing
+        # A move onto the board with no prior status has nothing to compare against.
       elsif index < last_index
-        new_category = board.possible_statuses.find_by_id(change.value_id).category.name
-        old_category = board.possible_statuses.find_by_id(change.old_value_id).category.name
-
-        if new_category == old_category
-          entry.report(
-            problem_key: :backwords_through_statuses,
-            detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
-              " to #{format_status change, board: board}" \
-              " on #{change.time.to_date}"
-          )
-        else
-          entry.report(
-            problem_key: :backwards_through_status_categories,
-            detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
-              " to #{format_status change, board: board}" \
-              " on #{change.time.to_date}," \
-              " crossing from category #{format_status change, use_old_status: true, board: board, is_category: true}" \
-              " to #{format_status change, board: board, is_category: true}."
-          )
-        end
+        report_backwards_movement(entry: entry, change: change, board: board)
       end
       last_index = index || -1
+    end
+  end
+
+  def column_index_for board, change
+    board.visible_columns.find_index { |column| column.status_ids.include? change.value_id }
+  end
+
+  def report_status_not_on_board entry:, change:, board:, backlog_statuses:
+    # If it's a backlog status then ignore it. Not supposed to be visible.
+    return if board.backlog_statuses.include?(board.possible_statuses.find_by_id(change.value_id))
+
+    detail = "Status #{format_status change, board: board} is not on the board"
+    if board.possible_statuses.find_by_id(change.value_id).nil?
+      detail = "Status #{format_status change, board: board} cannot be found at all. Was it deleted?"
+    end
+
+    # If it's been moved back to backlog then it's on a different report. Ignore it here.
+    detail = nil if backlog_statuses.any? { |s| s.name == change.value }
+
+    entry.report(problem_key: :issue_not_visible_on_board, detail: detail) unless detail.nil?
+  end
+
+  def report_backwards_movement entry:, change:, board:
+    new_category = board.possible_statuses.find_by_id(change.value_id).category.name
+    old_category = board.possible_statuses.find_by_id(change.old_value_id).category.name
+
+    if new_category == old_category
+      entry.report(
+        problem_key: :backwords_through_statuses,
+        detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
+          " to #{format_status change, board: board}" \
+          " on #{change.time.to_date}"
+      )
+    else
+      entry.report(
+        problem_key: :backwards_through_status_categories,
+        detail: "Moved from #{format_status change, use_old_status: true, board: board}" \
+          " to #{format_status change, board: board}" \
+          " on #{change.time.to_date}," \
+          " crossing from category #{format_status change, use_old_status: true, board: board, is_category: true}" \
+          " to #{format_status change, board: board, is_category: true}."
+      )
     end
   end
 
