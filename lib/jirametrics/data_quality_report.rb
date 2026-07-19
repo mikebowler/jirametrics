@@ -355,12 +355,6 @@ class DataQualityReport < ChartBase
     )
   end
 
-  def label_issues number
-    return '1 item' if number == 1
-
-    "#{number} items"
-  end
-
   def scan_for_discarded_data entry:
     hash = @discarded_changes_data&.find { |a| a[:issue] == entry.issue }
     return if hash.nil?
@@ -480,7 +474,7 @@ class DataQualityReport < ChartBase
 
   def render_incomplete_subtasks_when_issue_done problems
     <<-HTML
-      #{label_issues problems.size} issues were marked as done while subtasks were still not done.
+      #{label_issues problems.size} were marked as done while subtasks were still not done.
     HTML
   end
 

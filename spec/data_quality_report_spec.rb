@@ -643,16 +643,6 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
   end
 
-  describe '#label_issues' do
-    it 'handles singular' do
-      expect(report.label_issues(1)).to eq '1 item'
-    end
-
-    it 'handles plural' do
-      expect(report.label_issues(2)).to eq '2 items'
-    end
-  end
-
   describe '#scan_for_discarded_data' do
     it 'handles nothing discarded' do
       entry = DataQualityReport::Entry.new(
