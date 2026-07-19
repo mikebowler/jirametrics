@@ -39,23 +39,34 @@ class DailyWipChart < ChartBase
     issue_rules_by_active_date = group_issues_by_active_dates
     possible_rules = select_possible_rules issue_rules_by_active_date
 
-    conflicting_labels = possible_rules
-      .group_by(&:label)
-      .select { |_label, rules| rules.any?(&:highlight) && rules.any? { |r| !r.highlight } }
-      .keys
+    data_sets = build_data_sets(possible_rules, issue_rules_by_active_date)
+    data_sets = prepend_trend_lines(data_sets) if @trend_lines
 
-    data_sets = possible_rules.collect do |grouping_rule|
-      suffix = conflicting_labels.include?(grouping_rule.label) && grouping_rule.highlight ? '*' : ''
+    wrap_and_render(binding, __FILE__)
+  end
+
+  def build_data_sets possible_rules, issue_rules_by_active_date
+    labels = conflicting_labels(possible_rules)
+    possible_rules.collect do |grouping_rule|
+      suffix = labels.include?(grouping_rule.label) && grouping_rule.highlight ? '*' : ''
       make_data_set grouping_rule: grouping_rule, issue_rules_by_active_date: issue_rules_by_active_date,
                     label_suffix: suffix
     end
-    if @trend_lines
-      data_sets = @trend_lines.filter_map do |group_labels, line_color|
-        trend_line_data_set(data: data_sets, group_labels: group_labels, color: line_color)
-      end + data_sets
-    end
+  end
 
-    wrap_and_render(binding, __FILE__)
+  # Labels that appear both highlighted and un-highlighted; the highlighted variant gets a '*' suffix so
+  # the two are distinguishable in the legend.
+  def conflicting_labels possible_rules
+    possible_rules
+      .group_by(&:label)
+      .select { |_label, rules| rules.any?(&:highlight) && rules.any? { |rule| !rule.highlight } }
+      .keys
+  end
+
+  def prepend_trend_lines data_sets
+    @trend_lines.filter_map do |group_labels, line_color|
+      trend_line_data_set(data: data_sets, group_labels: group_labels, color: line_color)
+    end + data_sets
   end
 
   def default_header_text = 'Daily WIP'

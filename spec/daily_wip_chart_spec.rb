@@ -56,6 +56,27 @@ describe DailyWipChart do
         expect(output).to include('max: "2021-11-08"')
       end
     end
+
+    it 'assembles the data sets, prepending trend lines, and hands them to the renderer' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, to_time('2022-01-02T11:00:00'), to_time('2022-01-05T14:00:00')]
+      ]
+      chart.issues = [issue1]
+      chart.grouping_rules do |_issue, rules|
+        rules.label = 'foo'
+        rules.color = 'blue'
+      end
+      chart.add_trend_line group_labels: ['foo'], line_color: 'red'
+
+      captured = nil
+      allow(chart).to receive(:wrap_and_render) do |the_binding, _file|
+        captured = the_binding.local_variable_get(:data_sets)
+        'rendered'
+      end
+
+      expect(chart.run).to eq 'rendered'
+      expect(captured.collect { |data_set| data_set[:label] }).to eq %w[Trendline foo]
+    end
   end
 
   describe '#group_issues_by_active_dates' do
@@ -415,8 +436,16 @@ describe DailyWipChart do
     end
 
     it 'includes only the issues in the rule group, sorted by issue key' do
-      rule_a = DailyGroupingRules.new.tap { |r| r.label = 'a'; r.color = 'red'; r.group_priority = 0 }
-      rule_b = DailyGroupingRules.new.tap { |r| r.label = 'b'; r.color = 'blue'; r.group_priority = 0 }
+      rule_a = DailyGroupingRules.new.tap do |r|
+  r.label = 'a'
+  r.color = 'red'
+  r.group_priority = 0
+end
+      rule_b = DailyGroupingRules.new.tap do |r|
+  r.label = 'b'
+  r.color = 'blue'
+  r.group_priority = 0
+end
 
       issue_rules_by_active_date = {
         to_date('2022-01-01') => [[issue2, rule_a], [issue1, rule_a], [issue3, rule_b]]
@@ -426,7 +455,7 @@ describe DailyWipChart do
       titles = data_set[:data].first[:title]
       aggregate_failures do
         expect(titles.first).to eq 'a (2 issues)' # issue3 (rule_b) excluded
-        expect(titles[1]).to start_with 'SP-1'     # sorted ahead of SP-2 despite input order
+        expect(titles[1]).to start_with 'SP-1' # sorted ahead of SP-2 despite input order
         expect(titles[2]).to start_with 'SP-2'
       end
     end
@@ -508,6 +537,71 @@ describe DailyWipChart do
       ] }]
       result = chart.trend_line_data_set data: data, group_labels: ['cat'], color: 'red'
       expect(result[:data].last[:y]).to eq 200
+    end
+  end
+
+  def daily_rule label, highlight, group_priority: 0
+    DailyGroupingRules.new.tap do |rule|
+      rule.label = label
+      rule.color = 'blue'
+      rule.highlight = highlight
+      rule.group_priority = group_priority
+    end
+  end
+
+  describe '#conflicting_labels' do
+    it 'returns labels that appear both highlighted and un-highlighted' do
+      rules = [daily_rule('a', true), daily_rule('a', false), daily_rule('b', true), daily_rule('c', false)]
+      expect(chart.conflicting_labels(rules)).to eq ['a']
+    end
+
+    it 'is empty when no label appears in both states' do
+      rules = [daily_rule('a', true), daily_rule('b', false)]
+      expect(chart.conflicting_labels(rules)).to be_empty
+    end
+  end
+
+  describe '#build_data_sets' do
+    it 'suffixes the highlighted variant of a conflicting label with *' do
+      rule_hi = daily_rule('a', true)
+      rule_lo = daily_rule('a', false)
+      issue_rules_by_active_date = {
+        to_date('2022-01-01') => [[issue1, rule_hi], [issue2, rule_lo]]
+      }
+      data_sets = chart.build_data_sets([rule_hi, rule_lo], issue_rules_by_active_date)
+      expect(data_sets.collect { |data_set| data_set[:label] }).to eq ['a*', 'a']
+    end
+
+    it 'does not suffix a highlighted label that has no un-highlighted variant' do
+      rule_hi = daily_rule('solo', true)
+      issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule_hi]] }
+      data_sets = chart.build_data_sets([rule_hi], issue_rules_by_active_date)
+      expect(data_sets.collect { |data_set| data_set[:label] }).to eq ['solo']
+    end
+  end
+
+  describe '#prepend_trend_lines' do
+    let(:data_sets) do
+      [{ label: 'cat', data: [
+        { x: to_date('2022-01-02'), y: 1 },
+        { x: to_date('2022-02-01'), y: 50 },
+        { x: to_date('2022-03-01'), y: 200 }
+      ] }]
+    end
+
+    it 'prepends a trend line data set ahead of the existing data' do
+      chart.add_trend_line group_labels: ['cat'], line_color: 'red'
+      result = chart.prepend_trend_lines(data_sets)
+      aggregate_failures do
+        expect(result.first[:label]).to eq 'Trendline'
+        expect(result.first[:borderColor]).to eq 'red' # the configured line color is used
+        expect(result.last[:label]).to eq 'cat'
+      end
+    end
+
+    it 'drops a trend line that cannot be calculated' do
+      chart.add_trend_line group_labels: ['nomatch'], line_color: 'red' # no matching data -> nil -> dropped
+      expect(chart.prepend_trend_lines(data_sets)).to eq data_sets
     end
   end
 
