@@ -1719,6 +1719,74 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#in_active_sprint_at?' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+
+    def add_board_sprint id:, state:, start: nil
+      raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}" }
+      raw['activatedDate'] = "#{start}T00:00:00.000Z" if start
+      board.sprints << Sprint.new(raw: raw, timezone_offset: '+00:00')
+    end
+
+    def sprint_change value_id:, time:, old_value_id: ''
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint', value_id: value_id,
+        old_value_id: old_value_id, time: time, field_id: 'customfield_10020')
+    end
+
+    it 'is true while the issue sits in a started sprint' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be true
+    end
+
+    it 'ignores sprint changes that happen after the queried time' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-02'))).to be false
+    end
+
+    it 'is false when the sprint has not started by the queried time' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-08'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be false
+    end
+
+    it 'is true when the sprint started exactly at the queried time' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-05'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be true
+    end
+
+    it 'is false, without error, for a future sprint that never started' do
+      add_board_sprint id: 10, state: 'future'
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be false
+    end
+
+    it 'is false once the issue has left the sprint' do
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-03'
+      sprint_change value_id: '', old_value_id: '10', time: '2021-10-04'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be false
+    end
+
+    it 'only removes sprints that were actually dropped, not ones still present' do
+      # The second change restates sprint 10 (still a member); it must not be removed.
+      add_board_sprint id: 10, state: 'active', start: '2021-10-02'
+      sprint_change value_id: '10', time: '2021-10-03'
+      sprint_change value_id: '10', old_value_id: '10', time: '2021-10-04'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be true
+    end
+
+    it 'consults the sprint data on the issue when the board has no record of the sprint' do
+      issue.raw['fields']['customfield_10020'] = [
+        { 'id' => '10', 'state' => 'closed', 'startDate' => '2021-10-02T00:00:00.000Z' }
+      ]
+      sprint_change value_id: '10', time: '2021-10-03'
+      expect(issue.send(:in_active_sprint_at?, to_time('2021-10-05'))).to be true
+    end
+  end
+
   describe '#find_sprint_start_end' do
     let(:issue) { empty_issue created: '2021-10-01', board: board }
     # The issue's own sprint membership references sprint 7, never the sprints we look up below, so a

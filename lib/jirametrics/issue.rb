@@ -688,13 +688,19 @@ class Issue
       break if change.time > time
       next unless change.sprint?
 
-      (change.value_id - change.old_value_id).each do |sprint_id|
-        sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
-        active_ids << sprint_id if sprint_start && sprint_start <= time
-      end
-      (change.old_value_id - change.value_id).each { |id| active_ids.delete(id) }
+      apply_sprint_membership_change(active_ids, change, time)
     end
     active_ids.any?
+  end
+
+  # Adds the sprints newly joined by this change (only if they had already started by `time`) and
+  # removes the ones it left, mutating active_ids in place.
+  def apply_sprint_membership_change active_ids, change, time
+    (change.value_id - change.old_value_id).each do |sprint_id|
+      sprint_start, = find_sprint_start_end(sprint_id: sprint_id, change: change)
+      active_ids << sprint_id if sprint_start && sprint_start <= time
+    end
+    (change.old_value_id - change.value_id).each { |id| active_ids.delete(id) }
   end
 
   def in_visible_status_at? time, visible_status_ids
