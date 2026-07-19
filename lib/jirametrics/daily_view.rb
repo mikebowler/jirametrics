@@ -236,24 +236,28 @@ class DailyView < ChartBase
   end
 
   def history_text change:, board:
-    convertor = ->(value, _id) { value.inspect }
-    convertor = ->(_value, id) { format_status(board.possible_statuses.find_by_id(id), board: board) } if change.status?
-
     if change.comment? || change.description?
       atlassian_document_format.to_html(change.value)
     elsif %w[status priority assignee duedate issuetype].include?(change.field)
-      to = convertor.call(change.value, change.value_id)
-      if change.old_value
-        from = convertor.call(change.old_value, change.old_value_id)
-        "Changed from #{from} to #{to}"
-      else
-        "Set to #{to}"
-      end
+      field_change_text change, board
     elsif change.flagged?
       change.value == '' ? 'Off' : 'On'
     else
       change.value
     end
+  end
+
+  # 'Set to X' or 'Changed from Y to X' for a status/priority/assignee/duedate/issuetype change. Status
+  # values are rendered as coloured status labels; everything else is shown inspected.
+  def field_change_text change, board
+    convertor = ->(value, _id) { value.inspect }
+    convertor = ->(_value, id) { format_status(board.possible_statuses.find_by_id(id), board: board) } if change.status?
+
+    to = convertor.call(change.value, change.value_id)
+    return "Set to #{to}" unless change.old_value
+
+    from = convertor.call(change.old_value, change.old_value_id)
+    "Changed from #{from} to #{to}"
   end
 
   def make_sprints_lines issue

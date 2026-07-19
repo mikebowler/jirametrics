@@ -501,6 +501,38 @@ describe DailyView do
         'foo'
       )
     end
+
+    it 'renders a comment as html' do
+      change = mock_change field: 'comment', value: "foo\nbar", time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'foo<br />bar'
+    end
+
+    it 'renders a description as html' do
+      change = mock_change field: 'description', value: "foo\nbar", time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'foo<br />bar'
+    end
+
+    it 'sets an assignee' do
+      change = mock_change field: 'assignee', value: 'Fred', time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'Set to "Fred"'
+    end
+
+    it 'sets a due date' do
+      change = mock_change field: 'duedate', value: '2024-02-01', time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'Set to "2024-02-01"'
+    end
+
+    it 'sets an issue type' do
+      change = mock_change field: 'issuetype', value: 'Bug', time: '2024-01-01'
+      expect(view.history_text change: change, board: board).to eq 'Set to "Bug"'
+    end
+
+    it 'changes a non-status field from an old value to a new one' do
+      change = mock_change(
+        field: 'priority', value: 'High', old_value: 'Low', value_id: 3, old_value_id: 1, time: '2024-01-01'
+      )
+      expect(view.history_text change: change, board: board).to eq 'Changed from "Low" to "High"'
+    end
   end
 
   describe '#make_child_lines' do
