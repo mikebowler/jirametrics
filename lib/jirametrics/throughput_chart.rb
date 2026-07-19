@@ -122,30 +122,42 @@ class ThroughputChart < ChartBase
   def throughput_dataset periods:, completed_issues:, label_hint: nil
     custom_mode = @issue_periods&.values&.any?
     periods.collect do |period|
-      closed_issues = completed_issues.filter_map do |issue|
-        stop_date = issue.started_stopped_dates.last
-        next unless stop_date
-
-        if custom_mode
-          [stop_date, issue] if @issue_periods[issue] == period.end
-        elsif period.include?(stop_date)
-          [stop_date, issue]
-        end
-      end
-
-      date_label = "on #{period.end}"
-      date_label = "between #{period.begin} and #{period.end}" unless period.begin == period.end
-
-      with_label_hint = label_hint ? " with #{label_hint}" : ''
-      {
-        y: closed_issues.size,
-        x: "#{period.end}T23:59:59",
-        title: ["#{closed_issues.size} items closed#{with_label_hint} #{date_label}"] +
-          closed_issues.collect do |_stop_date, issue|
-            hint = @issue_hints&.fetch(issue, nil)
-            "#{issue.key} : #{issue.summary}#{" #{hint}" if hint}"
-          end
-      }
+      closed_issues = closed_issues_in_period(period, completed_issues, custom_mode)
+      period_dataset(period: period, closed_issues: closed_issues, label_hint: label_hint)
     end
+  end
+
+  def closed_issues_in_period period, completed_issues, custom_mode
+    completed_issues.filter_map do |issue|
+      stop_date = issue.started_stopped_dates.last
+      next unless stop_date
+
+      if custom_mode
+        issue if @issue_periods[issue] == period.end
+      elsif period.include?(stop_date)
+        issue
+      end
+    end
+  end
+
+  def period_dataset period:, closed_issues:, label_hint:
+    label_hint_text = label_hint ? " with #{label_hint}" : ''
+    header = "#{closed_issues.size} items closed#{label_hint_text} #{period_label(period)}"
+    {
+      y: closed_issues.size,
+      x: "#{period.end}T23:59:59",
+      title: [header] + closed_issues.collect { |issue| issue_title_line(issue) }
+    }
+  end
+
+  def period_label period
+    return "on #{period.end}" if period.begin == period.end
+
+    "between #{period.begin} and #{period.end}"
+  end
+
+  def issue_title_line issue
+    hint = @issue_hints&.fetch(issue, nil)
+    "#{issue.key} : #{issue.summary}#{" #{hint}" if hint}"
   end
 end
