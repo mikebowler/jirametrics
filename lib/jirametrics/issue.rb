@@ -301,33 +301,33 @@ class Issue
     # There are two different places that sprint data could be found. In theory all
     # sprints would be found in both places. In practice, sometimes what we need is
     # in one or the other but not both.
+    times = sprint_times_from_board(sprint_id) || sprint_times_from_issue(sprint_id, change)
 
-    # First look in the actual sprints json. If any issues are in this sprint then it should
-    # be here.
-    sprint = board.sprints.find { |s| s.id == sprint_id }
-    if sprint
-      return [nil, nil] if sprint.future?
-
-      return [sprint.start_time, sprint.completed_time]
-    end
-
-    # Then look at the sprints inside the issue. Even though the field id may be specified,
-    # that custom field may not be present. This happens if it was in that sprint but was
-    # then removed, whether or not that sprint had ever started.
-    sprint_data = raw['fields'][change.field_id]&.find { |sd| sd['id'].to_i == sprint_id }
-    if sprint_data
-      return [nil, nil] if sprint_data['state'] == 'future'
-
-      start = parse_time(sprint_data['startDate'])
-      stop = parse_time(sprint_data['completeDate'])
-      return [start, stop]
-    end
-
-    # If we got this far then the sprint can't be found anywhere, so we pretend that it never
+    # If both came up empty then the sprint can't be found anywhere, so we pretend that it never
     # started. Is this guaranteed to be true? No. In theory if all issues were removed from
     # an active sprint then it would also disappear, even though it had started. Nothing we
     # can do to detect that edge-case though.
-    [nil, nil]
+    times || [nil, nil]
+  end
+
+  # First look in the actual sprints json. If any issues are in this sprint then it should be here.
+  def sprint_times_from_board sprint_id
+    sprint = board.sprints.find { |s| s.id == sprint_id }
+    return nil unless sprint
+    return [nil, nil] if sprint.future?
+
+    [sprint.start_time, sprint.completed_time]
+  end
+
+  # Then look at the sprints inside the issue. Even though the field id may be specified, that custom
+  # field may not be present. This happens if it was in that sprint but was then removed, whether or
+  # not that sprint had ever started.
+  def sprint_times_from_issue sprint_id, change
+    sprint_data = raw['fields'][change.field_id]&.find { |sd| sd['id'].to_i == sprint_id }
+    return nil unless sprint_data
+    return [nil, nil] if sprint_data['state'] == 'future'
+
+    [parse_time(sprint_data['startDate']), parse_time(sprint_data['completeDate'])]
   end
 
   def parse_time text

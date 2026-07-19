@@ -1719,6 +1719,65 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#find_sprint_start_end' do
+    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    # The issue's own sprint membership references sprint 7, never the sprints we look up below, so a
+    # lookup against the issue's sprints (rather than the board's) would come up empty.
+    let(:change) do
+      add_mock_change(issue: issue, field: 'Sprint', value: 'S', value_id: '7',
+        time: '2021-10-02', field_id: 'customfield_10020')
+    end
+
+    def add_board_sprint id:, state:, start: nil, complete: nil
+      raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}" }
+      raw['activatedDate'] = "#{start}T00:00:00.000Z" if start
+      raw['completeDate'] = "#{complete}T00:00:00.000Z" if complete
+      board.sprints << Sprint.new(raw: raw, timezone_offset: '+00:00')
+    end
+
+    context 'when the sprint is in the board sprints' do
+      # A decoy sprint sits ahead of the real one so the lookup must actually match on id.
+      before { add_board_sprint id: 99, state: 'future', start: '2021-01-01' }
+
+      it 'returns the start and completed times of a started sprint' do
+        add_board_sprint id: 5, state: 'closed', start: '2021-10-02', complete: '2021-10-09'
+        # A trailing decoy so the lookup must actually find by id, not just take the first or last sprint.
+        add_board_sprint id: 88, state: 'future', start: '2021-01-02'
+        expect(issue.find_sprint_start_end(sprint_id: 5, change: change))
+          .to eq [to_time('2021-10-02'), to_time('2021-10-09')]
+      end
+
+      it 'returns nils for a future sprint that has not started' do
+        add_board_sprint id: 5, state: 'future', start: '2021-10-02'
+        expect(issue.find_sprint_start_end(sprint_id: 5, change: change)).to eq [nil, nil]
+      end
+    end
+
+    context 'when the sprint is only in the issue custom field' do
+      before do
+        issue.raw['fields']['customfield_10020'] = [
+          { 'id' => '99', 'state' => 'closed', 'startDate' => '2021-01-01T00:00:00.000Z' },
+          { 'id' => '5', 'state' => 'closed', 'startDate' => '2021-10-03T00:00:00.000Z',
+            'completeDate' => '2021-10-08T00:00:00.000Z' }
+        ]
+      end
+
+      it 'returns the parsed start and complete times' do
+        expect(issue.find_sprint_start_end(sprint_id: 5, change: change))
+          .to eq [to_time('2021-10-03'), to_time('2021-10-08')]
+      end
+
+      it 'returns nils for a future sprint' do
+        issue.raw['fields']['customfield_10020'][1]['state'] = 'future'
+        expect(issue.find_sprint_start_end(sprint_id: 5, change: change)).to eq [nil, nil]
+      end
+    end
+
+    it 'returns nils when the sprint cannot be found anywhere' do
+      expect(issue.find_sprint_start_end(sprint_id: 999, change: change)).to eq [nil, nil]
+    end
+  end
+
   describe '#load_comments_into_changes' do
     let(:issue_with_comments) do
       raw = {
