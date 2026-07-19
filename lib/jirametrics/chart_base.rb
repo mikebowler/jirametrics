@@ -279,35 +279,40 @@ class ChartBase
   # if it's a ChangeItem then use_old_status will specify whether we're using the new or old
   # Either way, is_category will format the category rather than the status
   def format_status object, board:, is_category: false, use_old_status: false
-    status = nil
-    error_message = nil
+    status, error_message = resolve_status object, board: board, use_old_status: use_old_status
+    return "<span style='color: red'>#{error_message}</span>" if error_message
 
+    color = status_category_color status
+    visibility = is_category ? '' : not_visible_icon(status, board)
+    text = is_category ? status.category : status
+    "<span title='Category: #{status.category}'>#{color_block color.name} #{text}</span>#{visibility}"
+  end
+
+  # Resolves the object being formatted into [status, error_message]. A Status is itself; a ChangeItem is
+  # looked up by id, yielding an error message (the raw value) when the id isn't a known status.
+  def resolve_status object, board:, use_old_status:
     case object
     when ChangeItem
       id = use_old_status ? object.old_value_id : object.value_id
       status = board.possible_statuses.find_by_id(id)
-      if status.nil?
-        error_message = use_old_status ? object.old_value : object.value
-      end
+      return [status, nil] unless status.nil?
+
+      [nil, use_old_status ? object.old_value : object.value]
     when Status
-      status = object
+      [object, nil]
     else
       raise "Unexpected type: #{object.class}"
     end
+  end
 
-    return "<span style='color: red'>#{error_message}</span>" if error_message
+  # The 👀 marker for a status that isn't mapped to any column, or '' when it is visible.
+  def not_visible_icon status, board
+    return '' if board.visible_columns.any? { |column| column.status_ids.include? status.id }
 
-    color = status_category_color status
-
-    visibility = ''
-    if is_category == false && board.visible_columns.none? { |column| column.status_ids.include? status.id }
-      visibility = icon_span(
-        title: "Not visible: The status #{status.name.inspect} is not mapped to any column and will not be visible",
-        icon: ' 👀'
-      )
-    end
-    text = is_category ? status.category : status
-    "<span title='Category: #{status.category}'>#{color_block color.name} #{text}</span>#{visibility}"
+    icon_span(
+      title: "Not visible: The status #{status.name.inspect} is not mapped to any column and will not be visible",
+      icon: ' 👀'
+    )
   end
 
   def icon_span title:, icon:

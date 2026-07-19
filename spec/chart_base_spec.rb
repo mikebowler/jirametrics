@@ -417,6 +417,50 @@ describe ChartBase do
           "style='background: var(--status-category-done-color);'></div> \"Done\":10002</span>"
       )
     end
+
+    it 'resolves a ChangeItem to its status via value_id' do
+      review = board.possible_statuses.find { |s| s.name == 'Review' }
+      change = mock_change(field: 'status', value: 'Review', value_id: review.id, time: '2021-01-01')
+      expect(chart_base.format_status(change, board: board))
+        .to eq chart_base.format_status(review, board: board)
+    end
+
+    it 'resolves a ChangeItem via old_value_id when use_old_status is set' do
+      review = board.possible_statuses.find { |s| s.name == 'Review' }
+      change = mock_change(
+        field: 'status', value: 'New', value_id: 99_999, old_value: 'Review', old_value_id: review.id,
+        time: '2021-01-01'
+      )
+      expect(chart_base.format_status(change, board: board, use_old_status: true))
+        .to eq chart_base.format_status(review, board: board)
+    end
+
+    it 'renders a red error span with the value when the status id is unknown' do
+      change = mock_change(field: 'status', value: 'Mystery', value_id: 99_999, time: '2021-01-01')
+      expect(chart_base.format_status(change, board: board)).to eq "<span style='color: red'>Mystery</span>"
+    end
+
+    it 'renders the old value in the error span when use_old_status is set' do
+      change = mock_change(
+        field: 'status', value: 'NewMystery', value_id: 99_999, old_value: 'OldMystery', old_value_id: 88_888,
+        time: '2021-01-01'
+      )
+      expect(chart_base.format_status(change, board: board, use_old_status: true))
+        .to eq "<span style='color: red'>OldMystery</span>"
+    end
+
+    it 'renders the category and skips the visibility icon when is_category is true' do
+      # Backlog is not mapped to any column, so it would normally get the 👀 icon.
+      backlog = board.possible_statuses.find { |s| s.name == 'Backlog' }
+      expect(chart_base.format_status(backlog, board: board, is_category: true)).to eq(
+        "<span title='Category: \"To Do\":2'><div class='color_block' " \
+          "style='background: var(--status-category-todo-color);'></div> \"To Do\":2</span>"
+      )
+    end
+
+    it 'raises for an unexpected object type' do
+      expect { chart_base.format_status(42, board: board) }.to raise_error('Unexpected type: Integer')
+    end
   end
 
   describe '#link_to_issue' do
