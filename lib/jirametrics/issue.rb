@@ -248,7 +248,11 @@ class Issue
   # time. Although it seems like an odd thing to calculate, it's a reasonable proxy
   # for 'ready' in cases where the team doesn't have an explicit 'ready' status.
   # You'd be better off with an explicit 'ready' but sometimes that's not an option.
-  # This is one cohesive algorithm: the add and remove phases are tightly coupled through all_datas
+  # A sprint the issue was added to: when that sprint started (all we care about is whether it did),
+  # and the change that added it.
+  SprintMembership = Data.define(:sprint_id, :sprint_start, :change)
+
+  # This is one cohesive algorithm: the add and remove phases are tightly coupled through memberships
   # (a removal has to find what an addition recorded, and whether the sprint started while we were in
   # it reaches across both). Splitting it would scatter that shared state across several methods and
   # read worse, so we keep it whole and accept the complexity here.
@@ -258,41 +262,36 @@ class Issue
       raise 'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
           "issue=#{key}, board=#{board.inspect}"
     end
-    data_clazz = Struct.new(:sprint_id, :sprint_start, :sprint_stop, :change)
-
     matching_changes = []
-    all_datas = []
+    memberships = []
 
     @changes.each do |change|
       next unless change.sprint?
 
       added_sprint_ids = change.value_id - change.old_value_id
       added_sprint_ids.each do |id|
-        data = data_clazz.new
-        data.sprint_id = id
-        data.change = change
-        data.sprint_start, data.sprint_stop = find_sprint_start_end(sprint_id: id, change: change)
-        all_datas << data
+        sprint_start = find_sprint_start_end(sprint_id: id, change: change).first
+        memberships << SprintMembership.new(sprint_id: id, sprint_start:, change:)
       end
 
       removed_sprint_ids = change.old_value_id - change.value_id
       removed_sprint_ids.each do |id|
-        data = all_datas.find { |d| d.sprint_id == id }
+        membership = memberships.find { |m| m.sprint_id == id }
         # It's possible for an issue to be created inside a sprint and therefore for
         # that add-to-sprint not show in the history.
-        next unless data
+        next unless membership
 
-        all_datas.delete(data)
-        next if data.sprint_start.nil? || data.sprint_start >= change.time
+        memberships.delete(membership)
+        next if membership.sprint_start.nil? || membership.sprint_start >= change.time
 
-        matching_changes << data.change
+        matching_changes << membership.change
       end
     end
 
     # There can't be any more removes so whatever is left is a valid option
     # Now all we care about is if the sprint has started.
-    all_datas.each do |data|
-      matching_changes << data.change if data.sprint_start
+    memberships.each do |membership|
+      matching_changes << membership.change if membership.sprint_start
     end
 
     matching_changes.min_by(&:time)
