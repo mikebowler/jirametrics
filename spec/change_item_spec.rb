@@ -95,9 +95,9 @@ describe ChangeItem do
         .to raise_error('ChangeItem.new() time cannot be nil')
     end
 
-    it 'raises when time is not a Time object' do
+    it 'raises when time is not a Time object, naming the offending value' do
       expect { described_class.new time: '2021-01-01', author_raw: nil, raw: status_raw }
-        .to raise_error(/Time must be an object of type Time/)
+        .to raise_error('Time must be an object of type Time in the correct timezone: "2021-01-01"')
     end
 
     it 'stores nil value_id when to is nil for non-sprint fields' do
@@ -107,6 +107,70 @@ describe ChangeItem do
     it 'stores nil old_value_id when from is nil for non-sprint fields' do
       change = described_class.new time: time, author_raw: nil, raw: status_raw.merge('from' => nil)
       expect(change.old_value_id).to be_nil
+    end
+
+    it 'populates every field from a non-sprint change, with scalar ids' do
+      author_raw = { 'displayName' => 'Bob' }
+      change = described_class.new time: time, author_raw: author_raw, raw: {
+        'field' => 'status', 'fieldId' => 'status',
+        'to' => '5', 'toString' => 'In Progress',
+        'from' => '3', 'fromString' => 'To Do'
+      }
+      aggregate_failures do
+        expect(change.field).to eq 'status'
+        expect(change.value).to eq 'In Progress'
+        expect(change.old_value).to eq 'To Do'
+        expect(change.value_id).to eq 5
+        expect(change.old_value_id).to eq 3
+        expect(change.field_id).to eq 'status'
+        expect(change.time).to eq time
+        expect(change.author_raw).to eq author_raw
+        expect(change).not_to be_artificial
+      end
+    end
+
+    it 'parses a single sprint id into a one-element list' do
+      change = described_class.new time: time, author_raw: nil, raw: {
+        'field' => 'Sprint', 'to' => '10', 'from' => nil # first add: no previous sprint
+      }
+      aggregate_failures do
+        expect(change.value_id).to eq [10]
+        expect(change.old_value_id).to eq [] # nil 'from' becomes an empty list, not nil
+      end
+    end
+
+    it 'parses several comma-separated sprint ids in both directions' do
+      change = described_class.new time: time, author_raw: nil, raw: {
+        'field' => 'Sprint', 'to' => '2, 3, 4', 'from' => '2, 3'
+      }
+      aggregate_failures do
+        expect(change.value_id).to eq [2, 3, 4]
+        expect(change.old_value_id).to eq [2, 3]
+      end
+    end
+
+    it 'accepts an integer id, not only a string' do
+      change = described_class.new time: time, author_raw: nil, raw: {
+        'field' => 'status', 'to' => 2, 'from' => 1
+      }
+      aggregate_failures do
+        expect(change.value_id).to eq 2
+        expect(change.old_value_id).to eq 1
+      end
+    end
+
+    it 'raises if a non-sprint change unexpectedly carries more than one id' do
+      expect do
+        described_class.new time: time, author_raw: nil, raw: { 'field' => 'status', 'to' => '5, 6' }
+      end.to raise_error(/Expected a single id for a non-sprint change but found \[5, 6\]/)
+    end
+
+    it 'tolerates a change with the to and from keys entirely absent' do
+      change = described_class.new time: time, author_raw: nil, raw: { 'field' => 'status' }
+      aggregate_failures do
+        expect(change.value_id).to be_nil
+        expect(change.old_value_id).to be_nil
+      end
     end
   end
 

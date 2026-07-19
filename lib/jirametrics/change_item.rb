@@ -14,15 +14,32 @@ class ChangeItem
     @field = @raw['field']
     @value = @raw['toString']
     @old_value = @raw['fromString']
-    if sprint?
-      @value_id = @raw['to'].split(', ').collect(&:to_i)
-      @old_value_id = (@raw['from'] || '').split(', ').collect(&:to_i)
-    else
-      @value_id = @raw['to']&.to_i
-      @old_value_id = @raw['from']&.to_i
-    end
+    @value_id, @old_value_id = parse_value_ids
     @field_id = @raw['fieldId']
     @artificial = artificial
+  end
+
+  # Sprint changes carry a comma-separated list of ids; every other field carries at most one. We parse
+  # both fields the same way, then for non-sprint fields unwrap the single value, asserting there is
+  # only ever one.
+  def parse_value_ids
+    to_ids = parse_ids @raw['to']
+    from_ids = parse_ids @raw['from']
+    return [to_ids, from_ids] if sprint?
+
+    [single_id(to_ids), single_id(from_ids)]
+  end
+
+  # 'to'/'from' come through as nil (no previous/next value), a single id (String or Integer), or - for
+  # sprints - a comma-separated String. to_s normalises all of those (nil becomes an empty list).
+  def parse_ids raw_value
+    raw_value.to_s.split(', ').collect(&:to_i)
+  end
+
+  def single_id ids
+    raise "Expected a single id for a non-sprint change but found #{ids.inspect}" if ids.size > 1
+
+    ids.first
   end
 
   def author
