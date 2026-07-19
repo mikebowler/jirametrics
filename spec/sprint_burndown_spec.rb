@@ -98,6 +98,127 @@ describe SprintBurndown do
         )
       ]
     end
+
+    it 'counts estimate changes for an issue that never completed' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil] # started, never stopped -> no completion time
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
+        SprintIssueChangeData.new(
+          action: :enter_sprint, time: to_time('2022-01-01'), value: 0.0, issue: issue, estimate: 0.0
+        ),
+        SprintIssueChangeData.new(
+          action: :story_points, time: to_time('2022-01-02'), value: 3.0, issue: issue, estimate: 3.0
+        )
+      ]
+    end
+
+    it 'ignores field changes that are neither the sprint nor the estimate' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil]
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-02')
+
+      # Only the sprint entry survives; the priority change is not an estimate change.
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)).to eq [:enter_sprint]
+    end
+
+    it 'records issue_stopped only once when several changes land on the completion time' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', '2022-01-05']
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+      add_mock_change(issue: issue, field: 'resolution', value: 'Fixed', time: '2022-01-05')
+
+      actions = sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)
+      expect(actions).to eq %i[enter_sprint issue_stopped]
+    end
+
+    it 'does not re-enter the sprint when a redundant sprint change repeats it' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil]
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)).to eq [:enter_sprint]
+    end
+
+    it 'returns empty when the issue is never in the sprint, even if it has other changes' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', '2022-01-05']
+      ]
+      add_mock_change(issue: issue, field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
+    end
+
+    it 'tracks fractional points (from string values), skips irrelevant changes, and leaves with a negative value' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil]
+      ]
+      # Jira sends change values as strings; the estimate and the delta from the old value are numeric.
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Story Points', value: '2.5', old_value: nil, time: '2022-01-02')
+      add_mock_change(issue: issue, field: 'Story Points', value: '4.0', old_value: '2.5', time: '2022-01-03')
+      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-04')
+      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-05')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
+        SprintIssueChangeData.new(
+          action: :enter_sprint, time: to_time('2022-01-01'), value: 0.0, issue: issue, estimate: 0.0
+        ),
+        SprintIssueChangeData.new(
+          action: :story_points, time: to_time('2022-01-02'), value: 2.5, issue: issue, estimate: 2.5
+        ),
+        SprintIssueChangeData.new(
+          action: :story_points, time: to_time('2022-01-03'), value: 1.5, issue: issue, estimate: 4.0
+        ),
+        SprintIssueChangeData.new(
+          action: :leave_sprint, time: to_time('2022-01-05'), value: -4.0, issue: issue, estimate: 4.0
+        )
+      ]
+    end
+
+    it 'marks issue_stopped only at the completion time, not at an earlier change' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', '2022-01-05']
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-03')
+      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+
+      actions = sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map { |c| [c.action, c.time] }
+      expect(actions).to eq [[:enter_sprint, to_time('2022-01-01')], [:issue_stopped, to_time('2022-01-05')]]
+    end
+
+    it 'only enters when the sprint change is actually for this sprint' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil]
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map { |c| [c.action, c.time] })
+        .to eq [[:enter_sprint, to_time('2022-01-02')]]
+    end
+
+    it 'does not leave again once it is already out of the sprint' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-01-01', nil]
+      ]
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-02')
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-03')
+
+      expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action))
+        .to eq %i[enter_sprint leave_sprint]
+    end
   end
 
   describe '#data_set_by_story_points' do
