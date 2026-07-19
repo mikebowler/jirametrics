@@ -13,6 +13,10 @@ describe ChartBase do
     it 'is plural for five' do
       expect(chart_base.label_days(5)).to eq '5 days'
     end
+
+    it "is 'unknown' for a nil count" do
+      expect(chart_base.label_days(nil)).to eq 'unknown'
+    end
   end
 
   describe '#label_issues' do

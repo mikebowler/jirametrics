@@ -85,26 +85,14 @@ class ChartBase
     @chart_colors[type] ||= random_color
   end
 
-  def label_days days
-    return 'unknown' if days.nil?
+  # Defines label_days, label_hours, label_minutes and label_issues - each renders a pluralised count
+  # like "3 days" or "1 issue", or 'unknown' for a nil count. Generated because only the unit differs.
+  %w[day hour minute issue].each do |unit|
+    define_method "label_#{unit}s" do |count|
+      return 'unknown' if count.nil?
 
-    "#{days} day#{'s' unless days == 1}"
-  end
-
-  def label_hours hours
-    return 'unknown' if hours.nil?
-
-    "#{hours} hour#{'s' unless hours == 1}"
-  end
-
-  def label_minutes minutes
-    return 'unknown' if minutes.nil?
-
-    "#{minutes} minute#{'s' unless minutes == 1}"
-  end
-
-  def label_issues count
-    "#{count} issue#{'s' unless count == 1}"
+      "#{count} #{unit}#{'s' unless count == 1}"
+    end
   end
 
   def to_human_readable number
