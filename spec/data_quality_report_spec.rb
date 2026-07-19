@@ -292,6 +292,97 @@ describe DataQualityReport do
 
       expect(entry.problems).to be_empty
     end
+
+    it 'ignores a status that is one of the board backlog statuses' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-05')
+
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
+
+      # Backlog is not on a visible column, but it is a board backlog status, so it is not a problem.
+      expect(entry.problems).to be_empty
+    end
+
+    it 'stays quiet when an off-board status was moved back to a backlog status (reported elsewhere)' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      fake_backlog = board.possible_statuses.find_by_id(10_012)
+
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: [fake_backlog]
+
+      # It is off the board, but because it matches a backlog status it is suppressed here.
+      expect(entry.problems).to be_empty
+    end
+
+    it 'does not flag a forward move that follows an off-board status' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      add_mock_change(
+        issue: issue1, field: 'status', value: 'Selected for Development', value_id: 10_001,
+        old_value: 'FakeBacklog', old_value_id: 10_012, time: '2021-09-06'
+      )
+
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
+
+      # The off-board status resets the position to -1, so even a move to the leftmost column (index 0)
+      # is not counted as backwards.
+      expect(entry.problems).to eq [
+        [
+          :issue_not_visible_on_board,
+          "Status #{report.format_status issue1.changes.first, board: board} is not on the board"
+        ]
+      ]
+    end
+
+    it 'still reports an off-board status when the backlog statuses do not match it' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      other_backlog = board.possible_statuses.find_by_id(10_000) # 'Backlog', a different name
+
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: [other_backlog]
+
+      # A non-empty backlog list that does not match by name must not suppress the report.
+      expect(entry.problems).to eq [
+        [
+          :issue_not_visible_on_board,
+          "Status #{report.format_status issue1.changes.first, board: board} is not on the board"
+        ]
+      ]
+    end
+
+    it 'does nothing for a backwards move whose change records no old status' do
+      report.all_boards = { 1 => board }
+      report.initialize_entries
+      entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
+
+      issue1.changes.clear
+      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05')
+      add_mock_change(
+        issue: issue1, field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-09-06'
+      )
+
+      report.scan_for_backwards_movement entry: entry, backlog_statuses: []
+
+      # Selected for Development (col 0) follows In Progress (col 1), but with no old status it is skipped
+      # rather than flagged backwards (and we never look up a nil old status).
+      expect(entry.problems).to be_empty
+    end
   end
 
   describe '#scan_for_issue_not_in_active_sprint' do
