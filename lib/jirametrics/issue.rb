@@ -101,7 +101,7 @@ class Issue
       next unless change.labels?
 
       change_labels = change.value.split
-      return change if change_labels.any? { |l| labels.include?(l) }
+      return change if change_labels.intersect?(labels)
     end
     nil
   end

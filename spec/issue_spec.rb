@@ -596,6 +596,11 @@ describe Issue do
       add_mock_change(issue: issue, field: 'labels', value: 'xxx refined', time: '2021-10-01')
       expect(issue.first_time_label_added('yyy', 'xxx').time).to eql to_time('2021-10-01')
     end
+
+    it 'ignores a non-label change even when its value happens to contain the label' do
+      add_mock_change(issue: issue, field: 'priority', value: 'refined', time: '2021-10-01')
+      expect(issue.first_time_label_added('refined')).to be_nil
+    end
   end
 
   describe '#first_time_visible_on_board' do
