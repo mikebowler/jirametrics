@@ -43,7 +43,7 @@ class JiraGateway
         return parse_response(command: command, result: stdout)
       end
 
-      if RETRYABLE_EXIT_CODES.include?(status.exitstatus) && retries < MAX_RETRIES && !stderr.include?('503')
+      if retryable?(status: status, stderr: stderr, retries: retries)
         retries += 1
         @file_system.log "Transient network error (exit #{status.exitstatus}), retrying in " \
                          "#{RETRY_DELAY_SECONDS}s (attempt #{retries}/#{MAX_RETRIES})..."
@@ -51,20 +51,28 @@ class JiraGateway
         next
       end
 
-      @file_system.error "Failed call with exit status #{status.exitstatus}!"
-      @file_system.error "Returned (stdout): #{stdout.inspect}"
-      @file_system.error "Returned (stderr): #{stderr.inspect}"
-      if stderr.include?('401')
-        raise 'The request was not authorized. Verify that your authentication token hasn\'t expired'
-      end
-      if stderr.include?('503')
-        raise 'Jira returned 503 (Service Unavailable). This may be a temporary outage, or your ' \
-              'Jira account may have been deactivated due to inactivity. Check your Jira subscription ' \
-              'and try again later.'
-      end
-      raise "Failed call with exit status #{status.exitstatus}. " \
-        "See #{@file_system.logfile_name} for details"
+      raise_for_failure status: status, stdout: stdout, stderr: stderr
     end
+  end
+
+  def retryable? status:, stderr:, retries:
+    RETRYABLE_EXIT_CODES.include?(status.exitstatus) && retries < MAX_RETRIES && !stderr.include?('503')
+  end
+
+  def raise_for_failure status:, stdout:, stderr:
+    @file_system.error "Failed call with exit status #{status.exitstatus}!"
+    @file_system.error "Returned (stdout): #{stdout.inspect}"
+    @file_system.error "Returned (stderr): #{stderr.inspect}"
+    if stderr.include?('401')
+      raise 'The request was not authorized. Verify that your authentication token hasn\'t expired'
+    end
+    if stderr.include?('503')
+      raise 'Jira returned 503 (Service Unavailable). This may be a temporary outage, or your ' \
+            'Jira account may have been deactivated due to inactivity. Check your Jira subscription ' \
+            'and try again later.'
+    end
+    raise "Failed call with exit status #{status.exitstatus}. " \
+      "See #{@file_system.logfile_name} for details"
   end
 
   def capture3 command, stdin_data:
