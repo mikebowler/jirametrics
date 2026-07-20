@@ -274,4 +274,95 @@ describe AgingWorkInProgressChart do
       ]
     end
   end
+
+  describe '#trim_board_columns' do
+    # Columns are Ready(0), In Progress(1), Review(2), Done(3), [Unmapped](4, the fake last one).
+    let(:trim_chart) do
+      build_chart(board: board, issues: []).tap { |chart| chart.determine_board_columns }
+    end
+
+    def data_sets_for *column_names
+      [{ 'data' => column_names.map { |name| { 'x' => name, 'y' => 5 } } }]
+    end
+
+    def calculator_with age_data
+      instance_double(BoardMovementCalculator).tap do |calc|
+        allow(calc).to receive(:age_data_for).and_return(age_data)
+      end
+    end
+
+    it 'removes nothing and returns [] when showing all columns' do
+      trim_chart.show_all_columns
+      expect(trim_chart.trim_board_columns(data_sets: [], calculator: calculator_with([]))).to eq []
+    end
+
+    it 'trims the columns with no aging items on either side of the ones that have them' do
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('In Progress'), calculator: calculator_with([0, 0, 0, 0])
+      )
+      aggregate_failures do
+        expect(result).to eq [0, 2, 3]
+        expect(trim_chart.board_columns.map(&:name)).to eq ['In Progress', '[Unmapped Statuses]']
+      end
+    end
+
+    it 'removes every real column when nothing is aging and there is no history' do
+      result = trim_chart.trim_board_columns(data_sets: data_sets_for, calculator: calculator_with([0, 0, 0, 0]))
+      aggregate_failures do
+        expect(result).to eq [0, 1, 2, 3]
+        expect(trim_chart.board_columns.map(&:name)).to eq ['[Unmapped Statuses]']
+      end
+    end
+
+    it 'keeps the whole span between the first and last aging columns' do
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('Ready', 'Review'), calculator: calculator_with([0, 0, 0, 0])
+      )
+      expect(result).to eq [3] # only Done, past the last aging column, is trimmed
+    end
+
+    it 'extends the kept range to columns that have historical age data' do
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('Review'), calculator: calculator_with([7, 0, 0, 0])
+      )
+      expect(result).to eq [3] # Ready is kept via its history even with no current aging item
+    end
+
+    it 'ignores history in the last visible column when finding the right boundary' do
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('In Progress'), calculator: calculator_with([0, 0, 0, 9])
+      )
+      expect(result).to eq [0, 2, 3] # Done's inflated history does not keep it
+    end
+
+    it 'extends the right boundary to a middle column that has history but no current aging' do
+      # Aging only in Ready(0), but history in Review(2) keeps everything up to Review.
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('Ready'), calculator: calculator_with([0, 0, 5, 0])
+      )
+      expect(result).to eq [3] # only Done is trimmed; Review is kept by its history
+    end
+
+    it 'ignores non-hash data points when collecting the aging columns' do
+      data_sets = [{ 'data' => [{ 'x' => 'In Progress', 'y' => 5 }, [99, 5]] }] # a bar-style array point
+      result = trim_chart.trim_board_columns(data_sets: data_sets, calculator: calculator_with([0, 0, 0, 0]))
+      expect(result).to eq [0, 2, 3]
+    end
+
+    it 'keeps just the single column that has aging items' do
+      result = trim_chart.trim_board_columns(
+        data_sets: data_sets_for('Ready'), calculator: calculator_with([0, 0, 0, 0])
+      )
+      aggregate_failures do
+        expect(result).to eq [1, 2, 3]
+        expect(trim_chart.board_columns.map(&:name)).to eq ['Ready', '[Unmapped Statuses]']
+      end
+    end
+
+    it 'removes every real column when only the last one has history and nothing is aging' do
+      # first_data is set (the last column) but there is no right boundary, so no range can be formed.
+      result = trim_chart.trim_board_columns(data_sets: data_sets_for, calculator: calculator_with([0, 0, 0, 9]))
+      expect(result).to eq [0, 1, 2, 3]
+    end
+  end
 end

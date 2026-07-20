@@ -174,29 +174,13 @@ class AgingWorkInProgressChart < ChartBase
   def trim_board_columns data_sets:, calculator:
     return [] if @show_all_columns
 
-    columns_with_aging_items = data_sets.flat_map do |set|
-      set['data'].filter_map { |d| d['x'] if d.is_a? Hash }
-    end.uniq
-
     # @fake_column is always the last element and is handled separately.
     real_column_count = @board_columns.size - 1
-
-    # The last visible column always has artificially inflated age_data because
-    # ages_of_issues_when_leaving_column uses `today` as end_date when there is no
-    # next column. Exclude it from the right-boundary search so it is only kept when
-    # it has current aging items (handled by the last_aging fallback below).
-    age_data = calculator.age_data_for(percentage: 100)
-    last_data = (0...(real_column_count - 1)).to_a.reverse.find { |i| !age_data[i].zero? }
-
-    in_current = ->(i) { columns_with_aging_items.include?(@board_columns[i].name) }
-    first_aging = (0...real_column_count).find(&in_current)
-    last_aging  = (0...real_column_count).to_a.reverse.find(&in_current)
-
-    # Combine: include any column with age_data (up to but not including the last visible
-    # column) and any column with current aging items.
-    first_data = (0...real_column_count).find { |i| !age_data[i].zero? }
-    left_bound  = [first_data, first_aging].compact.min
-    right_bound = [last_data, last_aging].compact.max
+    left_bound, right_bound = column_trim_bounds(
+      aging_columns: aging_column_names(data_sets),
+      age_data: calculator.age_data_for(percentage: 100),
+      real_column_count: real_column_count
+    )
 
     indexes_to_remove =
       if left_bound && right_bound
@@ -207,6 +191,28 @@ class AgingWorkInProgressChart < ChartBase
 
     indexes_to_remove.reverse_each { |index| @board_columns.delete_at index }
     indexes_to_remove
+  end
+
+  # The distinct column names that currently have aging items on the chart.
+  def aging_column_names data_sets
+    data_sets.flat_map do |set|
+      set['data'].filter_map { |d| d['x'] if d.is_a? Hash }
+    end.uniq
+  end
+
+  # The [left, right] column indexes to keep, combining columns with current aging items and columns
+  # with historical age data. The last visible column is excluded from the right-boundary history search
+  # because ages_of_issues_when_leaving_column inflates its age_data (it uses `today` as the end date
+  # when there's no next column), so it's kept only when it has a current aging item.
+  def column_trim_bounds aging_columns:, age_data:, real_column_count:
+    in_current = ->(i) { aging_columns.include?(@board_columns[i].name) }
+    first_aging = (0...real_column_count).find(&in_current)
+    last_aging  = (0...real_column_count).to_a.reverse.find(&in_current)
+
+    first_data = (0...real_column_count).find { |i| !age_data[i].zero? }
+    last_data  = (0...(real_column_count - 1)).to_a.reverse.find { |i| !age_data[i].zero? }
+
+    [[first_data, first_aging].compact.min, [last_data, last_aging].compact.max]
   end
 
   def column_for issue:
