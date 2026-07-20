@@ -335,24 +335,26 @@ class DataQualityReport < ChartBase
   def scan_for_incomplete_subtasks_when_issue_done entry:
     return unless entry.stopped
 
-    subtask_labels = entry.issue.subtasks.filter_map do |subtask|
-      subtask_started, subtask_stopped = subtask.started_stopped_times
-
-      if !subtask_started && !subtask_stopped
-        "#{subtask_label subtask} (Not even started)"
-      elsif !subtask_stopped
-        "#{subtask_label subtask} (Still not done)"
-      elsif subtask_stopped > entry.stopped
-        "#{subtask_label subtask} (Closed #{time_as_english entry.stopped, subtask_stopped} later)"
-      end
-    end
-
+    subtask_labels = entry.issue.subtasks.filter_map { |subtask| incomplete_subtask_label subtask, entry.stopped }
     return if subtask_labels.empty?
 
     entry.report(
       problem_key: :incomplete_subtasks_when_issue_done,
       detail: subtask_labels.join('<br />')
     )
+  end
+
+  # The label for one subtask that isn't finished when its parent is done, or nil if it is fine.
+  def incomplete_subtask_label subtask, issue_stopped
+    subtask_started, subtask_stopped = subtask.started_stopped_times
+
+    if !subtask_started && !subtask_stopped
+      "#{subtask_label subtask} (Not even started)"
+    elsif !subtask_stopped
+      "#{subtask_label subtask} (Still not done)"
+    elsif subtask_stopped > issue_stopped
+      "#{subtask_label subtask} (Closed #{time_as_english issue_stopped, subtask_stopped} later)"
+    end
   end
 
   def scan_for_discarded_data entry:
