@@ -53,7 +53,7 @@ describe CumulativeFlowDiagram do
 
     describe '#column_rules' do
       def chart_with_rules &block
-        block ||= proc {} # rubocop:disable Lint/EmptyBlock -- no rules block means "use the defaults"
+        block ||= proc {} # no rules block means "use the defaults"
         c = described_class.new(block)
         c.file_system = MockFileSystem.new
         c.file_system.when_loading(

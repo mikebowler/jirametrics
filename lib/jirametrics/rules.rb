@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class Rules
-  def ignore value = true
+  # Boolean positional is the config-block DSL's public API (ignore false).
+  def ignore value = true # rubocop:disable Style/OptionalBooleanParameter
     @ignore = value
   end
 

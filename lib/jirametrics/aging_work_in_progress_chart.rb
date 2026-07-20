@@ -65,7 +65,8 @@ class AgingWorkInProgressChart < ChartBase
     wrap_and_render(binding, __FILE__)
   end
 
-  def show_all_columns show = true
+  # Boolean positional is the config-block DSL's public API (show_all_columns false).
+  def show_all_columns show = true # rubocop:disable Style/OptionalBooleanParameter
     @show_all_columns = show
   end
 
