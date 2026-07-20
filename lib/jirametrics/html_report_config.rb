@@ -55,16 +55,21 @@ class HtmlReportConfig < HtmlGenerator
   end
 
   def execute_chart_per_board klass:, block:, board_id:
-    all_boards = @file_config.project_config.all_boards
-    ids = board_id ? [board_id] : issues.collect { |i| i.board.id }.uniq
-    ids = ids.sort_by { |id| all_boards[id]&.name || '' }
-    ids.each_with_index do |id, index|
+    board_ids(board_id).each_with_index do |id, index|
       execute_chart(klass.new(block)) do |chart|
         chart.board_id = id
         # We're showing the description only on the first one in order to reduce noise on the report
         chart.description_text nil unless index.zero?
       end
     end
+  end
+
+  # The boards to draw this chart for, sorted by name: just the requested one, or every board the
+  # issues touch.
+  def board_ids board_id
+    all_boards = @file_config.project_config.all_boards
+    ids = board_id ? [board_id] : issues.collect { |issue| issue.board.id }.uniq
+    ids.sort_by { |id| all_boards[id]&.name || '' }
   end
 
   def respond_to_missing? name, include_private = false
