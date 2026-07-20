@@ -252,42 +252,53 @@ class AgingWorkBarChart < ChartBase
     issue.changes.each do |change|
       next unless change.sprint?
 
-      removed_sprint_ids = change.old_value_id - change.value_id
-      added_sprint_ids = change.value_id - change.old_value_id
-
-      removed_sprint_ids.each do |id|
-        data = open_sprints.delete(id)
-        next unless data
-
-        completed = data[:sprint].completed_time
-        stop = completed ? [change.time, completed].min : change.time
-        results << BarChartRange.new(
-          start: data[:start_time], stop: stop,
-          color: CssVariable['--sprint-color'], title: data[:sprint].name
-        )
-      end
-
-      added_sprint_ids.each do |id|
-        sprint = issue.board.sprints.find { |s| s.id == id }
-        next unless sprint
-        next if sprint.future?
-
-        start_time = [sprint.start_time, change.time].max
-        open_sprints[id] = { start_time: start_time, sprint: sprint }
-      end
+      close_removed_sprints(change, open_sprints, results)
+      open_added_sprints(change, issue, open_sprints)
     end
 
+    # Anything still open at the end runs to the sprint's completion, or the end of the range if it's
+    # still active.
     open_sprints.each_value do |data|
       next if data[:sprint].future?
 
-      stop = data[:sprint].completed_time || time_range.end
-      results << BarChartRange.new(
-        start: data[:start_time], stop: stop,
-        color: CssVariable['--sprint-color'], title: data[:sprint].name
-      )
+      results << sprint_range(data, data[:sprint].completed_time || time_range.end)
     end
 
     results
+  end
+
+  # For each sprint this change leaves, close its open range. The range stops when the issue left, or
+  # when the sprint completed if that came first.
+  def close_removed_sprints change, open_sprints, results
+    removed_sprint_ids = change.old_value_id - change.value_id
+    removed_sprint_ids.each do |id|
+      data = open_sprints.delete(id)
+      next unless data
+
+      completed = data[:sprint].completed_time
+      stop = completed ? [change.time, completed].min : change.time
+      results << sprint_range(data, stop)
+    end
+  end
+
+  # For each sprint this change joins (that exists and has already started), open a range. It starts
+  # when the issue joined, or when the sprint began if the issue was added beforehand.
+  def open_added_sprints change, issue, open_sprints
+    added_sprint_ids = change.value_id - change.old_value_id
+    added_sprint_ids.each do |id|
+      sprint = issue.board.sprints.find { |s| s.id == id }
+      next unless sprint
+      next if sprint.future?
+
+      start_time = [sprint.start_time, change.time].max
+      open_sprints[id] = { start_time: start_time, sprint: sprint }
+    end
+  end
+
+  def sprint_range data, stop
+    BarChartRange.new(
+      start: data[:start_time], stop: stop, color: CssVariable['--sprint-color'], title: data[:sprint].name
+    )
   end
 
   def create_range_for_priority previous_change:, stop_time:, expedited_priority_names:

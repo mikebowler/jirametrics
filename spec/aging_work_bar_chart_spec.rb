@@ -662,5 +662,116 @@ time: '2021-01-05')
         )
       ]
     end
+
+    def active_sprint id, name, start
+      Sprint.new(
+        raw: { 'id' => id, 'state' => 'active', 'name' => name,
+               'activatedDate' => "#{start}T00:00:00+00:00", 'endDate' => '2021-02-01T00:00:00+00:00' },
+        timezone_offset: '+0000'
+      )
+    end
+
+    it 'keeps a sprint open across a change that adds another' do
+      board.sprints << active_sprint(2, 'Sprint 2', '2021-01-08')
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: '1', time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1, Sprint 2', value_id: '1, 2',
+        old_value: sprint1.name, old_value_id: '1', time: '2021-01-10'
+      )
+
+      sprint1_range = chart.collect_sprint_ranges(issue: issue).find { |range| range.title == 'Sprint 1' }
+      aggregate_failures do
+        expect(sprint1_range.start).to eq to_time('2021-01-05') # not reset by the second change
+        expect(sprint1_range.stop).to eq to_time('2021-01-17')  # not cut short at 01-10
+      end
+    end
+
+    it 'stops at the removal time when an active sprint (no completion) is left' do
+      board.sprints << active_sprint(2, 'Sprint 2', '2021-01-03')
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 2', value_id: '2', time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 2', old_value_id: '2',
+        time: '2021-01-10'
+      )
+
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(start: to_time('2021-01-05'), stop: to_time('2021-01-10'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 2')
+      ]
+    end
+
+    it 'ignores a removal for a sprint that was never added' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '', old_value: sprint1.name, old_value_id: '1',
+        time: '2021-01-10'
+      )
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq []
+    end
+
+    it 'creates no range for a future sprint that is added and then removed' do
+      board.sprints << Sprint.new(
+        raw: { 'id' => 3, 'state' => 'future', 'name' => 'Sprint 3',
+               'startDate' => '2021-02-01T00:00:00+00:00', 'endDate' => '2021-02-14T00:00:00+00:00' },
+        timezone_offset: '+0000'
+      )
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 3', value_id: '3', time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 3', old_value_id: '3',
+        time: '2021-01-10'
+      )
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq []
+    end
+
+    it 'ignores a sprint id that is not on the board' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 99', value_id: '99', time: '2021-01-05')
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq []
+    end
+
+    it 'handles several sprints added and removed in single changes' do
+      board.sprints << active_sprint(2, 'Sprint 2', '2021-01-03')
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 1, Sprint 2', value_id: '1, 2', time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 1, Sprint 2', old_value_id: '1, 2',
+        time: '2021-01-10'
+      )
+      expect(chart.collect_sprint_ranges(issue: issue).collect(&:title)).to contain_exactly('Sprint 1', 'Sprint 2')
+    end
+
+    it 'keeps processing removals after one for an un-added sprint' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: '1', time: '2021-01-05')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Gone, Sprint 1', old_value_id: '99, 1',
+        time: '2021-01-10'
+      )
+      # Sprint 1 is still removed at 01-10 (not left open to the flush) despite the earlier un-added 99.
+      expect(chart.collect_sprint_ranges(issue: issue)).to eq [
+        BarChartRange.new(start: to_time('2021-01-05'), stop: to_time('2021-01-10'),
+          color: CssVariable['--sprint-color'], title: 'Sprint 1')
+      ]
+    end
+
+    it 'keeps adding sprints after one with an unknown id' do
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Gone, Sprint 1', value_id: '99, 1', time: '2021-01-05')
+      expect(chart.collect_sprint_ranges(issue: issue).collect(&:title)).to eq ['Sprint 1']
+    end
+
+    it 'keeps adding sprints after skipping a future one' do
+      board.sprints << Sprint.new(
+        raw: { 'id' => 3, 'state' => 'future', 'name' => 'Sprint 3',
+               'startDate' => '2021-02-01T00:00:00+00:00', 'endDate' => '2021-02-14T00:00:00+00:00' },
+        timezone_offset: '+0000'
+      )
+      issue = empty_issue created: '2021-01-01', board: board
+      add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 3, Sprint 1', value_id: '3, 1', time: '2021-01-05')
+      expect(chart.collect_sprint_ranges(issue: issue).collect(&:title)).to eq ['Sprint 1']
+    end
   end
 end
