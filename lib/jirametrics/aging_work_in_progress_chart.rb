@@ -83,60 +83,58 @@ class AgingWorkInProgressChart < ChartBase
   end
 
   def make_data_sets
-    aging_issues = @issues.select do |issue|
-      board = issue.board
-      board.id == @board_id && board.cycletime.in_progress?(issue)
-    end
+    aging_issues = @issues.select { |issue| aging_issue_on_board? issue }
 
-    @max_age = 20
     rules_to_issues = group_issues aging_issues
-    data_sets = rules_to_issues.keys.collect do |rules|
-      {
-        'type' => 'line',
-        'label' => rules.label,
-        'data' => rules_to_issues[rules].filter_map do |issue|
-            age = issue.board.cycletime.age(issue, today: date_range.end)
-            column = column_for issue: issue
-            next if column.nil?
-
-            @max_age = age if age > @max_age
-
-            {
-              'y' => age,
-              'x' => column.name,
-              'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"]
-            }
-          end,
-        'fill' => false,
-        'showLine' => false,
-        'backgroundColor' => rules.color
-      }
-    end
+    data_sets = rules_to_issues.keys.collect { |rules| line_data_set(rules, rules_to_issues[rules]) }
+    # The y-axis is scaled to the oldest item, but never shorter than 20 days.
+    @max_age = data_sets.flat_map { |set| set['data'].collect { |point| point['y'] } }.push(20).max
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues, today: date_range.end
-
     column_indexes_to_remove = trim_board_columns data_sets: data_sets, calculator: calculator
-
     @row_index_offset = data_sets.size
 
+    append_bar_data_sets data_sets, calculator, column_indexes_to_remove
+    data_sets
+  end
+
+  def aging_issue_on_board? issue
+    issue.board.id == @board_id && issue.board.cycletime.in_progress?(issue)
+  end
+
+  def line_data_set rules, issues
+    {
+      'type' => 'line',
+      'label' => rules.label,
+      'data' => aging_datapoints(issues),
+      'fill' => false,
+      'showLine' => false,
+      'backgroundColor' => rules.color
+    }
+  end
+
+  # One {x: column, y: age, title} point per issue that's currently visible on the board.
+  def aging_datapoints issues
+    issues.filter_map do |issue|
+      age = issue.board.cycletime.age(issue, today: date_range.end)
+      column = column_for issue: issue
+      next if column.nil?
+
+      { 'y' => age, 'x' => column.name, 'title' => ["#{issue.key} : #{issue.summary} (#{label_days age})"] }
+    end
+  end
+
+  def append_bar_data_sets data_sets, calculator, column_indexes_to_remove
     bar_data = []
     calculator.stacked_age_data_for(percentages: @percentiles.keys).each do |percentage, data|
       column_indexes_to_remove.reverse_each { |index| data.delete_at index }
-      color = @percentiles[percentage]
-
       data_sets << {
-        'type' => 'bar',
-        'label' => "#{percentage}%",
-        'barPercentage' => 1.0,
-        'categoryPercentage' => 1.0,
-        'backgroundColor' => color,
-        'data' => data
+        'type' => 'bar', 'label' => "#{percentage}%", 'barPercentage' => 1.0, 'categoryPercentage' => 1.0,
+        'backgroundColor' => @percentiles[percentage], 'data' => data
       }
       bar_data << data
     end
     @bar_data = adjust_bar_data bar_data
-
-    data_sets
   end
 
   def adjust_bar_data input

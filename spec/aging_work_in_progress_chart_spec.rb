@@ -275,6 +275,38 @@ describe AgingWorkInProgressChart do
     end
   end
 
+  describe '#aging_issue_on_board?' do
+    it 'includes an in-progress issue on this board' do
+      issue = create_issue_from_aging_data(board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-200')
+      expect(chart.aging_issue_on_board?(issue)).to be true
+    end
+
+    it 'excludes an in-progress issue that belongs to a different board' do
+      other_board = load_complete_sample_board.tap do |b|
+        b.raw['id'] = 2
+        b.cycletime = default_cycletime_config
+      end
+      issue = create_issue_from_aging_data(
+        board: other_board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-201'
+      )
+      expect(chart.aging_issue_on_board?(issue)).to be false
+    end
+  end
+
+  describe '#aging_datapoints' do
+    it 'skips an issue that is not mapped to any column' do
+      kept = create_issue_from_aging_data(board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-300')
+      dropped = create_issue_from_aging_data(
+        board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-301'
+      )
+      column = board.visible_columns.first
+      allow(chart).to receive(:column_for).with(issue: kept).and_return(column)
+      allow(chart).to receive(:column_for).with(issue: dropped).and_return(nil)
+
+      expect(chart.aging_datapoints([kept, dropped]).collect { |point| point['x'] }).to eq [column.name]
+    end
+  end
+
   describe '#trim_board_columns' do
     # Columns are Ready(0), In Progress(1), Review(2), Done(3), [Unmapped](4, the fake last one).
     let(:trim_chart) do
