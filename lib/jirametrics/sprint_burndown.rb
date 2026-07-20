@@ -40,76 +40,93 @@ class SprintBurndown < ChartBase
     return nil unless current_board.scrum?
 
     sprints = sprints_in_time_range current_board
-
-    change_data_by_sprint = {}
-    sprints.each do |sprint|
-      change_data = []
-      issues.each do |issue|
-        change_data += changes_for_one_issue(issue: issue, sprint: sprint)
-      end
-      change_data_by_sprint[sprint] = change_data.sort_by(&:time)
-    end
+    change_data_by_sprint = gather_change_data_by_sprint sprints
 
     result = +''
     result << render_top_text(binding)
 
-    possible_colours = (1..ChartBase::OKABE_ITO_PALETTE.size).collect { |i| CssVariable["--sprint-burndown-sprint-color-#{i}"] }
-    charts_to_generate = []
-    charts_to_generate << [:data_set_by_story_points, 'Story Points'] if @use_story_points
-    charts_to_generate << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
-    charts_to_generate.each do |data_method, y_axis_title|
+    # HashEachMethods misreads this array of [method, title] pairs as a hash and thinks y_axis_title
+    # is unused; in fact the ERB template reads it (and data_method) from the binding we pass to render.
+    charts_to_generate.each do |data_method, y_axis_title| # rubocop:disable Style/HashEachMethods
       @summary_stats.clear
-      data_sets = []
-      sprints.each_with_index do |sprint, index|
-        color = possible_colours[index % possible_colours.size]
-        label = sprint.name
-        data = send(data_method, sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint])
-        data_sets << {
-          label: label,
-          data: data,
-          fill: false,
-          showLine: true,
-          borderColor: color,
-          backgroundColor: color,
-          stepped: true,
-          pointStyle: %w[rect circle] # First dot is visually different from the rest
-        }
-      end
-
-      legend = []
-      case data_method
-      when :data_set_by_story_counts
-        legend << '<b>Started</b>: Number of issues already in the sprint, when the sprint was started.'
-        legend << '<b>Completed</b>: Number of issues, completed during the sprint'
-        legend << '<b>Added</b>: Number of issues added in the middle of the sprint'
-        legend << '<b>Removed</b>: Number of issues removed while the sprint was in progress'
-      when :data_set_by_story_points
-        legend << '<b>Started</b>: Total count of story points when the sprint was started'
-        legend << '<b>Completed</b>: Count of story points completed during the sprint'
-        legend << '<b>Added</b>: Count of story points added in the middle of the sprint'
-        legend << '<b>Removed</b>: Count of story points removed while the sprint was in progress'
-      else
-        raise "Unexpected method #{data_method}"
-      end
-
+      data_sets = sprint_data_sets(
+        data_method: data_method, sprints: sprints, change_data_by_sprint: change_data_by_sprint
+      )
+      legend = legend_for data_method
       result << render(binding, __FILE__)
     end
 
     result
   end
 
+  # Every sprint's changes, flattened across all issues and sorted into time order.
+  def gather_change_data_by_sprint sprints
+    sprints.to_h do |sprint|
+      change_data = issues.flat_map { |issue| changes_for_one_issue(issue: issue, sprint: sprint) }
+      [sprint, change_data.sort_by(&:time)]
+    end
+  end
+
+  # The [data-builder method, y-axis label] pairs for whichever burndown measures are turned on.
+  def charts_to_generate
+    charts = []
+    charts << [:data_set_by_story_points, 'Story Points'] if @use_story_points
+    charts << [:data_set_by_story_counts, 'Story Count'] if @use_story_counts
+    charts
+  end
+
+  # One Chart.js data set per sprint, each in its own colour from the palette.
+  def sprint_data_sets data_method:, sprints:, change_data_by_sprint:
+    possible_colours = (1..ChartBase::OKABE_ITO_PALETTE.size).collect do |i|
+      CssVariable["--sprint-burndown-sprint-color-#{i}"]
+    end
+    sprints.each_with_index.collect do |sprint, index|
+      color = possible_colours[index % possible_colours.size]
+      {
+        label: sprint.name,
+        data: send(data_method, sprint: sprint, change_data_for_sprint: change_data_by_sprint[sprint]),
+        fill: false,
+        showLine: true,
+        borderColor: color,
+        backgroundColor: color,
+        stepped: true,
+        pointStyle: %w[rect circle] # First dot is visually different from the rest
+      }
+    end
+  end
+
+  def legend_for data_method
+    case data_method
+    when :data_set_by_story_counts
+      ['<b>Started</b>: Number of issues already in the sprint, when the sprint was started.',
+       '<b>Completed</b>: Number of issues, completed during the sprint',
+       '<b>Added</b>: Number of issues added in the middle of the sprint',
+       '<b>Removed</b>: Number of issues removed while the sprint was in progress']
+    when :data_set_by_story_points
+      ['<b>Started</b>: Total count of story points when the sprint was started',
+       '<b>Completed</b>: Count of story points completed during the sprint',
+       '<b>Added</b>: Count of story points added in the middle of the sprint',
+       '<b>Removed</b>: Count of story points removed while the sprint was in progress']
+    else
+      raise "Unexpected method #{data_method}"
+    end
+  end
+
   def sprints_in_time_range board
-    board.sprints.select do |sprint|
-      # If it's never been started then it's just a holding area. Ignore it.
-      next if sprint.future?
+    board.sprints.select { |sprint| sprint_in_time_range? sprint }
+  end
 
-      sprint_end_time = sprint.completed_time || sprint.end_time
-      sprint_start_time = sprint.start_time
-      next false if sprint_start_time.nil?
+  # A sprint counts when it has actually started (future and never-started sprints are just holding
+  # areas, so we ignore them) and its active span overlaps the chart's time range.
+  def sprint_in_time_range? sprint
+    return false if sprint.future?
 
-      time_range.include?(sprint_start_time) || time_range.include?(sprint_end_time) ||
-        (sprint_start_time < time_range.begin && sprint_end_time > time_range.end)
-    end || []
+    sprint_start_time = sprint.start_time
+    return false if sprint_start_time.nil?
+
+    sprint_end_time = sprint.completed_time || sprint.end_time
+    time_range.include?(sprint_start_time) || time_range.include?(sprint_end_time) ||
+      (sprint_start_time < time_range.begin && sprint_end_time > time_range.end)
   end
 
   # select all the changes that are relevant for the sprint. If this issue never appears in this sprint then return [].
