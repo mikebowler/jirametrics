@@ -47,7 +47,7 @@ describe DownloaderForDataCenter do
         file_system: file_system,
         jira_gateway: jira_gateway
       )
-      expect(instance).to be_instance_of DownloaderForDataCenter
+      expect(instance).to be_instance_of described_class
     end
   end
 
