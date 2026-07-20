@@ -18,6 +18,13 @@ Naming/BlockForwarding:
 Style/ArgumentsForwarding:
   UseAnonymousForwarding: false
 
+# Our chart, downloader, and file-system hierarchies share method signatures (grouping hooks, the
+# download interface, the FileSystem contract the mock implements). A given override often doesn't
+# use every keyword, but the name is part of the caller-facing contract, so it can't be dropped or
+# renamed to _foo. Allow unused keyword arguments rather than disabling the cop case by case.
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true
+
 Layout/FirstArrayElementIndentation:
   Enabled: false
 
