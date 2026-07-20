@@ -35,6 +35,7 @@ class CfdDataBuilder
     :high_water_mark, :correction_open_since, :correction_windows, :high_water_mark_timeline,
     keyword_init: true
   )
+  private_constant :CorrectionState
 
   # Returns { high_water_mark_timeline: [[date, high_water_mark], ...], correction_windows: [...] }
   def process_issue issue, column_map

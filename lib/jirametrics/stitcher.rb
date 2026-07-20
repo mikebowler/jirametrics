@@ -48,7 +48,8 @@ class Stitcher < HtmlGenerator
     ''
   end
 
-  def parse_file filename
+  # Imperative: it parses the file. The boolean is a "was it newly parsed" status, not a question.
+  def parse_file filename # rubocop:disable Naming/PredicateMethod
     return false if @loaded_files.include? filename
 
     # To match: <!-- seam-start | chart78 | GithubPrScatterplot | PR Scatterplot | chart -->

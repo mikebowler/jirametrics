@@ -14,7 +14,8 @@ class DependencyChart < ChartBase
       @merge_bidirectional = keep.to_sym
     end
 
-    def get_merge_bidirectional
+    # get_ prefix because the plain name is the config DSL setter (merge_bidirectional keep:).
+    def get_merge_bidirectional # rubocop:disable Naming/AccessorMethodName
       @merge_bidirectional
     end
 

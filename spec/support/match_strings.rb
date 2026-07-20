@@ -19,7 +19,8 @@ class MatchStrings
 
     biggest_size = [actual.size, @expected.size].min
     (0..biggest_size).each do |i|
-      unless @expected[i] === actual[i]
+      # === so an expected element can be a regexp/matcher, not only an equal string.
+      unless @expected[i] === actual[i] # rubocop:disable Style/CaseEquality
         @errors << "Line #{i + 1}: #{@expected[i].inspect} does not match #{actual[i].inspect}"
       end
     end

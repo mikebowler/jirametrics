@@ -67,14 +67,14 @@ class MockFileSystem < FileSystem
     @foreach_data[root] = result
   end
 
-  def foreach root
+  def foreach root, &block
     results = @foreach_data[root]
     raise "foreach called on directory #{root.inspect} but nothing set in the mock" unless results
 
     if results == :not_mocked
       super
     else
-      results.each { |file| yield file }
+      results.each(&block)
     end
   end
 

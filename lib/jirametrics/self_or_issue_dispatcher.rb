@@ -4,7 +4,7 @@ module SelfOrIssueDispatcher
   def method_missing method_name, *args, &block
     raise "#{method_name} isn't a method on Issue or #{self.class}" unless ::Issue.method_defined? method_name.to_sym
 
-    ->(issue) do
+    lambda do |issue|
       issue.__send__ method_name, *args, &block
     end
   end

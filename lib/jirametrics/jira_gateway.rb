@@ -131,7 +131,9 @@ class JiraGateway
   def validate_jira_auth
     raise 'When specifying an api-token, you must also specify email' if @jira_api_token && !@jira_email
 
-    if @jira_api_token && @jira_personal_access_token
+    # Kept as an if rather than a trailing-if guard: with this message the guard form runs past the
+    # line-length limit.
+    if @jira_api_token && @jira_personal_access_token # rubocop:disable Style/GuardClause
       raise "You can't specify both an api-token and a personal-access-token. They don't work together."
     end
   end
