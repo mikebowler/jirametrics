@@ -66,20 +66,26 @@ class FileConfig
   # most common usecase - the Team Dashboard from FocusedObjective.com. The rule for that one
   # is that all empty values in the first column should be at the bottom.
   def sort_output all_lines
-    all_lines.each_with_index.sort do |(a, a_idx), (b, b_idx)|
-      result = if a[0] == b[0]
-                 a[1..] <=> b[1..]
-               elsif a[0].nil?
-                 1
-               elsif b[0].nil?
-                 -1
-               else
-                 a[0] <=> b[0]
-      end
+    all_lines.each_with_index.sort do |(left, left_idx), (right, right_idx)|
+      result = compare_rows left, right
 
       # When objects aren't comparable, preserve original order for a stable sort.
-      result.nil? || result.zero? ? a_idx <=> b_idx : result
+      result.nil? || result.zero? ? left_idx <=> right_idx : result
     end.map(&:first)
+  end
+
+  # Compare two rows by their first column, falling back to the remaining columns on a tie, and
+  # sorting nil first columns to the bottom.
+  def compare_rows left, right
+    if left[0] == right[0]
+      left[1..] <=> right[1..]
+    elsif left[0].nil?
+      1
+    elsif right[0].nil?
+      -1
+    else
+      left[0] <=> right[0]
+    end
   end
 
   def columns &block

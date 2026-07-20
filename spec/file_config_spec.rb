@@ -49,6 +49,12 @@ describe FileConfig do
       expected = [[1, 2], [4, 4], [nil, nil], [nil, 3]]
       expect(file_config.sort_output(input)).to eq expected
     end
+
+    it 'breaks ties on the first column using the remaining columns' do
+      input = [['x', 2], ['x', 1], ['a', 3]]
+      expected = [['a', 3], ['x', 1], ['x', 2]]
+      expect(file_config.sort_output(input)).to eq expected
+    end
   end
 
   describe '#output_filename' do
