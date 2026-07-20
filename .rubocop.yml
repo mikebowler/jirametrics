@@ -16,7 +16,7 @@ Style/MethodDefParentheses:
 Naming/BlockForwarding:
   EnforcedStyle: explicit
 Style/ArgumentsForwarding:
-  EnforcedStyle: explicit
+  UseAnonymousForwarding: false
 
 Layout/FirstArrayElementIndentation:
   Enabled: false
