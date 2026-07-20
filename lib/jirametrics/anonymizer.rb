@@ -19,6 +19,10 @@ class Anonymizer < ChartBase
   def run
     anonymize_issue_keys_and_titles
     anonymize_column_names
+    # TODO: status names are not anonymized yet, so anonymized exports can still leak a client's real
+    # status vocabulary. anonymize_issue_statuses below does this but is disabled: build_status_name_hash
+    # doesn't index change.old_value, so re-enabling as-is can raise on an old_value that never appeared
+    # elsewhere. Finish that (and characterize it) before wiring it back in.
     # anonymize_issue_statuses
     anonymize_board_names
     anonymize_labels_and_components
@@ -133,7 +137,8 @@ class Anonymizer < ChartBase
       issue.changes.each do |change|
         next unless change.status?
 
-        # TODO: Do old value too
+        # TODO: index change.old_value too, or anonymize_issue_statuses raises on an old_value whose
+        # status is never seen here as a value or possible status.
         status_key = change.value
         if status_name_hash[status_key].nil?
           status_name_hash[status_key] = "status-#{next_status}"
