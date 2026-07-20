@@ -35,6 +35,13 @@ Naming/MethodParameterName:
     - x
     - y
 
+# Config-block DSL setters take a boolean positionally on purpose: `show_all_columns false` and
+# `ignore false` read naturally in a user's config, and the method name is the public API.
+Style/OptionalBooleanParameter:
+  AllowedMethods:
+    - show_all_columns
+    - ignore
+
 Layout/FirstArrayElementIndentation:
   Enabled: false
 

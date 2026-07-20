@@ -53,6 +53,7 @@ describe CumulativeFlowDiagram do
 
     describe '#column_rules' do
       def chart_with_rules &block
+        block ||= proc {} # rubocop:disable Lint/EmptyBlock -- no rules block means "use the defaults"
         c = described_class.new(block)
         c.file_system = MockFileSystem.new
         c.file_system.when_loading(
@@ -129,7 +130,7 @@ describe CumulativeFlowDiagram do
 
       describe '#triangle_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run
+          output = chart_with_rules.run
           expect(output).to include('--cfd-triangle-color')
         end
 
@@ -149,7 +150,7 @@ describe CumulativeFlowDiagram do
 
       describe '#arrival_rate_line_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run
+          output = chart_with_rules.run
           expect(output).to include('--cfd-arrival-rate-line-color')
         end
 
@@ -174,7 +175,7 @@ describe CumulativeFlowDiagram do
 
       describe '#departure_rate_line_color' do
         it 'defaults to the CSS variable' do
-          output = chart_with_rules {}.run
+          output = chart_with_rules.run
           expect(output).to include('--cfd-departure-rate-line-color')
         end
 
