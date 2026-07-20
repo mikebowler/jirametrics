@@ -120,7 +120,7 @@ class Anonymizer < ChartBase
 
   def anonymize_server_url
     @all_boards.each_value do |board|
-      board.raw['self'] = board.raw['self']&.sub(/^https?:\/\/[^\/]+/, 'https://anon.example.com')
+      board.raw['self'] = board.raw['self']&.sub(%r{^https?://[^/]+}, 'https://anon.example.com')
     end
   end
 

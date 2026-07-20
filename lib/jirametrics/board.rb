@@ -35,7 +35,7 @@ class Board
   end
 
   def server_url_prefix
-    raise "Cannot parse self: #{@raw['self'].inspect}" unless @raw['self'] =~ /^(https?:\/\/.+)\/rest\//
+    raise "Cannot parse self: #{@raw['self'].inspect}" unless @raw['self'] =~ %r{^(https?://.+)/rest/}
 
     $1
   end

@@ -147,7 +147,7 @@ class Exporter
       @jira_config = file_system.load_json(filename, fail_on_error: false)
       raise "Unable to load Jira configuration file and cannot continue: #{filename.inspect}" if @jira_config.nil?
 
-      @jira_config['url'] = $1 if @jira_config['url'] =~ /^(.+)\/+$/
+      @jira_config['url'] = $1 if @jira_config['url'] =~ %r{^(.+)/+$}
     end
     @jira_config
   end

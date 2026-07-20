@@ -84,7 +84,7 @@ describe ProjectConfig do
 
   describe '#guess_board_id' do
     it 'fails if no board id set and there are no boards' do
-      expect { project_config.guess_board_id }.to raise_error %r{we couldn't find any configuration files}
+      expect { project_config.guess_board_id }.to raise_error /we couldn't find any configuration files/
     end
 
     it 'fails if no board id set and there are multiple boards' do
@@ -93,7 +93,7 @@ describe ProjectConfig do
       project_config.load_board(board_id: 2, filename: 'spec/testdata/sample_board_1_configuration.json')
       project_config.load_board(board_id: 3, filename: 'spec/testdata/sample_board_1_configuration.json')
 
-      expect { project_config.guess_board_id }.to raise_error %r{following board ids and this is ambiguous}
+      expect { project_config.guess_board_id }.to raise_error /following board ids and this is ambiguous/
     end
   end
 
@@ -796,7 +796,7 @@ describe ProjectConfig do
       it 'logs its progress through the load and attach phases' do
         loaded_config.issues
         expect(exporter.file_system.log_messages).to include(
-          a_string_matching(%r{\[diag\] Loading issues from .*sample_issues}),
+          a_string_matching(/\[diag\] Loading issues from .*sample_issues/),
           '[diag] Loaded 6 issues from disk',
           '[diag] Starting attach phase',
           '[diag] Attach phase complete',

@@ -280,11 +280,11 @@ end
 # 2024-01-01T12:34:56.789+00:00
 # 2024-01-01T12:34:56+00:00
 def to_time input
-  regex = %r{
+  regex = /
     ^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})
     (?<remainder>T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?<fraction>\.\d+)?
     \s*(?<offset>[+-]\d{2}:?\d{2})?)?$
-  }x
+  /x
   matches = input.match regex
   raise "Can't parse string: #{input.inspect}" unless matches
 
