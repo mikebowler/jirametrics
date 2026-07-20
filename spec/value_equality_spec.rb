@@ -9,14 +9,14 @@ describe ValueEquality do
     stub_const('TestValueEquality', Class.new do
       include ValueEquality
 
-      def initialize a, b
-        @a = a
-        @b = b
+      def initialize first, second
+        @first = first
+        @second = second
       end
     end)
 
     stub_const('TestValueEqualityWithIgnore', Class.new(TestValueEquality) do
-      def value_equality_ignored_variables = [:@b]
+      def value_equality_ignored_variables = [:@second]
     end)
   end
 

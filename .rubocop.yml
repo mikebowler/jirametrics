@@ -25,6 +25,16 @@ Style/ArgumentsForwarding:
 Lint/UnusedMethodArgument:
   AllowUnusedKeywordArguments: true
 
+# x and y are coordinate names in our trend/line math, where single letters read clearest and match
+# the formulae they implement. Allow them alongside the cop's default short-name allowlist.
+inherit_mode:
+  merge:
+    - AllowedNames
+Naming/MethodParameterName:
+  AllowedNames:
+    - x
+    - y
+
 Layout/FirstArrayElementIndentation:
   Enabled: false
 
