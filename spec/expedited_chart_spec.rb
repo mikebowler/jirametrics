@@ -59,9 +59,15 @@ describe ExpeditedChart do
       ]
     end
 
-    it 'ignores an expedite that started and stopped outside the date range' do
+    it 'ignores an expedite that started and stopped before the date range' do
       add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2020-01-01')
       add_mock_change(issue: issue1, field: 'priority', value: '', time: '2020-01-02')
+      expect(chart.prepare_expedite_data(issue1)).to be_empty
+    end
+
+    it 'ignores an expedite that started and stopped after the date range' do
+      add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2022-02-01')
+      add_mock_change(issue: issue1, field: 'priority', value: '', time: '2022-02-15')
       expect(chart.prepare_expedite_data(issue1)).to be_empty
     end
 
@@ -71,6 +77,34 @@ describe ExpeditedChart do
       expect(chart.prepare_expedite_data(issue1)).to eq [
         [to_date('2020-01-01'), :expedite_start],
         [to_date('2023-01-02'), :expedite_stop]
+      ]
+    end
+
+    it 'includes an expedite that started inside the range and ended after it' do
+      add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2022-01-15')
+      add_mock_change(issue: issue1, field: 'priority', value: '', time: '2022-02-15')
+      expect(chart.prepare_expedite_data(issue1)).to eq [
+        [to_date('2022-01-15'), :expedite_start],
+        [to_date('2022-02-15'), :expedite_stop]
+      ]
+    end
+
+    it 'includes an expedite that started before the range and ended inside it' do
+      add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2021-12-15')
+      add_mock_change(issue: issue1, field: 'priority', value: '', time: '2022-01-15')
+      expect(chart.prepare_expedite_data(issue1)).to eq [
+        [to_date('2021-12-15'), :expedite_start],
+        [to_date('2022-01-15'), :expedite_stop]
+      ]
+    end
+
+    it 'ignores non-priority changes between an expedite start and stop' do
+      add_mock_change(issue: issue1, field: 'priority', value: 'expedite', time: '2022-01-05')
+      add_mock_change(issue: issue1, field: 'Flagged', value: 'Blocked', time: '2022-01-10')
+      add_mock_change(issue: issue1, field: 'priority', value: '', time: '2022-01-15')
+      expect(chart.prepare_expedite_data(issue1)).to eq [
+        [to_date('2022-01-05'), :expedite_start],
+        [to_date('2022-01-15'), :expedite_stop]
       ]
     end
   end

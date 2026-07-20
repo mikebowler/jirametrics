@@ -67,12 +67,7 @@ class ExpeditedChart < ChartBase
       if expedited_priority_names.include? change.value
         expedite_start = change.time.to_date
       elsif expedite_start
-        start_date = expedite_start.to_date
-        stop_date = change.time.to_date
-
-        if date_range.include?(start_date) || date_range.include?(stop_date) ||
-           (start_date < date_range.begin && stop_date > date_range.end)
-
+        if expedite_visible?(expedite_start, change.time.to_date)
           result << [expedite_start, :expedite_start]
           result << [change.time.to_date, :expedite_stop]
         end
@@ -83,6 +78,13 @@ class ExpeditedChart < ChartBase
     # If expedite_start is still set then we never ended.
     result << [expedite_start, :expedite_start] if expedite_start
     result
+  end
+
+  # True when an expedite span overlaps the chart's date range: either endpoint falls inside it, or it
+  # starts before and ends after (spanning the whole range).
+  def expedite_visible? start_date, stop_date
+    date_range.include?(start_date) || date_range.include?(stop_date) ||
+      (start_date < date_range.begin && stop_date > date_range.end)
   end
 
   def find_expedited_issues
