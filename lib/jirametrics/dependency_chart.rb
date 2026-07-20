@@ -192,7 +192,7 @@ class DependencyChart < ChartBase
       stdin.close
       return stdout.read
     end
-  rescue
+  rescue # rubocop:disable Style/RescueStandardError
     message = 'Unable to generate the dependency chart because graphviz could not be found in the path.'
     file_system.log message, also_write_to_stderr: true
     message
