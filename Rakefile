@@ -4,8 +4,9 @@ require 'rspec/core/rake_task'
 
 Dir.glob('tasks/*.rake').each { |f| load f }
 
-task default: %i[test_js spec]
-task test: %i[test_js spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
+task default: %i[test_js spec check_confidentiality]
+# Aliasing because it's easier than teaching my fingers to not type 'test'
+task test: %i[test_js spec check_confidentiality]
 
 task :initialize_config do # rubocop:disable Rake/Desc
   # Force lib onto the load path to match how it would run when packaged as a gem
