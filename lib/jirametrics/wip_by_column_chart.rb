@@ -7,7 +7,8 @@ class WipByColumnChart < ChartBase
 
   ColumnStats = Struct.new(:name, :min_wip_limit, :max_wip_limit, :wip_history, keyword_init: true)
 
-  def initialize block
+  # Long only because of the inline description_text heredoc and one-time setup; splitting wouldn't help.
+  def initialize block # rubocop:disable Metrics/MethodLength
     super()
     header_text 'WIP by column'
     description_text <<-HTML

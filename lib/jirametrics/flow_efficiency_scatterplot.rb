@@ -7,7 +7,8 @@ class FlowEfficiencyScatterplot < ChartBase
 
   attr_accessor :possible_statuses
 
-  def initialize block
+  # Long only because of the inline description_text heredoc and one-time setup; splitting wouldn't help.
+  def initialize block # rubocop:disable Metrics/MethodLength
     super()
 
     header_text 'Flow Efficiency'

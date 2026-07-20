@@ -67,7 +67,8 @@ end
 # can reference them by name (in the blocked_statuses/stalled_statuses settings) and by id (in
 # add_mock_change value_ids). Pass a project_config when the surrounding spec needs to share it;
 # otherwise a MockFileSystem-backed one is built.
-def board_with_blocked_stalled_statuses project_config: nil
+# A flat block of fixture setup; splitting it into helpers wouldn't make the test data any clearer.
+def board_with_blocked_stalled_statuses project_config: nil # rubocop:disable Metrics/MethodLength
   board = sample_board
   board.project_config = project_config || ProjectConfig.new(
     exporter: Exporter.new(file_system: MockFileSystem.new), target_path: 'spec/testdata/',

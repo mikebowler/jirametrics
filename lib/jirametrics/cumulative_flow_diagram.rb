@@ -35,7 +35,8 @@ class CumulativeFlowDiagram < ChartBase
   end
   private_constant :CfdColumnRules
 
-  def initialize block
+  # Long only because of the inline description_text heredoc and one-time setup; splitting wouldn't help.
+  def initialize block # rubocop:disable Metrics/MethodLength
     super()
     header_text 'Cumulative Flow Diagram'
     description_text <<~HTML

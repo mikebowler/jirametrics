@@ -39,7 +39,7 @@ class AtlassianDocumentFormat
   # Flat node-type dispatch: ~25 trivial branches mapping an ADF node type to its [prefix, suffix]
   # pair (adf_node_render does the recursion). The complexity here is breadth, not depth — a lookup
   # table would only trade a scannable case for a hash plus indirection, so we keep the case.
-  def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+  def adf_node_to_html node # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity, Metrics/MethodLength
     adf_node_render(node) do |n|
       node_attrs = n['attrs']
       case n['type']

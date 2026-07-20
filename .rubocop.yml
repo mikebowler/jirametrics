@@ -7,6 +7,8 @@ AllCops:
   NewCops: enable
   TargetRubyVersion: 3.4
 
+# Early-Ruby rule: leave off optional syntax unless it's needed to remove ambiguity, so we keep
+# paren-less method definitions (def foo param).
 Style/MethodDefParentheses:
   Enabled: false
 
@@ -35,41 +37,8 @@ Naming/MethodParameterName:
     - x
     - y
 
-Layout/FirstArrayElementIndentation:
-  Enabled: false
-
-Layout/MultilineOperationIndentation:
-  Enabled: false
-
-Metrics/BlockLength:
-  Enabled: false
-
-Metrics/MethodLength:
-  Enabled: false
-
-Metrics/AbcSize:
-  Enabled: false
-
-Style/Documentation:
-  Enabled: false
-
 # We intentionally group small, tightly-related classes/modules in a single file.
 Style/OneClassPerFile:
-  Enabled: false
-
-Layout/LineEndStringConcatenationIndentation:
-  Enabled: false
-
-Style/RegexpLiteral:
-  Enabled: false
-
-Style/PerlBackrefs:
-  Enabled: false
-
-Style/SymbolProc:
-  Enabled: false
-
-Style/ConditionalAssignment:
   Enabled: false
 
 # Although I generally agree that these are a bad practice, we're making an exception in order
@@ -77,53 +46,87 @@ Style/ConditionalAssignment:
 Style/ClassVars:
   Enabled: false
 
-Metrics/ClassLength:
+# We don't require a doc comment on every class/module: a mandatory comment would mostly restate an
+# already-clear class name (against our why-not-what rule) and fire on tiny Structs. Key classes get
+# documented deliberately (see the architecture doc), not by fiat.
+Style/Documentation:
   Enabled: false
 
-Layout/ArgumentAlignment:
+# We like the `x = if ... end` idiom, but the cop's autocorrect (and the EndAlignment reflow it
+# needs) mangles branches that contain comments, so we don't enforce it across the codebase.
+Style/ConditionalAssignment:
   Enabled: false
 
-Layout/ParameterAlignment:
+# Keep $1/$2 for now rather than the verbose ::Regexp.last_match the autocorrect produces. The real
+# modernization is named captures, tracked separately, so leave the cop off until that's done.
+Style/PerlBackrefs:
   Enabled: false
 
-Layout/BlockAlignment:
-  Enabled: false
-
-Layout/MultilineHashBraceLayout:
-  Enabled: false
-
-Layout/MultilineMethodCallIndentation:
-  Enabled: false
-
-Layout/FirstHashElementIndentation:
-  Enabled: false
-
-Layout/HashAlignment:
-  Enabled: false
-
-Layout/ArrayAlignment:
-  Enabled: false
-
-# Same reason as the alignment cops above: we line columns up by hand (e.g. in test-data tables)
-# because aligned columns read better, and that needs spacing these cops would strip.
-Layout/ExtraSpacing:
-  Enabled: false
-
-Layout/SpaceInsideArrayLiteralBrackets:
-  Enabled: false
-  
-Metrics/ParameterLists:
-  Enabled: false
-
+# We write the inner call paren-less -- foo(bar baz), not foo(bar(baz)) -- following our usual
+# "leave off optional syntax" rule, which this cop would fight.
 Style/NestedParenthesizedCalls:
   Enabled: false
 
+# "A method should fit on screen without scrolling." Subjective, so we set a generous ceiling
+# rather than the default 10.
+Metrics/MethodLength:
+  Max: 40
+
+# The most valuable size metric -- it catches methods that do a lot without much branching, which the
+# complexity cops miss -- but ~125 methods exceed it, a burndown we've deferred and track separately.
+# Off until we work through it.
+Metrics/AbcSize:
+  Enabled: false
+
+# Only count positional parameters. A method with many named keyword arguments (our DSL/config style)
+# is self-documenting at the call site, so keyword args don't count toward the limit.
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+# Off: a cohesive class (e.g. Issue) belongs in one place even when it's large. We fundamentally
+# disagree with splitting a class across files just to satisfy a line count.
+Metrics/ClassLength:
+  Enabled: false
+
+# Off: our config-block DSL and chart-rendering blocks are legitimately long; capping block length
+# would fight that style.
+Metrics/BlockLength:
+  Enabled: false
+
+# We lay code out by hand -- lining up columns in data tables, choosing our own multiline
+# indentation -- because it reads better than the machine-enforced version. So we turn off the
+# Layout cops that would fight that. Trade-off: less machine-enforced consistency, accepted for
+# readability.
+Layout/ExtraSpacing:
+  Enabled: false
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
+Layout/FirstArrayElementIndentation:
+  Enabled: false
+Layout/FirstHashElementIndentation:
+  Enabled: false
+Layout/HashAlignment:
+  Enabled: false
+Layout/ArrayAlignment:
+  Enabled: false
+Layout/ArgumentAlignment:
+  Enabled: false
+Layout/ParameterAlignment:
+  Enabled: false
+Layout/BlockAlignment:
+  Enabled: false
 Layout/EndAlignment:
   Enabled: false
-
 Layout/CaseIndentation:
   Enabled: false
-
+Layout/MultilineHashBraceLayout:
+  Enabled: false
+Layout/MultilineMethodCallIndentation:
+  Enabled: false
+Layout/MultilineOperationIndentation:
+  Enabled: false
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: false
 Layout/LineContinuationLeadingSpace:
   Enabled: false
 
@@ -136,14 +139,16 @@ Lint/NonAtomicFileOperation:
 RSpec/IndexedLet:
   Enabled: false
 
+# Behaviour tests often need substantial setup and several related assertions, so we don't cap
+# example length.
 RSpec/ExampleLength:
   Enabled: false
 
+# We group related assertions in one example with aggregate_failures rather than splitting into
+# many single-assertion examples.
 RSpec/MultipleExpectations:
   Enabled: false
 
+# Some specs legitimately need several let helpers to build a realistic fixture.
 RSpec/MultipleMemoizedHelpers:
-  Enabled: false
-  
-Performance/ChainArrayAllocation:
   Enabled: false

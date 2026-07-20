@@ -265,14 +265,17 @@ class McpServer
       filter = McpServer::HistoryFilter.from(**history_args)
 
       rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
-        build_row(issue, name, project_data, min_age_days, current_status, current_column, filter)
+        build_row(
+          issue: issue, project_name: name, project_data: project_data, min_age_days: min_age_days,
+          current_status: current_status, current_column: current_column, filter: filter
+        )
       end
       rows.sort_by! { |r| -r[:age_days] }
 
       McpServer.render_rows(rows, empty: 'No aging work found.') { |r| format_line(r) }
     end
 
-    def self.build_row issue, project_name, project_data, min_age_days, current_status, current_column, filter
+    def self.build_row issue:, project_name:, project_data:, min_age_days:, current_status:, current_column:, filter:
       started, stopped = issue.started_stopped_times
       return nil unless started && !stopped
       return nil unless McpServer.matches_current_state?(issue, current_status, current_column)
@@ -333,14 +336,19 @@ class McpServer
       filter = McpServer::HistoryFilter.from(**history_args)
 
       rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
-        build_row(issue, name, project_data, days_back, completed_status, completed_resolution, filter)
+        build_row(
+          issue: issue, project_name: name, project_data: project_data, days_back: days_back,
+          completed_status: completed_status, completed_resolution: completed_resolution, filter: filter
+        )
       end
       rows.sort_by! { |r| -r[:completed_date].to_time.to_i }
 
       McpServer.render_rows(rows, empty: 'No completed work found.') { |r| format_line(r) }
     end
 
-    def self.build_row issue, project_name, project_data, days_back, completed_status, completed_resolution, filter
+    def self.build_row(
+      issue:, project_name:, project_data:, days_back:, completed_status:, completed_resolution:, filter:
+    )
       started, stopped = issue.started_stopped_times
       return nil unless stopped
 
@@ -416,14 +424,17 @@ class McpServer
       filter = McpServer::HistoryFilter.from(**history_args)
 
       rows = McpServer.collect_rows(server_context, project) do |issue, name, project_data|
-        build_row(issue, name, project_data, current_status, current_column, filter)
+        build_row(
+          issue: issue, project_name: name, project_data: project_data,
+          current_status: current_status, current_column: current_column, filter: filter
+        )
       end
       rows.sort_by! { |r| r[:created] }
 
       McpServer.render_rows(rows, empty: 'No unstarted work found.') { |r| format_line(r) }
     end
 
-    def self.build_row issue, project_name, project_data, current_status, current_column, filter
+    def self.build_row issue:, project_name:, project_data:, current_status:, current_column:, filter:
       started, stopped = issue.started_stopped_times
       return nil if started || stopped
       return nil unless McpServer.matches_current_state?(issue, current_status, current_column)
