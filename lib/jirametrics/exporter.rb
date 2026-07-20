@@ -78,12 +78,7 @@ class Exporter
       project.evaluate_next_level
 
       project.run load_only: true
-      project.issues.each do |issue|
-        selected << [project, issue] if key == issue.key
-        issue.subtasks.each do |subtask|
-          selected << [project, subtask] if key == subtask.key
-        end
-      end
+      selected.concat matching_issues_in(project, key)
     rescue => e
       # This happens when we're attempting to load an aggregated project because it hasn't been
       # properly initialized. Since we don't care about aggregated projects, we just ignore it.
@@ -99,6 +94,17 @@ class Exporter
         file_system.log issue.dump, also_write_to_stderr: true
       end
     end
+  end
+
+  def matching_issues_in project, key
+    matches = []
+    project.issues.each do |issue|
+      matches << [project, issue] if key == issue.key
+      issue.subtasks.each do |subtask|
+        matches << [project, subtask] if key == subtask.key
+      end
+    end
+    matches
   end
 
   def stitch stitch_file
