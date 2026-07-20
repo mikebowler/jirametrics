@@ -244,16 +244,17 @@ class Downloader
     # Only use the saved metadata if the version number is the same one that we're currently using.
     # If the cached data is in an older format then we're going to throw most of it away.
     @cached_data_format_is_current = (hash['version'] || 0) == CURRENT_METADATA_VERSION
-    if @cached_data_format_is_current
-      hash.each do |key, value|
-        value = Date.parse(value) if value.is_a?(String) && value =~ /^\d{4}-\d{2}-\d{2}$/
-        @metadata[key] = value
-      end
-
-    end
+    load_cached_metadata(hash) if @cached_data_format_is_current
 
     # Even if this is the old format, we want to obey this one tag
     @metadata['no-download'] = hash['no-download'] if hash['no-download']
+  end
+
+  def load_cached_metadata hash
+    hash.each do |key, value|
+      value = Date.parse(value) if value.is_a?(String) && value =~ /^\d{4}-\d{2}-\d{2}$/
+      @metadata[key] = value
+    end
   end
 
   def timezone_offset
