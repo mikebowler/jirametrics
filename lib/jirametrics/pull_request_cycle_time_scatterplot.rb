@@ -76,13 +76,17 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
   def lines_changed_text pull_request
     return '' unless pull_request.changed_files
 
+    summary = additions_deletions_summary pull_request
+    " | Lines changed: [#{summary}], Files changed: #{to_human_readable pull_request.changed_files}"
+  end
+
+  # The "+10 -4" bit: each side only appears when non-zero, joined by a space only when both do.
+  def additions_deletions_summary pull_request
     additions = pull_request.additions || 0
     deletions = pull_request.deletions || 0
-    text = +' | Lines changed: ['
-    text << "+#{to_human_readable additions}" unless additions.zero?
-    text << ' ' if additions != 0 && deletions != 0
-    text << "-#{to_human_readable deletions}" unless deletions.zero?
-    text << "], Files changed: #{to_human_readable pull_request.changed_files}"
-    text
+    parts = []
+    parts << "+#{to_human_readable additions}" unless additions.zero?
+    parts << "-#{to_human_readable deletions}" unless deletions.zero?
+    parts.join(' ')
   end
 end

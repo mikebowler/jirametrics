@@ -19,6 +19,38 @@ describe PullRequestCycleTimeScatterplot do
     GroupingRules.new.tap { |r| r.label = 'my-repo' }
   end
 
+  describe '#lines_changed_text' do
+    def pr_with(additions:, deletions:, changed_files:)
+      PullRequest.new(raw: {
+        'additions' => additions, 'deletions' => deletions, 'changed_files' => changed_files
+      })
+    end
+
+    it 'is empty when the PR has no changed-files data' do
+      expect(chart.lines_changed_text(pr_with(additions: 5, deletions: 3, changed_files: nil))).to eq ''
+    end
+
+    it 'shows additions, deletions, and files changed' do
+      expect(chart.lines_changed_text(pr_with(additions: 10, deletions: 4, changed_files: 3)))
+        .to eq ' | Lines changed: [+10 -4], Files changed: 3'
+    end
+
+    it 'omits deletions and the separator when there are none' do
+      expect(chart.lines_changed_text(pr_with(additions: 10, deletions: 0, changed_files: 2)))
+        .to eq ' | Lines changed: [+10], Files changed: 2'
+    end
+
+    it 'omits additions when there are none' do
+      expect(chart.lines_changed_text(pr_with(additions: 0, deletions: 4, changed_files: 2)))
+        .to eq ' | Lines changed: [-4], Files changed: 2'
+    end
+
+    it 'shows empty brackets when nothing changed but files are reported' do
+      expect(chart.lines_changed_text(pr_with(additions: 0, deletions: 0, changed_files: 1)))
+        .to eq ' | Lines changed: [], Files changed: 1'
+    end
+  end
+
   describe '#cycletime_unit' do
     it 'defaults to days' do
       expect(chart.y_axis_title).to eq 'Cycle time in days'
