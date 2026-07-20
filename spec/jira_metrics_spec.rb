@@ -19,6 +19,14 @@ describe JiraMetrics do
       expect(logfile.string).to be_empty
     end
 
+    it 'falls back to the Exporter instance file system when none is given' do
+      allow(Exporter).to receive(:instance).and_return(instance_double(Exporter, file_system: file_system))
+      exception = RuntimeError.new('boom')
+      exception.set_backtrace(['lib/foo.rb:10'])
+      described_class.log_uncaught_exception exception
+      expect(logfile.string).to include('RuntimeError: boom')
+    end
+
     it 'does nothing when logfile is $stdout' do
       file_system.logfile = $stdout
       exception = RuntimeError.new('boom')

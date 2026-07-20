@@ -108,11 +108,15 @@ class JiraMetrics < Thor
       file_system ||= Exporter.instance.file_system
       return if file_system.logfile == $stdout
 
-      file_system.logfile.puts "#{exception.class}: #{exception.message}"
-      exception.backtrace&.each { |line| file_system.logfile.puts "\t#{line}" }
+      write_exception_to_logfile file_system.logfile, exception
     rescue StandardError
       # Exporter may not be initialized, or the logfile may already be closed
     end
+  end
+
+  def self.write_exception_to_logfile logfile, exception
+    logfile.puts "#{exception.class}: #{exception.message}"
+    exception.backtrace&.each { |line| logfile.puts "\t#{line}" }
   end
 
   at_exit { JiraMetrics.log_uncaught_exception $ERROR_INFO }
