@@ -378,18 +378,20 @@ class DownloaderForCloud < Downloader
     parent_key = issue.parent_key(project_config: @download_config.project_config)
     keys << parent_key if parent_key
 
-    issue.raw['fields']['subtasks']&.each do |raw_subtask|
-      keys << raw_subtask['key']
-    end
+    issue.raw['fields']['subtasks']&.each { |raw_subtask| keys << raw_subtask['key'] }
+    add_linked_issue_keys issue, keys
 
+    keys
+  end
+
+  # Add the keys of issues linked to this one, skipping clone links (a clone isn't a dependency).
+  def add_linked_issue_keys issue, keys
     issue.raw['fields']['issuelinks']&.each do |link|
       next if link['type']['name'] == 'Cloners'
 
       linked = link['inwardIssue'] || link['outwardIssue']
       keys << linked['key'] if linked
     end
-
-    keys
   end
 
   # We only follow links one hop out from the primary (board) issues. If a related issue
