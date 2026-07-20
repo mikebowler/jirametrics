@@ -68,42 +68,43 @@ class TimeBasedHistogram < ChartBase
     return {} if histogram_data.empty?
 
     total_values = histogram_data.values.sum
+    min, max = histogram_data.keys.minmax
+    {
+      average: average_for(histogram_data, total_values),
+      mode: modes_for(histogram_data),
+      min: min,
+      max: max,
+      percentiles: percentiles_for(histogram_data, percentiles, total_values)
+    }
+  end
 
-    # Calculate the average
+  def average_for histogram_data, total_values
+    return 0 if total_values.zero?
+
     weighted_sum = histogram_data.reduce(0) { |sum, (value, frequency)| sum + (value * frequency) }
-    average = total_values.zero? ? 0 : weighted_sum.to_f / total_values
+    weighted_sum.to_f / total_values
+  end
 
-    # Find the mode (or modes!) and the spread of the distribution
-    sorted_histogram = histogram_data.sort_by { |_value, frequency| frequency }
-    max_freq = sorted_histogram[-1][1]
-    mode = sorted_histogram.select { |_v, f| f == max_freq }
+  # Every value that ties for the highest frequency, so a flat or multi-modal distribution returns them all.
+  def modes_for histogram_data
+    sorted_by_frequency = histogram_data.sort_by { |_value, frequency| frequency }
+    max_frequency = sorted_by_frequency[-1][1]
+    sorted_by_frequency.select { |_value, frequency| frequency == max_frequency }.collect(&:first).sort
+  end
 
-    minmax = histogram_data.keys.minmax
-
-    # Calculate percentiles
+  def percentiles_for histogram_data, percentiles, total_values
     sorted_values = histogram_data.keys.sort
     cumulative_counts = {}
     cumulative_sum = 0
-
     sorted_values.each do |value|
       cumulative_sum += histogram_data[value]
       cumulative_counts[value] = cumulative_sum
     end
 
-    percentile_results = {}
-    percentiles.each do |percentile|
+    percentiles.to_h do |percentile|
       rank = (percentile / 100.0) * total_values
-      percentile_value = sorted_values.find { |value| cumulative_counts[value] >= rank }
-      percentile_results[percentile] = percentile_value
+      [percentile, sorted_values.find { |value| cumulative_counts[value] >= rank }]
     end
-
-    {
-      average: average,
-      mode: mode.collect(&:first).sort,
-      min: minmax[0],
-      max: minmax[1],
-      percentiles: percentile_results
-    }
   end
 
   def sort_items items
