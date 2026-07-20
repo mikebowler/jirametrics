@@ -40,20 +40,28 @@ class DailyWipByBlockedStalledChart < DailyWipChart
 
   def default_grouping_rules issue:, rules:
     started, stopped = issue.started_stopped_times
-    stopped_date = stopped&.to_date
     started_date = started&.to_date
+    stopped_date = stopped&.to_date
 
     date = rules.current_date
     change = issue.blocked_stalled_by_date(date_range: date..date, chart_end_time: time_range.end)[date]
-    stopped_today = stopped_date == rules.current_date
 
-    days = nil
-    if started_date && stopped_date
-      days = (stopped_date - started_date).to_i + 1 # cycletime
-    elsif started_date
-      days = (time_range.end.to_date - started_date).to_i + 1 # age
-    end
+    assign_group_rule(
+      rules, started: started, stopped_today: stopped_date == date, change: change,
+      days: days_between(started_date, stopped_date)
+    )
+  end
 
+  # The issue's cycle time when it has finished, its current age when it's still going, or nil when we
+  # don't even know when it started.
+  def days_between started_date, stopped_date
+    return (stopped_date - started_date).to_i + 1 if started_date && stopped_date
+    return (time_range.end.to_date - started_date).to_i + 1 if started_date
+
+    nil
+  end
+
+  def assign_group_rule rules, started:, stopped_today:, change:, days:
     if stopped_today && started.nil?
       @has_completed_but_not_started = true
       rules.label = 'Completed but not started'
@@ -69,7 +77,14 @@ class DailyWipByBlockedStalledChart < DailyWipChart
       rules.label = 'Start date unknown'
       rules.color = '--body-background'
       rules.group_priority = 4
-    elsif change&.blocked?
+    else
+      assign_in_progress_group_rule(rules, change: change, days: days)
+    end
+  end
+
+  # A started, not-yet-completed issue is grouped by its blocked/stalled state on the day.
+  def assign_in_progress_group_rule rules, change:, days:
+    if change&.blocked?
       rules.label = 'Blocked'
       rules.color = '--blocked-color'
       rules.group_priority = 1
