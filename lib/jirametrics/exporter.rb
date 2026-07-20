@@ -79,7 +79,7 @@ class Exporter
 
       project.run load_only: true
       selected.concat matching_issues_in(project, key)
-    rescue => e
+    rescue => e # rubocop:disable Style/RescueStandardError
       # This happens when we're attempting to load an aggregated project because it hasn't been
       # properly initialized. Since we don't care about aggregated projects, we just ignore it.
       raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'
