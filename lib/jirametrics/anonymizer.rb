@@ -164,7 +164,9 @@ class Anonymizer < ChartBase
     status_name_hash
   end
 
-  def anonymize_issue_statuses
+  def anonymize_issue_statuses # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    # Complexity left as-is while this feature is parked (it's disabled in #run -- see the TODO there);
+    # it'll be finished and decomposed when we pick it up.
     @file_system.log 'Anonymizing issue statuses and status categories'
     status_name_hash = build_status_name_hash
 
