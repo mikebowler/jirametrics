@@ -199,27 +199,25 @@ class GithubGateway
       unless status.success?
         error_message = "  GitHub CLI command failed for #{@repo} " \
                         "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
-        if attempts < MAX_RETRIES && transient_error?(stderr)
+        # stderr is a String (from Open3.capture3), so this include? is String#include? — a substring
+        # match ("does the error text contain this phrase?"), not Array membership. Style/ArrayIntersect
+        # can't tell the two apart; its `.intersect?(stderr)` rewrite would be an exact-equality check
+        # that never matches, silently killing the retry-on-transient-error logic.
+        # rubocop:disable Style/ArrayIntersect
+        if attempts < MAX_RETRIES && TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) }
           delay = 2**attempts
           @file_system.log error_message
           @file_system.log "  Transient error detected. Retrying in #{delay}s..."
           sleep delay
           next
         end
+        # rubocop:enable Style/ArrayIntersect
         @file_system.warning error_message
         raise "GitHub CLI command failed for #{@repo}: #{stderr}"
       end
 
       return parse_command_result(stdout)
     end
-  end
-
-  def transient_error? stderr
-    # stderr is a String (from Open3.capture3), so this include? is String#include? — a substring
-    # match ("does the error text contain this phrase?"), not Array membership. Style/ArrayIntersect
-    # can't tell the two apart; its `.intersect?(stderr)` rewrite would be an exact-equality check
-    # that never matches, silently killing the retry-on-transient-error logic.
-    TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) } # rubocop:disable Style/ArrayIntersect
   end
 
   def parse_command_result stdout
