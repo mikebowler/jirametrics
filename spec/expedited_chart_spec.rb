@@ -223,6 +223,55 @@ describe ExpeditedChart do
       })
     end
 
+    it 'returns nil when all of the data is before the date range' do
+      base_date = Date.parse('2020-01-01') # well before the 2022 date range
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
+      expedite_data = [[base_date + 1, :expedite_start], [base_date + 2, :expedite_stop]]
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).to be_nil
+    end
+
+    it 'marks the completion point as expedited when the issue finishes while still expedited' do
+      base_date = Date.parse('2022-01-01')
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 5]]
+      expedite_data = [[base_date + 2, :expedite_start]] # expedite starts and never stops
+
+      result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
+      completed = result[:data].find { |point| point[:title].first.include? 'Completed' }
+      expect(completed[:expedited]).to eq 1
+    end
+
+    it 'does not add a still-ongoing point when the last change is after the date range' do
+      base_date = Date.parse('2022-01-01')
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]] # never stopped
+      expedite_data = [[base_date + 4, :expedite_start], [Date.parse('2022-02-15'), :expedite_stop]]
+
+      result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
+      expect(result[:data].map { |point| point[:title].first }).not_to include(a_string_matching(/Still ongoing/))
+    end
+
+    it 'keeps data whose only point falls exactly on the range start' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      expedite_data = [[Date.parse('2022-01-01'), :expedite_start]] # exactly on date_range.begin
+      expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).not_to be_nil
+    end
+
+    it 'marks the start point as expedited when the expedite began before the issue started' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, Date.parse('2022-01-10'), nil]]
+      expedite_data = [[Date.parse('2022-01-05'), :expedite_start]] # expedite before the started date
+
+      result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
+      started = result[:data].find { |point| point[:title].first.include? 'Started' }
+      expect(started[:expedited]).to eq 1
+    end
+
+    it 'adds a still-ongoing point when the last change is exactly on the range end' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, Date.parse('2022-01-01'), nil]]
+      expedite_data = [[Date.parse('2022-01-30'), :expedite_start]] # exactly on date_range.end
+
+      result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
+      expect(result[:data].map { |point| point[:title].first }).to include(a_string_matching(/Still ongoing/))
+    end
+
     it 'raises an exception for unexpected expedite data' do
       issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
 

@@ -112,8 +112,7 @@ class ExpeditedChart < ChartBase
   end
 
   def make_expedite_lines_data_set issue:, expedite_data:
-    cycletime = issue.board.cycletime
-    started_date, stopped_date = cycletime.started_stopped_dates(issue)
+    started_date, stopped_date = issue.board.cycletime.started_stopped_dates(issue)
 
     expedite_data << [started_date, :issue_started] if started_date
     expedite_data << [stopped_date, :issue_stopped] if stopped_date
@@ -128,37 +127,16 @@ class ExpeditedChart < ChartBase
     expedited = false
 
     expedite_data.each do |time, action|
-      case action
-      when :issue_started
-        data << make_point(issue: issue, time: time, label: 'Started', expedited: expedited)
-        dot_colors << CssVariable['--expedited-chart-dot-issue-started-color']
-        point_styles << 'rect'
-      when :issue_stopped
-        data << make_point(issue: issue, time: time, label: 'Completed', expedited: expedited)
-        dot_colors << CssVariable['--expedited-chart-dot-issue-stopped-color']
-        point_styles << 'rect'
-      when :expedite_start
-        data << make_point(issue: issue, time: time, label: 'Expedited', expedited: true)
-        dot_colors << CssVariable['--expedited-chart-dot-expedite-started-color']
-        point_styles << 'circle'
-        expedited = true
-      when :expedite_stop
-        data << make_point(issue: issue, time: time, label: 'Not expedited', expedited: false)
-        dot_colors << CssVariable['--expedited-chart-dot-expedite-stopped-color']
-        point_styles << 'circle'
-        expedited = false
-      else
-        raise "Unexpected action: #{action}"
-      end
+      point, color, style, expedited = expedite_point(issue, time, action, expedited)
+      data << point
+      dot_colors << color
+      point_styles << style
     end
 
-    unless expedite_data.empty?
-      last_change_time = expedite_data[-1][0].to_date
-      if last_change_time && last_change_time <= date_range.end && stopped_date.nil?
-        data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
-        dot_colors << '' # It won't be visible so it doesn't matter
-        point_styles << 'dash'
-      end
+    if still_ongoing?(expedite_data, stopped_date)
+      data << make_point(issue: issue, time: date_range.end, label: 'Still ongoing', expedited: expedited)
+      dot_colors << '' # It won't be visible so it doesn't matter
+      point_styles << 'dash'
     end
 
     {
@@ -172,5 +150,35 @@ class ExpeditedChart < ChartBase
       pointStyle: point_styles,
       segment: EXPEDITED_SEGMENT
     }
+  end
+
+  # Returns [point, dot_color, point_style, expedited] for one timeline event. The returned expedited
+  # flag carries the (possibly changed) state forward to the next event.
+  def expedite_point issue, time, action, expedited
+    case action
+    when :issue_started
+      [make_point(issue: issue, time: time, label: 'Started', expedited: expedited),
+       CssVariable['--expedited-chart-dot-issue-started-color'], 'rect', expedited]
+    when :issue_stopped
+      [make_point(issue: issue, time: time, label: 'Completed', expedited: expedited),
+       CssVariable['--expedited-chart-dot-issue-stopped-color'], 'rect', expedited]
+    when :expedite_start
+      [make_point(issue: issue, time: time, label: 'Expedited', expedited: true),
+       CssVariable['--expedited-chart-dot-expedite-started-color'], 'circle', true]
+    when :expedite_stop
+      [make_point(issue: issue, time: time, label: 'Not expedited', expedited: false),
+       CssVariable['--expedited-chart-dot-expedite-stopped-color'], 'circle', false]
+    else
+      raise "Unexpected action: #{action}"
+    end
+  end
+
+  # The issue is still expedited/open at the end of the chart: it hasn't stopped and its last recorded
+  # change is on or before the end of the range.
+  def still_ongoing? expedite_data, stopped_date
+    return false if expedite_data.empty?
+
+    last_change_time = expedite_data[-1][0].to_date
+    last_change_time && last_change_time <= date_range.end && stopped_date.nil?
   end
 end
