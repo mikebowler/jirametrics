@@ -110,25 +110,25 @@ class EstimateAccuracyChart < ChartBase
   def split_into_completed_and_aging issues:
     aging_hash = {}
     completed_hash = {}
-
-    issues.each do |issue|
-      cycletime = issue.board.cycletime
-      start_time, stop_time = cycletime.started_stopped_times(issue)
-
-      next unless start_time
-
-      hash = stop_time ? completed_hash : aging_hash
-
-      estimate = @y_axis_block.call issue, start_time
-      cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
-
-      next if estimate.nil?
-
-      key = [estimate, cycle_time]
-      (hash[key] ||= []) << issue
-    end
-
+    issues.each { |issue| bucket_issue_by_estimate issue, completed_hash: completed_hash, aging_hash: aging_hash }
     [completed_hash, aging_hash]
+  end
+
+  def bucket_issue_by_estimate issue, completed_hash:, aging_hash:
+    cycletime = issue.board.cycletime
+    start_time, stop_time = cycletime.started_stopped_times(issue)
+
+    return unless start_time
+
+    hash = stop_time ? completed_hash : aging_hash
+
+    estimate = @y_axis_block.call issue, start_time
+    cycle_time = ((stop_time&.to_date || date_range.end) - start_time.to_date).to_i + 1
+
+    return if estimate.nil?
+
+    key = [estimate, cycle_time]
+    (hash[key] ||= []) << issue
   end
 
   def hash_sorter
