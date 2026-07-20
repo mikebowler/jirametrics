@@ -250,7 +250,7 @@ class DownloaderForCloud < Downloader
 
     loop do
       related_issue_keys = Set.new
-      stale = issue_data_hash.values.reject { |data| data.up_to_date }
+      stale = issue_data_hash.values.reject(&:up_to_date)
       if in_related_phase
         @file_system.diagnostic "Download loop: #{issue_data_hash.size} total known, " \
                                 "#{stale.size} stale, #{checked_for_related.size} link-scanned"

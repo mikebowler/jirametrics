@@ -55,9 +55,7 @@ class ProjectConfig
 
     anonymize_data if @anonymizer_needed
 
-    @file_configs.each do |file_config|
-      file_config.run
-    end
+    @file_configs.each(&:run)
   end
 
   def load_settings

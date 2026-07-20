@@ -310,7 +310,7 @@ describe AgingWorkInProgressChart do
   describe '#trim_board_columns' do
     # Columns are Ready(0), In Progress(1), Review(2), Done(3), [Unmapped](4, the fake last one).
     let(:trim_chart) do
-      build_chart(board: board, issues: []).tap { |chart| chart.determine_board_columns }
+      build_chart(board: board, issues: []).tap(&:determine_board_columns)
     end
 
     def data_sets_for *column_names

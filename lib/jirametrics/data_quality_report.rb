@@ -258,7 +258,7 @@ class DataQualityReport < ChartBase
   end
 
   def scan_for_issues_not_created_in_a_backlog_status entry:, backlog_statuses:
-    creation_change = entry.issue.changes.find { |issue| issue.status? }
+    creation_change = entry.issue.changes.find(&:status?)
 
     return if backlog_statuses.any? { |status| status.id == creation_change.value_id }
 

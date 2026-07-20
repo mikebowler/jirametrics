@@ -38,7 +38,7 @@ class ChartBase
   end
 
   def before_run
-    @call_before_run_procs&.each { |proc| proc.call }
+    @call_before_run_procs&.each(&:call)
   end
 
   def aggregated_project?

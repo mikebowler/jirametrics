@@ -358,11 +358,11 @@ class Issue
   end
 
   def first_resolution
-    @changes.find { |change| change.resolution? }
+    @changes.find(&:resolution?)
   end
 
   def last_resolution
-    @changes.reverse.find { |change| change.resolution? }
+    @changes.reverse.find(&:resolution?)
   end
 
   def assigned_to
@@ -591,7 +591,7 @@ class Issue
   end
 
   def status_changes
-    @changes.select { |change| change.status? }
+    @changes.select(&:status?)
   end
 
   def status_resolution_at_done
@@ -618,7 +618,7 @@ class Issue
     changes.each do |change|
       next unless change.sprint?
 
-      sprint_ids << change.raw['to'].split(/\s*,\s*/).collect { |id| id.to_i }
+      sprint_ids << change.raw['to'].split(/\s*,\s*/).collect(&:to_i)
     end
     sprint_ids.flatten!
 
@@ -626,7 +626,7 @@ class Issue
   end
 
   def started_sprints
-    sprints.reject { |sprint| sprint.future? }
+    sprints.reject(&:future?)
   end
 
   def compact_text text, max: 60
