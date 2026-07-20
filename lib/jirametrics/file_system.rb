@@ -105,12 +105,17 @@ class FileSystem
   # cases where this simple compression will drop the filesize by half.
   def compress node
     if node.is_a? Hash
-      node.reject! { |_key, value| value.nil? || (value.is_a?(Array) && value.empty?) }
+      node.reject! { |_key, value| prunable? value }
       node.each_value { |value| compress value }
     elsif node.is_a? Array
-      node.each { |a| compress a }
+      node.each { |element| compress element }
     end
     node
+  end
+
+  # A value worth dropping from the compressed output: nothing there, or an empty array.
+  def prunable? value
+    value.nil? || (value.is_a?(Array) && value.empty?)
   end
 
   def foreach root, &block
