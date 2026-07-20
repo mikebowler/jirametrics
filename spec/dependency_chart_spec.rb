@@ -189,6 +189,105 @@ describe DependencyChart do
         '}'
       ]
     end
+
+    it 'passes each visible issue to the issue_rules block' do
+      chart.issues = [issue13, issue14, issue15]
+      seen_keys = []
+      chart.issue_rules do |issue, rules|
+        seen_keys << issue.key
+        rules.color = :none
+      end
+      chart.build_dot_graph
+      expect(seen_keys).to include('SP-14', 'SP-15')
+    end
+
+    it 'skips the opposite via links_to_ignore but keeps processing later links' do
+      # Only the outward links merge, so each inward link would survive on its own merits — the only
+      # thing suppressing the inward Blocks link is links_to_ignore, populated when its outward partner
+      # is kept. A visible Cloners link follows it in the list, so the loop must carry on past the
+      # skipped one (next) rather than stopping (break).
+      chart.issues = [issue13, issue14, issue15]
+      chart.link_rules do |link, rules|
+        rules.merge_bidirectional(keep: 'outward') if link.direction == :outward
+      end
+      chart.issue_rules(&empty_issue_rules)
+      graph = chart.build_dot_graph
+      aggregate_failures do
+        expect(graph).to include %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];)
+        expect(graph).not_to include %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];)
+        expect(graph).to include %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];)
+      end
+    end
+  end
+
+  describe '#find_opposite_link' do
+    def link name:, origin:, other:
+      double(name: name, origin: double(key: origin), other_issue: double(key: other))
+    end
+
+    it 'finds the reverse link with the same name, ignoring near-misses' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2')
+      opposite = link(name: 'Blocks', origin: 'SP-2', other: 'SP-1')
+      candidates = [
+        link(name: 'Clones', origin: 'SP-2', other: 'SP-1'), # wrong name
+        link(name: 'Blocks', origin: 'SP-2', other: 'SP-3'), # right origin, wrong other
+        link(name: 'Blocks', origin: 'SP-3', other: 'SP-1'), # wrong origin, right other
+        opposite
+      ]
+      expect(chart.find_opposite_link(target, candidates)).to be opposite
+    end
+
+    it 'returns nil when there is no opposite' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2')
+      expect(chart.find_opposite_link(target, [link(name: 'Blocks', origin: 'SP-2', other: 'SP-3')])).to be_nil
+    end
+  end
+
+  describe '#merge_bidirectional_skip?' do
+    def link name:, origin:, other:, direction:
+      double(name: name, origin: double(key: origin), other_issue: double(key: other), direction: direction)
+    end
+
+    def link_rules merge
+      double(get_merge_bidirectional: merge)
+    end
+
+    it 'keeps the link when no merge is configured, even if an opposite exists' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2', direction: :outward)
+      opposite = link(name: 'Blocks', origin: 'SP-2', other: 'SP-1', direction: :inward)
+      ignore = []
+      expect(chart.merge_bidirectional_skip?(target, link_rules(nil), [target, opposite], ignore)).to be false
+      expect(ignore).to be_empty
+    end
+
+    it 'keeps the link and ignores nothing when there is no matching opposite' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2', direction: :outward)
+      ignore = []
+      expect(chart.merge_bidirectional_skip?(target, link_rules('outward'), [target], ignore)).to be false
+      expect(ignore).to be_empty
+    end
+
+    it 'keeps this link and ignores the opposite when the direction matches' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2', direction: :outward)
+      opposite = link(name: 'Blocks', origin: 'SP-2', other: 'SP-1', direction: :inward)
+      ignore = []
+      result = chart.merge_bidirectional_skip?(target, link_rules('outward'), [target, opposite], ignore)
+      aggregate_failures do
+        expect(result).to be false
+        expect(ignore).to eq [opposite]
+      end
+    end
+
+    it 'skips this link when the direction does not match' do
+      target = link(name: 'Blocks', origin: 'SP-1', other: 'SP-2', direction: :inward)
+      opposite = link(name: 'Blocks', origin: 'SP-2', other: 'SP-1', direction: :outward)
+      ignore = []
+      result = chart.merge_bidirectional_skip?(target, link_rules('outward'), [target, opposite], ignore)
+      aggregate_failures do
+        expect(result).to be true
+        expect(ignore).to be_empty
+      end
+    end
   end
 
   describe '#make_dot_issue' do

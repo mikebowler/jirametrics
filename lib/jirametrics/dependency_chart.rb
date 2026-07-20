@@ -135,32 +135,46 @@ class DependencyChart < ChartBase
       @link_rules_block.call link, link_rules
 
       next if link_rules.ignored?
-
-      if link_rules.get_merge_bidirectional
-        opposite = issue_links.find do |l|
-          l.name == link.name && l.origin.key == link.other_issue.key && l.other_issue.key == link.origin.key
-        end
-        if opposite
-          if link_rules.get_merge_bidirectional.to_sym == link.direction
-            # We keep this one and discard the opposite
-            links_to_ignore << opposite
-          else
-            # We keep the opposite and discard this one
-            next
-          end
-        end
-      end
+      next if merge_bidirectional_skip?(link, link_rules, issue_links, links_to_ignore)
 
       link_graph << make_dot_link(issue_link: link, link_rules: link_rules)
-
       visible_issues[link.origin.key] = link.origin
       visible_issues[link.other_issue.key] = link.other_issue
     end
 
-    dot_graph = []
-    dot_graph << 'digraph mygraph {'
-    dot_graph << 'rankdir=LR'
-    dot_graph << 'bgcolor="transparent"'
+    return nil if visible_issues.empty?
+
+    assemble_dot_graph(visible_issues, link_graph)
+  end
+
+  # For a bidirectional-merge link, collapses the pair into one. When this link is the one to keep, its
+  # opposite is added to links_to_ignore; returns true when this link should be skipped in favour of its
+  # opposite. Returns false (keep this link) when there's no merge or no matching opposite.
+  def merge_bidirectional_skip? link, link_rules, issue_links, links_to_ignore
+    merge_direction = link_rules.get_merge_bidirectional
+    return false unless merge_direction
+
+    opposite = find_opposite_link(link, issue_links)
+    return false unless opposite
+
+    if merge_direction.to_sym == link.direction
+      links_to_ignore << opposite # keep this one, discard the opposite
+      false
+    else
+      true # keep the opposite, skip this one
+    end
+  end
+
+  def find_opposite_link link, issue_links
+    issue_links.find do |candidate|
+      candidate.name == link.name &&
+        candidate.origin.key == link.other_issue.key &&
+        candidate.other_issue.key == link.origin.key
+    end
+  end
+
+  def assemble_dot_graph visible_issues, link_graph
+    dot_graph = ['digraph mygraph {', 'rankdir=LR', 'bgcolor="transparent"']
 
     # Sort the keys so they are proccessed in a deterministic order.
     visible_issues.values.sort_by(&:key_as_i).each do |issue|
@@ -169,12 +183,7 @@ class DependencyChart < ChartBase
       dot_graph << make_dot_issue(issue: issue, issue_rules: rules)
     end
 
-    dot_graph += link_graph
-    dot_graph << '}'
-
-    return nil if visible_issues.empty?
-
-    dot_graph
+    dot_graph + link_graph + ['}']
   end
 
   def execute_graphviz dot_graph
