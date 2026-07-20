@@ -123,14 +123,17 @@ class JiraGateway
     @jira_email = jira_config['email']
     @jira_api_token = jira_config['api_token']
     @jira_personal_access_token = jira_config['personal_access_token']
+    validate_jira_auth
 
+    @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
+  end
+
+  def validate_jira_auth
     raise 'When specifying an api-token, you must also specify email' if @jira_api_token && !@jira_email
 
     if @jira_api_token && @jira_personal_access_token
       raise "You can't specify both an api-token and a personal-access-token. They don't work together."
     end
-
-    @cookies = (jira_config['cookies'] || []).collect { |key, value| "#{key}=#{value}" }.join(';')
   end
 
   def make_curl_command url:, method: 'GET'
