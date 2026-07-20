@@ -48,22 +48,10 @@ class Anonymizer < ChartBase
     counter = 0
     seen_author_raws = {}.compare_by_identity
     issues.each do |issue|
-      new_key = "ANON-#{counter += 1}"
-
-      issue.raw['key'] = new_key
-      issue.raw['fields']['summary'] = random_phrase
-      issue.raw['fields']['description'] = nil
-      issue.raw['fields']['assignee']['displayName'] = random_name unless issue.raw['fields']['assignee'].nil?
-
-      anonymize_author_raw(issue.raw['fields']['creator'], seen_author_raws)
-
-      issue.changes.each do |change|
-        anonymize_author_raw(change.author_raw, seen_author_raws)
-        if change.comment? || change.description?
-          change.value = nil
-          change.old_value = nil
-        end
-      end
+      issue.raw['key'] = "ANON-#{counter += 1}"
+      anonymize_issue_summary_fields issue
+      anonymize_author_raw issue.raw['fields']['creator'], seen_author_raws
+      anonymize_change_content issue, seen_author_raws
 
       issue.issue_links.each do |link|
         other_issue = link.other_issue
@@ -72,6 +60,24 @@ class Anonymizer < ChartBase
         other_issue.raw['key'] = "ANON-#{counter += 1}"
         other_issue.raw['fields']['summary'] = random_phrase
       end
+    end
+  end
+
+  def anonymize_issue_summary_fields issue
+    issue.raw['fields']['summary'] = random_phrase
+    issue.raw['fields']['description'] = nil
+    return if issue.raw['fields']['assignee'].nil?
+
+    issue.raw['fields']['assignee']['displayName'] = random_name
+  end
+
+  def anonymize_change_content issue, seen_author_raws
+    issue.changes.each do |change|
+      anonymize_author_raw change.author_raw, seen_author_raws
+      next unless change.comment? || change.description?
+
+      change.value = nil
+      change.old_value = nil
     end
   end
 

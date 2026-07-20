@@ -60,6 +60,12 @@ describe Anonymizer do
       end
     end
 
+    it 'defaults to anonymizing every loaded issue when no issues are passed' do
+      expect(anonymizer.issues.map(&:key)).to all(match(/^SP-\d+$/)) # sanity: not yet anonymized
+      anonymizer.anonymize_issue_keys_and_titles
+      expect(anonymizer.issues.map(&:key)).to all(match(/^ANON-\d+$/))
+    end
+
     it 'has changed assigned_to if it was set' do
       issue = anonymizer.project_config.issues.first
       issue.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
