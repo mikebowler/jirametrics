@@ -21,6 +21,21 @@ describe CumulativeFlowDiagram do
     chart
   end
 
+  def chart_with_rules &block
+    block ||= proc {} # no rules block means "use the defaults"
+    c = described_class.new(block)
+    c.file_system = MockFileSystem.new
+    c.file_system.when_loading(
+      file: File.expand_path('./lib/jirametrics/html/cumulative_flow_diagram.erb'),
+      json: :not_mocked
+    )
+    c.board_id = 1
+    c.all_boards = { 1 => board }
+    c.issues = issues
+    c.date_range = Date.parse('2021-06-01')..Date.parse('2021-09-01')
+    c
+  end
+
   describe '#run' do
     it 'renders without error' do
       expect { chart.run }.not_to raise_error
@@ -50,153 +65,138 @@ describe CumulativeFlowDiagram do
       output = chart.run
       expect(output).to include('"reverse":true').or include('reverse: true').or include('reverse:true')
     end
+  end
 
-    describe '#column_rules' do
-      def chart_with_rules &block
-        block ||= proc {} # no rules block means "use the defaults"
-        c = described_class.new(block)
-        c.file_system = MockFileSystem.new
-        c.file_system.when_loading(
-          file: File.expand_path('./lib/jirametrics/html/cumulative_flow_diagram.erb'),
-          json: :not_mocked
-        )
-        c.board_id = 1
-        c.all_boards = { 1 => board }
-        c.issues = issues
-        c.date_range = Date.parse('2021-06-01')..Date.parse('2021-09-01')
-        c
+  describe '#column_rules' do
+    it 'uses a custom colour for the named column' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.color = '#abcdef' if column.name == 'In Progress'
+        end
+      end.run
+      expect(output).to include('#abcdef')
+    end
+
+    it 'excludes an ignored column from the output' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.ignore if column.name == 'Done'
+        end
+      end.run
+      # 'Done' must not appear as a dataset label
+      expect(output).not_to include('"Done"')
+    end
+
+    it 'still includes non-ignored columns when one is ignored' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.ignore if column.name == 'Done'
+        end
+      end.run
+      expect(output).to include('In Progress')
+    end
+
+    it 'uses the custom label in place of the column name' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.label = 'WIP' if column.name == 'In Progress'
+        end
+      end.run
+      aggregate_failures do
+        expect(output).to include('"label":"WIP"')
+        expect(output).not_to include('"label":"In Progress"')
       end
+    end
 
-      it 'uses a custom colour for the named column' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.color = '#abcdef' if column.name == 'In Progress'
-          end
-        end.run
-        expect(output).to include('#abcdef')
+    it 'includes label_hint in the dataset JSON when set' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.label_hint = 'Items actively being worked on' if column.name == 'In Progress'
+        end
+      end.run
+      expect(output).to include('Items actively being worked on')
+    end
+
+    it 'includes the legend hover tooltip plugin when label_hint is used' do
+      output = chart_with_rules do
+        column_rules do |column, rule|
+          rule.label_hint = 'Some hint' if column.name == 'In Progress'
+        end
+      end.run
+      aggregate_failures do
+        expect(output).to include('onHover')
+        expect(output).to include('legendItem')
       end
+    end
+  end
 
-      it 'excludes an ignored column from the output' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.ignore if column.name == 'Done'
-          end
-        end.run
-        # 'Done' must not appear as a dataset label
-        expect(output).not_to include('"Done"')
+  describe '#triangle_color' do
+    it 'defaults to the CSS variable' do
+      output = chart_with_rules.run
+      expect(output).to include('--cfd-triangle-color')
+    end
+
+    it 'uses the configured color' do
+      output = chart_with_rules { triangle_color '#abcdef' }.run
+      expect(output).to include('"#abcdef"')
+    end
+
+    it 'supports a light/dark color pair' do
+      output = chart_with_rules { triangle_color ['#111111', '#eeeeee'] }.run
+      aggregate_failures do
+        expect(output).to include('"#111111"')
+        expect(output).to include('"#eeeeee"')
       end
+    end
+  end
 
-      it 'still includes non-ignored columns when one is ignored' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.ignore if column.name == 'Done'
-          end
-        end.run
-        expect(output).to include('In Progress')
+  describe '#arrival_rate_line_color' do
+    it 'defaults to the CSS variable' do
+      output = chart_with_rules.run
+      expect(output).to include('--cfd-arrival-rate-line-color')
+    end
+
+    it 'uses the configured color' do
+      output = chart_with_rules { arrival_rate_line_color '#112233' }.run
+      expect(output).to include('"#112233"')
+    end
+
+    it 'supports a light/dark color pair' do
+      output = chart_with_rules { arrival_rate_line_color ['#112233', '#aabbcc'] }.run
+      aggregate_failures do
+        expect(output).to include('"#112233"')
+        expect(output).to include('"#aabbcc"')
       end
+    end
 
-      it 'uses the custom label in place of the column name' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.label = 'WIP' if column.name == 'In Progress'
-          end
-        end.run
-        aggregate_failures do
-          expect(output).to include('"label":"WIP"')
-          expect(output).not_to include('"label":"In Progress"')
-        end
+    it 'suppresses the line when nil is passed' do
+      output = chart_with_rules { arrival_rate_line_color nil }.run
+      expect(output).not_to include('--cfd-arrival-rate-line-color')
+    end
+  end
+
+  describe '#departure_rate_line_color' do
+    it 'defaults to the CSS variable' do
+      output = chart_with_rules.run
+      expect(output).to include('--cfd-departure-rate-line-color')
+    end
+
+    it 'uses the configured color' do
+      output = chart_with_rules { departure_rate_line_color '#aabbcc' }.run
+      expect(output).to include('"#aabbcc"')
+    end
+
+    it 'supports a light/dark color pair' do
+      output = chart_with_rules { departure_rate_line_color ['#223344', '#ddeeff'] }.run
+      aggregate_failures do
+        expect(output).to include('"#223344"')
+        expect(output).to include('"#ddeeff"')
       end
+    end
 
-      it 'includes label_hint in the dataset JSON when set' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.label_hint = 'Items actively being worked on' if column.name == 'In Progress'
-          end
-        end.run
-        expect(output).to include('Items actively being worked on')
-      end
-
-      it 'includes the legend hover tooltip plugin when label_hint is used' do
-        output = chart_with_rules do
-          column_rules do |column, rule|
-            rule.label_hint = 'Some hint' if column.name == 'In Progress'
-          end
-        end.run
-        aggregate_failures do
-          expect(output).to include('onHover')
-          expect(output).to include('legendItem')
-        end
-      end
-
-      describe '#triangle_color' do
-        it 'defaults to the CSS variable' do
-          output = chart_with_rules.run
-          expect(output).to include('--cfd-triangle-color')
-        end
-
-        it 'uses the configured color' do
-          output = chart_with_rules { triangle_color '#abcdef' }.run
-          expect(output).to include('"#abcdef"')
-        end
-
-        it 'supports a light/dark color pair' do
-          output = chart_with_rules { triangle_color ['#111111', '#eeeeee'] }.run
-          aggregate_failures do
-            expect(output).to include('"#111111"')
-            expect(output).to include('"#eeeeee"')
-          end
-        end
-      end
-
-      describe '#arrival_rate_line_color' do
-        it 'defaults to the CSS variable' do
-          output = chart_with_rules.run
-          expect(output).to include('--cfd-arrival-rate-line-color')
-        end
-
-        it 'uses the configured color' do
-          output = chart_with_rules { arrival_rate_line_color '#112233' }.run
-          expect(output).to include('"#112233"')
-        end
-
-        it 'supports a light/dark color pair' do
-          output = chart_with_rules { arrival_rate_line_color ['#112233', '#aabbcc'] }.run
-          aggregate_failures do
-            expect(output).to include('"#112233"')
-            expect(output).to include('"#aabbcc"')
-          end
-        end
-
-        it 'suppresses the line when nil is passed' do
-          output = chart_with_rules { arrival_rate_line_color nil }.run
-          expect(output).not_to include('--cfd-arrival-rate-line-color')
-        end
-      end
-
-      describe '#departure_rate_line_color' do
-        it 'defaults to the CSS variable' do
-          output = chart_with_rules.run
-          expect(output).to include('--cfd-departure-rate-line-color')
-        end
-
-        it 'uses the configured color' do
-          output = chart_with_rules { departure_rate_line_color '#aabbcc' }.run
-          expect(output).to include('"#aabbcc"')
-        end
-
-        it 'supports a light/dark color pair' do
-          output = chart_with_rules { departure_rate_line_color ['#223344', '#ddeeff'] }.run
-          aggregate_failures do
-            expect(output).to include('"#223344"')
-            expect(output).to include('"#ddeeff"')
-          end
-        end
-
-        it 'suppresses the line when nil is passed' do
-          output = chart_with_rules { departure_rate_line_color nil }.run
-          expect(output).not_to include('--cfd-departure-rate-line-color')
-        end
-      end
+    it 'suppresses the line when nil is passed' do
+      output = chart_with_rules { departure_rate_line_color nil }.run
+      expect(output).not_to include('--cfd-departure-rate-line-color')
     end
   end
 
