@@ -71,6 +71,23 @@ Style/NestedParenthesizedCalls:
 # rather than the default 10.
 Metrics/MethodLength:
   Max: 40
+  # The examples/ files are copy-me quick-start templates; their flat, self-contained form is the
+  # feature (the docs tell users to read the source and adapt it), so the size/complexity metrics and
+  # the redundant-parens style below don't apply to them. Everything else still lints them.
+  Exclude:
+    - 'lib/jirametrics/examples/**/*'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/jirametrics/examples/**/*'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/jirametrics/examples/**/*'
+
+Style/RedundantParentheses:
+  Exclude:
+    - 'lib/jirametrics/examples/**/*'
 
 # The most valuable size metric -- it catches methods that do a lot without much branching, which the
 # complexity cops miss -- but ~125 methods exceed it, a burndown we've deferred and track separately.
