@@ -4,9 +4,8 @@ require 'rspec/core/rake_task'
 
 Dir.glob('tasks/*.rake').each { |f| load f }
 
-task default: %i[test_js spec check_confidentiality]
-# Aliasing because it's easier than teaching my fingers to not type 'test'
-task test: %i[test_js spec check_confidentiality]
+task default: %i[test_js spec]
+task test: %i[test_js spec] # Aliasing because it's easier than teaching my fingers to not type 'test'
 
 task :initialize_config do # rubocop:disable Rake/Desc
   # Force lib onto the load path to match how it would run when packaged as a gem
@@ -45,6 +44,11 @@ task stitch: [:initialize_config] do
 end
 
 RSpec::Core::RakeTask.new(:spec)
+
+# Hang the confidentiality guard off :spec itself, so it fires however the specs are invoked
+# -- `rake spec` directly, or via `test`/`default` which depend on spec -- rather than only
+# on the aggregate tasks. enhance adds it as a prerequisite of the RSpec-defined task above.
+Rake::Task[:spec].enhance([:check_confidentiality])
 
 RSpec::Core::RakeTask.new(:focus) do |task, _args|
   task.rspec_opts = '--tag focus'
