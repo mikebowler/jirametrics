@@ -57,19 +57,7 @@ class Stitcher < HtmlGenerator
     file_system.load(filename).lines do |line|
       matches = line.match(regex)
       if matches
-        if matches[:seam] == 'start'
-          content = +''
-        else
-          if content.nil? || content.strip.empty?
-            file_system.warning "Seam found with no content in #{filename.inspect}: " \
-              "id=#{matches[:id].strip.inspect}, class=#{matches[:clazz].strip.inspect}, " \
-              "title=#{matches[:title].strip.inspect}"
-          end
-          @all_stitches << Stitcher::StitchContent.new(
-            file: filename, title: matches[:title], type: matches[:type], content: content
-          )
-          content = nil
-        end
+        content = handle_seam matches, filename: filename, content: content
       elsif content
         content << line
       end
@@ -77,5 +65,21 @@ class Stitcher < HtmlGenerator
 
     @loaded_files << filename
     true
+  end
+
+  # Handle one seam marker line, returning the new accumulator state: a fresh buffer for a start
+  # seam, or nil for an end seam (after recording the content collected since the start).
+  def handle_seam matches, filename:, content:
+    return +'' if matches[:seam] == 'start'
+
+    if content.nil? || content.strip.empty?
+      file_system.warning "Seam found with no content in #{filename.inspect}: " \
+        "id=#{matches[:id].strip.inspect}, class=#{matches[:clazz].strip.inspect}, " \
+        "title=#{matches[:title].strip.inspect}"
+    end
+    @all_stitches << Stitcher::StitchContent.new(
+      file: filename, title: matches[:title], type: matches[:type], content: content
+    )
+    nil
   end
 end
