@@ -25,7 +25,10 @@ class BlockedStalledChange
   def blocked_by_status? = !!(@status && @status_is_blocking)
   def stalled_by_status? = !!(@status && !@status_is_blocking)
 
-  def reasons
+  # A flat list of why an item is blocked or stalled: each branch is a single guarded append.
+  # Pulling these apart into helpers would scatter the story across single-use methods without
+  # reading any clearer, so we keep it whole.
+  def reasons # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     result = []
     if blocked?
       result << (@flag_reason ? "Blocked by flag: #{@flag_reason}" : 'Blocked by flag') if @flag
