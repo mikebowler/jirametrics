@@ -139,12 +139,16 @@ class GithubGateway
       # fallback fetches the complete set rather than us caching a partial answer.
       next if commits['totalCount'] && commits['totalCount'] > nodes.size
 
-      messages_by_number[number] = nodes.flat_map do |node|
-        commit = node['commit'] || {}
-        [commit['messageHeadline'], commit['messageBody']].compact
-      end
+      messages_by_number[number] = commit_messages_from(nodes)
     end
     messages_by_number
+  end
+
+  def commit_messages_from nodes
+    nodes.flat_map do |node|
+      commit = node['commit'] || {}
+      [commit['messageHeadline'], commit['messageBody']].compact
+    end
   end
 
   def owner_and_name
