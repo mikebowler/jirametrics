@@ -195,28 +195,34 @@ class GithubGateway
       unless status.success?
         error_message = "  GitHub CLI command failed for #{@repo} " \
                         "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
-        # stderr is a String (from Open3.capture3), so this include? is String#include? — a substring
-        # match ("does the error text contain this phrase?"), not Array membership. Style/ArrayIntersect
-        # can't tell the two apart; its `.intersect?(stderr)` rewrite would be an exact-equality check
-        # that never matches, silently killing the retry-on-transient-error logic.
-        # rubocop:disable Style/ArrayIntersect
-        if attempts < MAX_RETRIES && TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) }
+        if attempts < MAX_RETRIES && transient_error?(stderr)
           delay = 2**attempts
           @file_system.log error_message
           @file_system.log "  Transient error detected. Retrying in #{delay}s..."
           sleep delay
           next
         end
-        # rubocop:enable Style/ArrayIntersect
         @file_system.warning error_message
         raise "GitHub CLI command failed for #{@repo}: #{stderr}"
       end
 
-      result = JSON.parse(stdout)
-      if result.nil? || (result.is_a?(Array) && result.empty?)
-        @file_system.warning "No data was found in GitHub for #{@repo}. Is that what you expected?"
-      end
-      return result
+      return parse_command_result(stdout)
     end
+  end
+
+  # stderr is a String (from Open3.capture3), so this include? is String#include? — a substring
+  # match ("does the error text contain this phrase?"), not Array membership. Style/ArrayIntersect
+  # can't tell the two apart; its `.intersect?(stderr)` rewrite would be an exact-equality check
+  # that never matches, silently killing the retry-on-transient-error logic.
+  def transient_error? stderr
+    TRANSIENT_ERROR_PATTERNS.any? { |pattern| stderr.include?(pattern) } # rubocop:disable Style/ArrayIntersect
+  end
+
+  def parse_command_result stdout
+    result = JSON.parse(stdout)
+    if result.nil? || (result.is_a?(Array) && result.empty?)
+      @file_system.warning "No data was found in GitHub for #{@repo}. Is that what you expected?"
+    end
+    result
   end
 end
