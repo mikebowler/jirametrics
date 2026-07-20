@@ -39,43 +39,18 @@ class AggregateConfig
   end
 
   def include_issues_from project_name
-    project = @project_config.exporter.project_configs.find { |p| p.name == project_name }
-    if project.nil?
-      file_system.warning "Aggregated project #{@project_config.name.inspect} is attempting to load " \
-        "project #{project_name.inspect} but it can't be found. Is it disabled?"
-      return
-    end
-
-    @project_config.jira_url = project.jira_url if @project_config.jira_url.nil?
-    unless @project_config.jira_url == project.jira_url
-      raise 'Not allowed to aggregate projects from different Jira instances: ' \
-        "#{@project_config.jira_url.inspect} and #{project.jira_url.inspect}. For project #{project_name}"
-    end
+    project = find_included_project project_name
+    return if project.nil?
 
     @included_projects << project
-    if project.file_configs.empty?
-      issues = project.issues
-    else
-      issues = project.file_configs.first.issues
-      if project.file_configs.size > 1
-        log 'More than one file section is defined. For the aggregated view, we always use ' \
-          'the first file section'
-      end
-    end
-
+    issues = issues_for project
     if issues.nil?
       file_system.warning "No issues found for #{project_name}"
       return
     end
 
     @project_config.add_issues issues
-
-    # Bring fix versions over
-    project.fix_versions.each do |fix_version|
-      unless @project_config.fix_versions.find { |fv| fv.id == fix_version.id }
-        @project_config.fix_versions << fix_version
-      end
-    end
+    merge_fix_versions_from project
   end
 
   def find_time_range projects:
@@ -93,6 +68,44 @@ class AggregateConfig
   end
 
   private
+
+  # Resolve the named project and confirm it can be aggregated. Returns nil (with a warning) when the
+  # project can't be found; raises when it lives on a different Jira instance than the ones already
+  # included. The first included project's URL seeds the aggregate's URL.
+  def find_included_project project_name
+    project = @project_config.exporter.project_configs.find { |p| p.name == project_name }
+    if project.nil?
+      file_system.warning "Aggregated project #{@project_config.name.inspect} is attempting to load " \
+        "project #{project_name.inspect} but it can't be found. Is it disabled?"
+      return nil
+    end
+
+    @project_config.jira_url = project.jira_url if @project_config.jira_url.nil?
+    unless @project_config.jira_url == project.jira_url
+      raise 'Not allowed to aggregate projects from different Jira instances: ' \
+        "#{@project_config.jira_url.inspect} and #{project.jira_url.inspect}. For project #{project_name}"
+    end
+
+    project
+  end
+
+  def issues_for project
+    return project.issues if project.file_configs.empty?
+
+    if project.file_configs.size > 1
+      file_system.warning 'More than one file section is defined. For the aggregated view, we always use ' \
+        'the first file section'
+    end
+    project.file_configs.first.issues
+  end
+
+  def merge_fix_versions_from project
+    project.fix_versions.each do |fix_version|
+      next if @project_config.fix_versions.find { |fv| fv.id == fix_version.id }
+
+      @project_config.fix_versions << fix_version
+    end
+  end
 
   def file_system
     @project_config.exporter.file_system

@@ -79,6 +79,93 @@ describe AggregateConfig do
       subject.include_issues_from 'solo'
       expect(aggregated_project.issues.collect(&:key)).to eq %w[SP-1]
     end
+
+    # A minimal, already-run included project registered on the exporter, ready to have file sections
+    # or fix versions hung off it. Its own issues are irrelevant to the file-section cases below.
+    def included_project(name)
+      ProjectConfig.new(
+        exporter: exporter, target_path: target_path, jira_config: nil, block: nil, name: name
+      ).tap do |project|
+        exporter.file_system.when_foreach root: target_path, result: []
+        project.file_prefix 'sample'
+        project.run
+        exporter.project_configs << project
+      end
+    end
+
+    def file_section(project, issues:)
+      FileConfig.new(project_config: project, block: nil, issues: issues)
+    end
+
+    it 'pulls issues from the first file section when file sections exist' do
+      project = included_project 'withfile'
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-2', created: '2023-01-01')])
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'withfile'
+      expect(aggregated_project.issues.collect(&:key)).to eq %w[SP-2]
+      expect(exporter.file_system.log_messages).not_to include(
+        a_string_including('More than one file section')
+      )
+    end
+
+    it 'uses the first file section and warns when more than one is defined' do
+      project = included_project 'multifile'
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-2', created: '2023-01-01')])
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-9', created: '2023-01-01')])
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'multifile'
+
+      expect(aggregated_project.issues.collect(&:key)).to eq %w[SP-2]
+      expect(exporter.file_system.log_messages).to include(
+        a_string_including('More than one file section is defined')
+      )
+    end
+
+    it 'warns and adds nothing when the selected issues are nil' do
+      project = included_project 'empty'
+      project.file_configs << file_section(project, issues: nil)
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'empty'
+
+      expect(exporter.file_system.log_messages).to include(
+        a_string_including('No issues found for empty')
+      )
+    end
+
+    it 'brings fix versions over from the included project' do
+      project = included_project 'fv'
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-3', created: '2023-01-01')])
+      project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1')
+      project.fix_versions << FixVersion.new('id' => 2, 'name' => 'v2')
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'fv'
+      expect(aggregated_project.fix_versions.collect(&:id)).to eq [1, 2]
+    end
+
+    it 'does not bring over a fix version already present in the aggregate' do
+      aggregated_project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1')
+      project = included_project 'fv'
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-3', created: '2023-01-01')])
+      project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1-again')
+      project.fix_versions << FixVersion.new('id' => 2, 'name' => 'v2')
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'fv'
+      expect(aggregated_project.fix_versions.collect(&:id)).to eq [1, 2]
+    end
+
+    it 'records the included project' do
+      project = included_project 'tracked'
+      project.file_configs << file_section(project, issues: [empty_issue(key: 'SP-4', created: '2023-01-01')])
+
+      subject = described_class.new project_config: aggregated_project, block: nil
+      subject.include_issues_from 'tracked'
+      expect(subject.included_projects).to eq [project]
+    end
   end
 
   describe '#find_time_range' do
