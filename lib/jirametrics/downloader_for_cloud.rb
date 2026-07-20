@@ -140,27 +140,7 @@ class DownloaderForCloud < Downloader
       next if all_worklogs.size >= total
 
       key = issue_json['key']
-      start_at = all_worklogs.size
-
-      loop do
-        response = @jira_gateway.call_url(
-          relative_url: "/rest/api/3/issue/#{CGI.escape(key)}/worklog?startAt=#{start_at}&maxResults=#{max_results}"
-        )
-
-        worklogs = response['worklogs'] || []
-        all_worklogs.concat(worklogs)
-
-        total = response['total'].to_i
-        log "        #{key} worklogs: page startAt=#{start_at}, " \
-            "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
-        break if all_worklogs.size >= total
-        # Guard against Jira reporting a higher total than it will actually return — seen when
-        # worklogs are deleted or access-restricted after the initial fetch. Without this,
-        # start_at never advances and we loop forever requesting the same empty page.
-        break if worklogs.empty?
-
-        start_at += worklogs.size
-      end
+      fetch_remaining_worklogs key: key, all_worklogs: all_worklogs, max_results: max_results
 
       issue_json['fields']['worklog'] = {
         'startAt' => 0,
@@ -170,6 +150,30 @@ class DownloaderForCloud < Downloader
       }
 
       log "      Enhanced #{key} with #{all_worklogs.size} worklogs"
+    end
+  end
+
+  # Page through the worklogs Jira didn't include inline, appending each page to all_worklogs.
+  def fetch_remaining_worklogs key:, all_worklogs:, max_results:
+    start_at = all_worklogs.size
+    loop do
+      response = @jira_gateway.call_url(
+        relative_url: "/rest/api/3/issue/#{CGI.escape(key)}/worklog?startAt=#{start_at}&maxResults=#{max_results}"
+      )
+
+      worklogs = response['worklogs'] || []
+      all_worklogs.concat(worklogs)
+
+      total = response['total'].to_i
+      log "        #{key} worklogs: page startAt=#{start_at}, " \
+          "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
+      break if all_worklogs.size >= total
+      # Guard against Jira reporting a higher total than it will actually return — seen when
+      # worklogs are deleted or access-restricted after the initial fetch. Without this,
+      # start_at never advances and we loop forever requesting the same empty page.
+      break if worklogs.empty?
+
+      start_at += worklogs.size
     end
   end
 
