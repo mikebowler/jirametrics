@@ -372,7 +372,7 @@ describe GithubGateway do
 
     it 'builds the graphql query from a full repo URL' do
       url_gateway = described_class.new(
-        repo: 'https://github.com/JANA-Technology/Lighthouse-TIMP-Backend.git',
+        repo: 'https://github.com/example-org/example-repo.git',
         project_keys: %w[SP], file_system: file_system
       )
       captured = nil
@@ -389,7 +389,7 @@ describe GithubGateway do
       url_gateway.fetch_pull_requests
 
       aggregate_failures do
-        expect(captured).to include('owner: "JANA-Technology"', 'name: "Lighthouse-TIMP-Backend"')
+        expect(captured).to include('owner: "example-org"', 'name: "example-repo"')
         expect(captured).to include('pr0: pullRequest(number: 43)')
       end
     end
