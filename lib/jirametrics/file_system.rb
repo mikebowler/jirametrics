@@ -2,6 +2,10 @@
 
 require 'json'
 
+# This is the stderr display/logging layer: it writes progress and log output straight to $stderr
+# (see the $stderr.print/.flush calls). That output isn't warnings, so $stderr.puts is intentional
+# throughout rather than warn.
+# rubocop:disable Style/StderrPuts
 class FileSystem
   attr_accessor :logfile, :logfile_name, :log_only
 
@@ -144,3 +148,4 @@ class FileSystem
     log text, also_write_to_stderr: true
   end
 end
+# rubocop:enable Style/StderrPuts
