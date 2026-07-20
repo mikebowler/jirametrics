@@ -93,6 +93,14 @@ Layout/HashAlignment:
 
 Layout/ArrayAlignment:
   Enabled: false
+
+# Same reason as the alignment cops above: we line columns up by hand (e.g. in test-data tables)
+# because aligned columns read better, and that needs spacing these cops would strip.
+Layout/ExtraSpacing:
+  Enabled: false
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
   
 Metrics/ParameterLists:
   Enabled: false
