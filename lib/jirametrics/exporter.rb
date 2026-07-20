@@ -8,7 +8,9 @@ class Exporter
 
   def self.configure &block
     logfile_name = 'jirametrics.log'
-    logfile = File.open(logfile_name, 'w')
+    # No block form: FileSystem holds this descriptor open for the whole run and writes to it as we
+    # go, so it must outlive this method.
+    logfile = File.open(logfile_name, 'w') # rubocop:disable Style/FileOpen
   rescue Errno::EACCES
     # FileSystem can't be used here — it hasn't been created yet (it depends on this logfile).
     warn "Error: Cannot write to #{File.expand_path(logfile_name)}. " \
