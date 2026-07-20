@@ -6,16 +6,19 @@ class MockCycleTimeConfig < CycleTimeConfig
 
     raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
 
-    stub_values.each do |line|
-      unless line[0].is_a?(Issue) || line[0] =~ /^[A-Z]+-\d+$/
-        raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
-      end
-
-      line[0] = line[0].key if line[0].is_a?(Issue)
-      line[1] = to_time(line[1]) if line[1].is_a? String
-      line[2] = to_time(line[2]) if line[2].is_a? String
-    end
+    stub_values.each { |line| normalize_stub_line line }
     @stub_values = stub_values
+  end
+
+  # Validate one [issue, start, stop] tuple and normalize it in place: issue -> key, date strings -> times.
+  def normalize_stub_line line
+    unless line[0].is_a?(Issue) || line[0] =~ /^[A-Z]+-\d+$/
+      raise 'Parameters to mock_cycletime_config must be an array of [issue, start_time, end_time] tuples'
+    end
+
+    line[0] = line[0].key if line[0].is_a?(Issue)
+    line[1] = to_time(line[1]) if line[1].is_a? String
+    line[2] = to_time(line[2]) if line[2].is_a? String
   end
 
   def started_stopped_changes(issue)
