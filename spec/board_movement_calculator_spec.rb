@@ -25,6 +25,24 @@ describe BoardMovementCalculator do
     create_issue_from_aging_data board: board, ages_by_column: [4, 5, 6, 8], today: today.to_s, key: 'SP-2'
   end
 
+  # Builds a done issue whose board movement is described entirely by explicit status changes, with the
+  # start/stop times coming from a stubbed cycletime, so the per-issue methods (moves_backwards? and the
+  # column skip rules) can each be isolated. Marking it Done lets it survive the constructor's
+  # `issue.done?` filter for callers that go through the constructor.
+  # Visible columns are: Ready(10001), In Progress(3), Review(10011), Done(10002).
+  def issue_entering(statuses)
+    start_status = board.possible_statuses.find_by_id(10_001)
+    empty_issue(created: '2024-10-01', board: board, creation_status: start_status).tap do |issue|
+      issue.changes.clear
+      statuses.each do |name, id, time|
+        add_mock_change(issue: issue, field: 'status', value: name, value_id: id, time: time)
+      end
+      # done? reads the current status (raw field), not the changes, so mark it Done to survive the
+      # constructor's `issue.done?` filter. The cycletime stub still drives start/stop for the method.
+      issue.status = board.possible_statuses.find_by_id(10_002)
+    end
+  end
+
   describe '#age_data_for' do
     it 'has no issues' do
       calculator = described_class.new board: board, issues: [], today: today
@@ -44,6 +62,69 @@ describe BoardMovementCalculator do
     it 'at 0%' do # TODO: 0% should probably return all zeros
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       expect(calculator.age_data_for percentage: 0).to eq [1, 2, 4, 0]
+    end
+  end
+
+  describe '#moves_backwards?' do
+    let(:calculator) { described_class.new board: board, issues: [], today: today }
+
+    it 'is false when the issue never started' do
+      # Review(col 2) then In Progress(col 1) would be backwards, but with no start time we cannot judge.
+      issue = issue_entering([['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03']])
+      board.cycletime = mock_cycletime_config stub_values: [[issue, nil, '2024-10-04']]
+      expect(calculator.moves_backwards?(issue)).to be false
+    end
+
+    it 'is false when the columns only ever move forward' do
+      issue = issue_entering(
+        [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-03'], ['Done', 10_002, '2024-10-04']]
+      )
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-04']]
+      expect(calculator.moves_backwards?(issue)).to be false
+    end
+
+    it 'is true when the issue moves to an earlier column' do
+      # Review(col 2) back to In Progress(col 1).
+      issue = issue_entering([['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03']])
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-04']]
+      expect(calculator.moves_backwards?(issue)).to be true
+    end
+
+    it 'ignores backwards movement that happened before the issue started' do
+      # The Review -> In Progress dip is before the start; from the start it only goes In Progress -> Review.
+      issue = issue_entering(
+        [['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03'], ['Review', 10_011, '2024-10-06']]
+      )
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-05', '2024-10-07']]
+      expect(calculator.moves_backwards?(issue)).to be false
+    end
+
+    it 'keeps scanning past a change that predates the start and still finds a later backwards step' do
+      # In Progress predates the start (must be skipped, not treated as a stopping point); the real dip
+      # from Review(col 2) back to In Progress(col 1) happens after the start.
+      issue = issue_entering(
+        [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-04'], ['In Progress', 3, '2024-10-05']]
+      )
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-03', '2024-10-06']]
+      expect(calculator.moves_backwards?(issue)).to be true
+    end
+
+    it 'counts a change that lands exactly on the start time' do
+      # Review enters right at the start; it still marks the issue's position, so the following move back
+      # to In Progress reads as backwards.
+      issue = issue_entering([['Review', 10_011, '2024-10-03'], ['In Progress', 3, '2024-10-04']])
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-03', '2024-10-05']]
+      expect(calculator.moves_backwards?(issue)).to be true
+    end
+
+    it 'still detects a step backwards across a status that is not on the board' do
+      # Review(col 2), briefly off the board (FakeBacklog is a status with no visible column), then
+      # In Progress(col 1). The gap must not hide the backwards step.
+      issue = issue_entering(
+        [['Review', 10_011, '2024-10-02'], ['FakeBacklog', 10_012, '2024-10-03'], ['In Progress', 3, '2024-10-04']]
+      )
+      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-05']]
+      expect(calculator.moves_backwards?(issue)).to be true
     end
   end
 
@@ -85,23 +166,6 @@ describe BoardMovementCalculator do
       # puts "column 2"
       actual = calculator.ages_of_issues_when_leaving_column column_index: 2, today: today
       expect(actual).to eq [4]
-    end
-
-    # These drive the per-issue skip rules directly: column entry comes from explicit status changes and
-    # the start/stop times from a stubbed cycletime, so each rule can be isolated. Every issue must be done
-    # (a stop time) or the constructor's `issue.done?` filter drops it before this method runs. Column 1 is
-    # In Progress (this column) and Review is the next column.
-    def issue_entering(statuses)
-      start_status = board.possible_statuses.find_by_id(10_001)
-      empty_issue(created: '2024-10-01', board: board, creation_status: start_status).tap do |issue|
-        issue.changes.clear
-        statuses.each do |name, id, time|
-          add_mock_change(issue: issue, field: 'status', value: name, value_id: id, time: time)
-        end
-        # done? reads the current status (raw field), not the changes, so mark it Done to survive the
-        # constructor's `issue.done?` filter. The cycletime stub still drives start/stop for the method.
-        issue.status = board.possible_statuses.find_by_id(10_002)
-      end
     end
 
     it 'skips a done issue when we cannot tell it started' do

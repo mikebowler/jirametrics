@@ -13,16 +13,13 @@ class BoardMovementCalculator
     started, = issue.started_stopped_times
     return false unless started
 
-    previous_column = nil
-    issue.status_changes.each do |change|
-      column = board.visible_columns.index { |c| c.status_ids.include?(change.value_id) }
-      next if change.time < started
-      next if column.nil? # It disappeared from the board for a bit
-      return true if previous_column && column && column < previous_column
+    # filter_map drops any status that isn't on a visible column (it disappeared from the board for a bit),
+    # so a dip either side of that gap is still seen as consecutive columns.
+    columns = issue.status_changes
+      .select { |change| change.time >= started }
+      .filter_map { |change| board.visible_columns.index { |c| c.status_ids.include?(change.value_id) } }
 
-      previous_column = column
-    end
-    false
+    columns.each_cons(2).any? { |previous, current| current < previous }
   end
 
   def stacked_age_data_for percentages:
