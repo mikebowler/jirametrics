@@ -69,3 +69,46 @@ task :mutant do
     sh 'bundle exec mutant run'
   end
 end
+
+namespace :mutant do
+  desc 'Run mutation tests and append a survivors-by-method table (CLASS=ClassName to scope). ' \
+       'Best-effort: mutant 0.16 has no structured/JSON reporter, so the table is parsed out of ' \
+       'its text output. If a mutant upgrade ever changes that format the table may come up empty ' \
+       '-- the run output above it is always the authoritative source.'
+  task :report do
+    require 'tempfile'
+
+    subject = ENV.fetch('CLASS', nil)
+    target = subject ? "-- '#{subject}'" : ''
+    puts "Running mutation tests against: #{subject || '.mutant.yml subjects'}"
+
+    log = Tempfile.new(['mutant', '.log'])
+    # tee keeps the live run streaming to the terminal while we capture it for the tally. We
+    # deliberately ignore the exit status: surviving mutants make mutant exit non-zero, and for a
+    # report that's the normal case, not a failure -- we want the table, not an aborted rake run.
+    system("bundle exec mutant run --integration rspec #{target} | tee #{log.path}")
+    output = File.read(log.path).gsub(/\e\[[0-9;]*m/, '') # strip any ANSI colour before parsing
+    log.close!
+
+    # Mutant prints ONE representative survivor per subject as an "evil:<Subject>:..." line, then
+    # summarises the rest as "(N more alive mutation(s), use `mutant session subject <Subject>` ...)".
+    # So survivors-per-method = the one shown + N more. Counting only the evil: lines would tally
+    # subjects-with-survivors, not survivors -- the bug this task's first cut actually had.
+    counts = Hash.new(0)
+    output.scan(%r{^evil:(.+?):/}).each { |(subject_name)| counts[subject_name] += 1 }
+    output.scan(/\((\d+) more alive mutation\(s\), use `mutant session subject (\S+)`/).each do |(more, subject_name)|
+      counts[subject_name] += more.to_i
+    end
+    survivors = counts.sort_by { |_subject, count| -count }
+
+    puts
+    puts '-' * 72
+    if survivors.empty?
+      puts 'No surviving mutations parsed (either 100% coverage, or the output format changed).'
+    else
+      puts "Survivors by method (#{survivors.sum { |_subject, count| count }} total), worst first:"
+      survivors.each { |subject_name, count| printf("  %4<count>d  %<name>s\n", count: count, name: subject_name) }
+    end
+    puts '-' * 72
+  end
+end
