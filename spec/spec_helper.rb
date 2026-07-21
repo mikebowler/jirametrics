@@ -13,8 +13,8 @@ if RUBY_ENGINE == 'ruby' && !ENV['JIRAMETRICS_SUBPROCESS_SPEC']
   require 'simplecov'
   SimpleCov.start do
     enable_coverage :branch
-    add_filter '/spec/'
-    SimpleCov.add_filter do |src_file|
+    skip '/spec/'
+    SimpleCov.skip do |src_file|
       File.basename(src_file.filename) == 'config.rb'
     end
   end
