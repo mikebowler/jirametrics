@@ -126,7 +126,8 @@ def load_issue key, board: nil
   issue
 end
 
-def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
+def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil, current_sprints: nil,
+  changelog_histories: []
   if creation_status.nil?
     backlog_statuses = board.possible_statuses.find_all_by_name('Backlog')
     raise 'No Backlog status found' if backlog_statuses.empty?
@@ -136,11 +137,15 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
     creation_status = [creation_status.name, creation_status.id]
   end
 
+  # current_sprints mimics an issue created directly inside a sprint: that membership lives only in the
+  # current Sprint custom field and never appears as a changelog transition.
+  sprint_field = current_sprints ? { 'customfield_10020' => current_sprints } : {}
+
   Issue.new(
     raw: {
       'key' => key,
-      'changelog' => { 'histories' => [] },
-      'fields' => {
+      'changelog' => { 'histories' => changelog_histories },
+      'fields' => sprint_field.merge({
         'created' => to_time(created).to_s,
         'updated' => to_time(created).to_s,
         'status' => {
@@ -163,7 +168,7 @@ def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil
           'displayName' => 'Tolkien'
         },
         'summary' => 'Do the thing'
-      }
+      })
     },
     board: board
   )

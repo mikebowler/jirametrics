@@ -284,6 +284,20 @@ describe SprintBurndown do
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
+    it 'treats an issue created inside the sprint as entering at creation, with no Sprint changelog entry' do
+      created_inside = empty_issue created: '2022-03-20', board: board, key: 'SP-99', current_sprints: [
+        { 'id' => 1, 'name' => sprint.name, 'state' => 'active', 'boardId' => board.id }
+      ]
+      board.cycletime = mock_cycletime_config stub_values: [
+        [created_inside, '2022-03-20', nil]
+      ]
+      expect(sprint_burndown.changes_for_one_issue(issue: created_inside, sprint: sprint)).to eql [
+        SprintIssueChangeData.new(
+          action: :enter_sprint, time: to_time('2022-03-20'), value: 0.0, issue: created_inside, estimate: 0.0
+        )
+      ]
+    end
+
     it 'returns start and end only' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-02-01']

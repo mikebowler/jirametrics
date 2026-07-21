@@ -731,6 +731,24 @@ time: '2021-10-02')
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
+    it 'uses the creation time for an issue created directly inside an already-started sprint' do
+      # Ripple from reconstructing initial sprint membership: an issue born inside a running sprint has
+      # no "added to sprint" changelog entry, but it was still added to the sprint -- at creation.
+      scrum_board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-01T00:00:00.000Z',
+        'endDate' => '2021-10-23T00:00:00.000Z',
+        'completeDate' => '2021-10-23T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+        { 'id' => 10, 'name' => 'Scrum Sprint 1', 'state' => 'active', 'boardId' => scrum_board.id }
+      ]
+      expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-02')
+    end
+
     it 'does not match if the sprint never starts' do
       issue.board.sprints << Sprint.new(raw: {
         'id' => 10,
@@ -2106,6 +2124,45 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'returns nils when the sprint cannot be found anywhere' do
       expect(issue.find_sprint_start_end(sprint_id: 999, change: change)).to eq [nil, nil]
+    end
+  end
+
+  describe '#sprints' do
+    let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
+
+    def add_board_sprint id:, state: 'active', start: '2021-10-01'
+      scrum_board.sprints << Sprint.new(raw: {
+        'id' => id, 'state' => state, 'name' => "Sprint #{id}",
+        'startDate' => "#{start}T00:00:00.000Z", 'originBoardId' => scrum_board.id
+      }, timezone_offset: '+00:00')
+    end
+
+    it 'includes a sprint the issue was created inside, though it has no Sprint changelog entry' do
+      # This is the LS-821/LS-825 case: the issue was created directly in the sprint and never moved,
+      # so its membership lives only in the current Sprint field and never as a changelog transition.
+      add_board_sprint id: 10
+      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+        { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id }
+      ]
+      expect(issue.sprints.map(&:id)).to eq [10]
+    end
+
+    it 'includes a sprint the issue was created inside even after it was later removed from it' do
+      # The LS-826 case: the only recorded Sprint transition is the issue *leaving* (the sprint is in
+      # the change's 'from', never a 'to'), so without reconstructing the initial membership the issue
+      # would look like it was never in the sprint at all.
+      add_board_sprint id: 10
+      issue = empty_issue created: '2021-10-02', board: scrum_board, changelog_histories: [
+        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
+          { 'field' => 'Sprint', 'fieldId' => 'customfield_10020', 'from' => '10', 'to' => '' }
+        ] }
+      ]
+      expect(issue.sprints.map(&:id)).to eq [10]
+    end
+
+    it 'reports no sprints for an issue that was never in one' do
+      issue = empty_issue created: '2021-10-02', board: scrum_board
+      expect(issue.sprints).to be_empty
     end
   end
 

@@ -36,7 +36,8 @@ class Issue
     # not showing up in the change log. Create some artificial entries to capture those.
     @changes = [
       fabricate_change(field_name: 'status'),
-      fabricate_change(field_name: 'priority')
+      fabricate_change(field_name: 'priority'),
+      fabricate_sprint_change
     ].compact + @changes
   rescue # rubocop:disable Style/RescueStandardError -- deliberately broad: any failure is re-raised with context
     # All we're doing is adding information to the existing exception and letting it propogate up
@@ -815,6 +816,45 @@ class Issue
       'to' => first_status_id,
       'toString' => first_status
     }
+  end
+
+  # Jira never records an issue's *initial* sprint membership as a changelog transition, so an issue
+  # created directly inside a sprint (and never moved out) has no Sprint change at all, and one whose
+  # first recorded change already lists the sprint in its 'from' looks like it entered at that later
+  # moment. Reconstruct that initial membership as an artificial change at creation time, mirroring how
+  # we fabricate the initial status and priority. Returns nil when the issue started in no sprints.
+  def fabricate_sprint_change
+    return unless @raw['fields']['created']
+
+    first_sprint_change = @changes.find(&:sprint?)
+    initial_sprint_ids = first_sprint_change ? first_sprint_change.old_value_id : current_sprint_ids
+    return if initial_sprint_ids.empty?
+
+    ChangeItem.new(
+      time: parse_time(@raw['fields']['created']), artificial: true, author_raw: @raw['fields']['creator'],
+      raw: {
+        'field' => 'Sprint',
+        'fieldId' => first_sprint_change&.field_id || sprint_field_id,
+        'to' => initial_sprint_ids.join(', '),
+        'toString' => 'Sprint'
+      }
+    )
+  end
+
+  # The Sprint custom field id varies by Jira instance, so we find it by shape: its value is a list of
+  # sprint objects, each of which carries a boardId. Returns nil when the issue is in no sprints.
+  def sprint_field_id
+    field = @raw['fields'].find do |_field_id, value|
+      value.is_a?(Array) && value.first.is_a?(Hash) && value.first.key?('boardId')
+    end
+    field&.first
+  end
+
+  def current_sprint_ids
+    field_id = sprint_field_id
+    return [] unless field_id
+
+    @raw['fields'][field_id].filter_map { |sprint| sprint['id']&.to_i }
   end
 
   def find_status_category_ids_by_names category_names
