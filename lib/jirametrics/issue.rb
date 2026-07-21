@@ -286,7 +286,8 @@ class Issue
         next unless membership
 
         memberships.delete(membership)
-        next if membership.sprint_start.nil? || membership.sprint_start >= change.time
+        next unless counts_as_sprint_start? membership
+        next if membership.sprint_start >= change.time
 
         matching_changes << membership.change
       end
@@ -295,12 +296,30 @@ class Issue
     # There can't be any more removes so whatever is left is a valid option
     # Now all we care about is if the sprint has started.
     memberships.each do |membership|
-      matching_changes << membership.change if membership.sprint_start
+      matching_changes << membership.change if counts_as_sprint_start? membership
     end
 
     matching_changes.min_by(&:time)
   end
   # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+
+  # Being added to a sprint only counts as a "start" if that sprint had actually started and the issue
+  # wasn't already done when it did. Joining a sprint you've already finished (e.g. a done issue swept
+  # into a later sprint) is bookkeeping on completed work, not the moment work began.
+  def counts_as_sprint_start? membership
+    return false if membership.sprint_start.nil?
+
+    !in_done_status_at?(membership.sprint_start)
+  end
+
+  # Was the issue sitting in a done-category status at the given moment? Keys off the status category
+  # (not the status name), so a status merely called "Done" that Jira categorises otherwise won't count.
+  def in_done_status_at? time
+    last = status_changes.reverse.find { |change| change.time <= time }
+    return false unless last
+
+    find_or_create_status(id: last.value_id, name: last.value).category.done?
+  end
 
   def find_sprint_start_end sprint_id:, change:
     # There are two different places that sprint data could be found. In theory all

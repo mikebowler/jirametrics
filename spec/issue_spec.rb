@@ -731,6 +731,28 @@ time: '2021-10-02')
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-03')
     end
 
+    it 'returns nil when the issue was already done by the time the sprint started' do
+      # An issue that reached Done before a sprint started, then got added to that sprint, was never
+      # "started" by joining it -- treating the add as a start yields a nonsensical start-after-stop.
+      scrum_board.sprints << Sprint.new(raw: {
+        'id' => 10,
+        'state' => 'active',
+        'name' => 'Scrum Sprint 1',
+        'startDate' => '2021-10-05T00:00:00.000Z',
+        'endDate' => '2021-10-20T00:00:00.000Z',
+        'completeDate' => '2021-10-20T00:00:00.000Z',
+        'originBoardId' => 2
+      }, timezone_offset: '+00:00')
+      # In this board the done-*category* status is id 12 ('Doing'); id 9 ('Done') is deliberately
+      # category 'indeterminate', so this also pins that we key off category, not the status name.
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-03')
+      add_mock_change(
+        issue: issue, field: 'Sprint', value: 'Sprint 1', value_id: '10', time: '2021-10-06',
+        field_id: 'customfield_10020'
+      )
+      expect(issue.first_time_added_to_active_sprint).to be_nil
+    end
+
     it 'uses the creation time for an issue created directly inside an already-started sprint' do
       # Ripple from reconstructing initial sprint membership: an issue born inside a running sprint has
       # no "added to sprint" changelog entry, but it was still added to the sprint -- at creation.
