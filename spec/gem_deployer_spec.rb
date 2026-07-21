@@ -5,9 +5,17 @@ require './tasks/gem_deployer'
 
 describe GemDeployer do
   let(:gemspec_path) { 'jirametrics.gemspec' }
-  let(:changes_path) do
-    Tempfile.new(['changes', '.md']).tap { |f| f.write(changes_content) && f.flush }.path
+  # Hold the Tempfile object in its own memoized let so it stays referenced for the whole
+  # example. Keeping only its .path (as this once did) discards the Tempfile, leaving it eligible
+  # for GC -- and Tempfile's finalizer unlinks the file when it's collected. MRI happened not to
+  # collect it in time; JRuby's GC does, so the file vanished before changelog_section read it.
+  let(:changes_file) do
+    Tempfile.new(['changes', '.md']).tap do |file|
+      file.write changes_content
+      file.flush
+    end
   end
+  let(:changes_path) { changes_file.path }
   let(:deployer) { described_class.new(gemspec_path: gemspec_path, changes_path: changes_path) }
 
   let(:changes_content) do
