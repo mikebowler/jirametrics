@@ -1506,6 +1506,51 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [seconds_per_day, seconds_per_day]
     end
+
+    it 'returns zeros when the issue never started' do
+      issue = empty_issue created: '2000-01-01', board: board
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
+        .to eq [0.0, 0.0]
+    end
+
+    it 'returns zeros when the issue started after the window ends' do
+      issue = empty_issue created: '2000-01-01', board: board
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-10'), nil]]
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
+        .to eq [0.0, 0.0]
+    end
+
+    it 'caps the window at the issue stop time, ignoring anything after it' do
+      issue = empty_issue created: '2000-01-01', board: board
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, to_time('2000-01-01'), to_time('2000-01-03')]
+      ]
+      # Stopped on the 3rd but asked about the 5th: only the two active days up to the stop count.
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
+        .to eq [2 * seconds_per_day, 2 * seconds_per_day]
+    end
+
+    it 'leaves the window uncapped when the issue stopped after it ends' do
+      issue = empty_issue created: '2000-01-01', board: board
+      issue.board.cycletime = mock_cycletime_config stub_values: [
+        [issue, to_time('2000-01-01'), to_time('2000-01-10')]
+      ]
+      # Stopped on the 10th but asked about the 5th: the window stays at four days, not stretched to the stop.
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
+        .to eq [4 * seconds_per_day, 4 * seconds_per_day]
+    end
+
+    it 'defaults settings to the board project config settings when none are passed' do
+      issue = empty_issue created: '2000-01-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-01'), nil]]
+      allow(board.project_config).to receive(:settings).and_return(settings)
+      # The defaulted settings must classify 'Blocked' as blocked, so across the two-day window only the
+      # first (pre-Blocked) day counts as active. Nil/wrong settings would miss it and count both days.
+      expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-03')))
+        .to eq [seconds_per_day, 2 * seconds_per_day]
+    end
   end
 
   describe '#find_or_create_status' do
