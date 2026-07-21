@@ -9,7 +9,10 @@ ENV['RACK_ENV'] = 'test'
 # simplecov depends on date_core, a C extension that JRuby cannot load.
 # Skip it in subprocess spec runs (see the leaked-SystemExit regression test) so the
 # child process doesn't restart coverage and pollute its output.
-if RUBY_ENGINE == 'ruby' && !ENV['JIRAMETRICS_SUBPROCESS_SPEC']
+# The $PROGRAM_NAME guard keeps coverage to genuine rspec runs: mutant and other runners
+# load this helper too, but boot under a non-rspec $0 — starting SimpleCov there just writes
+# a junk "Unknown Test Framework" result that later trips SimpleCov's stale-merge warning.
+if RUBY_ENGINE == 'ruby' && !ENV['JIRAMETRICS_SUBPROCESS_SPEC'] && $PROGRAM_NAME.end_with?('rspec')
   require 'simplecov'
   SimpleCov.start do
     enable_coverage :branch
