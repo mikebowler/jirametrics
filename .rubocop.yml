@@ -89,9 +89,12 @@ Style/RedundantParentheses:
   Exclude:
     - 'lib/jirametrics/examples/**/*'
 
-# The most valuable size metric -- it catches methods that do a lot without much branching, which the
-# complexity cops miss -- but ~125 methods exceed it, a burndown we've deferred and track separately.
-# Off until we work through it.
+# Disabled by decision, not deferral. AbcSize scores methods by sheer volume of assignments, branches,
+# and calls -- not by tangled logic. We sampled the worst offenders (the data-quality scan/render
+# orchestration, the ADF node-type case dispatch, chart wiring/DI) and every one is flat, wide, and
+# perfectly readable whole -- the same "breadth, not depth" shapes we already exempt from the complexity
+# cops by design. Across ~124 hits it's overwhelmingly "reads fine, just does a lot," so enabling it
+# would only manufacture documented-disable ceremony without improving a single method. Left off for good.
 Metrics/AbcSize:
   Enabled: false
 
