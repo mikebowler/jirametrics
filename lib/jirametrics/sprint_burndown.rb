@@ -164,7 +164,37 @@ class SprintBurndown < ChartBase
       )
     end
 
-    ever_entered_sprint?(change_data) ? change_data : []
+    prune_change_data(
+      change_data: change_data, issue: issue, sprint: sprint, issue_completed_time: issue_completed_time
+    )
+  end
+
+  # Decide whether this issue's changes belong in the sprint at all. It doesn't if it never entered, or
+  # if it was already complete before it entered (see #warn_completed_before_sprint_entry).
+  def prune_change_data change_data:, issue:, sprint:, issue_completed_time:
+    return [] unless ever_entered_sprint?(change_data)
+
+    first_entered_time = change_data.find { |data| data.action == :enter_sprint }.time
+    if issue_completed_time && issue_completed_time < first_entered_time
+      warn_completed_before_sprint_entry(
+        issue: issue, sprint: sprint, completed_time: issue_completed_time, entered_time: first_entered_time
+      )
+      return []
+    end
+
+    change_data
+  end
+
+  # An issue can reach our definition of "done" before it's ever added to a sprint (its cycletime stop
+  # predates its sprint membership). Left in the burndown it would read as unfinished for the whole
+  # sprint, so we drop it -- but because our Done can differ from Jira's, we say so on the console.
+  def warn_completed_before_sprint_entry issue:, sprint:, completed_time:, entered_time:
+    file_system&.warning(
+      "#{issue.key} was already complete (#{completed_time.to_date}) before it entered sprint " \
+      "#{sprint.name.inspect} (#{entered_time.to_date}), so it's excluded from the sprint burndown. " \
+      "This usually means the board's Done definition differs from Jira's, or an already-completed " \
+      'issue was added to the sprint.'
+    )
   end
 
   # Two sprint changes in a row can say the same thing, so an event only fires when the membership

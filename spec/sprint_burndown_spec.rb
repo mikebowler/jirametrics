@@ -284,6 +284,25 @@ describe SprintBurndown do
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
+    it 'excludes, and warns about, an issue that was already complete before it entered the sprint' do
+      # LS-780 case: the issue reached Done (per our cycletime) before it was ever added to the sprint,
+      # so its completion predates its membership. Left in, it would show as unfinished for the whole
+      # sprint -- misleading. Because our Done can differ from Jira's, we warn rather than silently drop.
+      sprint_burndown.file_system = MockFileSystem.new
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue, '2022-03-10', '2022-03-20'] # done 2022-03-20
+      ]
+      add_mock_change( # ...but only added to the sprint on 2022-03-25, five days after it was done
+        issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-25'
+      )
+      aggregate_failures do
+        expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
+        expect(sprint_burndown.file_system.log_messages).to include(
+          a_string_matching(/SP-1 was already complete .* before it entered sprint "Scrum Sprint 1"/)
+        )
+      end
+    end
+
     it 'treats an issue created inside the sprint as entering at creation, with no Sprint changelog entry' do
       created_inside = empty_issue created: '2022-03-20', board: board, key: 'SP-99', current_sprints: [
         { 'id' => 1, 'name' => sprint.name, 'state' => 'active', 'boardId' => board.id }
