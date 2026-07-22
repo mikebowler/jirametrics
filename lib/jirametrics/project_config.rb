@@ -288,9 +288,10 @@ class ProjectConfig
 
   def load_all_boards
     Dir.foreach(@target_path) do |file|
-      next unless file =~ /^#{get_file_prefix}_board_(\d+)_configuration\.json$/
+      match = file.match(/^#{get_file_prefix}_board_(?<board_id>\d+)_configuration\.json$/)
+      next unless match
 
-      board_id = $1.to_i
+      board_id = match[:board_id].to_i
       load_board board_id: board_id, filename: "#{@target_path}#{file}"
     end
   end
