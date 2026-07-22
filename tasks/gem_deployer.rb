@@ -244,9 +244,10 @@ class GemDeployer
 
   def gemspec_version_string
     content = File.read(@gemspec_path)
-    raise "Could not parse version from #{@gemspec_path}" unless content =~ /spec\.version\s*=\s*['"]([^'"]*)['"]/
+    match = /spec\.version\s*=\s*['"](?<version>[^'"]*)['"]/.match(content)
+    raise "Could not parse version from #{@gemspec_path}" unless match
 
-    $1
+    match[:version]
   end
 
   def latest_released_version
@@ -271,9 +272,9 @@ class GemDeployer
   end
 
   def increment_prerelease version_str
-    raise "Cannot parse prerelease version: #{version_str}" unless version_str =~ /^(.*?)pre(\d+)$/
+    raise "Cannot parse prerelease version: #{version_str}" unless /^(?<base>.*?)pre(?<number>\d+)$/ =~ version_str
 
-    "#{$1}pre#{$2.to_i + 1}"
+    "#{base}pre#{number.to_i + 1}"
   end
 
   def increment_stable_to_prerelease version_str

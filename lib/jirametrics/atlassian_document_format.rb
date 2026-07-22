@@ -12,7 +12,9 @@ class AtlassianDocumentFormat
     if input.is_a? String
       input
         .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
+        # rubocop:disable Style/PerlBackrefs -- in a gsub block $1 reads cleaner than Regexp.last_match[:...]
         .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
+        # rubocop:enable Style/PerlBackrefs
         .gsub(/\[([^|]+)\|(https?[^\]]+)\]/, '<a href="\2">\1</a>') # URLs
         .gsub("\n", '<br />')
     elsif input&.[]('content')

@@ -57,11 +57,6 @@ Style/Documentation:
 Style/ConditionalAssignment:
   Enabled: false
 
-# Keep $1/$2 for now rather than the verbose ::Regexp.last_match the autocorrect produces. The real
-# modernization is named captures, tracked separately, so leave the cop off until that's done.
-Style/PerlBackrefs:
-  Enabled: false
-
 # We write the inner call paren-less -- foo(bar baz), not foo(bar(baz)) -- following our usual
 # "leave off optional syntax" rule, which this cop would fight.
 Style/NestedParenthesizedCalls:
