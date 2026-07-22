@@ -53,12 +53,13 @@ class ChartBase
   def render caller_binding, file
     pathname = Pathname.new(File.realpath(file))
     basename = pathname.basename.to_s
-    raise "Unexpected filename #{basename.inspect}" unless basename =~ /^(.+)\.rb$/
+    match = basename.match(/^(?<template_name>.+)\.rb$/)
+    raise "Unexpected filename #{basename.inspect}" unless match
 
     # Insert a incrementing chart_id so that all the chart names on the page are unique
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
-    erb = ERB.new file_system.load "#{html_directory}/#{$1}.erb"
+    erb = ERB.new file_system.load "#{html_directory}/#{match[:template_name]}.erb"
     erb.result(caller_binding)
   end
 
