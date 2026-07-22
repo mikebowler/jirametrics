@@ -39,20 +39,6 @@ class CycleTimeConfig
     started_stopped_times(issue).last
   end
 
-  def fabricate_change_item time
-    @file_system.deprecated(
-      date: '2024-12-16', message: "This method should now return a ChangeItem not a #{time.class}", depth: 4
-    )
-    raw = {
-      'field' => 'Fabricated change',
-      'to' => '0',
-      'toString' => '',
-      'from' => '0',
-      'fromString' => ''
-    }
-    ChangeItem.new raw: raw, time: time, artificial: true, author_raw: nil
-  end
-
   def started_stopped_changes issue
     cache_key = "#{issue.key}:#{issue.board.id}"
     last_result = (@cache ||= {})[cache_key]
@@ -68,12 +54,17 @@ class CycleTimeConfig
     result
   end
 
-  # start_at/stop_at blocks should return a ChangeItem or nil. Older configs may instead return false
-  # (meaning "not found") or a bare Time; normalize both of those legacy forms to a ChangeItem or nil.
+  # start_at/stop_at blocks must return a ChangeItem or nil. A legacy false (meaning "not found") is
+  # still tolerated as nil, but a bare Time -- once accepted and wrapped -- is no longer supported.
   def resolve_change block, issue
     change = block.call(issue)
-    change ||= nil
-    change = fabricate_change_item(change) if !change.nil? && !change.is_a?(ChangeItem)
+    return nil unless change
+
+    unless change.is_a?(ChangeItem)
+      raise "A start_at/stop_at block must return a ChangeItem or nil but returned a #{change.class}. " \
+        'If you were relying on a bare time such as `created`, use the ChangeItem form (e.g. `time_created`).'
+    end
+
     change
   end
 

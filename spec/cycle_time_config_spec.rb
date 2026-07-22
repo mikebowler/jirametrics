@@ -13,20 +13,18 @@ describe CycleTimeConfig do
   end
   let(:issue) { load_issue 'SP-1' }
 
-  describe 'deprecated methods' do
-    it 'deprecates methods that return a time' do
+  describe 'start_at / stop_at return values' do
+    it 'raises when a block returns a bare time rather than a ChangeItem or nil' do
       config = described_class.new(
         possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
         block: lambda do |_|
-          start_at created
+          start_at created # `created` returns a bare Time, which is no longer supported
           stop_at created
         end
       )
-      config.started_stopped_changes issue
-      expect(exporter.file_system.log_messages).to match_strings [
-        /Deprecated\(2024-12-16\): This method should now return a ChangeItem not a Time/,
-        /Deprecated\(2024-12-16\): This method should now return a ChangeItem not a Time/
-      ]
+      expect { config.started_stopped_changes issue }.to raise_error(
+        /must return a ChangeItem or nil but returned a Time/
+      )
     end
   end
 
@@ -120,21 +118,14 @@ describe CycleTimeConfig do
       )
     end
 
-    it 'fabricates a ChangeItem when a block returns a bare Time (legacy blocks)' do
-      start = to_time('2025-01-03')
-      stop = to_time('2025-01-05')
-      started, stopped = config_returning(start: start, stop: stop).started_stopped_changes(issue)
-      aggregate_failures do
-        expect(started).to be_a(ChangeItem)
-        expect(started.time).to eq start
-        expect(stopped).to be_a(ChangeItem)
-        expect(stopped.time).to eq stop
-      end
+    # A ChangeItem at a given time, so the start/stop blocks can be driven directly.
+    def change_at time
+      mock_change field: 'status', value: 'x', value_id: 1, time: time
     end
 
-    it 'treats a block returning false as no start (false becomes nil, not a fabricated item)' do
+    it 'treats a block returning false as no start (false becomes nil)' do
       stop = to_time('2025-01-05')
-      started, stopped = config_returning(start: false, stop: stop).started_stopped_changes(issue)
+      started, stopped = config_returning(start: false, stop: change_at(stop)).started_stopped_changes(issue)
       aggregate_failures do
         expect(started).to be_nil
         expect(stopped.time).to eq stop
@@ -143,7 +134,8 @@ describe CycleTimeConfig do
 
     it 'reports never-started when start and stop resolve to the same time' do
       same = to_time('2025-01-05')
-      started, stopped = config_returning(start: same, stop: same).started_stopped_changes(issue)
+      started, stopped =
+        config_returning(start: change_at(same), stop: change_at(same)).started_stopped_changes(issue)
       aggregate_failures do
         expect(started).to be_nil # same time -> pretend it never started
         expect(stopped).to be_a(ChangeItem)
@@ -153,7 +145,7 @@ describe CycleTimeConfig do
 
     it 'returns the start with no stop when the stop block finds nothing' do
       start = to_time('2025-01-03')
-      started, stopped = config_returning(start: start, stop: nil).started_stopped_changes(issue)
+      started, stopped = config_returning(start: change_at(start), stop: nil).started_stopped_changes(issue)
       aggregate_failures do
         expect(started).to be_a(ChangeItem)
         expect(started.time).to eq start
