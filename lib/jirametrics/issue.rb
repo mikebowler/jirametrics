@@ -26,7 +26,7 @@ class Issue
     return unless @raw['fields']
 
     # If this is an older pull of data then comments may not be there.
-    load_comments_into_changes if @raw['fields']['comment']
+    load_comments_into_changes if raw_fields['comment']
 
     # It might appear that Jira already returns these in order but we've found different
     # versions of Server/Cloud return the changelog in different orders so we sort them.
@@ -46,29 +46,36 @@ class Issue
 
   def key = @raw['key']
 
-  def type = @raw['fields']['issuetype']['name']
-  def type_icon_url = @raw['fields']['issuetype']['iconUrl']
+  # 'fields' is the one part of the issue JSON that must always be present -- its absence means the
+  # payload is malformed. (Linked-issue fragments legitimately have no fields; that case is guarded in
+  # initialize, which returns before any of the fields-based accessors below can run.)
+  def raw_fields
+    @raw['fields'] || raise("Issue(#{@raw['key']}) has no 'fields'; is this an Issue JSON?")
+  end
+
+  def type = raw_fields['issuetype']['name']
+  def type_icon_url = raw_fields['issuetype']['iconUrl']
 
   def priority_name = @raw.dig('fields', 'priority', 'name')
   def priority_url = @raw.dig('fields', 'priority', 'iconUrl')
 
-  def summary = @raw['fields']['summary']
+  def summary = raw_fields['summary']
 
-  def labels = @raw['fields']['labels'] || []
+  def labels = raw_fields['labels'] || []
 
-  def author = @raw['fields']['creator']&.[]('displayName') || ''
+  def author = raw_fields['creator']&.[]('displayName') || ''
 
-  def resolution = @raw['fields']['resolution']&.[]('name')
+  def resolution = raw_fields['resolution']&.[]('name')
 
   def status
-    @status ||= Status.from_raw(@raw['fields']['status'])
+    @status ||= Status.from_raw(raw_fields['status'])
     @status
   end
 
   attr_writer :status
 
   def due_date
-    text = @raw['fields']['duedate']
+    text = raw_fields['duedate']
     text.nil? ? nil : Date.parse(text)
   end
 
@@ -82,7 +89,7 @@ class Issue
   end
 
   def component_names
-    @raw['fields']['components']&.collect { |component| component['name'] } || []
+    raw_fields['components']&.collect { |component| component['name'] } || []
   end
 
   def first_time_in_status *status_names
@@ -366,7 +373,7 @@ class Issue
 
   def created
     # This nil check shouldn't be necessary and yet we've seen one case where it was.
-    created_text = @raw['fields']['created']
+    created_text = raw_fields['created']
     parse_time created_text if created_text
   end
 
@@ -375,7 +382,7 @@ class Issue
   end
 
   def updated
-    parse_time @raw['fields']['updated']
+    parse_time raw_fields['updated']
   end
 
   def first_resolution
@@ -387,11 +394,11 @@ class Issue
   end
 
   def assigned_to
-    @raw['fields']['assignee']&.[]('displayName')
+    raw_fields['assignee']&.[]('displayName')
   end
 
   def assigned_to_icon_url
-    @raw['fields']['assignee']&.[]('avatarUrls')&.[]('16x16')
+    raw_fields['assignee']&.[]('avatarUrls')&.[]('16x16')
   end
 
   # Many test failures are simply unreadable because the default inspect on this class goes
@@ -504,7 +511,7 @@ class Issue
 
   def issue_links
     if @issue_links.nil?
-      @issue_links = @raw['fields']['issuelinks']&.collect do |issue_link|
+      @issue_links = raw_fields['issuelinks']&.collect do |issue_link|
         IssueLink.new origin: self, raw: issue_link
       end || []
     end
@@ -513,7 +520,7 @@ class Issue
 
   def fix_versions
     if @fix_versions.nil?
-      @fix_versions = @raw['fields']['fixVersions']&.collect do |fix_version|
+      @fix_versions = raw_fields['fixVersions']&.collect do |fix_version|
         FixVersion.new fix_version
       end || []
     end
@@ -528,7 +535,7 @@ class Issue
     # Although Atlassian is trying to standardize on one way to determine the parent, today it's a mess.
     # We try a variety of ways to get the parent and hopefully one of them will work. See this link:
     # https://community.developer.atlassian.com/t/deprecation-of-the-epic-link-parent-link-and-other-related-fields-in-rest-apis-and-webhooks/54048
-    fields = @raw['fields']
+    fields = raw_fields
 
     # The 'parent' field will eventually be the only way; the 'epic' field is the older form. Failing
     # both, the parent link may be stored in a custom field.
@@ -782,7 +789,7 @@ class Issue
   end
 
   def load_comments_into_changes
-    @raw['fields']['comment']['comments']&.each do |comment|
+    raw_fields['comment']['comments']&.each do |comment|
       raw = comment.merge({
         'field' => 'comment',
         'to' => comment['id'],
@@ -811,16 +818,16 @@ class Issue
     first_status_id = nil
 
     # There won't be a created timestamp in cases where this was a linked issue
-    return unless @raw['fields']['created']
+    return unless raw_fields['created']
 
-    created_time = parse_time @raw['fields']['created']
+    created_time = parse_time raw_fields['created']
     first_change = @changes.find { |change| change.field == field_name }
     if first_change.nil?
       # There have been no changes of this type yet so we have to look at the current one
-      return nil unless @raw['fields'][field_name]
+      return nil unless raw_fields[field_name]
 
-      first_status = @raw['fields'][field_name]['name']
-      first_status_id = @raw['fields'][field_name]['id'].to_i
+      first_status = raw_fields[field_name]['name']
+      first_status_id = raw_fields[field_name]['id'].to_i
     else
       # Otherwise, we look at what the first one had changed away from.
       first_status = first_change.old_value
@@ -844,14 +851,14 @@ class Issue
   # moment. Reconstruct that initial membership as an artificial change at creation time, mirroring how
   # we fabricate the initial status and priority. Returns nil when the issue started in no sprints.
   def fabricate_sprint_change
-    return unless @raw['fields']['created']
+    return unless raw_fields['created']
 
     first_sprint_change = @changes.find(&:sprint?)
     initial_sprint_ids = first_sprint_change ? first_sprint_change.old_value_id : current_sprint_ids
     return if initial_sprint_ids.empty?
 
     ChangeItem.new(
-      time: parse_time(@raw['fields']['created']), artificial: true, author_raw: @raw['fields']['creator'],
+      time: parse_time(raw_fields['created']), artificial: true, author_raw: raw_fields['creator'],
       raw: {
         'field' => 'Sprint',
         'fieldId' => first_sprint_change&.field_id || sprint_field_id,
@@ -864,7 +871,7 @@ class Issue
   # The Sprint custom field id varies by Jira instance, so we find it by shape: its value is a list of
   # sprint objects, each of which carries a boardId. Returns nil when the issue is in no sprints.
   def sprint_field_id
-    field = @raw['fields'].find do |_field_id, value|
+    field = raw_fields.find do |_field_id, value|
       value.is_a?(Array) && value.first.is_a?(Hash) && value.first.key?('boardId')
     end
     field&.first
@@ -874,7 +881,7 @@ class Issue
     field_id = sprint_field_id
     return [] unless field_id
 
-    @raw['fields'][field_id].filter_map { |sprint| sprint['id']&.to_i }
+    raw_fields[field_id].filter_map { |sprint| sprint['id']&.to_i }
   end
 
   def find_status_category_ids_by_names category_names

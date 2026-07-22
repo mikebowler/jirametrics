@@ -1493,6 +1493,17 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#raw_fields' do
+    it 'returns the fields hash' do
+      expect(issue1.raw_fields).to be issue1.raw['fields']
+    end
+
+    it 'raises when fields is missing, since that means a malformed payload' do
+      fragment = described_class.new(raw: { 'key' => 'SP-99' }, board: board)
+      expect { fragment.raw_fields }.to raise_error(/Issue\(SP-99\) has no 'fields'/)
+    end
+  end
+
   describe '#created' do
     it "doesn't blow up if created is missing" do # Seen in production
       issue1.raw['fields']['created'] = nil
