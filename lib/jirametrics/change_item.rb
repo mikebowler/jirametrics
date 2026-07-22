@@ -23,9 +23,11 @@ class ChangeItem
   # field is treated as a single id: to_i grabs the leading number, or 0 for text/bracketed values like
   # Watchers or Markets (whose value_id is never used as a real id anyway).
   def parse_value_ids
-    return [@raw['to']&.to_i, @raw['from']&.to_i] unless sprint?
+    to = @raw['to']
+    from = @raw['from']
+    return [to&.to_i, from&.to_i] unless sprint?
 
-    [parse_multiple_integer_values(@raw['to']), parse_multiple_integer_values(@raw['from'])]
+    [parse_multiple_integer_values(to), parse_multiple_integer_values(from)]
   end
 
   # Parses a comma-separated string of integers into a list. Sprint is the only field we currently parse
