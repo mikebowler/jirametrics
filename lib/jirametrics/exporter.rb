@@ -162,8 +162,8 @@ class Exporter
     unless args.empty?
       dates = []
       args.each do |arg|
-        if arg =~ /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/
-          Date.parse($1).upto(Date.parse($2)).each { |date| dates << date }
+        if /^(?<from>\d{4}-\d{2}-\d{2})\.\.(?<to>\d{4}-\d{2}-\d{2})$/ =~ arg
+          Date.parse(from).upto(Date.parse(to)).each { |date| dates << date }
         else
           dates << Date.parse(arg)
         end
