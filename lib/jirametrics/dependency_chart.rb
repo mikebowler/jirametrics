@@ -201,9 +201,10 @@ class DependencyChart < ChartBase
 
   def shrink_svg svg
     scale = 0.8
-    svg.sub(/width="([\d.]+)pt" height="([\d.]+)pt"/) do
-      width = $1.to_i * scale
-      height = $2.to_i * scale
+    svg.sub(/width="(?<width_pt>[\d.]+)pt" height="(?<height_pt>[\d.]+)pt"/) do
+      match = Regexp.last_match
+      width = match[:width_pt].to_i * scale
+      height = match[:height_pt].to_i * scale
       "width=\"#{width.to_i}pt\" height=\"#{height.to_i}pt\""
     end
   end
