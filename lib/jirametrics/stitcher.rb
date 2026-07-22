@@ -32,8 +32,8 @@ class Stitcher < HtmlGenerator
   end
 
   def make_output_filename input_filename
-    if /^(.+)\.erb$/ =~ input_filename
-      "#{$1}.html"
+    if /^(?<base_name>.+)\.erb$/ =~ input_filename
+      "#{base_name}.html"
     else
       "#{input_filename}.html"
     end
