@@ -10,6 +10,16 @@ require 'jirametrics/chart_base'
 # hook so this class doesn't need to know which axis carries the value); the
 # PR-vs-issue split lives one level below that.
 class TimeBasedChart < ChartBase
+  # The cycletime units we support, mapped to how each reads in an axis title.
+  # :days counts calendar days; :"24hours" counts elapsed 24-hour clock periods
+  # (the two differ for anything that crosses midnight).
+  VALUE_AXIS_LABELS = {
+    minutes: 'minutes',
+    hours: 'hours',
+    days: 'days',
+    '24hours': '24-hour periods'
+  }.freeze
+
   def initialize
     super
 
@@ -17,12 +27,14 @@ class TimeBasedChart < ChartBase
   end
 
   def cycletime_unit unit
-    unless %i[minutes hours days].include?(unit)
-      raise ArgumentError, "cycletime_unit must be :minutes, :hours, or :days, got #{unit.inspect}"
+    axis_label = VALUE_AXIS_LABELS[unit]
+    unless axis_label
+      raise ArgumentError,
+        "cycletime_unit must be one of #{VALUE_AXIS_LABELS.keys.map(&:inspect).join(', ')}, got #{unit.inspect}"
     end
 
     @cycletime_unit = unit
-    self.value_axis_title = "Cycle time in #{unit}"
+    self.value_axis_title = "Cycle time in #{axis_label}"
   end
 
   def label_cycletime value
@@ -30,6 +42,7 @@ class TimeBasedChart < ChartBase
     when :minutes then label_minutes(value)
     when :hours then label_hours(value)
     when :days then label_days(value)
+    when :'24hours' then "#{value}x 24h periods"
     end
   end
 
@@ -45,7 +58,7 @@ class TimeBasedChart < ChartBase
       tz = timezone_offset || '+00:00'
       (to.getlocal(tz).to_date - from.getlocal(tz).to_date).to_i + 1
     else
-      seconds_per_unit = { minutes: 60, hours: 3600 }[@cycletime_unit]
+      seconds_per_unit = { minutes: 60, hours: 3600, '24hours': 86_400 }[@cycletime_unit]
       ((to - from) / seconds_per_unit).ceil
     end
   end
