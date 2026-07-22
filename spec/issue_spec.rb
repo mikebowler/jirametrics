@@ -1498,6 +1498,12 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       issue1.raw['fields']['created'] = nil
       expect(issue1.created).to be_nil
     end
+
+    it 'reads the created time from the fields' do
+      issue1.raw['fields']['created'] = '2021-08-29T18:00:00Z'
+      # Compared as instants, so this holds regardless of the issue's timezone offset.
+      expect(issue1.created).to eq Time.parse('2021-08-29T18:00:00Z')
+    end
   end
 
   describe '#key_as_i' do

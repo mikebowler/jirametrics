@@ -366,7 +366,8 @@ class Issue
 
   def created
     # This nil check shouldn't be necessary and yet we've seen one case where it was.
-    parse_time @raw['fields']['created'] if @raw['fields']['created']
+    created_text = @raw['fields']['created']
+    parse_time created_text if created_text
   end
 
   def time_created
