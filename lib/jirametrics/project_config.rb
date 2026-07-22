@@ -62,13 +62,6 @@ class ProjectConfig
     # This is the weird exception that we don't ever want mocked out so we skip FileSystem entirely.
     settings = JSON.parse(File.read(File.join(__dir__, 'settings.json'), encoding: 'UTF-8'))
 
-    if settings['blocked_color']
-      file_system.deprecated message: 'blocked color should be set via css now', date: '2024-05-03'
-    end
-    if settings['stalled_color']
-      file_system.deprecated message: 'stalled color should be set via css now', date: '2024-05-03'
-    end
-
     settings['blocked_statuses'] = StatusCollection.new
     settings['stalled_statuses'] = StatusCollection.new
 

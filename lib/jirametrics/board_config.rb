@@ -29,11 +29,4 @@ class BoardConfig
       settings: project_config.settings
     )
   end
-
-  def expedited_priority_names *priority_names
-    project_config.exporter.file_system.deprecated(
-      date: '2024-09-15', message: 'Expedited priority names are now specified in settings'
-    )
-    @project_config.settings['expedited_priority_names'] = priority_names
-  end
 end

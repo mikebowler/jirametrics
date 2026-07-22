@@ -239,19 +239,4 @@ describe HtmlReportConfig do
       end
     end
   end
-
-  describe '.define_chart' do
-    it 'Tracks deprecated warnings' do
-      described_class.define_chart(
-        name: 'fake_chart', classname: 'TestableChart',
-        deprecated_warning: 'Please use another', deprecated_date: '2024-05-23'
-      )
-
-      config = described_class.new file_config: file_config, block: nil
-      config.fake_chart
-      expect(config.file_system.log_messages).to match_strings [
-        /^Deprecated\(2024-05-23\): Please use another/
-      ]
-    end
-  end
 end

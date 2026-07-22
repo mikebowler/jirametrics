@@ -38,16 +38,4 @@ describe BoardConfig do
       'Must specify a cycletime for board 1'
     )
   end
-
-  it 'sets expedited priority names (deprecated)' do
-    board_config = described_class.new project_config: project_config, id: 1, block: empty_config_block
-    board_config.expedited_priority_names 'super-high'
-
-    aggregate_failures do
-      expect(project_config.settings['expedited_priority_names']).to eq ['super-high']
-      expect(exporter.file_system.log_messages).to match_strings [
-        /^Deprecated\(2024-09-15\): Expedited priority names are now specified in settings/
-      ]
-    end
-  end
 end

@@ -207,8 +207,8 @@ class AgingWorkBarChart < ChartBase
   end
 
   def blocked_stalled_range starting_change, change
-    color = settings['blocked_color'] || '--blocked-color'
-    color = settings['stalled_color'] || '--stalled-color' if starting_change.stalled?
+    color = '--blocked-color'
+    color = '--stalled-color' if starting_change.stalled?
 
     BarChartRange.new(
       start: starting_change.time, stop: change.time, color: CssVariable[color], title: starting_change.reasons

@@ -8,23 +8,6 @@ class HtmlReportConfig < HtmlGenerator
 
   attr_reader :file_config, :sections, :charts
 
-  def self.define_chart name:, classname:, deprecated_warning: nil, deprecated_date: nil
-    lines = []
-    lines << "def #{name} &block"
-    lines << '  block = ->(_) {} unless block'
-    if deprecated_warning
-      lines << "  file_system.deprecated date: #{deprecated_date.inspect}, message: #{deprecated_warning.inspect}"
-    end
-    lines << "  execute_chart #{classname}.new(block)"
-    lines << 'end'
-    module_eval lines.join("\n"), __FILE__, __LINE__
-  end
-
-  define_chart name: 'daily_wip_by_type', classname: 'DailyWipChart',
-    deprecated_warning: 'This is the same as daily_wip_chart. Please use that one', deprecated_date: '2024-05-23'
-  define_chart name: 'story_point_accuracy_chart', classname: 'EstimateAccuracyChart',
-    deprecated_warning: 'Renamed to estimate_accuracy_chart. Please use that one', deprecated_date: '2024-05-23'
-
   def initialize file_config:, block:
     super()
     @file_config = file_config
@@ -204,13 +187,5 @@ class HtmlReportConfig < HtmlGenerator
         with <a href="https://jirametrics.org">JiraMetrics</a> <b>v#{version}</b>
       </section>
     HTML
-  end
-
-  def discard_changes_before status_becomes: nil, &block
-    file_system.deprecated(
-      date: '2025-01-09',
-      message: 'discard_changes_before is now only supported at the project level'
-    )
-    file_config.project_config.discard_changes_before status_becomes: status_becomes, &block
   end
 end

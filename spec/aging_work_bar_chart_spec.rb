@@ -198,13 +198,6 @@ describe AgingWorkBarChart do
       expect(ranges.size).to eq 1
     end
 
-    it 'uses a custom blocked color from settings' do
-      issue = flagged_issue
-      chart.settings['blocked_color'] = '#abcdef'
-      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
-      expect(ranges.first.color).to eq CssVariable['#abcdef']
-    end
-
     # A status change into a stalled status and back out, giving a stalled span from 01-02 to 01-03.
     def stalled_issue
       board.possible_statuses << Status.new(
@@ -228,13 +221,6 @@ describe AgingWorkBarChart do
         BarChartRange.new(start: to_time('2021-01-02'), stop: to_time('2021-01-03'),
           color: CssVariable['--stalled-color'], title: 'Stalled by status: Waiting')
       ]
-    end
-
-    it 'uses a custom stalled color from settings' do
-      issue = stalled_issue
-      chart.settings['stalled_color'] = '#123456'
-      ranges = chart.collect_blocked_stalled_ranges(issue: issue, issue_start_time: issue.created)
-      expect(ranges.first.color).to eq CssVariable['#123456']
     end
 
     it 'emits separate ranges when a blocked span runs straight into a stalled span' do
