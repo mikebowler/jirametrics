@@ -97,7 +97,7 @@ describe Board do
     it 'raises when column name is not found' do
       board = load_complete_sample_board
       expect { board.status_ids_in_or_right_of_column('Nonexistent') }.to raise_error(
-        /No visible column with name: "Nonexistent"/
+        /No visible column named "Nonexistent"/
       )
     end
 
@@ -106,6 +106,27 @@ describe Board do
       expect { board.status_ids_in_or_right_of_column('Nonexistent') }.to raise_error(
         /"Ready".*"In Progress".*"Review".*"Done"/
       )
+    end
+
+    it 'points at the correctly-cased column when the name differs only by case' do
+      board = load_complete_sample_board
+      expect { board.status_ids_in_or_right_of_column('DONE') }.to raise_error(
+        /You specified "DONE" but probably meant "Done"\. Column names are case-sensitive\./
+      )
+    end
+
+    it 'lists the other columns (excluding the suggestion) after a case-only miss' do
+      board = load_complete_sample_board
+      expect { board.status_ids_in_or_right_of_column('DONE') }.to raise_error(
+        /the other visible columns are: "Ready", "In Progress", "Review"\.\z/
+      )
+    end
+
+    it 'does not offer a suggestion when there is no case-insensitive match' do
+      board = load_complete_sample_board
+      expect { board.status_ids_in_or_right_of_column('Nonexistent') }.to raise_error do |error|
+        expect(error.message).not_to include('probably meant')
+      end
     end
   end
 

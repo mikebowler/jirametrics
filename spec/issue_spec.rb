@@ -393,7 +393,8 @@ describe Issue do
 
     it 'fails for invalid column name' do
       expect { issue.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
-        'No visible column with name: "NoSuchColumn" Possible options are: "Ready", "In Progress", "Review", "Done"'
+        'No visible column named "NoSuchColumn". ' \
+          'The visible columns are: "Ready", "In Progress", "Review", "Done".'
       )
     end
 

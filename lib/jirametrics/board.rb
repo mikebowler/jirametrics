@@ -59,11 +59,25 @@ class Board
       status_ids += column.status_ids if found_it
     end
 
-    unless found_it
-      column_names = @visible_columns.collect { |c| c.name.inspect }.join(', ')
-      raise "No visible column with name: #{column_name.inspect} Possible options are: #{column_names}"
-    end
+    raise column_not_found_message(column_name) unless found_it
+
     status_ids
+  end
+
+  # Column-name matching is case-sensitive, so a config asking for "Done" against a board whose column
+  # is "DONE" fails -- and that's the mistake people actually make. When only the case differs, name the
+  # likely intended column outright instead of making the reader spot it in the list themselves.
+  def column_not_found_message column_name
+    names = @visible_columns.collect(&:name)
+    suggestion = names.find { |name| name.casecmp?(column_name) }
+    unless suggestion
+      return "No visible column named #{column_name.inspect}. " \
+        "The visible columns are: #{names.collect(&:inspect).join(', ')}."
+    end
+
+    others = (names - [suggestion]).collect(&:inspect).join(', ')
+    "You specified #{column_name.inspect} but probably meant #{suggestion.inspect}. Column names are " \
+      "case-sensitive. If that's not it, the other visible columns are: #{others}."
   end
 
   def board_type = raw['type']
