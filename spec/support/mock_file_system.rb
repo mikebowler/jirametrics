@@ -16,7 +16,7 @@ class MockFileSystem < FileSystem
     self.logfile_name = 'mock_logfile'
   end
 
-  def load filename, supress_deprecation: false
+  def load filename
     json = @data[filename]
 
     return super if json == :not_mocked

@@ -18,18 +18,14 @@ class FileSystem
   end
 
   # Effectively the same as File.read except it forces the encoding to UTF-8
-  def load filename, supress_deprecation: false
-    if filename.end_with?('.json') && !supress_deprecation
-      deprecated(message: 'call load_json instead', date: '2024-11-13')
-    end
-
+  def load filename
     File.read filename, encoding: 'UTF-8'
   end
 
   def load_json filename, fail_on_error: true
     return nil if fail_on_error == false && File.exist?(filename) == false
 
-    JSON.parse load(filename, supress_deprecation: true)
+    JSON.parse load(filename)
   end
 
   def save_json json:, filename:
