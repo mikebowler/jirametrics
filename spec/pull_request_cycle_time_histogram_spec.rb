@@ -30,8 +30,8 @@ describe PullRequestCycleTimeHistogram do
       expect(chart.x_axis_title).to eq 'Cycle time in hours'
     end
 
-    it 'reflects :"24hours" in the axis title' do
-      chart.cycletime_unit :'24hours'
+    it 'reflects :hours24 in the axis title' do
+      chart.cycletime_unit :hours24
       expect(chart.x_axis_title).to eq 'Cycle time in 24-hour periods'
     end
 
@@ -64,8 +64,8 @@ describe PullRequestCycleTimeHistogram do
       expect(chart.value_for_item(pr)).to eq 2
     end
 
-    it 'counts :"24hours" as elapsed clock periods (the same midnight-crossing PR is 1)' do
-      chart.cycletime_unit :'24hours'
+    it 'counts :hours24 as elapsed clock periods (the same midnight-crossing PR is 1)' do
+      chart.cycletime_unit :hours24
       pr = PullRequest.new(raw: {
         'opened_at' => '2024-01-01T23:00:00Z',
         'closed_at' => '2024-01-02T01:00:00Z'

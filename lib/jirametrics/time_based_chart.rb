@@ -11,13 +11,13 @@ require 'jirametrics/chart_base'
 # PR-vs-issue split lives one level below that.
 class TimeBasedChart < ChartBase
   # The cycletime units we support, mapped to how each reads in an axis title.
-  # :days counts calendar days; :"24hours" counts elapsed 24-hour clock periods
+  # :days counts calendar days; :hours24 counts elapsed 24-hour clock periods
   # (the two differ for anything that crosses midnight).
   VALUE_AXIS_LABELS = {
     minutes: 'minutes',
     hours: 'hours',
     days: 'days',
-    '24hours': '24-hour periods'
+    hours24: '24-hour periods'
   }.freeze
 
   def initialize
@@ -42,7 +42,7 @@ class TimeBasedChart < ChartBase
     when :minutes then label_minutes(value)
     when :hours then label_hours(value)
     when :days then label_days(value)
-    when :'24hours' then "#{value}x 24h periods"
+    when :hours24 then "#{value}x 24h periods"
     end
   end
 
@@ -58,7 +58,7 @@ class TimeBasedChart < ChartBase
       tz = timezone_offset || '+00:00'
       (to.getlocal(tz).to_date - from.getlocal(tz).to_date).to_i + 1
     else
-      seconds_per_unit = { minutes: 60, hours: 3600, '24hours': 86_400 }[@cycletime_unit]
+      seconds_per_unit = { minutes: 60, hours: 3600, hours24: 86_400 }[@cycletime_unit]
       ((to - from) / seconds_per_unit).ceil
     end
   end

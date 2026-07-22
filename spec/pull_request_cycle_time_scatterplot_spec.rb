@@ -66,8 +66,8 @@ describe PullRequestCycleTimeScatterplot do
       expect(chart.y_axis_title).to eq 'Cycle time in hours'
     end
 
-    it 'reflects :"24hours" in the axis title' do
-      chart.cycletime_unit :'24hours'
+    it 'reflects :hours24 in the axis title' do
+      chart.cycletime_unit :hours24
       expect(chart.y_axis_title).to eq 'Cycle time in 24-hour periods'
     end
 
@@ -119,9 +119,9 @@ describe PullRequestCycleTimeScatterplot do
       expect(chart.y_value(pr)).to eq 2
     end
 
-    it 'counts :"24hours" as elapsed clock periods, unlike calendar :days (midnight-crossing PR is 1)' do
+    it 'counts :hours24 as elapsed clock periods, unlike calendar :days (midnight-crossing PR is 1)' do
       # The same midnight-crossing PR that :days counts as 2 (see above) is 1 in clock time.
-      chart.cycletime_unit :'24hours'
+      chart.cycletime_unit :hours24
       pr = PullRequest.new(raw: {
         'opened_at' => '2024-01-01T23:00:00Z',
         'closed_at' => '2024-01-02T01:00:00Z'
@@ -154,8 +154,8 @@ describe PullRequestCycleTimeScatterplot do
       expect(chart.label_cycletime(1)).to eq '1 minute'
     end
 
-    it 'labels :"24hours" as an "Nx 24h periods" multiplier' do
-      chart.cycletime_unit :'24hours'
+    it 'labels :hours24 as an "Nx 24h periods" multiplier' do
+      chart.cycletime_unit :hours24
       expect(chart.label_cycletime(3)).to eq '3x 24h periods'
     end
   end
