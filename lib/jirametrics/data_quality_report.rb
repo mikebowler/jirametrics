@@ -128,15 +128,7 @@ class DataQualityReport < ChartBase
       Entry.new started: started, stopped: stopped, issue: issue
     end
 
-    @entries.sort! do |a, b|
-      a.issue.key =~ /.+-(\d+)$/
-      a_id = $1.to_i
-
-      b.issue.key =~ /.+-(\d+)$/
-      b_id = $1.to_i
-
-      a_id <=> b_id
-    end
+    @entries.sort_by! { |entry| entry.issue.key_as_i }
   end
 
   def scan_for_completed_issues_without_a_start_time entry:
