@@ -346,9 +346,10 @@ class ProjectConfig
 
   def load_sprints
     file_system.foreach(@target_path) do |file|
-      next unless file =~ /^#{get_file_prefix}_board_(\d+)_sprints_\d+.json$/
+      match = file.match(/^#{get_file_prefix}_board_(?<board_id>\d+)_sprints_\d+.json$/)
+      next unless match
 
-      board_id = $1.to_i
+      board_id = match[:board_id].to_i
       file_path = File.join(@target_path, file)
       board = @all_boards[board_id]
       unless board

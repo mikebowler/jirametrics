@@ -916,6 +916,19 @@ describe ProjectConfig do
           'File: spec/testdata/sample_board_2_sprints_0.json, Boards: [1]'
       ])
     end
+
+    it 'loads the sprints into the board identified in the filename' do
+      exporter.file_system.when_foreach root: 'spec/testdata/', result: ['sample_board_1_sprints_0.json']
+      exporter.file_system.when_loading(
+        file: 'spec/testdata/sample_board_1_sprints_0.json',
+        json: { 'values' => [{ 'id' => 5, 'name' => 'Sprint 5', 'state' => 'active' }] }
+      )
+      board = sample_board
+      project_config.file_prefix 'sample'
+      project_config.all_boards[1] = board
+      project_config.load_sprints
+      expect(board.sprints.map(&:id)).to eq [5]
+    end
   end
 
   describe '#load_fix_versions' do
