@@ -1517,6 +1517,70 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#fabricate_change (artificial status/priority change from creation)' do
+    def fabricated_status_change issue
+      issue.changes.find { |change| change.status? && change.artificial? }
+    end
+
+    it 'reads the current field value when there is no prior change of that type' do
+      issue = empty_issue created: '2021-10-02', board: board # created in Backlog (id 1)
+      change = fabricated_status_change(issue)
+      aggregate_failures do
+        expect(change.time).to eq to_time('2021-10-02')
+        expect(change.artificial?).to be true
+        expect(change.field).to eq 'status'
+        expect(change.value).to eq 'Backlog' # toString, from the current status name
+        expect(change.value_id).to eq 1 # to, from the current status id
+        expect(change.author_raw).to eq('displayName' => 'Tolkien') # from the creator
+      end
+    end
+
+    it "reads the first prior change's old value when one exists" do
+      # Non-status changes on either side, so we pin that we find the first *status* change, not just
+      # the first or last change.
+      issue = empty_issue created: '2021-10-02', board: board, changelog_histories: [
+        { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
+        { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [
+          { 'field' => 'status', 'from' => '1', 'fromString' => 'Backlog', 'to' => '5', 'toString' => 'In Progress' }
+        ] },
+        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'y' }] }
+      ]
+      change = fabricated_status_change(issue)
+      aggregate_failures do
+        expect(change.value).to eq 'Backlog' # old_value of the first status change
+        expect(change.value_id).to eq 1 # old_value_id of the first status change
+      end
+    end
+
+    it 'falls back to id 0 when the first change has no from id (seen in prod)' do
+      issue = empty_issue created: '2021-10-02', board: board, changelog_histories: [
+        { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [
+          { 'field' => 'status', 'to' => '5', 'toString' => 'In Progress' } # no from / fromString
+        ] }
+      ]
+      expect(fabricated_status_change(issue).value_id).to eq 0
+    end
+
+    it 'fabricates nothing for a field that is absent from the issue' do
+      issue = described_class.new(board: board, raw: {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [] },
+        'fields' => { 'created' => '2021-10-02T00:00:00.000Z', 'creator' => { 'displayName' => 'Tolkien' } }
+      })
+      expect(fabricated_status_change(issue)).to be_nil
+    end
+
+    it 'fabricates nothing when the created timestamp is absent (a linked-issue fragment)' do
+      # status is present, so removing the guard would try to build a change with a nil time and blow up.
+      issue = described_class.new(board: board, raw: {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [] },
+        'fields' => { 'status' => { 'name' => 'Backlog', 'id' => '1' }, 'creator' => { 'displayName' => 'Tolkien' } }
+      })
+      expect(fabricated_status_change(issue)).to be_nil
+    end
+  end
+
   describe '#key_as_i' do
     it 'returns when valid' do
       expect(issue1.key_as_i).to eq 1

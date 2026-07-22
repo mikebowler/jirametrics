@@ -837,7 +837,7 @@ class Issue
       first_status_id = first_change.old_value_id || 0
     end
 
-    creator = raw['fields']['creator']
+    creator = raw_fields['creator']
     ChangeItem.new time: created_time, artificial: true, author_raw: creator, raw: {
       'field' => field_name,
       'to' => first_status_id,
