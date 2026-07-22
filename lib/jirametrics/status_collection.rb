@@ -49,8 +49,8 @@ class StatusCollection
 
   def parse_name_id name
     # Names could arrive in one of the following formats: "Done:3", "3", "Done"
-    if name =~ /^(.*):(\d+)$/
-      [$1, $2.to_i]
+    if /^(?<status_name>.*):(?<status_id>\d+)$/ =~ name
+      [status_name, status_id.to_i]
     elsif name.match?(/^\d+$/)
       [nil, name.to_i]
     else
