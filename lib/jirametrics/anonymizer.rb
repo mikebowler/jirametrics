@@ -19,11 +19,10 @@ class Anonymizer < ChartBase
   def run
     anonymize_issue_keys_and_titles
     anonymize_column_names
-    # TODO: status names are not anonymized yet, so anonymized exports can still leak a client's real
-    # status vocabulary. anonymize_issue_statuses below does this but is disabled: build_status_name_hash
-    # doesn't index change.old_value, so re-enabling as-is can raise on an old_value that never appeared
-    # elsewhere. Finish that (and characterize it) before wiring it back in.
-    # anonymize_issue_statuses
+    # Status names are deliberately left alone. They show up throughout the reports (hover text, aging
+    # tables, the board columns themselves), so scrubbing them to tokens would make those displays
+    # useless -- you'd lose the workflow story that makes the report worth reading. If a client's status
+    # vocabulary is itself confidential, rename the statuses in Jira rather than anonymizing here.
     anonymize_board_names
     anonymize_labels_and_components
     anonymize_sprints
@@ -133,73 +132,6 @@ class Anonymizer < ChartBase
         column.name = column_name
         column_name = column_name.next
       end
-    end
-  end
-
-  def build_status_name_hash
-    next_status = 'a'
-    status_name_hash = {}
-    @issues.each do |issue|
-      issue.changes.each do |change|
-        next unless change.status?
-
-        # TODO: index change.old_value too, or anonymize_issue_statuses raises on an old_value whose
-        # status is never seen here as a value or possible status.
-        status_key = change.value
-        if status_name_hash[status_key].nil?
-          status_name_hash[status_key] = "status-#{next_status}"
-          next_status = next_status.next
-        end
-      end
-    end
-
-    @possible_statuses.each do |status|
-      status_key = status.name
-      if status_name_hash[status_key].nil?
-        status_name_hash[status_key] = "status-#{next_status}"
-        next_status = next_status.next
-      end
-    end
-
-    status_name_hash
-  end
-
-  def anonymize_issue_statuses # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-    # Complexity left as-is while this feature is parked (it's disabled in #run -- see the TODO there);
-    # it'll be finished and decomposed when we pick it up.
-    @file_system.log 'Anonymizing issue statuses and status categories'
-    status_name_hash = build_status_name_hash
-
-    @issues.each do |issue|
-      # This is where we create URL's from
-      issue.raw['self'] = nil
-
-      issue.changes.each do |change|
-        next unless change.status?
-
-        status_key = change.value
-        anonymized_value = status_name_hash[status_key]
-        raise "status_name_hash[#{status_key.inspect} is nil" if anonymized_value.nil?
-
-        change.value = anonymized_value
-
-        next if change.old_value.nil?
-
-        status_key = change.old_value
-        anonymized_value = status_name_hash[status_key]
-        raise "status_name_hash[#{status_key.inspect} is nil" if anonymized_value.nil?
-
-        change.old_value = anonymized_value
-      end
-    end
-
-    @possible_statuses.each do |status|
-      status_key = status.name
-      if status_name_hash[status_key].nil?
-        raise "Can't find status_key #{status_key.inspect} in #{status_name_hash.inspect}"
-      end
-
-      status.name = status_name_hash[status_key] unless status_name_hash[status_key].nil?
     end
   end
 
