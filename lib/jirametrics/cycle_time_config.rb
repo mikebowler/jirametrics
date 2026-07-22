@@ -39,16 +39,6 @@ class CycleTimeConfig
     started_stopped_times(issue).last
   end
 
-  def started_time issue
-    @file_system.deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
-    started_stopped_times(issue).first
-  end
-
-  def stopped_time issue
-    @file_system.deprecated date: '2024-10-16', message: 'Use started_stopped_times() instead'
-    started_stopped_times(issue).last
-  end
-
   def fabricate_change_item time
     @file_system.deprecated(
       date: '2024-12-16', message: "This method should now return a ChangeItem not a #{time.class}", depth: 4

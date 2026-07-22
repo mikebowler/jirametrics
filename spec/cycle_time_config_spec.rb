@@ -14,34 +14,6 @@ describe CycleTimeConfig do
   let(:issue) { load_issue 'SP-1' }
 
   describe 'deprecated methods' do
-    it 'deprecates started_at' do
-      config = described_class.new(
-        possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
-        block: lambda do |_|
-          start_at first_time_in_status('In Progress')
-          stop_at first_time_in_status('Done')
-        end
-      )
-      config.started_time issue
-      expect(exporter.file_system.log_messages).to match_strings [
-        /Deprecated\(2024-10-16\): Use started_stopped_times\(\) instead/
-      ]
-    end
-
-    it 'deprecates stopped_at' do
-      config = described_class.new(
-        possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
-        block: lambda do |_|
-          start_at first_time_in_status('In Progress')
-          stop_at first_time_in_status('Done')
-        end
-      )
-      config.stopped_time issue
-      expect(exporter.file_system.log_messages).to match_strings [
-        /Deprecated\(2024-10-16\): Use started_stopped_times\(\) instead/
-      ]
-    end
-
     it 'deprecates methods that return a time' do
       config = described_class.new(
         possible_statuses: nil, label: 'foo', file_system: exporter.file_system, settings: load_settings,
