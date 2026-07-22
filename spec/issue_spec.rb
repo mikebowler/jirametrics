@@ -2205,6 +2205,66 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#fabricate_sprint_change (the artificial initial sprint change)' do
+    let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
+
+    def fabricated_change issue
+      issue.changes.find { |change| change.sprint? && change.artificial? }
+    end
+
+    it 'captures the full change for an issue created inside sprints with no changelog entry' do
+      # Two sprints so the 'to' separator (join(', ')) actually matters.
+      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+        { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id },
+        { 'id' => 20, 'name' => 'Sprint 20', 'state' => 'active', 'boardId' => scrum_board.id }
+      ]
+      change = fabricated_change(issue)
+      aggregate_failures do
+        expect(change.time).to eq to_time('2021-10-02')
+        expect(change.artificial?).to be true
+        expect(change.field).to eq 'Sprint'
+        expect(change.value).to eq 'Sprint' # toString
+        expect(change.value_id).to eq [10, 20] # 'to', comma-space separated
+        expect(change.field_id).to eq 'customfield_10020' # from sprint_field_id (no changelog to read it from)
+        expect(change.author_raw).to eq('displayName' => 'Tolkien') # from the issue's creator
+      end
+    end
+
+    it 'seeds membership and field id from the first recorded sprint change when there is a changelog' do
+      # Non-sprint changes on either side, so we're pinning that we find the sprint change, not just
+      # take the first or last change in the list.
+      issue = empty_issue created: '2021-10-02', board: scrum_board, changelog_histories: [
+        { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
+        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
+          { 'field' => 'Sprint', 'fieldId' => 'customfield_99', 'from' => '10', 'to' => '' }
+        ] },
+        { 'created' => '2021-10-06T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'y' }] }
+      ]
+      change = fabricated_change(issue)
+      aggregate_failures do
+        expect(change.value_id).to eq [10] # from the sprint change's old_value_id
+        expect(change.field_id).to eq 'customfield_99' # from first_sprint_change.field_id, not sprint_field_id
+      end
+    end
+
+    it 'fabricates nothing when the issue was never in a sprint' do
+      issue = empty_issue created: '2021-10-02', board: scrum_board
+      expect(fabricated_change(issue)).to be_nil
+    end
+
+    it 'fabricates nothing, and does not blow up, when the created timestamp is missing' do
+      # The guard exists because a nil created would make the fabricated change's time nil, which
+      # ChangeItem rejects. 'created' is present-but-nil (not merely absent) so it also pins that we
+      # check the value, not just the key. Built by hand since empty_issue always supplies a created.
+      issue = described_class.new(board: scrum_board, raw: {
+        'key' => 'SP-1',
+        'changelog' => { 'histories' => [] },
+        'fields' => { 'created' => nil, 'customfield_10020' => [{ 'id' => 10, 'boardId' => scrum_board.id }] }
+      })
+      expect(fabricated_change(issue)).to be_nil
+    end
+  end
+
   describe '#load_comments_into_changes' do
     let(:issue_with_comments) do
       raw = {
