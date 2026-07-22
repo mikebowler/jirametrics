@@ -49,6 +49,15 @@ describe PullRequestCycleTimeHistogram do
       chart.cycletime_unit :minutes
       expect(chart.value_for_item(pull_request)).to eq 3600
     end
+
+    it 'counts :days as calendar days, not elapsed 24-hour periods (a midnight-crossing PR is 2 days)' do
+      chart.timezone_offset = '+00:00'
+      pr = PullRequest.new(raw: {
+        'opened_at' => '2024-01-01T23:00:00Z',
+        'closed_at' => '2024-01-02T01:00:00Z'
+      })
+      expect(chart.value_for_item(pr)).to eq 2
+    end
   end
 
   describe '#title_for_item' do

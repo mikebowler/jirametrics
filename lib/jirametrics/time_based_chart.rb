@@ -32,4 +32,21 @@ class TimeBasedChart < ChartBase
     when :days then label_days(value)
     end
   end
+
+  # Converts the span between two Times into the selected cycletime unit.
+  #
+  # :days is deliberately different from the other units: it counts calendar days
+  # inclusively in the configured timezone (opened and closed on the same day is
+  # 1 day, crossing one midnight is 2), matching the working-days cycletime engine.
+  # The elapsed units (:hours, :minutes) divide the wall-clock span and round up --
+  # a partial unit still counts as one, so a 20-minute PR is 1 hour, never 0.
+  def duration_in_unit from, to
+    if @cycletime_unit == :days
+      tz = timezone_offset || '+00:00'
+      (to.getlocal(tz).to_date - from.getlocal(tz).to_date).to_i + 1
+    else
+      seconds_per_unit = { minutes: 60, hours: 3600 }[@cycletime_unit]
+      ((to - from) / seconds_per_unit).ceil
+    end
+  end
 end

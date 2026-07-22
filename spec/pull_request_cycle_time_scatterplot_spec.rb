@@ -95,6 +95,24 @@ describe PullRequestCycleTimeScatterplot do
       chart.cycletime_unit :minutes
       expect(chart.y_value(pull_request)).to eq 3600
     end
+
+    it 'ceils partial hours rather than rounding (a 20-minute PR is 1 hour, not 0)' do
+      pr = PullRequest.new(raw: {
+        'opened_at' => '2024-01-01T09:00:00Z',
+        'closed_at' => '2024-01-01T09:20:00Z'
+      })
+      chart.cycletime_unit :hours
+      expect(chart.y_value(pr)).to eq 1
+    end
+
+    it 'ceils partial minutes rather than rounding (80 seconds is 2 minutes, not 1)' do
+      pr = PullRequest.new(raw: {
+        'opened_at' => '2024-01-01T09:00:00Z',
+        'closed_at' => '2024-01-01T09:01:20Z'
+      })
+      chart.cycletime_unit :minutes
+      expect(chart.y_value(pr)).to eq 2
+    end
   end
 
   describe '#label_cycletime' do

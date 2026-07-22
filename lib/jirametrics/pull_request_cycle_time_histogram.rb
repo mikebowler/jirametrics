@@ -39,8 +39,7 @@ class PullRequestCycleTimeHistogram < TimeBasedHistogram
   end
 
   def value_for_item item
-    divisor = { minutes: 60.0, hours: 3600.0, days: 86_400.0 }[@cycletime_unit]
-    ((item.closed_at - item.opened_at) / divisor).ceil
+    duration_in_unit item.opened_at, item.closed_at
   end
 
   def title_for_item count:, value:

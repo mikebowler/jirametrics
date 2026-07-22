@@ -38,15 +38,7 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
   end
 
   def y_value pull_request
-    if @cycletime_unit == :days
-      tz = timezone_offset || '+00:00'
-      opened = pull_request.opened_at.getlocal(tz).to_date
-      closed = pull_request.closed_at.getlocal(tz).to_date
-      (closed - opened).to_i + 1
-    else
-      divisor = { minutes: 60, hours: 3600 }[@cycletime_unit]
-      ((pull_request.closed_at - pull_request.opened_at) / divisor).round
-    end
+    duration_in_unit pull_request.opened_at, pull_request.closed_at
   end
 
   def title_value pull_request, rules: nil
