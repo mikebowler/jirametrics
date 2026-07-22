@@ -1096,6 +1096,24 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
   end
 
+  describe '#blocked_on_date?' do
+    # Flagged 'Blocked' on 10-03, so the issue is blocked from 10-03 onward and active before it.
+    let(:issue) do
+      empty_issue(created: '2021-10-01', board: board).tap do |issue|
+        add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+      end
+    end
+    let(:end_time) { to_time('2021-10-04T23:59:59') }
+
+    it 'is true on a date the issue was blocked' do
+      expect(issue.blocked_on_date?(to_date('2021-10-03'), end_time: end_time)).to be true
+    end
+
+    it 'is false on a date the issue was not blocked' do
+      expect(issue.blocked_on_date?(to_date('2021-10-02'), end_time: end_time)).to be false
+    end
+  end
+
   describe '#inspect' do
     it 'returns a simplified representation' do
       expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
