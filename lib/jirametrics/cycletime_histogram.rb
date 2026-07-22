@@ -28,6 +28,13 @@ class CycletimeHistogram < TimeBasedHistogram
     end
   end
 
+  # Days-only until the working-days cycletime engine grows sub-day resolution. Inherited from
+  # TimeBasedChart so the option exists, but the unbuilt path fails loudly rather than mislabelling
+  # the axis while the value stays in days. See jirametrics-en5.
+  def cycletime_unit unit
+    raise NotImplementedError, "#{self.class} only supports :days for now (see jirametrics-en5)" unless unit == :days
+  end
+
   def all_items
     stopped_issues = completed_issues_in_range include_unstarted: true
 

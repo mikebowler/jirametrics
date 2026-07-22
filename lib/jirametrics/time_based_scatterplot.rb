@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/time_based_chart'
 
-class TimeBasedScatterplot < ChartBase
+class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
 
   def initialize
@@ -10,6 +11,11 @@ class TimeBasedScatterplot < ChartBase
 
     @percentage_lines = []
     @highest_y_value = 0
+  end
+
+  # On a scatterplot the cycle time is plotted up the y-axis.
+  def value_axis_title= title
+    @y_axis_title = title
   end
 
   def run

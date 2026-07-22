@@ -10,6 +10,18 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#cycletime_unit' do
+    it 'accepts :days (the only supported unit)' do
+      expect { chart.cycletime_unit :days }.not_to raise_error
+    end
+
+    it 'raises NotImplementedError for any other unit' do
+      expect { chart.cycletime_unit :hours }.to raise_error(
+        NotImplementedError, /CycletimeScatterplot only supports :days/
+      )
+    end
+  end
+
   describe '#data_for_issue' do
     it 'gets data' do
       board = load_complete_sample_board

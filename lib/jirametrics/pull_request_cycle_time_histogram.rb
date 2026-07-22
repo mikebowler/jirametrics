@@ -6,7 +6,6 @@ class PullRequestCycleTimeHistogram < TimeBasedHistogram
   def initialize block
     super()
 
-    @cycletime_unit = :days
     @x_axis_title = 'Cycle time in days'
 
     header_text 'PR Histogram'
@@ -23,15 +22,6 @@ class PullRequestCycleTimeHistogram < TimeBasedHistogram
         rule.label = pull_request.repo
       end
     end
-  end
-
-  def cycletime_unit unit
-    unless %i[minutes hours days].include?(unit)
-      raise ArgumentError, "cycletime_unit must be :minutes, :hours, or :days, got #{unit.inspect}"
-    end
-
-    @cycletime_unit = unit
-    @x_axis_title = "Cycle time in #{unit}"
   end
 
   def all_items
@@ -51,14 +41,6 @@ class PullRequestCycleTimeHistogram < TimeBasedHistogram
   def value_for_item item
     divisor = { minutes: 60.0, hours: 3600.0, days: 86_400.0 }[@cycletime_unit]
     ((item.closed_at - item.opened_at) / divisor).ceil
-  end
-
-  def label_cycletime value
-    case @cycletime_unit
-    when :minutes then label_minutes(value)
-    when :hours then label_hours(value)
-    when :days then label_days(value)
-    end
   end
 
   def title_for_item count:, value:

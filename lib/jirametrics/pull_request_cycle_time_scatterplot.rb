@@ -6,7 +6,6 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
   def initialize block
     super()
 
-    @cycletime_unit = :days
     @y_axis_title = 'Cycle time in days'
 
     header_text 'Pull Request (PR) Scatterplot'
@@ -22,15 +21,6 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
         rule.label = pull_request.repo
       end
     end
-  end
-
-  def cycletime_unit unit
-    unless %i[minutes hours days].include?(unit)
-      raise ArgumentError, "cycletime_unit must be :minutes, :hours, or :days, got #{unit.inspect}"
-    end
-
-    @cycletime_unit = unit
-    @y_axis_title = "Cycle time in #{unit}"
   end
 
   def all_items
@@ -56,14 +46,6 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
     else
       divisor = { minutes: 60, hours: 3600 }[@cycletime_unit]
       ((pull_request.closed_at - pull_request.opened_at) / divisor).round
-    end
-  end
-
-  def label_cycletime value
-    case @cycletime_unit
-    when :minutes then label_minutes(value)
-    when :hours then label_hours(value)
-    when :days then label_days(value)
     end
   end
 

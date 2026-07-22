@@ -35,6 +35,13 @@ class CycletimeScatterplot < TimeBasedScatterplot
     end
   end
 
+  # Days-only until the working-days cycletime engine grows sub-day resolution. Inherited from
+  # TimeBasedChart so the option exists, but the unbuilt path fails loudly rather than mislabelling
+  # the axis while the value stays in days. See jirametrics-en5.
+  def cycletime_unit unit
+    raise NotImplementedError, "#{self.class} only supports :days for now (see jirametrics-en5)" unless unit == :days
+  end
+
   def minimum_y_value
     1 # Values under 1 day are data quality problems; they're flagged in the quality report instead
   end

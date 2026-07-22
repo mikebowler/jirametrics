@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/time_based_chart'
 
-class TimeBasedHistogram < ChartBase
+class TimeBasedHistogram < TimeBasedChart
   include GroupableIssueChart
 
   attr_reader :show_stats
@@ -12,6 +13,11 @@ class TimeBasedHistogram < ChartBase
 
     percentiles [50, 85, 98]
     @show_stats = true
+  end
+
+  # On a histogram the cycle time is plotted along the x-axis (count is on the y-axis).
+  def value_axis_title= title
+    @x_axis_title = title
   end
 
   def percentiles percs = nil

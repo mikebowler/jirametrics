@@ -9,6 +9,18 @@ describe CycletimeHistogram do
   let(:issue10) { load_issue 'SP-10', board: board }
   let(:chart) { described_class.new(empty_config_block) }
 
+  describe '#cycletime_unit' do
+    it 'accepts :days (the only supported unit)' do
+      expect { chart.cycletime_unit :days }.not_to raise_error
+    end
+
+    it 'raises NotImplementedError for any other unit' do
+      expect { chart.cycletime_unit :hours }.to raise_error(
+        NotImplementedError, /CycletimeHistogram only supports :days/
+      )
+    end
+  end
+
   describe '#histogram_data_for' do
     it 'handles no issues' do
       expect(chart.histogram_data_for items: []).to be_empty
