@@ -6,6 +6,7 @@ coverage/
 .mutant/
 .DS_Store
 spec/tmp/
+/tmp/
 *.gem
 *.log
 extra.css
