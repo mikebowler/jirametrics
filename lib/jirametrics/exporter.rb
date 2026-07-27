@@ -118,10 +118,31 @@ class Exporter
 
   def boards board_id:, name_filter: nil
     gateway = JiraGateway.new(file_system: file_system, jira_config: jira_config, settings: {})
+    # Keep the gateway's raw curl chatter in the logfile; list_boards/describe_board switch this off
+    # right before they print their own clean output, and the rescue turns a failed Jira call into a
+    # one-line message with next steps instead of a stack trace.
+    file_system.log_only = true
     if board_id.nil?
       list_boards gateway, name_filter
     else
       describe_board gateway, board_id
+    end
+    true
+  rescue StandardError
+    file_system.log_only = false
+    file_system.error boards_error_message(board_id)
+    false
+  ensure
+    file_system.log_only = false
+  end
+
+  def boards_error_message board_id
+    if board_id
+      "Couldn't read board #{board_id} from Jira. Check the id (run `jirametrics boards` to list them) " \
+        "and your credentials (`jirametrics verify`). Details in #{file_system.logfile_name}."
+    else
+      "Couldn't list boards from Jira. Check your credentials with `jirametrics verify`. " \
+        "Details in #{file_system.logfile_name}."
     end
   end
 
@@ -129,6 +150,7 @@ class Exporter
     boards = fetch_all_boards gateway
     boards.select! { |board| File.fnmatch(name_filter, board['name'].to_s, File::FNM_CASEFOLD) } if name_filter
     boards.sort_by! { |board| board['name'].to_s.strip.downcase }
+    file_system.log_only = false # gateway calls done; turn logging back on to print results
 
     if boards.empty?
       file_system.log(
@@ -165,7 +187,9 @@ class Exporter
       statuses << Status.from_raw(snippet)
     end
     raw = gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
-    board = Board.new raw: raw, possible_statuses: statuses, features: board_features(gateway, board_id, raw)
+    features = board_features(gateway, board_id, raw)
+    file_system.log_only = false # gateway calls done; turn logging back on to print results
+    board = Board.new raw: raw, possible_statuses: statuses, features: features
     file_system.log format_board(board, board_id), also_write_to_stderr: true
   end
 

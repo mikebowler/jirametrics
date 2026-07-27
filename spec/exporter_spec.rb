@@ -396,6 +396,30 @@ describe Exporter do
       exporter.boards board_id: '9'
       expect(file_system.log_messages.join("\n")).not_to include('first_time_added_to_active_sprint')
     end
+
+    it 'reports a clean error and returns false when listing boards fails' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      gw = instance_double(JiraGateway)
+      allow(gw).to receive(:call_url).and_raise('Failed call with exit status 56. See jirametrics.log for details')
+      allow(JiraGateway).to receive(:new).and_return(gw)
+      result = exporter.boards board_id: nil
+      aggregate_failures do
+        expect(result).to be false
+        expect(file_system.log_messages.join("\n")).to match(/couldn't list boards/i)
+      end
+    end
+
+    it 'reports a clean error naming the board and returns false when a board id cannot be read' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      gw = instance_double(JiraGateway)
+      allow(gw).to receive(:call_url).and_raise('Failed call with exit status 56. See jirametrics.log for details')
+      allow(JiraGateway).to receive(:new).and_return(gw)
+      result = exporter.boards board_id: '99999999'
+      aggregate_failures do
+        expect(result).to be false
+        expect(file_system.log_messages.join("\n")).to match(/board 99999999/i)
+      end
+    end
   end
 
   describe '#info' do
