@@ -243,12 +243,45 @@ describe Exporter do
       )
     end
 
-    it 'asks for a board id when none is given, without calling Jira' do
+    it 'lists the accessible boards with id, name and type when no board id is given' do
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
+        .and_return({
+          'isLast' => true,
+          'values' => [
+            { 'id' => 1, 'name' => 'SP board', 'type' => 'kanban' },
+            { 'id' => 2, 'name' => 'Scrum board', 'type' => 'scrum' }
+          ]
+        })
       exporter.boards board_id: nil
+      output = file_system.log_messages.join("\n")
       aggregate_failures do
-        expect(file_system.log_messages.join("\n")).to match(/board id/i)
-        expect(gateway).not_to have_received(:call_url)
+        expect(output).to include('1 — "SP board" (kanban)')
+        expect(output).to include('2 — "Scrum board" (scrum)')
       end
+    end
+
+    it 'follows pagination until the last page' do
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
+        .and_return({ 'isLast' => false, 'values' => [{ 'id' => 1, 'name' => 'A', 'type' => 'kanban' }] })
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=1&maxResults=50')
+        .and_return({ 'isLast' => true, 'values' => [{ 'id' => 2, 'name' => 'B', 'type' => 'scrum' }] })
+      exporter.boards board_id: nil
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('1 — "A" (kanban)')
+        expect(output).to include('2 — "B" (scrum)')
+      end
+    end
+
+    it 'reports when no boards are accessible' do
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
+        .and_return({ 'isLast' => true, 'values' => [] })
+      exporter.boards board_id: nil
+      expect(file_system.log_messages.join("\n")).to match(/no boards/i)
     end
   end
 

@@ -107,13 +107,39 @@ class Exporter
   end
 
   def boards board_id:
+    gateway = JiraGateway.new(file_system: file_system, jira_config: jira_config, settings: {})
     if board_id.nil?
-      file_system.error 'Provide a board id, e.g. `jirametrics boards 42`. ' \
-        'The board id is the number in your Jira board URL.'
+      list_boards gateway
+    else
+      describe_board gateway, board_id
+    end
+  end
+
+  def list_boards gateway
+    boards = []
+    start_at = 0
+    loop do
+      json = gateway.call_url relative_url: "/rest/agile/1.0/board?startAt=#{start_at}&maxResults=50"
+      values = json['values'] || []
+      boards.concat values
+      break if json['isLast'] || values.empty?
+
+      start_at += values.length
+    end
+
+    if boards.empty?
+      file_system.log 'No boards found for this Jira connection.', also_write_to_stderr: true
       return
     end
 
-    gateway = JiraGateway.new(file_system: file_system, jira_config: jira_config, settings: {})
+    lines = ['Boards you can access (id — name — type):', '']
+    boards.each { |board| lines << "  #{board['id']} — #{board['name'].inspect} (#{board['type']})" }
+    lines << ''
+    lines << "Run `jirametrics boards <id>` to see a board's columns and choose cycletime points."
+    file_system.log lines.join("\n"), also_write_to_stderr: true
+  end
+
+  def describe_board gateway, board_id
     statuses = StatusCollection.new
     gateway.call_url(relative_url: '/rest/api/2/status').each do |snippet|
       statuses << Status.from_raw(snippet)
