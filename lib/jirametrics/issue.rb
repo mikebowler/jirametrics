@@ -186,14 +186,12 @@ class Issue
 
       status = board.possible_statuses.fabricate_status_for id: id, name: name
 
-      message = +'The history for issue '
-      message << key
-      message << ' references the status ('
-      message << "#{name.inspect}:#{id.inspect}"
-      message << ') that can\'t be found. We are guessing that this belongs to the '
-      message << status.category.to_s
-      message << ' status category but that may be wrong. See https://jirametrics.org/faq/#q1 for more '
-      message << 'details on defining statuses.'
+      message =
+        "The history for issue #{key} references the status (#{name.inspect}:#{id.inspect}) which can't be " \
+        'found, most likely because it was deleted from Jira after this issue passed through it. We have ' \
+        "guessed it belongs to the #{status.category} category, but if that is wrong this issue's cycle " \
+        'time and throughput will be off. To set the category yourself, add a status_category_mapping; ' \
+        'https://jirametrics.org/faq/#q1 shows what to add and how to choose the right category.'
       board.project_config.file_system.warning message, more: "The statuses we did find are: #{found_statuses}"
     end
 

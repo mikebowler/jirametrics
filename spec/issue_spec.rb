@@ -1706,9 +1706,11 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       )
       expect(exporter.file_system.log_messages).to eq([
         [
-          'Warning: The history for issue SP-1 references the status ("foo":1000) that can\'t be found. We are ' \
-            'guessing that this belongs to the "in-flight":6 status category but that may be wrong. See ' \
-            'https://jirametrics.org/faq/#q1 for more details on defining statuses.',
+          'Warning: The history for issue SP-1 references the status ("foo":1000) which can\'t be ' \
+            'found, most likely because it was deleted from Jira after this issue passed through it. We have ' \
+            'guessed it belongs to the "in-flight":6 category, but if that is wrong this issue\'s cycle ' \
+            'time and throughput will be off. To set the category yourself, add a status_category_mapping; ' \
+            'https://jirametrics.org/faq/#q1 shows what to add and how to choose the right category.',
           'The statuses we did find are: ' \
             '["Backlog":1, "Blocked":10, "Blocked2":15, "Doing":12, "Doing2":13, "Done":9, "In Progress":5, ' \
             '"Review":7, "Selected for Development":3, "Stalled":11, "Stalled2":14]'
