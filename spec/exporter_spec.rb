@@ -131,6 +131,75 @@ describe Exporter do
     end
   end
 
+  describe '#verify_jira_connections' do
+    let(:ok_result) do
+      JiraGateway::VerifyResult.new(
+        ok: true, url: 'https://acme.atlassian.net',
+        message: 'Verified https://acme.atlassian.net — authenticated as Bugs Bunny'
+      )
+    end
+    let(:fail_result) do
+      JiraGateway::VerifyResult.new(
+        ok: false, url: 'https://acme.atlassian.net',
+        message: 'Could not authenticate to https://acme.atlassian.net — token expired'
+      )
+    end
+
+    it 'returns a passing result and reports the authenticated user when the connection verifies' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      exporter.project name: 'foo'
+      allow(JiraGateway).to receive(:new).and_return(instance_double(JiraGateway, verify_connection: ok_result))
+      results = exporter.verify_jira_connections(name_filter: '*')
+      aggregate_failures do
+        expect(results.map(&:ok)).to eq [true]
+        expect(file_system.log_messages).to include(
+          'Verified https://acme.atlassian.net — authenticated as Bugs Bunny'
+        )
+      end
+    end
+
+    it 'returns a failing result and reports the reason when a connection fails to authenticate' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      exporter.project name: 'foo'
+      allow(JiraGateway).to receive(:new).and_return(instance_double(JiraGateway, verify_connection: fail_result))
+      results = exporter.verify_jira_connections(name_filter: '*')
+      aggregate_failures do
+        expect(results.map(&:ok)).to eq [false]
+        expect(file_system.log_messages).to include(
+          'Could not authenticate to https://acme.atlassian.net — token expired'
+        )
+      end
+    end
+
+    it 'verifies each distinct Jira URL only once' do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      exporter.project name: 'foo'
+      exporter.project name: 'bar'
+      allow(JiraGateway).to receive(:new).and_return(instance_double(JiraGateway, verify_connection: ok_result))
+      exporter.verify_jira_connections(name_filter: '*')
+      expect(JiraGateway).to have_received(:new).once
+    end
+
+    it 'authenticates without requiring a prior download' do
+      # Regression: verify is meant to run before the first download, to catch bad credentials
+      # early. Evaluating a real standard_project block forces an issue-data load that does not
+      # exist yet, which used to crash verify with "No data found. Must do a download...".
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      exporter.standard_project name: 'Sample', file_prefix: 'sample', boards: { 2 => :default }
+      allow(JiraGateway).to receive(:new).and_return(instance_double(JiraGateway, verify_connection: ok_result))
+      expect(exporter.verify_jira_connections(name_filter: '*').map(&:ok)).to eq [true]
+    end
+
+    it 'reports and returns nothing when no Jira connection is configured' do
+      aggregate_failures do
+        expect(exporter.verify_jira_connections(name_filter: '*')).to eq []
+        expect(file_system.log_messages).to include(
+          'Error: No Jira connection found in the configuration to verify'
+        )
+      end
+    end
+  end
+
   describe '#info' do
     it 'does not match on any issue' do
       exporter.info 'SP-1', name_filter: '*'

@@ -263,4 +263,58 @@ describe JiraGateway do
       expect(gateway).not_to have_received(:sleep_between_retries)
     end
   end
+
+  describe '#verify_connection' do
+    let(:cloud_gateway) do
+      described_class.new(
+        file_system: file_system,
+        jira_config: { 'url' => 'https://example.atlassian.net', 'email' => 'bugs@example.com',
+                       'api_token' => 'carrots' },
+        settings: { 'ignore_ssl_errors' => false }
+      )
+    end
+    let(:data_center_gateway) do
+      described_class.new(
+        file_system: file_system,
+        jira_config: { 'url' => 'https://jira.example.com', 'personal_access_token' => 'carrots' },
+        settings: { 'ignore_ssl_errors' => false }
+      )
+    end
+
+    it 'hits the auth-required /myself endpoint (v3) on Jira Cloud' do
+      allow(cloud_gateway).to receive(:call_url).and_return({ 'displayName' => 'Bugs Bunny' })
+      cloud_gateway.verify_connection
+      expect(cloud_gateway).to have_received(:call_url).with(relative_url: '/rest/api/3/myself')
+    end
+
+    it 'hits the v2 /myself endpoint on Jira Server / Data Center' do
+      allow(data_center_gateway).to receive(:call_url).and_return({ 'displayName' => 'Bugs Bunny' })
+      data_center_gateway.verify_connection
+      expect(data_center_gateway).to have_received(:call_url).with(relative_url: '/rest/api/2/myself')
+    end
+
+    it 'returns a successful result naming the authenticated user' do
+      allow(cloud_gateway).to receive(:call_url).and_return({ 'displayName' => 'Bugs Bunny' })
+      result = cloud_gateway.verify_connection
+      aggregate_failures do
+        expect(result.ok).to be true
+        expect(result.url).to eq 'https://example.atlassian.net'
+        expect(result.message).to eq 'Verified https://example.atlassian.net — authenticated as Bugs Bunny'
+      end
+    end
+
+    it 'returns a failing result carrying the reason authentication failed' do
+      allow(cloud_gateway).to receive(:call_url).and_raise(
+        "The request was not authorized. Verify that your authentication token hasn't expired"
+      )
+      result = cloud_gateway.verify_connection
+      aggregate_failures do
+        expect(result.ok).to be false
+        expect(result.message).to eq(
+          'Could not authenticate to https://example.atlassian.net — ' \
+          "The request was not authorized. Verify that your authentication token hasn't expired"
+        )
+      end
+    end
+  end
 end

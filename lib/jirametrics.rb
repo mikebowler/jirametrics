@@ -47,6 +47,15 @@ class JiraMetrics < Thor
   end
 
   option :config
+  option :name
+  desc 'verify', 'Check that JiraMetrics can authenticate to Jira, without downloading anything'
+  def verify
+    load_config options[:config]
+    results = Exporter.instance.verify_jira_connections(name_filter: options[:name] || '*')
+    exit 1 if results.empty? || results.any? { |result| !result.ok }
+  end
+
+  option :config
   desc 'info', 'Dump information about one issue'
   def info key
     load_config options[:config]

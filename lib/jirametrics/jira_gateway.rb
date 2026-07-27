@@ -95,6 +95,21 @@ class JiraGateway
     exec_and_parse_response command: command, stdin_data: nil
   end
 
+  VerifyResult = Data.define(:ok, :url, :message)
+
+  # Confirm that our credentials actually authenticate against Jira. We deliberately hit /myself,
+  # which requires authentication on every Jira edition (anonymous callers get a 401). An endpoint
+  # that also answers anonymously would happily "succeed" with bad credentials, which defeats the
+  # whole point. Cloud speaks v3, Server/Data Center speaks v2. Returns a VerifyResult rather than
+  # raising so the caller can report on every configured connection and set its own exit status.
+  def verify_connection
+    json = call_url relative_url: "/rest/api/#{cloud? ? 3 : 2}/myself"
+    user = json['displayName'] || json['name'] || json['emailAddress'] || 'unknown user'
+    VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} — authenticated as #{user}")
+  rescue StandardError => e
+    VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url} — #{e.message}")
+  end
+
   def parse_response command:, result:
     begin
       json = JSON.parse(result)
