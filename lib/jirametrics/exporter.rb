@@ -116,16 +116,36 @@ class Exporter
     connections
   end
 
-  def boards board_id:
+  def boards board_id:, name_filter: nil
     gateway = JiraGateway.new(file_system: file_system, jira_config: jira_config, settings: {})
     if board_id.nil?
-      list_boards gateway
+      list_boards gateway, name_filter
     else
       describe_board gateway, board_id
     end
   end
 
-  def list_boards gateway
+  def list_boards gateway, name_filter
+    boards = fetch_all_boards gateway
+    boards.select! { |board| File.fnmatch(name_filter, board['name'].to_s, File::FNM_CASEFOLD) } if name_filter
+    boards.sort_by! { |board| board['name'].to_s.strip.downcase }
+
+    if boards.empty?
+      file_system.log(
+        name_filter ? "No boards match #{name_filter.inspect}." : 'No boards found for this Jira connection.',
+        also_write_to_stderr: true
+      )
+      return
+    end
+
+    lines = ['Boards you can access:', '']
+    boards.each { |board| lines << "  #{board['id']}: #{board['name'].inspect} (#{board['type']})" }
+    lines << ''
+    lines << "Run `jirametrics boards <id>` to see a board's columns and choose cycletime points."
+    file_system.log lines.join("\n"), also_write_to_stderr: true
+  end
+
+  def fetch_all_boards gateway
     boards = []
     start_at = 0
     loop do
@@ -136,17 +156,7 @@ class Exporter
 
       start_at += values.length
     end
-
-    if boards.empty?
-      file_system.log 'No boards found for this Jira connection.', also_write_to_stderr: true
-      return
-    end
-
-    lines = ['Boards you can access:', '']
-    boards.each { |board| lines << "  #{board['id']}: #{board['name'].inspect} (#{board['type']})" }
-    lines << ''
-    lines << "Run `jirametrics boards <id>` to see a board's columns and choose cycletime points."
-    file_system.log lines.join("\n"), also_write_to_stderr: true
+    boards
   end
 
   def describe_board gateway, board_id

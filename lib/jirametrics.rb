@@ -56,10 +56,11 @@ class JiraMetrics < Thor
   end
 
   option :config
+  option :name
   desc 'boards', "Show a board's columns and statuses, to help choose cycletime start/stop points"
   def boards board_id = nil
     load_config options[:config]
-    Exporter.instance.boards(board_id: board_id)
+    Exporter.instance.boards(board_id: board_id, name_filter: options[:name])
   end
 
   option :config

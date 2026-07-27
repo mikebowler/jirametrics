@@ -287,6 +287,35 @@ describe Exporter do
       end
     end
 
+    it 'lists boards sorted by name, case-insensitively' do
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
+        .and_return({ 'isLast' => true, 'values' => [
+          { 'id' => 1, 'name' => 'Zebra', 'type' => 'kanban' },
+          { 'id' => 2, 'name' => 'apple', 'type' => 'scrum' },
+          { 'id' => 3, 'name' => 'Mango', 'type' => 'simple' }
+        ] })
+      exporter.boards board_id: nil
+      output = file_system.log_messages.join("\n")
+      expect(output.index('apple')).to be < output.index('Mango')
+      expect(output.index('Mango')).to be < output.index('Zebra')
+    end
+
+    it 'filters the board list by a case-insensitive name glob when name_filter is given' do
+      allow(gateway).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
+        .and_return({ 'isLast' => true, 'values' => [
+          { 'id' => 1, 'name' => 'Mobile Squad', 'type' => 'kanban' },
+          { 'id' => 2, 'name' => 'Web Squad', 'type' => 'kanban' }
+        ] })
+      exporter.boards board_id: nil, name_filter: 'mob*'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('Mobile Squad')
+        expect(output).not_to include('Web Squad')
+      end
+    end
+
     it 'reports when no boards are accessible' do
       allow(gateway).to receive(:call_url)
         .with(relative_url: '/rest/agile/1.0/board?startAt=0&maxResults=50')
