@@ -190,6 +190,17 @@ describe Exporter do
       expect(exporter.verify_jira_connections(name_filter: '*').map(&:ok)).to eq [true]
     end
 
+    it 'verifies the top-level jira_config when no project is declared yet' do
+      # Lets verify run as a first setup step, on just credentials, before any project exists.
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      allow(JiraGateway).to receive(:new).and_return(instance_double(JiraGateway, verify_connection: ok_result))
+      results = exporter.verify_jira_connections(name_filter: '*')
+      aggregate_failures do
+        expect(results.map(&:ok)).to eq [true]
+        expect(JiraGateway).to have_received(:new).once
+      end
+    end
+
     it 'reports and returns nothing when no Jira connection is configured' do
       aggregate_failures do
         expect(exporter.verify_jira_connections(name_filter: '*')).to eq []

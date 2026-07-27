@@ -74,24 +74,13 @@ class Exporter
   end
 
   def verify_jira_connections name_filter:
-    verified_urls = []
     results = []
     begin
       # Probe under log_only so the gateway's raw curl chatter (and its error dumps) stay in the
       # logfile rather than cluttering the console; we surface a clean summary line below.
       file_system.log_only = true
-      each_project_config(name_filter: name_filter) do |project|
-        url = project.jira_config && project.jira_config['url']
-        next if url.nil? || verified_urls.include?(url)
-
-        verified_urls << url
-        # Deliberately do NOT evaluate_next_level here: running a project block (e.g. standard_project)
-        # forces an issue-data load that does not exist before the first download, and verify must work
-        # pre-download. The cost is that a config-block-only setting like ignore_ssl_errors is not applied
-        # to the probe — acceptable, as that only affects self-signed Data Center instances.
-        gateway = JiraGateway.new(
-          file_system: file_system, jira_config: project.jira_config, settings: project.settings
-        )
+      jira_connections_to_verify(name_filter: name_filter).each do |config, settings|
+        gateway = JiraGateway.new(file_system: file_system, jira_config: config, settings: settings)
         results << gateway.verify_connection
       end
     ensure
@@ -104,6 +93,27 @@ class Exporter
     end
     results.each { |result| file_system.log result.message, also_write_to_stderr: true }
     results
+  end
+
+  # The [jira_config, settings] pairs to verify, deduplicated by URL. We do NOT evaluate_next_level:
+  # running a project block (e.g. standard_project) forces an issue-data load that doesn't exist
+  # before the first download, and verify must work pre-download. When no project supplied a
+  # connection we fall back to the top-level jira_config, so verify can run as a first setup step on
+  # just the credentials file. (The fallback has no per-project settings, so a config-block-only
+  # setting like ignore_ssl_errors isn't applied — acceptable, as that only affects self-signed
+  # Data Center instances.)
+  def jira_connections_to_verify name_filter:
+    connections = []
+    seen_urls = []
+    each_project_config(name_filter: name_filter) do |project|
+      url = project.jira_config && project.jira_config['url']
+      next if url.nil? || seen_urls.include?(url)
+
+      seen_urls << url
+      connections << [project.jira_config, project.settings]
+    end
+    connections << [jira_config, {}] if connections.empty? && jira_config
+    connections
   end
 
   def boards board_id:
