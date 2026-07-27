@@ -106,6 +106,54 @@ class Exporter
     results
   end
 
+  def boards board_id:
+    if board_id.nil?
+      file_system.error 'Provide a board id, e.g. `jirametrics boards 42`. ' \
+        'The board id is the number in your Jira board URL.'
+      return
+    end
+
+    gateway = JiraGateway.new(file_system: file_system, jira_config: jira_config, settings: {})
+    statuses = StatusCollection.new
+    gateway.call_url(relative_url: '/rest/api/2/status').each do |snippet|
+      statuses << Status.from_raw(snippet)
+    end
+    raw = gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
+    board = Board.new raw: raw, possible_statuses: statuses
+    file_system.log format_board(board, board_id), also_write_to_stderr: true
+  end
+
+  def format_board board, board_id
+    lines = ["Board #{board_id}: #{board.name.inspect} (#{board.board_type})", '']
+
+    backlog = board.backlog_statuses
+    unless backlog.empty?
+      lines << 'Not shown on the board (treated as not started):'
+      backlog.each { |status| lines << "  - #{format_status status}" }
+      lines << ''
+    end
+
+    lines << 'Columns, left to right, with the statuses mapped to each (as "name":id — category):'
+    lines << ''
+    board.visible_columns.each do |column|
+      lines << "  #{column.name}"
+      column.status_ids.each do |id|
+        status = board.possible_statuses.find_by_id id
+        lines << "    - #{status ? format_status(status) : "unknown status id #{id}"}"
+      end
+    end
+
+    lines << ''
+    lines << 'To set cycle time, choose the column where work is "started" and where it is "finished":'
+    lines << "  start_at first_time_in_or_right_of_column '<started column>'"
+    lines << "  stop_at  first_time_in_or_right_of_column '<finished column>'"
+    lines.join "\n"
+  end
+
+  def format_status status
+    "#{status.name.inspect}:#{status.id} — #{status.category.name}"
+  end
+
   def info key, name_filter:
     selected = []
     file_system.log_only = true

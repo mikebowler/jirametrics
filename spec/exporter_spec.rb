@@ -200,6 +200,58 @@ describe Exporter do
     end
   end
 
+  describe '#boards' do
+    let(:statuses_json) { JSON.parse(File.read('spec/complete_sample/sample_statuses.json')) }
+    let(:board_config_json) { JSON.parse(File.read('spec/complete_sample/sample_board_1_configuration.json')) }
+    let(:gateway) do
+      instance_double(JiraGateway).tap do |gw|
+        allow(gw).to receive(:call_url).with(relative_url: '/rest/api/2/status').and_return(statuses_json)
+        allow(gw).to receive(:call_url)
+          .with(relative_url: '/rest/agile/1.0/board/1/configuration').and_return(board_config_json)
+      end
+    end
+
+    before do
+      exporter.jira_config 'spec/testdata/jira-config.json'
+      allow(JiraGateway).to receive(:new).and_return(gateway)
+    end
+
+    it 'lists each visible column with its statuses shown as "name":id and category' do
+      exporter.boards board_id: '1'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('"SP board" (kanban)')
+        expect(output).to include('Ready')
+        expect(output).to include('"Selected for Development":10001 — In Progress')
+        expect(output).to include('"Done":10002 — Done')
+      end
+    end
+
+    it 'marks the kanban backlog statuses as not started' do
+      exporter.boards board_id: '1'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('"Backlog":10000 — To Do')
+        expect(output).to match(/not started/i)
+      end
+    end
+
+    it 'includes a cycletime hint expressed in column names' do
+      exporter.boards board_id: '1'
+      expect(file_system.log_messages.join("\n")).to include(
+        'start_at first_time_in_or_right_of_column'
+      )
+    end
+
+    it 'asks for a board id when none is given, without calling Jira' do
+      exporter.boards board_id: nil
+      aggregate_failures do
+        expect(file_system.log_messages.join("\n")).to match(/board id/i)
+        expect(gateway).not_to have_received(:call_url)
+      end
+    end
+  end
+
   describe '#info' do
     it 'does not match on any issue' do
       exporter.info 'SP-1', name_filter: '*'
