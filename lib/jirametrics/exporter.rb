@@ -100,7 +100,7 @@ class Exporter
   # before the first download, and verify must work pre-download. When no project supplied a
   # connection we fall back to the top-level jira_config, so verify can run as a first setup step on
   # just the credentials file. (The fallback has no per-project settings, so a config-block-only
-  # setting like ignore_ssl_errors isn't applied — acceptable, as that only affects self-signed
+  # setting like ignore_ssl_errors isn't applied. That only affects self-signed
   # Data Center instances.)
   def jira_connections_to_verify name_filter:
     connections = []
@@ -142,8 +142,8 @@ class Exporter
       return
     end
 
-    lines = ['Boards you can access (id — name — type):', '']
-    boards.each { |board| lines << "  #{board['id']} — #{board['name'].inspect} (#{board['type']})" }
+    lines = ['Boards you can access:', '']
+    boards.each { |board| lines << "  #{board['id']}: #{board['name'].inspect} (#{board['type']})" }
     lines << ''
     lines << "Run `jirametrics boards <id>` to see a board's columns and choose cycletime points."
     file_system.log lines.join("\n"), also_write_to_stderr: true
@@ -169,7 +169,7 @@ class Exporter
       lines << ''
     end
 
-    lines << 'Columns, left to right, with the statuses mapped to each (as "name":id — category):'
+    lines << 'Columns, left to right, with the statuses in each (shown as "name":id with its category):'
     lines << ''
     board.visible_columns.each do |column|
       lines << "  #{column.name}"
@@ -187,7 +187,7 @@ class Exporter
   end
 
   def format_status status
-    "#{status.name.inspect}:#{status.id} — #{status.category.name}"
+    "#{status.name.inspect}:#{status.id} (#{status.category.name})"
   end
 
   def info key, name_filter:

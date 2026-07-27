@@ -135,13 +135,13 @@ describe Exporter do
     let(:ok_result) do
       JiraGateway::VerifyResult.new(
         ok: true, url: 'https://acme.atlassian.net',
-        message: 'Verified https://acme.atlassian.net — authenticated as Bugs Bunny'
+        message: 'Verified https://acme.atlassian.net (authenticated as Bugs Bunny)'
       )
     end
     let(:fail_result) do
       JiraGateway::VerifyResult.new(
         ok: false, url: 'https://acme.atlassian.net',
-        message: 'Could not authenticate to https://acme.atlassian.net — token expired'
+        message: 'Could not authenticate to https://acme.atlassian.net: token expired'
       )
     end
 
@@ -153,7 +153,7 @@ describe Exporter do
       aggregate_failures do
         expect(results.map(&:ok)).to eq [true]
         expect(file_system.log_messages).to include(
-          'Verified https://acme.atlassian.net — authenticated as Bugs Bunny'
+          'Verified https://acme.atlassian.net (authenticated as Bugs Bunny)'
         )
       end
     end
@@ -166,7 +166,7 @@ describe Exporter do
       aggregate_failures do
         expect(results.map(&:ok)).to eq [false]
         expect(file_system.log_messages).to include(
-          'Could not authenticate to https://acme.atlassian.net — token expired'
+          'Could not authenticate to https://acme.atlassian.net: token expired'
         )
       end
     end
@@ -233,8 +233,8 @@ describe Exporter do
       aggregate_failures do
         expect(output).to include('"SP board" (kanban)')
         expect(output).to include('Ready')
-        expect(output).to include('"Selected for Development":10001 — In Progress')
-        expect(output).to include('"Done":10002 — Done')
+        expect(output).to include('"Selected for Development":10001 (In Progress)')
+        expect(output).to include('"Done":10002 (Done)')
       end
     end
 
@@ -242,7 +242,7 @@ describe Exporter do
       exporter.boards board_id: '1'
       output = file_system.log_messages.join("\n")
       aggregate_failures do
-        expect(output).to include('"Backlog":10000 — To Do')
+        expect(output).to include('"Backlog":10000 (To Do)')
         expect(output).to match(/not started/i)
       end
     end
@@ -267,8 +267,8 @@ describe Exporter do
       exporter.boards board_id: nil
       output = file_system.log_messages.join("\n")
       aggregate_failures do
-        expect(output).to include('1 — "SP board" (kanban)')
-        expect(output).to include('2 — "Scrum board" (scrum)')
+        expect(output).to include('1: "SP board" (kanban)')
+        expect(output).to include('2: "Scrum board" (scrum)')
       end
     end
 
@@ -282,8 +282,8 @@ describe Exporter do
       exporter.boards board_id: nil
       output = file_system.log_messages.join("\n")
       aggregate_failures do
-        expect(output).to include('1 — "A" (kanban)')
-        expect(output).to include('2 — "B" (scrum)')
+        expect(output).to include('1: "A" (kanban)')
+        expect(output).to include('2: "B" (scrum)')
       end
     end
 

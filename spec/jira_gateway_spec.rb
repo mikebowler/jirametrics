@@ -299,7 +299,7 @@ describe JiraGateway do
       aggregate_failures do
         expect(result.ok).to be true
         expect(result.url).to eq 'https://example.atlassian.net'
-        expect(result.message).to eq 'Verified https://example.atlassian.net — authenticated as Bugs Bunny'
+        expect(result.message).to eq 'Verified https://example.atlassian.net (authenticated as Bugs Bunny)'
       end
     end
 
@@ -311,7 +311,7 @@ describe JiraGateway do
       aggregate_failures do
         expect(result.ok).to be false
         expect(result.message).to eq(
-          'Could not authenticate to https://example.atlassian.net — ' \
+          'Could not authenticate to https://example.atlassian.net: ' \
           "The request was not authorized. Verify that your authentication token hasn't expired"
         )
       end

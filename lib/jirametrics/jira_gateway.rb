@@ -105,9 +105,9 @@ class JiraGateway
   def verify_connection
     json = call_url relative_url: "/rest/api/#{cloud? ? 3 : 2}/myself"
     user = json['displayName'] || json['name'] || json['emailAddress'] || 'unknown user'
-    VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} — authenticated as #{user}")
+    VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} (authenticated as #{user})")
   rescue StandardError => e
-    VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url} — #{e.message}")
+    VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url}: #{e.message}")
   end
 
   def parse_response command:, result:
