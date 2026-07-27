@@ -90,7 +90,7 @@ class StatusCollection
 
   def fabricate_status_for id:, name:
     category = @historical_status_mappings["#{name.inspect}:#{id.inspect}"]
-    category = in_progress_category if category.nil?
+    category = guess_category_by_name(name) if category.nil?
 
     status = Status.new(
       name: name,
@@ -105,6 +105,26 @@ class StatusCollection
   end
 
   private
+
+  # Guess the category of a deleted status from its name rather than always assuming In Progress. In
+  # English, "To Do"/"New"/"Backlog" are almost certainly To Do and "Done"/"Closed"/"Cancelled" are
+  # almost certainly Done; everything else we treat as In Progress. It's only a guess -- the user
+  # should still map anything that matters -- but it beats defaulting every deleted status to In
+  # Progress. Falls back to In Progress if the board has no status of the guessed category to borrow.
+  def guess_category_by_name name
+    normalized = name.to_s.downcase
+    todo = category_matching(:new?)
+    return todo if todo && normalized.match?(/\b(to.?do|new|backlog)\b/)
+
+    done = category_matching(:done?)
+    return done if done && normalized.match?(/\b(done|closed|cancell?ed)\b/)
+
+    in_progress_category
+  end
+
+  def category_matching predicate
+    find { |status| status.category.public_send(predicate) }&.category
+  end
 
   # Return the in-progress category or raise an error if we can't find one.
   def in_progress_category

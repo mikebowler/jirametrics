@@ -48,6 +48,29 @@ describe StatusCollection do
         name: 'walk', id: 100, category_name: 'In Progress', category_id: 1001, category_key: 'indeterminate'
       )
     end
+
+    it 'guesses To Do from a to-do-ish name' do
+      aggregate_failures do
+        ['To Do', 'TODO', 'to-do', 'New', 'Backlog'].each_with_index do |name, index|
+          collection.fabricate_status_for name: name, id: 200 + index
+          expect(collection.find_by_id(200 + index).category.name).to eq 'To Do'
+        end
+      end
+    end
+
+    it 'guesses Done from a done-ish name' do
+      aggregate_failures do
+        %w[Done Closed Cancelled Canceled].each_with_index do |name, index|
+          collection.fabricate_status_for name: name, id: 300 + index
+          expect(collection.find_by_id(300 + index).category.name).to eq 'Done'
+        end
+      end
+    end
+
+    it 'guesses In Progress for anything else' do
+      collection.fabricate_status_for name: 'In Review', id: 400
+      expect(collection.find_by_id(400).category.name).to eq 'In Progress'
+    end
   end
 
   describe '#find_all_by_name' do
