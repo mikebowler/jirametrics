@@ -33,7 +33,7 @@ class GithubGateway
   end
 
   def fetch_raw_pull_requests since: nil
-    # NOTE: 'commits' is intentionally excluded — including it triggers GitHub's GraphQL node
+    # NOTE: 'commits' is intentionally excluded - including it triggers GitHub's GraphQL node
     # limit (authors sub-connection × PRs × commits exceeds 500,000 nodes). Branch name,
     # title, and body are sufficient for issue key extraction in the vast majority of cases.
     json_fields = %w[number title body headRefName createdAt closedAt mergedAt
@@ -199,7 +199,7 @@ class GithubGateway
       unless status.success?
         error_message = "  GitHub CLI command failed for #{@repo} " \
                         "(attempt #{attempts}/#{MAX_RETRIES}): #{stderr.strip}"
-        # stderr is a String (from Open3.capture3), so this include? is String#include? — a substring
+        # stderr is a String (from Open3.capture3), so this include? is String#include? - a substring
         # match ("does the error text contain this phrase?"), not Array membership. Style/ArrayIntersect
         # can't tell the two apart; its `.intersect?(stderr)` rewrite would be an exact-equality check
         # that never matches, silently killing the retry-on-transient-error logic.

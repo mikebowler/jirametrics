@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ChartBase
-  # Okabe-Ito palette — perceptually distinct under the most common forms of colour blindness.
+  # Okabe-Ito palette - perceptually distinct under the most common forms of colour blindness.
   # Ordered from most- to least-commonly useful for chart series.
   OKABE_ITO_PALETTE = %w[
     #0072B2

@@ -168,7 +168,7 @@ class DownloaderForCloud < Downloader
       log "        #{key} worklogs: page startAt=#{start_at}, " \
           "received=#{worklogs.size}, fetched=#{all_worklogs.size}/#{total}"
       break if all_worklogs.size >= total
-      # Guard against Jira reporting a higher total than it will actually return — seen when
+      # Guard against Jira reporting a higher total than it will actually return - seen when
       # worklogs are deleted or access-restricted after the initial fetch. Without this,
       # start_at never advances and we loop forever requesting the same empty page.
       break if worklogs.empty?
@@ -344,7 +344,7 @@ class DownloaderForCloud < Downloader
     end
   end
 
-  # Scan up-to-date cached primary issues we haven't checked yet — they may reference related
+  # Scan up-to-date cached primary issues we haven't checked yet - they may reference related
   # issues that are not in the primary query result. We only follow links one hop out from the
   # primary issues, so related (non-primary) cached issues are not followed (just logged).
   def scan_cached_issues_for_related issue_data_hash:, board:, checked_for_related:, related_issue_keys:
@@ -400,7 +400,7 @@ class DownloaderForCloud < Downloader
 
   # We only follow links one hop out from the primary (board) issues. If a related issue
   # itself references further issues we haven't already downloaded, we deliberately don't
-  # follow them — but log it so we can diagnose later if an export fails because a
+  # follow them - but log it so we can diagnose later if an export fails because a
   # second-hop issue was missing. See GitHub #72.
   def log_unfollowed_related_keys issue:, issue_data_hash:
     onward = related_keys_for(issue).reject { |key| issue_data_hash[key] }

@@ -258,7 +258,7 @@ describe Issue do
               'field' => 'status',
               'fieldtype' => 'jira',
               'fieldId' => 'status',
-              # intentionally no 'from' key — Jira sometimes omits it
+              # intentionally no 'from' key - Jira sometimes omits it
               'fromString' => 'To Do',
               'to' => '10001',
               'toString' => 'In Progress'

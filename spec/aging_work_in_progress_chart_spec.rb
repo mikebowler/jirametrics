@@ -176,7 +176,7 @@ describe AgingWorkInProgressChart do
 
     it 'keeps intermediate columns with completion history even when no aging items are currently there' do
       # Regression test for the case where Done is the last visible column: BoardMovementCalculator
-      # uses today as end_date for the last column, so Done's age_data is always inflated — it can
+      # uses today as end_date for the last column, so Done's age_data is always inflated - it can
       # never be a trailing zero, and the naive algorithm therefore could not remove it. Excluding
       # the last visible column from the age_data right-boundary calculation keeps In Progress and
       # Review while dropping Done.

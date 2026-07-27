@@ -67,7 +67,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
         const endX   = chart.scales.x.getPixelForValue(new Date(win.end_date).getTime());
 
         // Draw hatched slices over the correction window.
-        // For stacked line charts, PointElement has no .base — derive the band bottom from the
+        // For stacked line charts, PointElement has no .base - derive the band bottom from the
         // dataset directly below in the visual stack (dataset_index - 1, since datasets are
         // stored reversed), or chart.chartArea.bottom for the lowest dataset.
         // Use a trapezoid clip path per slice so hatching stays within the actual band boundary
@@ -330,7 +330,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
         const parent = canvas.parentNode;
         if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
         // Read canvas.offsetTop/Left after parent is positioned so they are
-        // relative to parent — this accounts for the label/checkbox above the
+        // relative to parent - this accounts for the label/checkbox above the
         // canvas that would otherwise shift the overlay upward.
         const overlay = document.createElement('canvas');
         overlay.width  = canvas.width;
@@ -426,7 +426,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
         const fm = chart._flowMetrics;
         if (!fm) return;
         drawTrendLines(chart, fm);
-        // Triangle is on the overlay canvas — no drawing needed here.
+        // Triangle is on the overlay canvas - no drawing needed here.
       }
     };
   })();

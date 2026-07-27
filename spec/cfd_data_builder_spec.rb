@@ -53,7 +53,7 @@ describe CfdDataBuilder do
 
     it 'skips status changes not mapped to any board column' do
       issue1 = empty_issue(board: board, created: '2021-07-01', key: 'SP-1')
-      # Status ID 10000 is Backlog — not in visible_columns for this kanban board
+      # Status ID 10000 is Backlog - not in visible_columns for this kanban board
       add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
         value_id: 10_000, time: '2021-07-02T10:00:00')
 
@@ -68,7 +68,7 @@ describe CfdDataBuilder do
 
       result = build(issues: [issue1])
 
-      # issue1 already in In Progress (col 1) before the range starts — counts col 0 and col 1
+      # issue1 already in In Progress (col 1) before the range starts - counts col 0 and col 1
       expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [1, 1, 0, 0]
     end
 
@@ -229,7 +229,7 @@ describe CfdDataBuilder do
       board.cycletime = never_started_config
 
       issue1 = empty_issue(created: '2021-07-01', key: 'SP-1', board: board)
-      # Only reaches Ready — never reaches In Progress, so start_time is nil
+      # Only reaches Ready - never reaches In Progress, so start_time is nil
       add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
 
@@ -263,11 +263,11 @@ describe CfdDataBuilder do
 
       result = build(issues: [issue1])
 
-      # July 2: issue entered Ready but hadn't started — should not appear
+      # July 2: issue entered Ready but hadn't started - should not appear
       expect(result[:daily_counts][Date.parse('2021-07-02')]).to eq [0, 0, 0, 0]
-      # July 4: issue started (entered In Progress) — appears from col 0 through col 1
+      # July 4: issue started (entered In Progress) - appears from col 0 through col 1
       expect(result[:daily_counts][Date.parse('2021-07-04')]).to eq [1, 1, 0, 0]
-      # July 6: issue entered Review — appears through col 2
+      # July 6: issue entered Review - appears through col 2
       expect(result[:daily_counts][Date.parse('2021-07-06')]).to eq [1, 1, 1, 0]
     end
   end

@@ -24,7 +24,7 @@ describe McpServer do
     board.cycletime = mock_cycletime_config stub_values: tuples
   end
 
-  # Each project shares the same today/end_time here — enough for these characterizations.
+  # Each project shares the same today/end_time here - enough for these characterizations.
   def server_context projects:, aggregates: {}, today: '2024-01-15', end_time: '2024-01-15'
     {
       projects: projects.transform_values do |issues|
@@ -644,7 +644,7 @@ describe McpServer do
       unresolved = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'unresolved'
       wire_cycletime [resolved, '2024-01-05', '2024-01-10'], [unresolved, '2024-01-05', '2024-01-10']
       # The filter value is a distinct string object from the one on the change, so an identity (equal?)
-      # comparison would wrongly reject it — the match must be by value.
+      # comparison would wrongly reject it - the match must be by value.
       filter = +"Won't Do"
       text = completed_text(server_context(projects: { 'SP' => [resolved, unresolved] }), completed_resolution: filter)
       expect(text).to eq "SP-1 | SP | Bug | 2024-01-10 | Cycle time: 6d | FE: 100.0% | Done / Won't Do | resolved"

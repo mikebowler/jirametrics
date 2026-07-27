@@ -18,7 +18,7 @@ class WipByColumnChart < ChartBase
       <p>
         Each row on the Y axis is a WIP level (the number of items in that column at the same time).
         Each column on the X axis is a board column.
-        The horizontal bars show what percentage of the total time that column spent at that WIP level —
+        The horizontal bars show what percentage of the total time that column spent at that WIP level -
         a wider bar means more time was spent there.
       </p>
       <p>
@@ -136,7 +136,7 @@ class WipByColumnChart < ChartBase
 
       max = @wip_limits[i]['max']
       if max.nil?
-        "Add a WIP limit to column '#{name}' — suggested maximum: #{rec}"
+        "Add a WIP limit to column '#{name}' - suggested maximum: #{rec}"
       elsif rec < max
         "Lower the WIP limit for '#{name}' from #{max} to #{rec}"
       elsif rec > max
@@ -267,7 +267,7 @@ class WipByColumnChart < ChartBase
   end
 
   # Move the issue out of its old column and into new_col, keeping wip_counts and current_column in
-  # sync. A nil column means the issue isn't on the board — ie entering or leaving WIP.
+  # sync. A nil column means the issue isn't on the board - ie entering or leaving WIP.
   def apply_event wip_counts, current_column, issue, new_col
     old_col = current_column[issue]
     wip_counts[old_col] -= 1 unless old_col.nil?

@@ -117,7 +117,7 @@ describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
       RUBY
 
       # Reuse the exact interpreter and rspec running this suite rather than a bare
-      # `bundle exec rspec`, whose `bundle` resolves off PATH — under JRuby/RVM that can
+      # `bundle exec rspec`, whose `bundle` resolves off PATH - under JRuby/RVM that can
       # pick a different Ruby and fail to find the gem, which has nothing to do with the guard.
       out, = Open3.capture2e(
         { 'JIRAMETRICS_SUBPROCESS_SPEC' => '1' },

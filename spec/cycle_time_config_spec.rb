@@ -188,7 +188,7 @@ describe CycleTimeConfig do
 
       aggregate_failures do
         expect(cycletime.started_stopped_changes(issue_a)).to eq [a_start, a_stop]
-        # Same issue key, different board — dropping the board id from the cache key would collide.
+        # Same issue key, different board - dropping the board id from the cache key would collide.
         expect(cycletime.started_stopped_changes(issue_b)).to eq [b_start, b_stop]
       end
     end

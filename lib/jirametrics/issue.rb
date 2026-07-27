@@ -831,7 +831,7 @@ class Issue
     else
       # Otherwise, we look at what the first one had changed away from.
       first_status = first_change.old_value
-      # old_value_id should never be nil — a status change must have a 'from' id — but Jira has
+      # old_value_id should never be nil - a status change must have a 'from' id - but Jira has
       # been seen in production omitting the 'from' field entirely. Fall back to 0 so the
       # downstream fabricate/warn path handles it rather than crashing.
       first_status_id = first_change.old_value_id || 0

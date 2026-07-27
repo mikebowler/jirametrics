@@ -202,7 +202,7 @@ describe DependencyChart do
     end
 
     it 'skips the opposite via links_to_ignore but keeps processing later links' do
-      # Only the outward links merge, so each inward link would survive on its own merits — the only
+      # Only the outward links merge, so each inward link would survive on its own merits - the only
       # thing suppressing the inward Blocks link is links_to_ignore, populated when its outward partner
       # is kept. A visible Cloners link follows it in the list, so the loop must carry on past the
       # skipped one (next) rather than stopping (break).

@@ -405,7 +405,7 @@ describe WipByColumnChart do
   describe '#run' do
     # run's data assembly is normally reachable only through the HTML wrap_and_render produces.
     # Stub that out, capturing the binding run hands it, and we can read the values the ERB template
-    # would see — exactly, and without pulling ERB into the test.
+    # would see - exactly, and without pulling ERB into the test.
     def run_ivars
       captured_binding = nil
       allow(chart).to receive(:wrap_and_render) { |render_binding, _file| captured_binding = render_binding }
@@ -478,7 +478,7 @@ describe WipByColumnChart do
     context 'with two issues (one stays in Ready, one moves to In Progress after 400s)' do
       # Window is 1000s. Issue A stays in Ready the whole time (1000s at WIP=1).
       # Issue B is in Ready for 600s then moves to In Progress for 400s.
-      # Ready column: WIP=1 for 400s (40%), WIP=2 for 600s (60%) — total 1000s
+      # Ready column: WIP=1 for 400s (40%), WIP=2 for 600s (60%) - total 1000s
       #   sorted: [[1,400],[2,600]]
       #   cumulative: WIP=1 → 400/1000=40%, WIP=2 → 1000/1000=100%
       #   85th percentile lands at WIP=2  → recommended max = 2
@@ -558,7 +558,7 @@ describe WipByColumnChart do
     end
 
     it 'suggests adding a limit when there is no existing limit' do
-      # Done has min=nil, max=nil — use mock cycletime so the issue counts as in-WIP
+      # Done has min=nil, max=nil - use mock cycletime so the issue counts as in-WIP
       issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'Done', value_id: 10_002,
@@ -577,7 +577,7 @@ describe WipByColumnChart do
 
   describe '#trim_zero_end_columns' do
     it 'removes a leading all-zero column' do
-      # Issue is only in In Progress — Ready (index 0) stays at WIP=0 the whole window
+      # Issue is only in In Progress - Ready (index 0) stays at WIP=0 the whole window
       issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'In Progress', value_id: 3,
@@ -593,7 +593,7 @@ describe WipByColumnChart do
     end
 
     it 'removes a trailing all-zero column' do
-      # Issue stays in Ready the whole window — Done (index 3) stays at WIP=0
+      # Issue stays in Ready the whole window - Done (index 3) stays at WIP=0
       issue = issue_in_ready key: 'SP-1'
 
       chart.issues = [issue]

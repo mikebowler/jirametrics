@@ -850,7 +850,7 @@ describe DownloaderForCloud do
 
       downloader.download_issues board: board
 
-      # ABC-LINKED is already in the hash and up to date, so the dedup drops it — only ABC-123 is fetched.
+      # ABC-LINKED is already in the hash and up to date, so the dedup drops it - only ABC-123 is fetched.
       expect(fetched).to eq [['ABC-123']]
     end
 

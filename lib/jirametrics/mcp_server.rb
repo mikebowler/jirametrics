@@ -461,7 +461,7 @@ class McpServer
     description 'Aggregates the time issues spend in each status or column, ranked by average days. ' \
                 'Useful for identifying bottlenecks. Before calling this tool, always ask the user ' \
                 'which issues they want to include: aging (in progress), completed, not yet started, ' \
-                'or all. Do not assume — the answer changes the result significantly.'
+                'or all. Do not assume - the answer changes the result significantly.'
 
     input_schema(
       type: 'object',

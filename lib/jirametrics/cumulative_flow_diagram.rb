@@ -46,7 +46,7 @@ class CumulativeFlowDiagram < ChartBase
         total work entered; the top edge of the rightmost band shows total work completed.
       </div>
       <div class="p">
-        A widening band means work is piling up in that stage — a bottleneck. Parallel top edges
+        A widening band means work is piling up in that stage - a bottleneck. Parallel top edges
         (bands staying the same width) indicate smooth flow. Steep rises in the leftmost band
         without corresponding rises on the right mean new work is arriving faster than it is
         being finished.

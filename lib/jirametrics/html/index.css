@@ -228,7 +228,7 @@ div.child_issue {
   padding: 0.5em;
 }
 
-/* Dark CSS variables — shared by the media query and the forced dark theme */
+/* Dark CSS variables - shared by the media query and the forced dark theme */
 html[data-theme="dark"] {
   --warning-banner: #9F2B00;
   --non-working-days-color: #2f2f2f;
@@ -240,7 +240,7 @@ html[data-theme="dark"] {
   --grid-line-color: #424242;
   --expedited-color: #E69F00;        /* Okabe-Ito orange for dark bg */
   --blocked-color: #E69F00;          /* Okabe-Ito orange for dark bg */
-  --stalled-color: #F0E442;          /* Okabe-Ito yellow — distinct from blocked */
+  --stalled-color: #F0E442;          /* Okabe-Ito yellow - distinct from blocked */
   --wip-chart-active-color: #56B4E9; /* sky blue for dark bg */
   --status-category-inprogress-color: #56B4E9;  /* sky blue for dark bg */
   --status-category-done-color: #2DCB9A;         /* lighter bluish green for dark bg */
@@ -284,7 +284,7 @@ html[data-theme="dark"] {
   }
 }
 
-/* Force light mode — overrides the dark media query when user explicitly picks light */
+/* Force light mode - overrides the dark media query when user explicitly picks light */
 html[data-theme="light"] {
   --warning-banner: yellow;
   --non-working-days-color: #F0F0F0;
@@ -380,7 +380,7 @@ html[data-theme="light"] {
 
     --expedited-color: #E69F00;        /* Okabe-Ito orange for dark bg */
     --blocked-color: #E69F00;          /* Okabe-Ito orange for dark bg */
-    --stalled-color: #F0E442;          /* Okabe-Ito yellow — distinct from blocked */
+    --stalled-color: #F0E442;          /* Okabe-Ito yellow - distinct from blocked */
     --dead-color: black;
     --wip-chart-active-color: #56B4E9; /* sky blue for dark bg */
 

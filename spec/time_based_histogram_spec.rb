@@ -37,7 +37,7 @@ describe TimeBasedHistogram do
 
     it 'sorts by value before computing percentiles, whatever order the keys arrive in' do
       # Keys given high-to-low: percentiles must still accumulate against ascending values, so the
-      # 50th percentile of three equally-weighted values 1, 2, 3 is 2 — not whichever key came first.
+      # 50th percentile of three equally-weighted values 1, 2, 3 is 2 - not whichever key came first.
       expect_percentiles({ 3 => 1, 1 => 1, 2 => 1 }, [50]).to eq({ 50 => 2 })
     end
 
