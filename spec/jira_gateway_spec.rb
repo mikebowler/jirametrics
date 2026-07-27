@@ -198,6 +198,24 @@ describe JiraGateway do
       )
     end
 
+    it 'reports the HTTP status for a generic HTTP error' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['', 'curl: (22) The requested URL returned error: 404', MockStatus.new(exitstatus: 22)]
+      )
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error 'Jira returned HTTP 404. See mock_logfile for details'
+      )
+    end
+
+    it 'reports curl\'s own message when the failure is not an HTTP error' do
+      allow(gateway).to receive(:capture3).and_return(
+        ['', 'curl: (6) Could not resolve host: nope.example.com', MockStatus.new(exitstatus: 6)]
+      )
+      expect { gateway.exec_and_parse_response command: 'foo', stdin_data: nil }.to(
+        raise_error 'Jira call failed: Could not resolve host: nope.example.com. See mock_logfile for details'
+      )
+    end
+
     it 'execs successfully' do
       allow(gateway).to receive(:capture3).and_return(
         ['{"a":1}', 'stderr', MockStatus.new(exitstatus: 0)]

@@ -71,8 +71,20 @@ class JiraGateway
             'Jira account may have been deactivated due to inactivity. Check your Jira subscription ' \
             'and try again later.'
     end
-    raise "Failed call with exit status #{status.exitstatus}. " \
-      "See #{@file_system.logfile_name} for details"
+    raise "#{failure_summary(status: status, stderr: stderr)}. See #{@file_system.logfile_name} for details"
+  end
+
+  # Turn curl's opaque exit code into something self-describing: prefer the HTTP status Jira
+  # returned, then curl's own error text (e.g. "Could not resolve host"), falling back to the exit
+  # code only when neither is present.
+  def failure_summary status:, stderr:
+    http_status = stderr[/returned error: (\d{3})/, 1]
+    return "Jira returned HTTP #{http_status}" if http_status
+
+    curl_message = stderr[/curl: \(\d+\) (.+)/, 1]
+    return "Jira call failed: #{curl_message.strip}" if curl_message
+
+    "Failed call with exit status #{status.exitstatus}"
   end
 
   def capture3 command, stdin_data:
