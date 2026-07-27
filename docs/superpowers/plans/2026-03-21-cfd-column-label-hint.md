@@ -4,7 +4,7 @@
 
 **Goal:** Add `label` and `label_hint` to `CfdColumnRules` so users can override band names in the legend and show tooltip text on legend hover.
 
-**Architecture:** Two changes: (1) Ruby — add the attributes to `CfdColumnRules` and use them when building datasets in `run`; (2) ERB — add the Chart.js legend hover tooltip plugin (already present in `daily_wip_chart.erb`) to the CFD template.
+**Architecture:** Two changes: (1) Ruby - add the attributes to `CfdColumnRules` and use them when building datasets in `run`; (2) ERB - add the Chart.js legend hover tooltip plugin (already present in `daily_wip_chart.erb`) to the CFD template.
 
 **Tech Stack:** Ruby, RSpec, Chart.js (ERB template).
 
@@ -18,7 +18,7 @@
 
 #### Background
 
-`CfdColumnRules` currently has only `attr_accessor :color`. The `run` method builds datasets with `label: name` where `name` comes from `cfd[:columns]` (the board column name string). Datasets are iterated via `columns.each_with_index` where `col_index` is the position within the active (non-ignored) column list — the same index into `active_rules`.
+`CfdColumnRules` currently has only `attr_accessor :color`. The `run` method builds datasets with `label: name` where `name` comes from `cfd[:columns]` (the board column name string). Datasets are iterated via `columns.each_with_index` where `col_index` is the position within the active (non-ignored) column list - the same index into `active_rules`.
 
 The `chart_with_rules` helper already exists in the spec's `context 'column_rules'` block. Use it for the new tests.
 
@@ -53,7 +53,7 @@ end
 rake spec
 ```
 
-Expected: 2 failures — `label` and `label_hint` methods not defined on `CfdColumnRules`.
+Expected: 2 failures - `label` and `label_hint` methods not defined on `CfdColumnRules`.
 
 - [ ] **Step 3: Add `attr_accessor :label, :label_hint` to `CfdColumnRules`**
 
@@ -104,7 +104,7 @@ to:
 }
 ```
 
-Note: `col_index` here is the position within `columns` (the filtered active list), which is the same index into `active_rules`. `label_hint: nil` is harmless — Chart.js ignores it, and the legend hover plugin guards with `if (!dataset?.label_hint)`.
+Note: `col_index` here is the position within `columns` (the filtered active list), which is the same index into `active_rules`. `label_hint: nil` is harmless - Chart.js ignores it, and the legend hover plugin guards with `if (!dataset?.label_hint)`.
 
 - [ ] **Step 5: Run the tests and verify they pass**
 
@@ -163,7 +163,7 @@ end
 rake spec
 ```
 
-Expected: 1 failure — `onHover` not found in output.
+Expected: 1 failure - `onHover` not found in output.
 
 - [ ] **Step 3: Update `cumulative_flow_diagram.erb`**
 
@@ -201,7 +201,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
         const endX   = chart.scales.x.getPixelForValue(new Date(win.end_date).getTime());
 
         // Draw hatched slices over the correction window.
-        // For stacked line charts, PointElement has no .base — derive the band bottom from the
+        // For stacked line charts, PointElement has no .base - derive the band bottom from the
         // dataset directly below in the visual stack (dataset_index - 1, since datasets are
         // stored reversed), or chart.chartArea.bottom for the lowest dataset.
         // Use a trapezoid clip path per slice so hatching stays within the actual band boundary

@@ -4,11 +4,11 @@
 
 Add an opt-in `show_flow_metrics` feature to `CumulativeFlowDiagram` that teaches users how to read a CFD by overlaying:
 
-1. **Arrival rate line** — linear regression trend line across the full chart showing how fast work enters the system
-2. **Departure rate line** — linear regression trend line showing how fast work leaves
-3. **Interactive Little's Law triangle** — follows the mouse, showing WIP, approximate average cycle time, and throughput at any point in time, with values labelled inline on each side of the triangle
+1. **Arrival rate line** - linear regression trend line across the full chart showing how fast work enters the system
+2. **Departure rate line** - linear regression trend line showing how fast work leaves
+3. **Interactive Little's Law triangle** - follows the mouse, showing WIP, approximate average cycle time, and throughput at any point in time, with values labelled inline on each side of the triangle
 
-**Assumption:** `show_flow_metrics` assumes the rightmost active column represents completed work (departures). If the user has ignored the rightmost column via `column_rules`, the metrics will be meaningless. This interaction is not validated — it is a documented limitation.
+**Assumption:** `show_flow_metrics` assumes the rightmost active column represents completed work (departures). If the user has ignored the rightmost column via `column_rules`, the metrics will be meaningless. This interaction is not validated - it is a documented limitation.
 
 ---
 
@@ -70,7 +70,7 @@ arrivals[j] = datasets.reduce((sum, ds) => sum + (ds.data[j]?.y || 0), 0)
 departures[j] = datasets[0].data[j]?.y || 0
 ```
 
-Both `arrivals[j]` and `departures[j]` are cumulative totals. Note: `departures[j]` is not guaranteed to be monotonically non-decreasing — correction windows (backward movements) can cause the done count to dip on some days. The `j_c` search (Section 3.5) handles this correctly because it scans forward looking for the first crossing, regardless of non-monotonicity.
+Both `arrivals[j]` and `departures[j]` are cumulative totals. Note: `departures[j]` is not guaranteed to be monotonically non-decreasing - correction windows (backward movements) can cause the done count to dip on some days. The `j_c` search (Section 3.5) handles this correctly because it scans forward looking for the first crossing, regardless of non-monotonicity.
 
 ### 3.2 Plugin structure
 
@@ -188,11 +188,11 @@ Labels: white, 11px sans-serif, with a small semi-transparent dark background re
 
 **Triangle fill:** before drawing strokes, fill the triangle ABC with `rgba(255, 255, 255, 0.06)`.
 
-**Edge case — C outside date range:** if no `j_c` is found within the dataset, draw AB normally, then extend AC horizontally (constant y = A's y-pixel) to the right edge of the chart area as a dashed line. Omit the BC segment, triangle fill, and throughput label entirely.
+**Edge case - C outside date range:** if no `j_c` is found within the dataset, draw AB normally, then extend AC horizontally (constant y = A's y-pixel) to the right edge of the chart area as a dashed line. Omit the BC segment, triangle fill, and throughput label entirely.
 
 ### 3.7 No JavaScript unit tests
 
-The `linearRegression` function is pure but the spec intentionally omits Jest tests for it — the entire plugin is visual/interactive and is best verified manually. An implementer who wants to add a Jest test for the regression function may do so but it is not required.
+The `linearRegression` function is pure but the spec intentionally omits Jest tests for it - the entire plugin is visual/interactive and is best verified manually. An implementer who wants to add a Jest test for the regression function may do so but it is not required.
 
 ---
 

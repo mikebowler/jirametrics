@@ -29,7 +29,7 @@
 
 ---
 
-### Task 1: `GroupingRules` — color pair support
+### Task 1: `GroupingRules` - color pair support
 
 **Files:**
 - Modify: `lib/jirametrics/grouping_rules.rb`
@@ -135,7 +135,7 @@ end
 rake spec
 ```
 
-Expected: several failures in `grouping_rules_spec.rb` — `undefined method 'color_pair'` and similar.
+Expected: several failures in `grouping_rules_spec.rb` - `undefined method 'color_pair'` and similar.
 
 - [ ] **Step 3: Implement the changes in `lib/jirametrics/grouping_rules.rb`**
 
@@ -189,7 +189,7 @@ Expected: all tests pass, including the new `grouping_rules_spec.rb` tests.
 
 ---
 
-### Task 2: `ChartBase` — `generated_colors` accessor
+### Task 2: `ChartBase` - `generated_colors` accessor
 
 **Files:**
 - Modify: `lib/jirametrics/chart_base.rb`
@@ -254,7 +254,7 @@ Expected: all tests pass.
 
 ---
 
-### Task 3: `GroupableIssueChart` — populate `generated_colors`
+### Task 3: `GroupableIssueChart` - populate `generated_colors`
 
 **Files:**
 - Modify: `lib/jirametrics/groupable_issue_chart.rb`
@@ -293,7 +293,7 @@ end
 rake spec
 ```
 
-Expected: both new tests fail — `generated_colors` remains empty.
+Expected: both new tests fail - `generated_colors` remains empty.
 
 - [ ] **Step 3: Update `group_issues` in `lib/jirametrics/groupable_issue_chart.rb`**
 
@@ -338,7 +338,7 @@ Expected: all tests pass.
 
 ---
 
-### Task 4: `DailyWipChart` — populate `generated_colors`
+### Task 4: `DailyWipChart` - populate `generated_colors`
 
 **Files:**
 - Modify: `lib/jirametrics/daily_wip_chart.rb`
@@ -379,7 +379,7 @@ end
 rake spec
 ```
 
-Expected: both new tests fail — `generated_colors` remains empty.
+Expected: both new tests fail - `generated_colors` remains empty.
 
 - [ ] **Step 3: Update `configure_rule` in `lib/jirametrics/daily_wip_chart.rb`**
 
@@ -407,7 +407,7 @@ Expected: all tests pass.
 
 ---
 
-### Task 5: `HtmlReportConfig` — accumulate and emit generated CSS
+### Task 5: `HtmlReportConfig` - accumulate and emit generated CSS
 
 **Files:**
 - Modify: `lib/jirametrics/html_report_config.rb`
@@ -415,7 +415,7 @@ Expected: all tests pass.
 
 - [ ] **Step 1: Add failing tests to `spec/html_report_config_spec.rb`**
 
-Add a new context block. The `TestableChart` class at the top of the spec already subclasses `ChartBase` with a simple `run` method — extend it to support color pairs:
+Add a new context block. The `TestableChart` class at the top of the spec already subclasses `ChartBase` with a simple `run` method - extend it to support color pairs:
 
 ```ruby
 context 'generated_colors accumulation' do
@@ -508,7 +508,7 @@ end
 rake spec
 ```
 
-Expected: failures — `load_css` not overridden yet, `@generated_colors` not initialised, etc.
+Expected: failures - `load_css` not overridden yet, `@generated_colors` not initialised, etc.
 
 - [ ] **Step 3: Implement the changes in `lib/jirametrics/html_report_config.rb`**
 

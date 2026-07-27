@@ -20,7 +20,7 @@
 
 The spec file has a `context 'column_rules'` block (lines 52–123) that defines the `chart_with_rules` helper. The two new tests must be nested **inside** `context 'column_rules'` (before its closing `end` at line 123) so they can use that helper.
 
-The first test checks the default — no `show_flow_metrics` call → no plugin JS in output. The second test calls `show_flow_metrics` inside the DSL block, which goes through `instance_eval` in `initialize`, so the method must be a public instance method on `CumulativeFlowDiagram`.
+The first test checks the default - no `show_flow_metrics` call → no plugin JS in output. The second test calls `show_flow_metrics` inside the DSL block, which goes through `instance_eval` in `initialize`, so the method must be a public instance method on `CumulativeFlowDiagram`.
 
 The identifier `'cfdFlowMetrics'` is the plugin's `id` string that will be present in the ERB output when the flag is set. Task 2 will make the second test pass by adding the ERB plugin.
 
@@ -48,7 +48,7 @@ end
 rake spec
 ```
 
-Expected: 1 failure — `NoMethodError: undefined method 'show_flow_metrics'`. The first test ("does not include") may pass immediately since the string is absent by default.
+Expected: 1 failure - `NoMethodError: undefined method 'show_flow_metrics'`. The first test ("does not include") may pass immediately since the string is absent by default.
 
 - [ ] **Step 3: Add the `show_flow_metrics` method**
 
@@ -66,7 +66,7 @@ end
 rake spec
 ```
 
-Expected: 1 failure — `'cfdFlowMetrics'` not found in output. The method now exists so no `NoMethodError`, but the ERB doesn't emit the plugin yet (Task 2 fixes this).
+Expected: 1 failure - `'cfdFlowMetrics'` not found in output. The method now exists so no `NoMethodError`, but the ERB doesn't emit the plugin yet (Task 2 fixes this).
 
 - [ ] **Step 5: Run RuboCop**
 
@@ -89,24 +89,24 @@ The ERB template is inside `<script>` tags. There is already a custom plugin `cf
 
 The `@show_flow_metrics` ivar is accessed in ERB as `<%= @show_flow_metrics %>` or tested with `<% if @show_flow_metrics %>`. When `nil` (default), the `if` is falsy and no plugin code is emitted.
 
-**Data model recap** (important — read before implementing):
+**Data model recap** (important - read before implementing):
 
 - Datasets are in reversed order: done column = `datasets[0]`, leftmost column = `datasets[last]`
 - `datasets[0].data[j].y` = cumulative departures at index j. This equals cumulative count because the done column is the rightmost, so its marginal equals its cumulative (no column to its right)
 - `arrivals[j]` = sum of all dataset y values at j (marginals telescope to give `cumulative[0]`, the total ever arrived)
 - Neither arrivals nor departures are guaranteed monotone (correction windows can cause dips); the j_c forward scan handles this correctly regardless
-- `arrivals[j]` is a **fixed threshold** in the j_c scan — do not re-evaluate it per candidate index
+- `arrivals[j]` is a **fixed threshold** in the j_c scan - do not re-evaluate it per candidate index
 
 **Plugin responsibilities:**
 
-1. `afterInit` — build arrivals/departures arrays, compute linear regression for each, cache on `chart._flowMetrics`
-2. `afterEvent` — update `fm.mouseX` on `mousemove` within chart area; clear on `mouseout`. Use `args.changed = true` (not `chart.update()`) to request redraw
-3. `afterDraw` — always draw the two trend lines; draw the triangle+labels if `mouseX` is set
+1. `afterInit` - build arrivals/departures arrays, compute linear regression for each, cache on `chart._flowMetrics`
+2. `afterEvent` - update `fm.mouseX` on `mousemove` within chart area; clear on `mouseout`. Use `args.changed = true` (not `chart.update()`) to request redraw
+3. `afterDraw` - always draw the two trend lines; draw the triangle+labels if `mouseX` is set
 
 **Triangle geometry:**
 
 ```
-A ————————— C      (same y; horizontal top = cycle time)
+A --------- C      (same y; horizontal top = cycle time)
 |          /
 |         /        (dashed hypotenuse = throughput slope)
 |        /

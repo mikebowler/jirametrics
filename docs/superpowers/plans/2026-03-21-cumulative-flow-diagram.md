@@ -20,7 +20,7 @@
 | `lib/jirametrics/html/cumulative_flow_diagram.erb` | Create | Chart.js stacked area template |
 | `spec/cumulative_flow_diagram_spec.rb` | Create | Integration chart spec |
 
-No changes to `lib/jirametrics.rb` — `require_rel 'jirametrics'` auto-loads all files in the directory.
+No changes to `lib/jirametrics.rb` - `require_rel 'jirametrics'` auto-loads all files in the directory.
 
 ---
 
@@ -33,11 +33,11 @@ No changes to `lib/jirametrics.rb` — `require_rel 'jirametrics'` auto-loads al
 - Index 3: Done (status_ids: [10002])
 
 **Test helpers** (from `spec/spec_helper.rb`):
-- `sample_board` — loads the test board fixture
-- `empty_issue(created:, board:, key:)` — creates an issue with no changes
-- `add_mock_change(issue:, field:, value:, value_id:, time:)` — adds a `ChangeItem` to `issue.changes`
+- `sample_board` - loads the test board fixture
+- `empty_issue(created:, board:, key:)` - creates an issue with no changes
+- `add_mock_change(issue:, field:, value:, value_id:, time:)` - adds a `ChangeItem` to `issue.changes`
 - For status changes: always pass `field: 'status'` AND `value_id:` (integer status ID). `value_id` must be an integer (e.g., `10001`, not `'10001'`).
-- `issue.status_changes` — returns only changes where `field == 'status'`; `change.value_id` is already an integer
+- `issue.status_changes` - returns only changes where `field == 'status'`; `change.value_id` is already an integer
 
 **Chart patterns** (from `expedited_chart.rb` and `aging_work_in_progress_chart_spec.rb`):
 - Chart class: `class Foo < ChartBase`, `super()`, then `instance_eval(&block)` in initialize
@@ -48,7 +48,7 @@ No changes to `lib/jirametrics.rb` — `require_rel 'jirametrics'` auto-loads al
 
 ---
 
-## Task 1: CfdDataBuilder — skeleton + daily counts
+## Task 1: CfdDataBuilder - skeleton + daily counts
 
 **Files:**
 - Create: `lib/jirametrics/cfd_data_builder.rb`
@@ -236,7 +236,7 @@ git commit -m "Add CfdDataBuilder skeleton with daily_counts computation"
 
 ---
 
-## Task 2: CfdDataBuilder — correction windows and edge cases
+## Task 2: CfdDataBuilder - correction windows and edge cases
 
 **Files:**
 - Modify: `spec/cfd_data_builder_spec.rb` (add test contexts)
@@ -300,7 +300,7 @@ Add these contexts to `spec/cfd_data_builder_spec.rb` after the `daily_counts` c
   context 'edge cases' do
     it 'skips status changes not mapped to any board column' do
       issue1 = empty_issue(created: '2021-07-01', key: 'SP-1')
-      # Status ID 10000 is Backlog — not in visible_columns for this kanban board
+      # Status ID 10000 is Backlog - not in visible_columns for this kanban board
       add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10000, time: '2021-07-02T10:00:00')
 
       result = build(issues: [issue1])
@@ -314,7 +314,7 @@ Add these contexts to `spec/cfd_data_builder_spec.rb` after the `daily_counts` c
 
       result = build(issues: [issue1])
 
-      # issue1 already in In Progress (col 1) before the range starts — counts col 0 and col 1
+      # issue1 already in In Progress (col 1) before the range starts - counts col 0 and col 1
       expect(result[:daily_counts][Date.parse('2021-07-01')]).to eq [1, 1, 0, 0]
     end
 
@@ -643,7 +643,7 @@ git commit -m "Add CumulativeFlowDiagram chart with backwards-movement visualiza
 
 ## Notes for Implementer
 
-**`CfdSegment#to_json` pattern:** The custom `to_json` emits raw JavaScript (not a quoted string), so `JSON.generate(data_sets)` produces JS-compatible output with embedded functions — not valid JSON, but valid JS that Chart.js consumes. This is the same pattern used in `ExpeditedChart::EXPEDITED_SEGMENT`. Do not add quotes around the segment value.
+**`CfdSegment#to_json` pattern:** The custom `to_json` emits raw JavaScript (not a quoted string), so `JSON.generate(data_sets)` produces JS-compatible output with embedded functions - not valid JSON, but valid JS that Chart.js consumes. This is the same pattern used in `ExpeditedChart::EXPEDITED_SEGMENT`. Do not add quotes around the segment value.
 
 **Stacking and legend order:** `y.stacked: true` tells Chart.js to stack datasets. Datasets are passed in reverse order (Done first) so the leftmost column ends up on top visually. `legend.reverse: true` restores left-to-right legend display.
 

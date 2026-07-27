@@ -91,7 +91,7 @@ Expected: all tests pass.
 
 `hex_to_rgba` (already on the chart) converts `#rrggbb` → `rgba(r,g,b,alpha)`. If the user supplies a non-hex color string, we use it as-is for both border and fill (limitation documented separately).
 
-`empty_config_block` in `spec_helper.rb` returns `->(_) {}` — a lambda that accepts the chart object (passed as block-arg by `instance_eval`) and ignores it. For tests that need a custom DSL block, pass a `proc { ... }` instead (no argument needed; `instance_eval` sets `self` to the chart so methods like `column_rules` resolve directly).
+`empty_config_block` in `spec_helper.rb` returns `->(_) {}` - a lambda that accepts the chart object (passed as block-arg by `instance_eval`) and ignores it. For tests that need a custom DSL block, pass a `proc { ... }` instead (no argument needed; `instance_eval` sets `self` to the chart so methods like `column_rules` resolve directly).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -149,7 +149,7 @@ end
 rake spec
 ```
 
-Expected: 3 failures — `column_rules` method not defined.
+Expected: 3 failures - `column_rules` method not defined.
 
 - [ ] **Step 3: Add `CfdColumnRules` inner class and `column_rules` method**
 

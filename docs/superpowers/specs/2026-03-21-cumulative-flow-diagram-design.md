@@ -10,8 +10,8 @@ Add a `CumulativeFlowDiagram` chart to jirametrics that shows how work accumulat
 
 Two classes with a clear separation of concerns:
 
-- **`CfdDataBuilder`** (`lib/jirametrics/cfd_data_builder.rb`) — pure computation class. Accepts `board:`, `issues:`, and `date_range:` as keyword arguments (`date_range` is a `Date` range). No chart infrastructure, no rendering. Fully unit-testable in isolation.
-- **`CumulativeFlowDiagram < ChartBase`** (`lib/jirametrics/cumulative_flow_diagram.rb`) — thin rendering class. In its `run` method, `require`s `cfd_data_builder`, instantiates `CfdDataBuilder` passing `current_board` (the inherited `ChartBase#current_board`), `issues`, and `date_range`. Passes results to an ERB template that renders a Chart.js stacked area chart.
+- **`CfdDataBuilder`** (`lib/jirametrics/cfd_data_builder.rb`) - pure computation class. Accepts `board:`, `issues:`, and `date_range:` as keyword arguments (`date_range` is a `Date` range). No chart infrastructure, no rendering. Fully unit-testable in isolation.
+- **`CumulativeFlowDiagram < ChartBase`** (`lib/jirametrics/cumulative_flow_diagram.rb`) - thin rendering class. In its `run` method, `require`s `cfd_data_builder`, instantiates `CfdDataBuilder` passing `current_board` (the inherited `ChartBase#current_board`), `issues`, and `date_range`. Passes results to an ERB template that renders a Chart.js stacked area chart.
 
 Does NOT include `GroupableIssueChart`. Uses standard `ChartBase` block handling for `header_text`/`description_text` overrides.
 
@@ -28,9 +28,9 @@ Default texts:
 ## Section 2: Computation (`CfdDataBuilder`)
 
 ### Input
-- `board:` — Jira board; uses `board.visible_columns`, each with `status_ids` returning an array of integers (status IDs)
-- `issues:` — all issues for the project
-- `date_range:` — a `Date` range
+- `board:` - Jira board; uses `board.visible_columns`, each with `status_ids` returning an array of integers (status IDs)
+- `issues:` - all issues for the project
+- `date_range:` - a `Date` range
 
 ### Algorithm
 
@@ -42,7 +42,7 @@ For each status change:
 
 - Column lookup result is `nil` (status not on board): skip this change, leave high-water-mark unchanged.
 - Resolved column index > current high-water-mark (or high-water-mark is `nil`): advance the high-water-mark. If `correction_open_since` is set, close the correction window (`end_date = change.time.to_date`) and clear `correction_open_since`.
-- Resolved column index < current high-water-mark: backwards movement. If `correction_open_since` is `nil`, open a new correction window (set `correction_open_since = change.time.to_date`). If a correction window is already open (multiple backwards moves without recovery), do not open a new one — keep the existing window open and leave the high-water-mark unchanged.
+- Resolved column index < current high-water-mark: backwards movement. If `correction_open_since` is `nil`, open a new correction window (set `correction_open_since = change.time.to_date`). If a correction window is already open (multiple backwards moves without recovery), do not open a new one - keep the existing window open and leave the high-water-mark unchanged.
 
 After processing all changes: if `correction_open_since` is still set, close the correction window with `end_date = date_range.end`.
 
@@ -53,7 +53,7 @@ Each closed correction window records:
 
 **Initial snapshot (pre-range issues):** Before iterating `date_range`, process all status changes that occurred *before* `date_range.begin` to establish each issue's high-water-mark at the start of the range. Issues with no status changes of any kind (never appeared on the board) contribute 0 to all columns.
 
-**Daily counts — cumulative totals:** For each date in `date_range`, emit one count per column. The count for column `i` is the number of issues whose high-water-mark is `>= i`. These are cumulative totals stored in board left-to-right order:
+**Daily counts - cumulative totals:** For each date in `date_range`, emit one count per column. The count for column `i` is the number of issues whose high-water-mark is `>= i`. These are cumulative totals stored in board left-to-right order:
 
 ```
 [12, 8, 3, 1]   # 12 issues reached column 0+; 8 reached column 1+; 3 reached column 2+; 1 reached column 3
@@ -100,11 +100,11 @@ marginal[last] = cumulative[last]
 
 **Legend order:** Because datasets are reversed, Chart.js would render the legend in reverse order. Use `options.plugins.legend.reverse: true` to restore left-to-right legend display.
 
-### Backwards movement visualization (both signals — dashed line + hatched fill)
+### Backwards movement visualization (both signals - dashed line + hatched fill)
 
-**Dashed border line** — via Chart.js `segment` callback on `borderDash`. Each dataset carries a `correctionWindows` property (array of `{start_date, end_date}` for its column). The segment callback checks whether the segment's midpoint date falls within any correction window for that dataset.
+**Dashed border line** - via Chart.js `segment` callback on `borderDash`. Each dataset carries a `correctionWindows` property (array of `{start_date, end_date}` for its column). The segment callback checks whether the segment's midpoint date falls within any correction window for that dataset.
 
-**Hatched fill** — via a custom Chart.js `afterDraw` plugin registered inline in the ERB template. After the chart draws, the plugin iterates each correction window:
+**Hatched fill** - via a custom Chart.js `afterDraw` plugin registered inline in the ERB template. After the chart draws, the plugin iterates each correction window:
 
 1. Map `start_date` and `end_date` to pixel x-coordinates via `chart.scales.x.getPixelForValue(date)`.
 2. Find the dataset index for the affected column. Get top and bottom pixel y-coordinates for the band using Chart.js dataset meta: `chart.getDatasetMeta(datasetIndex).data[pointIndex].y` (top of band) and `chart.getDatasetMeta(datasetIndex).data[pointIndex].base` (bottom of band).
@@ -130,13 +130,13 @@ end
 ## Section 4: Testing
 
 ### `CfdDataBuilder` spec (`spec/cfd_data_builder_spec.rb`)
-Pure unit tests — no chart infrastructure required. Uses `empty_issue`, `add_mock_change`, and `sample_board` from `spec_helper.rb`.
+Pure unit tests - no chart infrastructure required. Uses `empty_issue`, `add_mock_change`, and `sample_board` from `spec_helper.rb`.
 
 - **Happy path:** 3 issues with status changes spanning the date_range. Verify `daily_counts` has correct cumulative values per column per date.
-- **Correction window — recovered:** Issue moves from column 2 back to column 1, then later re-advances to column 2. Verify `correction_windows` has one entry: `start_date` = date of backwards move, `end_date` = date of re-advance, `column_index` = 2.
-- **Correction window — not recovered:** Same backwards move, issue never re-advances within the range. Verify `end_date` = `date_range.end`.
+- **Correction window - recovered:** Issue moves from column 2 back to column 1, then later re-advances to column 2. Verify `correction_windows` has one entry: `start_date` = date of backwards move, `end_date` = date of re-advance, `column_index` = 2.
+- **Correction window - not recovered:** Same backwards move, issue never re-advances within the range. Verify `end_date` = `date_range.end`.
 - **Multiple backwards moves without recovery:** Issue drops from column 2 to column 1, then from column 1 to column 0. Verify only one correction window is recorded (not two), with `start_date` = date of first backwards move.
-- **Status not on board:** Status change whose `value_id` is not in any board column is skipped — high-water-mark unchanged.
+- **Status not on board:** Status change whose `value_id` is not in any board column is skipped - high-water-mark unchanged.
 - **Pre-range issues:** Issue with changes before `date_range.begin`. Verify it appears in the day-0 snapshot.
 - **Never on board:** Issue with no status changes at all contributes 0 to all columns.
 - **Issue skips columns:** Issue moves directly from column 0 to column 3. Verify columns 0, 1, 2, and 3 all gain a count.

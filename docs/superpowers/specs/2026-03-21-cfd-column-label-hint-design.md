@@ -14,7 +14,7 @@ Add two attributes to the `CfdColumnRules` inner class in `lib/jirametrics/cumul
 attr_accessor :label, :label_hint
 ```
 
-These mirror `GroupingRules#label` and `GroupingRules#label_hint` (see `lib/jirametrics/grouping_rules.rb`). No validation is required — both accept any string or nil.
+These mirror `GroupingRules#label` and `GroupingRules#label_hint` (see `lib/jirametrics/grouping_rules.rb`). No validation is required - both accept any string or nil.
 
 ---
 
@@ -31,7 +31,7 @@ When building each dataset in `CumulativeFlowDiagram#run`, replace the bare colu
 }
 ```
 
-`label_hint: nil` is harmless — Chart.js ignores unknown dataset properties with nil/undefined values, and the legend hover plugin guards with `if (!dataset?.label_hint)`.
+`label_hint: nil` is harmless - Chart.js ignores unknown dataset properties with nil/undefined values, and the legend hover plugin guards with `if (!dataset?.label_hint)`.
 
 ---
 
@@ -65,7 +65,7 @@ tooltip: {
 }
 ```
 
-**`plugins.legend`** — add `onHover` and `onLeave`:
+**`plugins.legend`** - add `onHover` and `onLeave`:
 ```javascript
 legend: {
   reverse: true,
@@ -92,7 +92,7 @@ legend: {
 }
 ```
 
-The dataset reversal (done = index 0) requires no special handling — `legendItem.datasetIndex` is the Chart.js array index, which is already correct.
+The dataset reversal (done = index 0) requires no special handling - `legendItem.datasetIndex` is the Chart.js array index, which is already correct.
 
 ---
 

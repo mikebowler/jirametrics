@@ -8,7 +8,7 @@ Grouping rules allow users to specify a single color per group. Charts are displ
 
 ## Solution
 
-Accept a two-element `[light_color, dark_color]` array wherever a grouping rule color is currently accepted. When an array is given, a deterministic CSS variable name is generated from the pair's content (via a short hash), the pair is stored on the `GroupingRules` object, the chart accumulates pairs into `generated_colors`, and `HtmlReportConfig` emits a `<style>` block appended to the CSS loaded for the report — placing it in `<head>` alongside existing styles.
+Accept a two-element `[light_color, dark_color]` array wherever a grouping rule color is currently accepted. When an array is given, a deterministic CSS variable name is generated from the pair's content (via a short hash), the pair is stored on the `GroupingRules` object, the chart accumulates pairs into `generated_colors`, and `HtmlReportConfig` emits a `<style>` block appended to the CSS loaded for the report - placing it in `<head>` alongside existing styles.
 
 ## User-Facing API
 
@@ -22,7 +22,7 @@ html_report do
 end
 ```
 
-Single-color usage (`rules.color = '#4bc14b'` or `rules.color = '--type-story-color'`) is unchanged. Each element of the array may be any valid CSS color value (hex, named color, etc.) — CSS variable references (`--foo`) are not allowed as array elements. If one is provided, `color=` raises `ArgumentError` with the message: `"CSS variable references are not supported as color pair elements; use a literal color value instead"`.
+Single-color usage (`rules.color = '#4bc14b'` or `rules.color = '--type-story-color'`) is unchanged. Each element of the array may be any valid CSS color value (hex, named color, etc.) - CSS variable references (`--foo`) are not allowed as array elements. If one is provided, `color=` raises `ArgumentError` with the message: `"CSS variable references are not supported as color pair elements; use a literal color value instead"`.
 
 ## Architecture
 
@@ -30,20 +30,20 @@ Single-color usage (`rules.color = '#4bc14b'` or `rules.color = '--type-story-co
 
 `color=` is extended to detect a two-element array:
 
-- Generates a deterministic CSS variable name: `--generated-color-#{short_hash}`, where `short_hash` is the first 8 hex characters of the SHA256 of `"#{light}|#{dark}"`. The same pair always produces the same variable name — across charts, across runs.
+- Generates a deterministic CSS variable name: `--generated-color-#{short_hash}`, where `short_hash` is the first 8 hex characters of the SHA256 of `"#{light}|#{dark}"`. The same pair always produces the same variable name - across charts, across runs.
 - Sets `@color = CssVariable['--generated-color-#{short_hash}']` as today
 - Stores `@color_pair = { light: light_color, dark: dark_color }` for later CSS emission
 
 No callbacks or counter injection are required. `GroupingRules` is self-contained.
 
 **Validation:** `color=` raises `ArgumentError` if an array is given that:
-- does not have exactly two elements — message: `"Color pair must have exactly two elements: [light_color, dark_color]"`
-- contains a non-string element — message: `"Color pair elements must be strings"`
-- contains a string starting with `--` — message: `"CSS variable references are not supported as color pair elements; use a literal color value instead"`
+- does not have exactly two elements - message: `"Color pair must have exactly two elements: [light_color, dark_color]"`
+- contains a non-string element - message: `"Color pair elements must be strings"`
+- contains a string starting with `--` - message: `"CSS variable references are not supported as color pair elements; use a literal color value instead"`
 
 Non-array values behave as today (passed through `CssVariable[]`).
 
-**Equality:** Because variable names are derived deterministically from pair content, `eql?` (which compares `@color`) and `group` (which returns `[@label, @color]`) continue to work correctly — two rules with the same pair produce the same variable name and are considered equal.
+**Equality:** Because variable names are derived deterministically from pair content, `eql?` (which compares `@color`) and `group` (which returns `[@label, @color]`) continue to work correctly - two rules with the same pair produce the same variable name and are considered equal.
 
 ### `ChartBase`
 
@@ -59,7 +59,7 @@ Charts that use grouping rules already collect `GroupingRules` objects during `r
 
 Before calling `chart.run`, resets `chart.generated_colors` to `{}`. After `chart.run`, merges `chart.generated_colors` into `@generated_colors`. Because variable names are content-addressed, merging identical pairs from multiple charts is idempotent.
 
-### CSS Emission — `HtmlReportConfig#load_css`
+### CSS Emission - `HtmlReportConfig#load_css`
 
 `HtmlReportConfig` overrides `load_css(html_directory:)` (inherited from `HtmlGenerator`). The override calls `super(html_directory: html_directory)` to obtain the base CSS string (index.css plus any user `include_css`), then appends the generated block and returns the result. This ensures the generated variables are placed inside `<head>` alongside existing styles, which is the correct and standards-compliant location.
 
@@ -88,7 +88,7 @@ All three selectors must be emitted to correctly support both the system prefere
 | Component | Change |
 |-----------|--------|
 | `GroupingRules` | Detect array in `color=`; generate deterministic variable name; store `@color_pair` |
-| `ChartBase` | Add `generated_colors` accessor (initialised to `{}`) — populated by chart subclasses at their existing grouping-rule evaluation site |
+| `ChartBase` | Add `generated_colors` accessor (initialised to `{}`) - populated by chart subclasses at their existing grouping-rule evaluation site |
 | `HtmlReportConfig#initialize` | Add `@generated_colors = {}` |
 | `HtmlReportConfig#execute_chart` | Reset `chart.generated_colors` before `chart.run`; merge into `@generated_colors` after |
 | `HtmlReportConfig#load_css` | Override to append generated CSS block when `@generated_colors` is non-empty |

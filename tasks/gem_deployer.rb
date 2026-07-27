@@ -225,7 +225,7 @@ class GemDeployer
     if status.success?
       puts 'done.'
     else
-      puts "WARNING: could not yank #{version} — #{stdout.strip}. Skipping."
+      puts "WARNING: could not yank #{version} - #{stdout.strip}. Skipping."
     end
 
     otp

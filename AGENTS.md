@@ -45,7 +45,7 @@ Config file (Ruby DSL) → `Exporter.configure {}` → Download via `JiraGateway
 - **`Issue`** (`lib/jirametrics/issue.rb`): Core domain model (~850 lines). Tracks changelog, cycle time, status transitions
 - **`Board`**: Jira board configuration; maps statuses to columns, handles Kanban vs Scrum differences
 - **`ChartBase`** (`lib/jirametrics/chart_base.rb`): Abstract base for all charts. Subclasses override `run` and call `wrap_and_render(binding, __FILE__)` which pairs with a matching `.erb` template
-- **`Downloader`**: Factory pattern — `Downloader.create` returns `DownloaderForCloud` or `DownloaderForDataCenter`
+- **`Downloader`**: Factory pattern - `Downloader.create` returns `DownloaderForCloud` or `DownloaderForDataCenter`
 - **`FileSystem`**: I/O abstraction injected into classes that do file operations (enables test mocking)
 
 ### Configuration DSL
@@ -75,13 +75,13 @@ Each chart class in `lib/jirametrics/` has a matching ERB template in `lib/jiram
 
 ### Test Helpers (spec/spec_helper.rb)
 
-- `sample_board` / `load_complete_sample_board` — create Board from fixture data
-- `load_issue(key, board:)` — load Issue from `spec/testdata/{key}.json`
-- `empty_issue(created:, board:, key:)` — create minimal Issue for testing
-- `mock_change(field:, value:, time:, value_id:, ...)` / `add_mock_change(issue:, ...)` — create/add ChangeItem entries
-- `default_cycletime_config` — standard cycle time config using creation→last_resolution
-- `to_time(string)` / `to_date(string)` — parse time strings (defaults to UTC for test consistency)
-- `chart_format(object)` — format values for chart assertion comparisons
+- `sample_board` / `load_complete_sample_board` - create Board from fixture data
+- `load_issue(key, board:)` - load Issue from `spec/testdata/{key}.json`
+- `empty_issue(created:, board:, key:)` - create minimal Issue for testing
+- `mock_change(field:, value:, time:, value_id:, ...)` / `add_mock_change(issue:, ...)` - create/add ChangeItem entries
+- `default_cycletime_config` - standard cycle time config using creation→last_resolution
+- `to_time(string)` / `to_date(string)` - parse time strings (defaults to UTC for test consistency)
+- `chart_format(object)` - format values for chart assertion comparisons
 
 ### Important Testing Notes
 
@@ -94,30 +94,30 @@ Each chart class in `lib/jirametrics/` has a matching ERB template in `lib/jiram
 
 Tests must always be written for new or modified functionality. There are no exceptions to this rule.
 
-A passing `rake` is necessary but **not sufficient** — untested code passes it trivially. Every new or
+A passing `rake` is necessary but **not sufficient** - untested code passes it trivially. Every new or
 changed behaviour ships with a spec that asserts its real output. Code that merely *runs* is not
 thereby tested: a chart that renders, or an MCP tool that returns text when you call it live, is a
-demo, not a spec ("it worked when I ran it" ≠ tested). Framework-coupled code — MCP tool handlers,
-downloaders, anything awkward to fixture — is **not** exempt; awkwardness to test is the reason bugs
+demo, not a spec ("it worked when I ran it" ≠ tested). Framework-coupled code - MCP tool handlers,
+downloaders, anything awkward to fixture - is **not** exempt; awkwardness to test is the reason bugs
 hide there, not a reason to skip.
 
 ## Known Gotchas
 
 ### Timezone consistency
-All timestamps must be in `exporter.timezone_offset` (default `+00:00`). Issue timestamps are converted on load via `Issue#parse_time`. Use `today_in_project_timezone` (`Time.now.getlocal(timezone_offset).to_date`) in downloaders — never `Date.today`, which uses the system local timezone and will cause issues to fall outside the date range.
+All timestamps must be in `exporter.timezone_offset` (default `+00:00`). Issue timestamps are converted on load via `Issue#parse_time`. Use `today_in_project_timezone` (`Time.now.getlocal(timezone_offset).to_date`) in downloaders - never `Date.today`, which uses the system local timezone and will cause issues to fall outside the date range.
 
 ### Chart.js time axis max
 Chart.js interprets `max` as the *start* of that day, so always use `date_range.end + 1` for the max value on time-scale x-axes.
 
 ### chartjs-plugin-annotation v3 label position
-The `position` property on a line annotation label accepts `'start'`, `'center'`, `'end'`, or a **percentage string** like `'25%'`. Decimal numbers (e.g. `0.25`) are silently ignored — the label stays at the default position with no warning or error. Always call `.to_json` when interpolating string values into JS heredocs.
+The `position` property on a line annotation label accepts `'start'`, `'center'`, `'end'`, or a **percentage string** like `'25%'`. Decimal numbers (e.g. `0.25`) are silently ignored - the label stays at the default position with no warning or error. Always call `.to_json` when interpolating string values into JS heredocs.
 
 ### Running tests
-Always run `rake spec` rather than individual spec files — running a single file causes `NameError: uninitialized constant MockFileSystem` due to a load-order dependency.
+Always run `rake spec` rather than individual spec files - running a single file causes `NameError: uninitialized constant MockFileSystem` due to a load-order dependency.
 
 ## Linting
 
-After making changes to Ruby files, run `rubocop` on the modified files and fix any offenses before finishing. RuboCop warnings about `plugins:` vs `require:` in `.rubocop.yml` are pre-existing and can be ignored — only fix actual code offenses.
+After making changes to Ruby files, run `rubocop` on the modified files and fix any offenses before finishing. RuboCop warnings about `plugins:` vs `require:` in `.rubocop.yml` are pre-existing and can be ignored - only fix actual code offenses.
 
 ## Colours
 
@@ -139,10 +139,10 @@ Blue and vermilion/orange are safe pairings because they differ in brightness as
 
 ### CSS variables and light/dark mode
 All chart colours must be defined as CSS variables in `lib/jirametrics/html/index.css`. Every variable must appear in **four** places:
-1. `:root` — light mode defaults
-2. `html[data-theme="dark"]` — forced dark mode
-3. `html[data-theme="light"]` — forced light mode
-4. `@media screen and (prefers-color-scheme: dark) :root` — system dark mode
+1. `:root` - light mode defaults
+2. `html[data-theme="dark"]` - forced dark mode
+3. `html[data-theme="light"]` - forced light mode
+4. `@media screen and (prefers-color-scheme: dark) :root` - system dark mode
 
 In ERB templates, reference colours via `CssVariable['--my-variable'].to_json`, which emits a `getComputedStyle(...)` call resolved at browser runtime so dark/light switching works live. Typically use lighter Okabe-Ito variants (e.g. sky blue `#56B4E9`) for dark mode and darker variants (e.g. blue `#0072B2`) for light mode to maintain contrast.
 
@@ -153,7 +153,7 @@ In ERB templates, reference colours via `CssVariable['--my-variable'].to_json`, 
 - All Ruby files use `# frozen_string_literal: true`
 - No method definition parentheses required (RuboCop `Style/MethodDefParentheses` disabled)
 - Class variables are permitted (used for DSL patterns, e.g., `@@chart_counter` in ChartBase)
-- Many RuboCop metrics (method length, ABC size, block length) are disabled — the DSL style produces long methods
+- Many RuboCop metrics (method length, ABC size, block length) are disabled - the DSL style produces long methods
 - Use `FileSystem` for I/O in production code, not `File` directly
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
@@ -172,9 +172,9 @@ bd close <id>         # Complete work
 
 ### Rules
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Use `bd` for ALL task tracking - do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `bd remember` for persistent knowledge - do NOT use MEMORY.md files
 
 ## Session Completion
 

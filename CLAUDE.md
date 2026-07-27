@@ -10,7 +10,7 @@ pasted from support cases) and must **never** be committed or pushed here.
 
 - Beads issue data lives in the **private** repo `github.com/mikebowler/jirametrics-beads`.
 - `.beads/issues.jsonl` (and `events.jsonl`/`interactions.jsonl`) are gitignored in
-  this repo — do **not** force-add them or remove those `.gitignore` entries.
+  this repo - do **not** force-add them or remove those `.gitignore` entries.
 - `bd dolt push` is configured to push to the private repo's Dolt remote, NOT here.
 - In the session-close workflow below, `git push` sends **code only** to the public
   repo; `bd dolt push` sends **beads data only** to the private repo. Keep them separate.
@@ -33,9 +33,9 @@ bd close <id>         # Complete work
 
 ### Rules
 
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
+- Use `bd` for ALL task tracking - do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `bd remember` for persistent knowledge - do NOT use MEMORY.md files
 
 ## Session Completion
 

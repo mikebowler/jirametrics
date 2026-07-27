@@ -24,7 +24,7 @@ describe('initThemeToggle functionality', () => {
 
   test('applies saved theme from localStorage synchronously on script load (before DOMContentLoaded)', () => {
     localStorage.setItem('jirametrics:theme', 'dark');
-    // eval the script without calling initThemeToggle — the IIFE should apply the theme immediately
+    // eval the script without calling initThemeToggle - the IIFE should apply the theme immediately
     const fs = require('fs');
     const path = require('path');
     const jsCode = fs.readFileSync(path.join(__dirname, '../lib/jirametrics/html/index.js'), 'utf8');
