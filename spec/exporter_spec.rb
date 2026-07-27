@@ -221,10 +221,47 @@ describe Exporter do
           .with(relative_url: '/rest/agile/1.0/board/1/configuration').and_return(board_config_json)
       end
     end
+    let(:minimal_statuses) do
+      [
+        { 'id' => '1', 'name' => 'To Do',
+          'statusCategory' => { 'id' => 2, 'name' => 'To Do', 'key' => 'new' } },
+        { 'id' => '2', 'name' => 'In Progress',
+          'statusCategory' => { 'id' => 4, 'name' => 'In Progress', 'key' => 'indeterminate' } },
+        { 'id' => '3', 'name' => 'Done',
+          'statusCategory' => { 'id' => 3, 'name' => 'Done', 'key' => 'done' } }
+      ]
+    end
 
     before do
       exporter.jira_config 'spec/testdata/jira-config.json'
       allow(JiraGateway).to receive(:new).and_return(gateway)
+    end
+
+    def minimal_board_config type:
+      {
+        'name' => 'Test board', 'type' => type,
+        'columnConfig' => { 'columns' => [
+          { 'name' => 'To Do', 'statuses' => [{ 'id' => '1' }] },
+          { 'name' => 'In Progress', 'statuses' => [{ 'id' => '2' }] },
+          { 'name' => 'Done', 'statuses' => [{ 'id' => '3' }] }
+        ] }
+      }
+    end
+
+    # Wire a gateway that serves one board of the given type (and, for team-managed boards, a
+    # features response saying whether sprints are enabled).
+    def stub_board type:, sprints: nil
+      gw = instance_double(JiraGateway)
+      allow(gw).to receive(:call_url).with(relative_url: '/rest/api/2/status').and_return(minimal_statuses)
+      allow(gw).to receive(:call_url)
+        .with(relative_url: '/rest/agile/1.0/board/9/configuration').and_return(minimal_board_config(type: type))
+      unless sprints.nil?
+        allow(gw).to receive(:call_url)
+          .with(relative_url: '/rest/agile/1.0/board/9/features')
+          .and_return({ 'features' => [{ 'feature' => 'jsw.agility.sprints',
+                                         'state' => sprints ? 'ENABLED' : 'DISABLED' }] })
+      end
+      allow(JiraGateway).to receive(:new).and_return(gw)
     end
 
     it 'lists each visible column with its statuses shown as "name":id and category' do
@@ -322,6 +359,42 @@ describe Exporter do
         .and_return({ 'isLast' => true, 'values' => [] })
       exporter.boards board_id: nil
       expect(file_system.log_messages.join("\n")).to match(/no boards/i)
+    end
+
+    it 'labels a scrum board and offers sprint-based start' do
+      stub_board type: 'scrum'
+      exporter.boards board_id: '9'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('(scrum)')
+        expect(output).to include('start_at first_time_added_to_active_sprint')
+      end
+    end
+
+    it 'resolves a team-managed board that uses sprints and offers sprint-based start' do
+      stub_board type: 'simple', sprints: true
+      exporter.boards board_id: '9'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('(team-managed, uses sprints)')
+        expect(output).to include('start_at first_time_added_to_active_sprint')
+      end
+    end
+
+    it 'resolves a team-managed board without sprints and does not offer sprint-based start' do
+      stub_board type: 'simple', sprints: false
+      exporter.boards board_id: '9'
+      output = file_system.log_messages.join("\n")
+      aggregate_failures do
+        expect(output).to include('(team-managed, no sprints)')
+        expect(output).not_to include('first_time_added_to_active_sprint')
+      end
+    end
+
+    it 'does not offer sprint-based start for a kanban board' do
+      stub_board type: 'kanban'
+      exporter.boards board_id: '9'
+      expect(file_system.log_messages.join("\n")).not_to include('first_time_added_to_active_sprint')
     end
   end
 

@@ -165,12 +165,20 @@ class Exporter
       statuses << Status.from_raw(snippet)
     end
     raw = gateway.call_url relative_url: "/rest/agile/1.0/board/#{board_id}/configuration"
-    board = Board.new raw: raw, possible_statuses: statuses
+    board = Board.new raw: raw, possible_statuses: statuses, features: board_features(gateway, board_id, raw)
     file_system.log format_board(board, board_id), also_write_to_stderr: true
   end
 
+  # Only a team-managed ("simple") board needs the features lookup to tell sprints from kanban; for
+  # classic scrum/kanban the board type alone settles it, so we skip the extra request.
+  def board_features gateway, board_id, raw
+    return [] unless raw['type'] == 'simple'
+
+    BoardFeature.from_raw gateway.call_url(relative_url: "/rest/agile/1.0/board/#{board_id}/features")
+  end
+
   def format_board board, board_id
-    lines = ["Board #{board_id}: #{board.name.inspect} (#{board.board_type})", '']
+    lines = ["Board #{board_id}: #{board.name.inspect} (#{board_kind_label board})", '']
 
     backlog = board.backlog_statuses
     unless backlog.empty?
@@ -193,7 +201,21 @@ class Exporter
     lines << 'To set cycle time, choose the column where work is "started" and where it is "finished":'
     lines << "  start_at first_time_in_or_right_of_column '<started column>'"
     lines << "  stop_at  first_time_in_or_right_of_column '<finished column>'"
+    if board.scrum?
+      lines << ''
+      lines << 'This board uses sprints. If no column cleanly marks when work starts, you can start the'
+      lines << 'clock when an item is first added to a sprint instead:'
+      lines << '  start_at first_time_added_to_active_sprint'
+    end
     lines.join "\n"
+  end
+
+  # A team-managed ("simple") board can be scrum- or kanban-flavoured depending on its sprints
+  # feature; the bare "simple" from Jira doesn't say which, so spell it out.
+  def board_kind_label board
+    return board.board_type unless board.board_type == 'simple'
+
+    board.scrum? ? 'team-managed, uses sprints' : 'team-managed, no sprints'
   end
 
   def format_status status
