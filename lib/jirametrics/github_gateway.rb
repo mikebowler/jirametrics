@@ -28,8 +28,23 @@ class GithubGateway
 
   def fetch_pull_requests since: nil
     raw_prs = @raw_pr_cache[[@repo, since]] ||= fetch_raw_pull_requests(since: since)
+    verify_repo_reachable_when_empty(raw_prs, since: since)
     prefetch_commit_messages(raw_prs)
     raw_prs.filter_map { |pr| build_pr_data(pr) }
+  end
+
+  # `gh pr list --search` (the path taken whenever a `since` date is set) goes through GitHub's
+  # search API, which returns an empty result with a SUCCESS status for a repo we can't actually
+  # access, rather than erroring the way a direct repo query does. Downstream that empty would
+  # overwrite previously downloaded PR data. So when a search comes back empty, confirm the repo is
+  # genuinely reachable; if it isn't, raise so the caller treats it as a failed download and keeps
+  # the existing data instead of replacing it with nothing.
+  def verify_repo_reachable_when_empty raw_prs, since:
+    return unless since && raw_prs.empty?
+    return if repo_reachable?
+
+    raise "GitHub returned no pull requests for #{@repo} and the repository is not reachable " \
+      '(check your access to it and the URL in github_repos).'
   end
 
   def fetch_raw_pull_requests since: nil
@@ -175,6 +190,23 @@ class GithubGateway
 
     keys_pattern = @project_keys.map { |k| Regexp.escape(k) }.join('|')
     Regexp.new("\\b(?:#{keys_pattern})-\\d+(?![A-Za-z0-9])")
+  end
+
+  # Cached per repo (reachability doesn't depend on the `since` window) so we probe at most once even
+  # when several projects share the same repo. Uses key? rather than ||= because a false verdict must
+  # stick and not trigger a re-probe on every project.
+  def repo_reachable?
+    key = [@repo, :reachable]
+    return @raw_pr_cache[key] if @raw_pr_cache.key?(key)
+
+    @raw_pr_cache[key] = probe_repo_reachable
+  end
+
+  def probe_repo_reachable
+    run_command(['repo', 'view', @repo, '--json', 'name'])
+    true
+  rescue StandardError
+    false
   end
 
   def monotonic_time

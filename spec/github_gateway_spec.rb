@@ -218,8 +218,8 @@ describe GithubGateway do
 
     it 'passes the since date to the gh command' do
       allow(gateway).to receive(:run_command) do |args|
-        expect(args).to include('--search', 'updated:>=2026-01-01')
-        []
+        expect(args).to include('--search', 'updated:>=2026-01-01') if args.first(2) == %w[pr list]
+        args.first(2) == %w[repo view] ? { 'name' => 'repo' } : []
       end
       gateway.fetch_pull_requests since: Date.parse('2026-01-01')
     end
@@ -230,6 +230,56 @@ describe GithubGateway do
         []
       end
       gateway.fetch_pull_requests
+    end
+
+    # `gh pr list --search` returns an empty result with a success status for a repo we can't
+    # access, instead of erroring. Those tests pin down that we probe reachability before trusting
+    # such an empty result, so a silent access failure can't masquerade as "this repo has no PRs".
+    context 'when a searched fetch comes back empty' do
+      def command_aware_stub gateway, reachable:
+        allow(gateway).to receive(:run_command) do |args|
+          if args.first(2) == %w[repo view]
+            raise 'GitHub CLI command failed for owner/repo: could not resolve to a Repository' unless reachable
+
+            { 'name' => 'repo' }
+          else
+            []
+          end
+        end
+      end
+
+      it 'raises when the repo turns out to be unreachable' do
+        command_aware_stub gateway, reachable: false
+        expect { gateway.fetch_pull_requests since: Date.parse('2026-01-01') }
+          .to raise_error(/not reachable/)
+      end
+
+      it 'returns the empty result without raising when the repo is reachable' do
+        command_aware_stub gateway, reachable: true
+        expect(gateway.fetch_pull_requests(since: Date.parse('2026-01-01'))).to eq []
+      end
+
+      it 'does not probe reachability when there is no since date (no search)' do
+        allow(gateway).to receive(:run_command).and_return([])
+        gateway.fetch_pull_requests
+        expect(gateway).not_to have_received(:run_command).with(array_including('view'))
+      end
+
+      it 'probes reachability only once for the same repo across a shared cache' do
+        cache = {}
+        first = described_class.new(
+          repo: 'owner/repo', project_keys: %w[SP], file_system: file_system, raw_pr_cache: cache
+        )
+        second = described_class.new(
+          repo: 'owner/repo', project_keys: %w[OTHER], file_system: file_system, raw_pr_cache: cache
+        )
+        [first, second].each { |gw| command_aware_stub gw, reachable: true }
+
+        first.fetch_pull_requests since: Date.parse('2026-01-01')
+        second.fetch_pull_requests since: Date.parse('2026-01-01')
+
+        expect(second).not_to have_received(:run_command).with(array_including('view'))
+      end
     end
 
     it 'uses the shared cache to avoid duplicate GitHub requests for the same repo and since date' do
