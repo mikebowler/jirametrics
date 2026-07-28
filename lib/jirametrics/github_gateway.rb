@@ -44,7 +44,7 @@ class GithubGateway
     return if repo_reachable?
 
     raise "GitHub returned no pull requests for #{@repo} and the repository is not reachable " \
-      '(check your access to it and the URL in github_repos).'
+      '(check your access to it and the URL in github_repos)'
   end
 
   def fetch_raw_pull_requests since: nil
