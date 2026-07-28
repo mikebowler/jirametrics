@@ -163,6 +163,24 @@ describe DownloaderForCloud do
       end
     end
 
+    it 'warns about an unreachable repo only once even across projects sharing the pr cache' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: ['SP-1-1.json']
+
+      download_config.github_repo 'owner/repo'
+
+      failing_gateway = instance_double(GithubGateway)
+      allow(failing_gateway).to receive(:fetch_pull_requests).and_raise('could not resolve repository')
+      allow(GithubGateway).to receive(:new).and_return(failing_gateway)
+
+      # Two calls stand in for two projects sharing the same github_pr_cache.
+      downloader.download_github_prs
+      downloader.download_github_prs
+
+      warnings = file_system.log_messages.grep(%r{Failed to download pull requests from owner/repo})
+      expect(warnings.size).to eq 1
+    end
+
     it 'saves an empty result when every repo succeeds with no matching PRs' do
       file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
       file_system.when_foreach root: 'spec/testdata/sample_issues', result: ['SP-1-1.json']

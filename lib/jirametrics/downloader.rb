@@ -353,9 +353,7 @@ class Downloader
       )
     rescue StandardError => e
       any_repo_failed = true
-      @file_system.warning "Failed to download pull requests from #{repo}: #{e.message}. " \
-        'Left the existing PR data in place rather than overwriting it with an incomplete set. ' \
-        'Fix the access problem (often a `gh auth login` / repo-access issue) and re-run download to refresh it.'
+      warn_about_failed_pr_download(repo, e)
     end
 
     # A successful-but-empty fetch is a legitimate result and gets saved. But if any repo raised, we
@@ -366,6 +364,19 @@ class Downloader
       json: prs.map(&:raw),
       filename: File.join(@target_path, "#{file_prefix}_github_prs.json")
     )
+  end
+
+  # The same github_repos are downloaded for every project, so an unreachable repo would otherwise
+  # warn once per project (dozens of identical messages). The github_pr_cache is shared across all
+  # projects in a run, so we use it to warn about each repo at most once.
+  def warn_about_failed_pr_download repo, error
+    warned_key = [repo, :download_failure_warned]
+    return if @github_pr_cache[warned_key]
+
+    @github_pr_cache[warned_key] = true
+    @file_system.warning "Failed to download pull requests from #{repo}: #{error.message}. " \
+      'Left the existing PR data in place rather than overwriting it with an incomplete set. ' \
+      'Fix the access problem (often a `gh auth login` / repo-access issue) and re-run download to refresh it.'
   end
 
   def extract_project_keys_from_downloaded_issues
