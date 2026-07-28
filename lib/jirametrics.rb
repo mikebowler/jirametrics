@@ -80,7 +80,9 @@ class JiraMetrics < Thor
     original_stdout = $stdout.dup
     $stdout.reopen($stderr)
 
-    load_config options[:config]
+    # Log to a separate file so that starting the MCP server doesn't truncate jirametrics.log, which
+    # someone may be relying on to debug a preceding export run.
+    load_config options[:config], logfile_name: 'jirametrics-mcp.log'
     require 'jirametrics/mcp_server'
 
     Exporter.instance.file_system.log_only = true
@@ -139,7 +141,7 @@ class JiraMetrics < Thor
   at_exit { JiraMetrics.log_uncaught_exception $ERROR_INFO }
 
   no_commands do
-    def load_config config_file, file_system: FileSystem.new
+    def load_config config_file, logfile_name: nil, file_system: FileSystem.new
       config_file = './config.rb' if config_file.nil?
 
       if file_system.file_exist? config_file
@@ -152,6 +154,10 @@ class JiraMetrics < Thor
       end
 
       require_rel 'jirametrics'
+      # Set only after the require above, so Exporter is defined. The config file we load below calls
+      # Exporter.configure, which opens this log; the MCP server passes its own name so it doesn't
+      # truncate jirametrics.log.
+      Exporter.logfile_name = logfile_name if logfile_name
       load config_file
     end
   end

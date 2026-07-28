@@ -6,8 +6,17 @@ class Exporter
   attr_reader :project_configs
   attr_accessor :file_system
 
+  def self.logfile_name
+    @logfile_name ||= 'jirametrics.log'
+  end
+
+  # The MCP server sets this to a separate file so starting the server doesn't clobber the
+  # export/debug log (jirametrics.log) that someone may be mid-debug on.
+  class << self
+    attr_writer :logfile_name
+  end
+
   def self.configure &block
-    logfile_name = 'jirametrics.log'
     # No block form: FileSystem holds this descriptor open for the whole run and writes to it as we
     # go, so it must outlive this method.
     logfile = File.open(logfile_name, 'w') # rubocop:disable Style/FileOpen

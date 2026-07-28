@@ -13,10 +13,20 @@ describe Exporter do
   let(:exporter) { described_class.new file_system: file_system }
 
   describe '.configure' do
+    after { described_class.logfile_name = 'jirametrics.log' }
+
     it 'prints a friendly error and exits when the log file cannot be written' do
       allow(File).to receive(:open).with('jirametrics.log', 'w').and_raise(Errno::EACCES)
       expect { described_class.configure { nil } }
         .to output(/Cannot write to.*jirametrics\.log/).to_stderr
+        .and raise_error(SystemExit)
+    end
+
+    it 'opens the log file named by logfile_name, so the MCP server can use its own' do
+      described_class.logfile_name = 'jirametrics-mcp.log'
+      allow(File).to receive(:open).with('jirametrics-mcp.log', 'w').and_raise(Errno::EACCES)
+      expect { described_class.configure { nil } }
+        .to output(/Cannot write to.*jirametrics-mcp\.log/).to_stderr
         .and raise_error(SystemExit)
     end
   end
