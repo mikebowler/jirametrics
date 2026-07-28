@@ -177,25 +177,8 @@ class Issue
   end
 
   def find_or_create_status id:, name:
-    status = board.possible_statuses.find_by_id(id)
-
-    unless status
-      # Have to pull this list before the call to fabricate or else the warning will incorrectly
-      # list this status as one it actually found
-      found_statuses = board.possible_statuses.to_s
-
-      status = board.possible_statuses.fabricate_status_for id: id, name: name
-
-      message =
-        "The history for issue #{key} references the status (#{name.inspect}:#{id.inspect}) which can't be " \
-        'found, most likely because it was deleted from Jira after this issue passed through it. We have ' \
-        "guessed it belongs to the #{status.category} category, but if that is wrong this issue's cycle " \
-        'time and throughput will be off. To set the category yourself, add a status_category_mapping; ' \
-        'https://jirametrics.org/faq/#q1 shows what to add and how to choose the right category.'
-      board.project_config.file_system.warning message, more: "The statuses we did find are: #{found_statuses}"
-    end
-
-    status
+    board.possible_statuses.find_by_id(id) ||
+      board.possible_statuses.fabricate_status_for(id: id, name: name, example_issue_key: key)
   end
 
   def first_status_change_after_created

@@ -1704,18 +1704,10 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       expect(issue1.find_or_create_status id: 1000, name: 'foo').to eq(
         Status.new name: 'foo', id: 1000, category_name: 'in-flight', category_id: 6, category_key: 'indeterminate'
       )
-      expect(exporter.file_system.log_messages).to eq([
-        [
-          'Warning: The history for issue SP-1 references the status ("foo":1000) which can\'t be ' \
-            'found, most likely because it was deleted from Jira after this issue passed through it. We have ' \
-            'guessed it belongs to the "in-flight":6 category, but if that is wrong this issue\'s cycle ' \
-            'time and throughput will be off. To set the category yourself, add a status_category_mapping; ' \
-            'https://jirametrics.org/faq/#q1 shows what to add and how to choose the right category.',
-          'The statuses we did find are: ' \
-            '["Backlog":1, "Blocked":10, "Blocked2":15, "Doing":12, "Doing2":13, "Done":9, "In Progress":5, ' \
-            '"Review":7, "Selected for Development":3, "Stalled":11, "Stalled2":14]'
-        ]
-      ])
+      aggregate_failures do
+        expect(exporter.file_system.log_messages).to be_empty
+        expect(issue1.board.possible_statuses.example_issue_key).to eq 'SP-1'
+      end
     end
 
     it 'raises error if no in-progress statuses can be found' do

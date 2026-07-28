@@ -71,6 +71,22 @@ describe StatusCollection do
       collection.fabricate_status_for name: 'In Review', id: 400
       expect(collection.find_by_id(400).category.name).to eq 'In Progress'
     end
+
+    it 'collects the fabricated statuses in the order they were created' do
+      collection.fabricate_status_for name: 'walk', id: 100
+      collection.fabricate_status_for name: 'run', id: 101
+      expect(collection.fabricated_statuses.map(&:id)).to eq [100, 101]
+    end
+
+    it 'does not report loaded statuses as fabricated' do
+      expect(collection.fabricated_statuses).to be_empty
+    end
+
+    it 'remembers the first example issue key it was given' do
+      collection.fabricate_status_for name: 'walk', id: 100, example_issue_key: 'SP-1'
+      collection.fabricate_status_for name: 'run', id: 101, example_issue_key: 'SP-2'
+      expect(collection.example_issue_key).to eq 'SP-1'
+    end
   end
 
   describe '#find_all_by_name' do

@@ -56,6 +56,55 @@ class ProjectConfig
     anonymize_data if @anonymizer_needed
 
     @file_configs.each(&:run)
+
+    # By this point the charts have walked the issue histories, so every deleted status has already
+    # been fabricated lazily. Just report them. (The mcp path has no chart phase, so it resolves them
+    # explicitly before reporting.)
+    report_fabricated_statuses
+  end
+
+  # Walk every issue's status history so that any status that no longer exists in Jira gets fabricated
+  # now. Fabrication is otherwise lazy (it happens the first time a status is touched, which for some
+  # code paths is mid-render), so this gives us a single deterministic point where we know they all
+  # exist before we report them.
+  def resolve_all_status_changes
+    issues.each do |issue|
+      issue.status_changes.each do |change|
+        issue.find_or_create_status id: change.value_id, name: change.value
+      end
+    end
+  end
+
+  # Print one consolidated warning covering every status we had to fabricate (a status that an issue
+  # passed through but that no longer exists in Jira). It fires often -- any workflow rework leaves
+  # these behind -- so we say the explanation once and hand over a single ready-to-paste block of
+  # mappings rather than one repetitive paragraph per status.
+  def report_fabricated_statuses
+    statuses = possible_statuses.fabricated_statuses
+    return if statuses.empty? || @fabricated_statuses_reported
+
+    @fabricated_statuses_reported = true
+
+    width = statuses.map { |status| "'#{status.name}:#{status.id}'".length }.max
+    mappings = statuses.map do |status|
+      "      #{"'#{status.name}:#{status.id}'".ljust(width)} => '#{status.category.name}',"
+    end.join("\n")
+
+    example_key = possible_statuses.example_issue_key
+    info_line =
+      if example_key
+        "\nRun `jirametrics info #{example_key}` on an affected issue to see how it moved through its workflow."
+      else
+        ''
+      end
+
+    file_system.warning(
+      'Some statuses in your issue history no longer exist in Jira (they were probably deleted). ' \
+      "We've guessed each one's category from its name. If a guess is right the mapping just confirms " \
+      'it and silences this warning; if it is wrong, change the category. Add these to your ' \
+      "config's status category mappings; with standard_project that's:\n" \
+      "    status_category_mappings: {\n#{mappings}\n    }\n#{info_line}"
+    )
   end
 
   def load_settings

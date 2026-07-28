@@ -41,6 +41,54 @@ describe ProjectConfig do
     end
   end
 
+  describe '#resolve_all_status_changes' do
+    it 'fabricates statuses that appear in an issue history but are gone from Jira' do
+      issue = empty_issue created: '2024-01-01', board: board
+      # A real deleted-status change references an id no longer in possible_statuses, which the mock
+      # change builder refuses to create, so feed it as plain input and let the real fabrication run.
+      allow(issue).to receive(:status_changes).and_return([double(value_id: 99_999, value: 'Ghost')])
+      allow(project_config).to receive(:issues).and_return([issue])
+
+      project_config.resolve_all_status_changes
+
+      expect(board.possible_statuses.find_by_id(99_999)&.name).to eq 'Ghost'
+    end
+  end
+
+  describe '#report_fabricated_statuses' do
+    it 'stays silent when nothing was fabricated' do
+      project_config.report_fabricated_statuses
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'emits a single consolidated warning listing every fabricated status and its guessed category' do
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      statuses = project_config.possible_statuses
+      statuses.fabricate_status_for name: 'To Do', id: 10_209, example_issue_key: 'LDIMP-1787'
+      statuses.fabricate_status_for name: 'In Review', id: 10_215
+
+      project_config.report_fabricated_statuses
+
+      messages = exporter.file_system.log_messages
+      aggregate_failures do
+        expect(messages.size).to eq 1
+        expect(messages.first).to match(/'To Do:10209'\s+=> 'To Do',/)
+        expect(messages.first).to match(/'In Review:10215'\s+=> 'In Progress',/)
+        expect(messages.first).to include('jirametrics info LDIMP-1787')
+      end
+    end
+
+    it 'does not repeat the warning when called a second time' do
+      project_config.file_prefix 'sample'
+      project_config.load_status_category_mappings
+      project_config.possible_statuses.fabricate_status_for name: 'To Do', id: 10_209
+      project_config.report_fabricated_statuses
+      project_config.report_fabricated_statuses
+      expect(exporter.file_system.log_messages.size).to eq 1
+    end
+  end
+
   describe '#possible_statuses' do
     it 'loads' do
       project_config.file_prefix 'sample'

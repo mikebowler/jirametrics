@@ -4,11 +4,13 @@ class StatusNotFoundError < StandardError
 end
 
 class StatusCollection
-  attr_reader :historical_status_mappings
+  attr_reader :historical_status_mappings, :fabricated_statuses, :example_issue_key
 
   def initialize
     @list = []
     @historical_status_mappings = {} # 'name:id' => category
+    @fabricated_statuses = []
+    @example_issue_key = nil
   end
 
   # Return the status matching this id or nil if it can't be found.
@@ -88,7 +90,8 @@ class StatusCollection
     "StatusCollection#{self}"
   end
 
-  def fabricate_status_for id:, name:
+  def fabricate_status_for id:, name:, example_issue_key: nil
+    @example_issue_key ||= example_issue_key
     category = @historical_status_mappings["#{name.inspect}:#{id.inspect}"]
     category = guess_category_by_name(name) if category.nil?
 
@@ -101,6 +104,7 @@ class StatusCollection
       artificial: true
     )
     @list << status
+    @fabricated_statuses << status
     status
   end
 

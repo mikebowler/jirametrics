@@ -97,6 +97,10 @@ class JiraMetrics < Thor
         today: project.time_range.end.to_date,
         end_time: project.time_range.end
       }
+      # Fabrication is lazy, so force every historical status to resolve now and then emit the single
+      # consolidated warning into jirametrics-mcp.log (file_system is log_only here).
+      project.resolve_all_status_changes
+      project.report_fabricated_statuses
     rescue StandardError => e
       if e.message.start_with? 'This is an aggregated project'
         names = project.aggregate_project_names
