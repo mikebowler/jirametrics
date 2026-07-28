@@ -28,9 +28,15 @@ class DataQualityReport < ChartBase
     description_text <<-HTML
       <p>
         We have a tendency to assume that anything we see in a chart is 100% accurate, although that's
-        not always true. To understand the accuracy of the chart, we have to understand how accurate the
-        initial data was and also how much of the original data set was used in the chart. This section
-        will hopefully give you enough information to make that decision.
+        not always true. The accuracy of a chart depends both on how good the underlying data was and
+        on how much of that data actually made it into the chart.
+      </p>
+      <p>
+        The items highlighted below are not necessarily bad data. Some are genuine contradictions worth
+        fixing in Jira, such as an item finishing before it started. But many are simply places where the
+        way your team actually works bumps up against the simplified start-to-finish model this tool uses
+        to compute flow metrics. Those aren't mistakes; we flag them so you can read the charts with the
+        right context, not because anyone did anything wrong.
       </p>
     HTML
   end
