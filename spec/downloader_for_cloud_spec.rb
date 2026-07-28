@@ -140,6 +140,42 @@ describe DownloaderForCloud do
       saved = JSON.parse(file_system.saved_json['spec/testdata/sample_github_prs.json'])
       expect(saved.map { |pr| pr['number'] }).to eq [1, 2]
     end
+
+    it 'preserves existing PR data instead of overwriting it when a repo fetch fails' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: ['SP-1-1.json']
+
+      download_config.github_repo 'owner/repo'
+
+      failing_gateway = instance_double(GithubGateway)
+      allow(failing_gateway).to receive(:fetch_pull_requests).and_raise(
+        'GitHub CLI command failed for owner/repo: could not resolve repository'
+      )
+      allow(GithubGateway).to receive(:new).and_return(failing_gateway)
+
+      downloader.download_github_prs
+
+      aggregate_failures do
+        expect(file_system.saved_json).not_to have_key 'spec/testdata/sample_github_prs.json'
+        expect(file_system.log_messages).to include(
+          a_string_matching(%r{Warning:.*pull requests from owner/repo})
+        )
+      end
+    end
+
+    it 'saves an empty result when every repo succeeds with no matching PRs' do
+      file_system.when_dir_exists? path: 'spec/testdata/sample_issues', result: true
+      file_system.when_foreach root: 'spec/testdata/sample_issues', result: ['SP-1-1.json']
+
+      download_config.github_repo 'owner/repo'
+
+      empty_gateway = instance_double(GithubGateway, fetch_pull_requests: [])
+      allow(GithubGateway).to receive(:new).and_return(empty_gateway)
+
+      downloader.download_github_prs
+
+      expect(file_system.saved_json['spec/testdata/sample_github_prs.json']).to eq '[]'
+    end
   end
 
   describe '#make_jql' do

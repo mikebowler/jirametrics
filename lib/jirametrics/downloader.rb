@@ -340,14 +340,27 @@ class Downloader
       return
     end
 
-    prs = @download_config.github_repos.flat_map do |repo|
-      GithubGateway.new(
-        repo: repo,
-        project_keys: project_keys,
-        file_system: @file_system,
-        raw_pr_cache: @github_pr_cache
-      ).fetch_pull_requests(since: @download_date_range&.begin)
+    prs = []
+    any_repo_failed = false
+    @download_config.github_repos.each do |repo|
+      prs.concat(
+        GithubGateway.new(
+          repo: repo,
+          project_keys: project_keys,
+          file_system: @file_system,
+          raw_pr_cache: @github_pr_cache
+        ).fetch_pull_requests(since: @download_date_range&.begin)
+      )
+    rescue StandardError => e
+      any_repo_failed = true
+      @file_system.warning "Failed to download pull requests from #{repo}: #{e.message}. " \
+        'Left the existing PR data in place rather than overwriting it with an incomplete set. ' \
+        'Fix the access problem (often a `gh auth login` / repo-access issue) and re-run download to refresh it.'
     end
+
+    # A successful-but-empty fetch is a legitimate result and gets saved. But if any repo raised, we
+    # can't produce a complete file, so we leave the previously downloaded data untouched.
+    return if any_repo_failed
 
     @file_system.save_json(
       json: prs.map(&:raw),
