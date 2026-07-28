@@ -539,4 +539,30 @@ describe GithubGateway do
       expect(Open3).to have_received(:capture3).once
     end
   end
+
+  # An unreachable repo used to stack three warnings (empty-result hint, the raw probe failure, and
+  # the download summary). Only the summary from the caller is useful, so the gateway itself should
+  # stay quiet: no "No data was found" hint, and no raw failure warning from the reachability probe.
+  describe 'warning noise on an empty or unreachable repo' do
+    let(:success) { instance_double(Process::Status, success?: true) }
+    let(:failure) { instance_double(Process::Status, success?: false) }
+
+    it 'does not warn about an empty result for a reachable repo' do
+      allow(Open3).to receive(:capture3) do |_gh, *args|
+        args.first(2) == %w[repo view] ? ['{"name":"repo"}', '', success] : ['[]', '', success]
+      end
+
+      gateway.fetch_pull_requests since: Date.parse('2026-01-01')
+      expect(file_system.log_messages).not_to include(a_string_matching(/No data was found/))
+    end
+
+    it 'does not emit the raw gh failure warning from the reachability probe' do
+      allow(Open3).to receive(:capture3) do |_gh, *args|
+        args.first(2) == %w[repo view] ? ['', 'Could not resolve to a Repository', failure] : ['[]', '', success]
+      end
+
+      expect { gateway.fetch_pull_requests since: Date.parse('2026-01-01') }.to raise_error(/not reachable/)
+      expect(file_system.log_messages).not_to include(a_string_matching(/GitHub CLI command failed for/))
+    end
+  end
 end

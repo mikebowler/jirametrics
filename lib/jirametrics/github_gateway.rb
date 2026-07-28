@@ -203,7 +203,9 @@ class GithubGateway
   end
 
   def probe_repo_reachable
-    run_command(['repo', 'view', @repo, '--json', 'name'])
+    # This is expected to fail for an inaccessible repo, and the caller turns that into a single
+    # actionable warning, so suppress run_command's own failure warning to avoid stacking messages.
+    run_command(['repo', 'view', @repo, '--json', 'name'], warn_on_failure: false)
     true
   rescue StandardError
     false
@@ -214,7 +216,7 @@ class GithubGateway
     Process.clock_gettime(Process::CLOCK_MONOTONIC)
   end
 
-  def run_command args
+  def run_command args, warn_on_failure: true
     attempts = 0
     loop do
       attempts += 1
@@ -244,19 +246,11 @@ class GithubGateway
           next
         end
         # rubocop:enable Style/ArrayIntersect
-        @file_system.warning error_message
+        @file_system.warning error_message if warn_on_failure
         raise "GitHub CLI command failed for #{@repo}: #{stderr}"
       end
 
-      return parse_command_result(stdout)
+      return JSON.parse(stdout)
     end
-  end
-
-  def parse_command_result stdout
-    result = JSON.parse(stdout)
-    if result.nil? || (result.is_a?(Array) && result.empty?)
-      @file_system.warning "No data was found in GitHub for #{@repo}. Is that what you expected?"
-    end
-    result
   end
 end
