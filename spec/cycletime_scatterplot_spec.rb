@@ -154,4 +154,41 @@ describe CycletimeScatterplot do
       expect(chart.y_axis_cap_percentile).to eq 90
     end
   end
+
+  describe '#percentile_value' do
+    it 'returns the value at the requested percentile, min-filtered' do
+      items = Array.new(20) { |index| "item#{index}" }
+      values = (1..19).to_a + [500] # 20 values; index 20*85/100 = 17 -> sorted[17] = 18
+      allow(chart).to receive(:y_value) { |item| values[items.index(item)] }
+      expect(chart.percentile_value(items, 85)).to eq 18
+    end
+  end
+
+  describe '#compute_cap' do
+    let(:items) { Array.new(20) { |index| "item#{index}" } }
+    let(:values) { (1..19).to_a + [500] }
+
+    before { allow(chart).to receive(:y_value) { |item| values[items.index(item)] } }
+
+    it 'returns nil when capping is disabled' do
+      expect(chart.compute_cap(items)).to be_nil
+    end
+
+    it 'returns nil when nothing exceeds the cutoff' do
+      chart.cap_y_axis percentile: 100
+      expect(chart.compute_cap(items)).to be_nil
+    end
+
+    it 'computes the cap layout from the full set' do
+      chart.cap_y_axis percentile: 85 # cutoff = 18; values 19 and 500 exceed it
+      cap = chart.compute_cap(items)
+      aggregate_failures do
+        expect(cap[:cutoff]).to eq 18
+        expect(cap[:outlier_count]).to eq 2
+        expect(cap[:sep]).to be_within(0.001).of(18 + (18 * 0.06))
+        expect(cap[:axis_max]).to eq (18 + (18 * 0.06) + (18 * 0.15)).ceil
+        expect(cap[:pin_row]).to be_within(0.001).of((18 + (18 * 0.06)) + (18 * 0.15 * 0.55))
+      end
+    end
+  end
 end

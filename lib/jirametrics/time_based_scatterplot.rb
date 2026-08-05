@@ -113,10 +113,44 @@ class TimeBasedScatterplot < TimeBasedChart
   end
 
   def calculate_percent_line items
-    min = minimum_y_value
-    times = items.collect { |item| y_value(item) }
-    times.reject! { |y| min && y < min }
-    index = times.size * 85 / 100
-    times.sort[index]
+    percentile_value items, 85
   end
+
+  def percentile_value items, percentile
+    min = minimum_y_value
+    values = items.collect { |item| y_value(item) }
+    values.reject! { |value| min && value < min }
+    return nil if values.empty?
+
+    index = [values.size * percentile / 100, values.size - 1].min
+    values.sort[index]
+  end
+
+  # rubocop:disable Metrics/CyclomaticComplexity
+  # The multiple guard clauses and conditional blocks are necessary for the cap layout logic:
+  # validating the cap is enabled, computing the cutoff percentile, filtering values by minimum,
+  # counting outliers, and building the result hash. Extracting further would fragment the logic.
+  def compute_cap items
+    return nil unless @y_axis_cap_percentile
+
+    cutoff = percentile_value items, @y_axis_cap_percentile
+    return nil unless cutoff
+
+    min = minimum_y_value
+    values = items.collect { |item| y_value(item) }.reject { |value| min && value < min }
+    outlier_count = values.count { |value| value > cutoff }
+    return nil if outlier_count.zero?
+
+    pad = cutoff * 0.06        # breathing room so the top real dot does not touch the break
+    gutter_height = cutoff * 0.15
+    sep = cutoff + pad
+    {
+      cutoff: cutoff,
+      sep: sep,
+      pin_row: sep + (gutter_height * 0.55),
+      axis_max: (sep + gutter_height).ceil,
+      outlier_count: outlier_count
+    }
+  end
+  # rubocop:enable Metrics/CyclomaticComplexity
 end
