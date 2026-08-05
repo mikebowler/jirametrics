@@ -219,8 +219,24 @@ the author's call and is not part of the code change itself.
 
 ## Out of scope (deferred, not part of this slice)
 
-- Other chart types (histogram, aging charts, and so on). The seam should be
-  written so it is extractable later, but no other chart is changed now.
+- Other chart types. We evaluated generalizing the cap across the chart catalogue
+  (post-ship, 2026-08-05) and concluded it stays a scatterplot-family tool. The cap
+  earns its place only when all three hold: (a) the value axis is a continuous,
+  unbounded quantity; (b) a few rare extreme values compress the meaningful bulk;
+  and (c) those outliers are noise you read past, not the primary signal. That fits
+  the cycletime and PR cycletime scatterplots, and nothing else in the catalogue:
+    - Histogram: the distribution is the subject and the tail is information, not
+      noise (fails a and c); binning already tames the range.
+    - daily_wip / throughput / WIP-by-column / CFD: the axis is counts or a
+      cumulative total, every value is load-bearing and comparable, and you need
+      the full range, so nothing can be pushed off-scale (fails a and c).
+    - flow efficiency: a bounded percentage (0-100), nothing to compress.
+    - Aging work (bar): the age axis genuinely gets compressed by one ancient
+      stuck item (a and b hold), but that oldest item is usually the most important
+      thing on the chart, so pinning it into a gutter would bury the signal the
+      chart exists to surface (fails c). This is the interesting near-miss.
+  So there is no seam to extract until a chart appears with the "outliers are noise,
+  not signal" property. None does today.
 - The fixed-value mode `cap_y_axis at: 45`. Reserved by the naming; not built.
 - Making the scatterplot family's hardcoded 85% line configurable and
   de-hardcoding its prose to adopt the existing `percentiles` setter. This is a
