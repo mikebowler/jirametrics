@@ -116,11 +116,12 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             yMin: <%= @cap[:sep] %>,
             yMax: <%= @cap[:sep] %>,
             borderWidth: 0,
+            drawTime: 'afterDraw',
             label: {
               display: true,
               content: '<%= @cap[:outlier_count] %> items above <%= @cap[:cutoff] %> days',
               position: 'start',
-              yAdjust: -14,
+              yAdjust: 0,
               backgroundColor: 'rgba(0,0,0,0.85)',
               color: '#fff',
               font: { size: 11 }
