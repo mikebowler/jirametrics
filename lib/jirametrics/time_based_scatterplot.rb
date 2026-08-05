@@ -6,6 +6,8 @@ require 'jirametrics/time_based_chart'
 class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
 
+  attr_reader :y_axis_cap_percentile
+
   def initialize
     super
 
@@ -16,6 +18,10 @@ class TimeBasedScatterplot < TimeBasedChart
   # On a scatterplot the cycle time is plotted up the y-axis.
   def value_axis_title= title
     @y_axis_title = title
+  end
+
+  def cap_y_axis percentile: 98
+    @y_axis_cap_percentile = percentile
   end
 
   def run

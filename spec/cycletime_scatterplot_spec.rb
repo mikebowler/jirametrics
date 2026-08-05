@@ -138,4 +138,20 @@ describe CycletimeScatterplot do
       expect(chart.title_value(issue)).to eq 'SP-10 : Check in people at an event (81 days) (priority: high)'
     end
   end
+
+  describe '#cap_y_axis' do
+    it 'is disabled by default' do
+      expect(chart.y_axis_cap_percentile).to be_nil
+    end
+
+    it 'defaults to the 98th percentile when enabled with no argument' do
+      chart.cap_y_axis
+      expect(chart.y_axis_cap_percentile).to eq 98
+    end
+
+    it 'accepts an explicit percentile' do
+      chart.cap_y_axis percentile: 90
+      expect(chart.y_axis_cap_percentile).to eq 90
+    end
+  end
 end
