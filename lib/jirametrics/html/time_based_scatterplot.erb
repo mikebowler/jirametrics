@@ -119,7 +119,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             label: {
               display: true,
               content: '<%= @cap[:outlier_count] %> items above <%= @cap[:cutoff] %> days',
-              position: 'end',
+              position: 'start',
               yAdjust: -14,
               backgroundColor: 'rgba(0,0,0,0.85)',
               color: '#fff',
