@@ -5,6 +5,8 @@
   --warning-banner: yellow;
 
   --cycletime-scatterplot-overall-trendline-color: gray;
+  --cycletime-scatterplot-cap-rule-color: #555555;
+  --cycletime-scatterplot-cap-gutter-color: rgba(0, 0, 0, 0.05);
 
   --non-working-days-color: #F0F0F0;
   --expedited-color: #D55E00;        /* Okabe-Ito vermilion */
@@ -238,6 +240,8 @@ html[data-theme="dark"] {
   --body-background: #343434;
   --default-text-color: #aaa;
   --grid-line-color: #424242;
+  --cycletime-scatterplot-cap-rule-color: #b8b8b8;
+  --cycletime-scatterplot-cap-gutter-color: rgba(255, 255, 255, 0.08);
   --expedited-color: #E69F00;        /* Okabe-Ito orange for dark bg */
   --blocked-color: #E69F00;          /* Okabe-Ito orange for dark bg */
   --stalled-color: #F0E442;          /* Okabe-Ito yellow - distinct from blocked */
@@ -294,6 +298,8 @@ html[data-theme="light"] {
   --body-background: white;
   --default-text-color: black;
   --grid-line-color: lightgray;
+  --cycletime-scatterplot-cap-rule-color: #555555;
+  --cycletime-scatterplot-cap-gutter-color: rgba(0, 0, 0, 0.05);
   --expedited-color: #D55E00;        /* Okabe-Ito vermilion */
   --blocked-color: #D55E00;          /* Okabe-Ito vermilion */
   --stalled-color: #E69F00;          /* Okabe-Ito orange */
@@ -377,6 +383,8 @@ html[data-theme="light"] {
     --body-background: #343434;
     --default-text-color: #aaa;
     --grid-line-color: #424242;
+    --cycletime-scatterplot-cap-rule-color: #b8b8b8;
+    --cycletime-scatterplot-cap-gutter-color: rgba(255, 255, 255, 0.08);
 
     --expedited-color: #E69F00;        /* Okabe-Ito orange for dark bg */
     --blocked-color: #E69F00;          /* Okabe-Ito orange for dark bg */

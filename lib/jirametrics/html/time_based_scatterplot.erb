@@ -5,8 +5,52 @@
 <script>
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   type: 'scatter',
+  <% if @cap %>
+  plugins: [{
+    id: 'capRule<%= chart_id %>',
+    afterDatasetsDraw: function(chart) {
+      const yPixel = chart.scales.y.getPixelForValue(<%= @cap[:sep] %>);
+      const area = chart.chartArea;
+      const pen = chart.ctx;
+      pen.save();
+      pen.strokeStyle = <%= CssVariable['--cycletime-scatterplot-cap-rule-color'].to_json %>;
+      pen.lineWidth = 1.5;
+      [0, 3].forEach(function(offset) {
+        pen.beginPath();
+        pen.moveTo(area.left, yPixel - offset);
+        pen.lineTo(area.right, yPixel - offset);
+        pen.stroke();
+      });
+      pen.restore();
+    }
+  }],
+  <% end %>
   data: {
-    datasets: <%= JSON.generate(data_sets) %>
+    datasets: (function() {
+      const dataSets = <%= JSON.generate(data_sets) %>;
+      <% if @cap %>
+      // draw an up-arrow glyph in the given colour, usable as a Chart.js pointStyle.
+      // The arrow says "the real value continues upward beyond the cap".
+      function capArrow(color) {
+        const size = 18, glyph = document.createElement('canvas');
+        glyph.width = size; glyph.height = size;
+        const pen = glyph.getContext('2d');
+        pen.strokeStyle = color; pen.lineWidth = 2.5; pen.lineCap = 'round'; pen.lineJoin = 'round';
+        pen.beginPath();
+        pen.moveTo(size / 2, size - 3); pen.lineTo(size / 2, 3);
+        pen.moveTo(size / 2 - 5, 8); pen.lineTo(size / 2, 3); pen.lineTo(size / 2 + 5, 8);
+        pen.stroke();
+        return glyph;
+      }
+      dataSets.forEach(function(dataSet) {
+        if (dataSet.type === 'line') return; // skip the interleaved trend lines
+        const arrow = capArrow(dataSet.backgroundColor);
+        dataSet.pointStyle = dataSet.data.map(function(point) { return point.over ? arrow : 'circle'; });
+        dataSet.pointRadius = dataSet.data.map(function(point) { return point.over ? 9 : 3; });
+      });
+      <% end %>
+      return dataSets;
+    })()
   },
   options: {
     title: {
@@ -29,7 +73,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
       },
       y: {
         min: 0,
-        max: <%= (@highest_y_value * 1.1).ceil %>,
+        max: <%= @cap ? @cap[:axis_max] : (@highest_y_value * 1.1).ceil %>,
         scaleLabel: {
           display: true
         },
@@ -39,6 +83,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         },
         ticks: {
           callback: function(value, index, ticks) {
+            <% if @cap %>if (value > <%= @cap[:cutoff] %>) return null;<% end %>
             return index === ticks.length - 1 ? null : value;
           }
         }
@@ -57,6 +102,31 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
         annotations: {
           <%= working_days_annotation %>
           <%= date_annotation %>
+
+          <% if @cap %>
+          capGutter: {
+            type: 'box',
+            yMin: <%= @cap[:sep] %>,
+            yMax: <%= @cap[:axis_max] %>,
+            backgroundColor: <%= CssVariable['--cycletime-scatterplot-cap-gutter-color'].to_json %>,
+            borderWidth: 0
+          },
+          capLabel: {
+            type: 'line',
+            yMin: <%= @cap[:sep] %>,
+            yMax: <%= @cap[:sep] %>,
+            borderWidth: 0,
+            label: {
+              display: true,
+              content: '<%= @cap[:outlier_count] %> items above <%= @cap[:cutoff] %> days',
+              position: 'end',
+              yAdjust: -14,
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              color: '#fff',
+              font: { size: 11 }
+            }
+          },
+          <% end %>
 
           <% @percentage_lines.each_with_index do |args, index| %>
           <%   percent, color = args %>
