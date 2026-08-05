@@ -68,7 +68,7 @@ class TimeBasedScatterplot < TimeBasedChart
 
   def trend_line_data_set label:, data:, color:
     points = data.collect do |hash|
-      [Time.parse(hash[:x]).to_i, hash[:y]]
+      [Time.parse(hash[:x]).to_i, hash[:true_y] || hash[:y]]
     end
 
     # The trend calculation works with numbers only so convert Time to an int and back
@@ -113,7 +113,10 @@ class TimeBasedScatterplot < TimeBasedChart
       x: chart_format(x_value(item)),
       title: [title_value(item, rules: rules)]
     }
-    point[:over] = true if over
+    if over
+      point[:over] = true
+      point[:true_y] = y
+    end
     point
   end
 
@@ -147,11 +150,17 @@ class TimeBasedScatterplot < TimeBasedChart
       sep: sep,
       pin_row: sep + (gutter_height * 0.55),
       axis_max: (sep + gutter_height).ceil,
-      outlier_count: outlier_count
+      outlier_count: outlier_count,
+      label: cap_label(outlier_count: outlier_count, cutoff: cutoff)
     }
   end
 
   private
+
+  def cap_label outlier_count:, cutoff:
+    item_word = outlier_count == 1 ? 'item' : 'items'
+    "#{outlier_count} #{item_word} above #{cutoff.round} days"
+  end
 
   def filtered_values items
     min = minimum_y_value

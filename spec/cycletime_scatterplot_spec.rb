@@ -190,6 +190,23 @@ describe CycletimeScatterplot do
         expect(cap[:pin_row]).to be_within(0.001).of((18 + (18 * 0.06)) + (18 * 0.15 * 0.55))
       end
     end
+
+    it 'pluralizes and rounds the label for a single outlier' do
+      chart.cap_y_axis percentile: 85 # cutoff = 18; values 19 and 500 exceed it
+      cap = chart.compute_cap(items)
+      expect(cap[:label]).to eq '2 items above 18 days'
+    end
+
+    it 'uses the singular word and rounds a fractional cutoff for exactly one outlier' do
+      fractional_values = (1..18).to_a + [18.4, 500] # 20 values; percentile 90 -> cutoff = 18.4
+      allow(chart).to receive(:y_value) { |item| fractional_values[items.index(item)] }
+      chart.cap_y_axis percentile: 90
+      cap = chart.compute_cap(items)
+      aggregate_failures do
+        expect(cap[:outlier_count]).to eq 1
+        expect(cap[:label]).to eq '1 item above 18 days'
+      end
+    end
   end
 
   describe 'capping in create_datasets' do
@@ -235,6 +252,49 @@ describe CycletimeScatterplot do
       chart.cap_y_axis percentile: 90
       capped = chart.calculate_percent_line(issues)
       expect(capped).to eq uncapped
+    end
+  end
+
+  describe 'trend line regression is unaffected by capping' do
+    let(:board) { load_complete_sample_board }
+    # SP-10 (81 days) and SP-14 (78 days) sit close together; SP-13 (306 days) is a large
+    # outlier. Percentile 60 on this trio puts the cutoff at 81, so only SP-13 gets capped.
+    let(:issues) { %w[SP-10 SP-14 SP-13].map { |key| load_issue(key, board: board) } }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.time_range = to_time('2021-01-01')..to_time('2022-12-31')
+    end
+
+    def trend_line_slope data_sets
+      trend_data = data_sets.find { |data_set| data_set[:type] == 'line' }[:data]
+      x1 = Time.parse(trend_data[0][:x]).to_i
+      y1 = trend_data[0][:y]
+      x2 = Time.parse(trend_data[1][:x]).to_i
+      y2 = trend_data[1][:y]
+      (y2 - y1).to_f / (x2 - x1)
+    end
+
+    it 'fits the same regression slope whether capping is on or off' do
+      uncapped_slope = trend_line_slope(chart.create_datasets(issues))
+
+      chart.cap_y_axis percentile: 60
+      capped_slope = trend_line_slope(chart.create_datasets(issues))
+
+      expect(capped_slope).to be_within(0.0000001).of(uncapped_slope)
+    end
+
+    it 'records the true cycletime on a capped point, separate from the pinned y' do
+      chart.cap_y_axis percentile: 60
+      scatter = chart.create_datasets(issues).first
+      sp13_title = ['SP-13 : Report of people checked in at an event (306 days)']
+      point = scatter[:data].find { |data_point| data_point[:title] == sp13_title }
+      cap = chart.compute_cap(issues)
+      aggregate_failures do
+        expect(point[:over]).to be true
+        expect(point[:y]).to eq cap[:pin_row]
+        expect(point[:true_y]).to eq 306
+      end
     end
   end
 end
