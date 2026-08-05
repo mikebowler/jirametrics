@@ -223,4 +223,18 @@ describe CycletimeScatterplot do
       end
     end
   end
+
+  describe 'statistics are unaffected by capping' do
+    let(:board) { load_complete_sample_board }
+    let(:issues) { %w[SP-10 SP-14].map { |key| load_issue(key, board: board) } }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'computes the same 85% line with capping on and off' do
+      uncapped = chart.calculate_percent_line(issues)
+      chart.cap_y_axis percentile: 90
+      capped = chart.calculate_percent_line(issues)
+      expect(capped).to eq uncapped
+    end
+  end
 end
