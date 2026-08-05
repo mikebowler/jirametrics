@@ -191,4 +191,36 @@ describe CycletimeScatterplot do
       end
     end
   end
+
+  describe 'capping in create_datasets' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'leaves points unchanged when capping is disabled' do
+      point = chart.create_datasets([issue]).first[:data].first
+      aggregate_failures do
+        expect(point[:y]).to eq 81
+        expect(point).not_to have_key(:over)
+      end
+    end
+
+    it 'remaps an over-cap point to the pinned row and flags it' do
+      # SP-10 (81 days) and SP-14 (78 days). Percentile 1 on this pair makes 78 the cutoff,
+      # so SP-10's 81 lands strictly above it and gets remapped.
+      other_issue = load_issue('SP-14', board: board)
+      the_items = [issue, other_issue]
+      chart.cap_y_axis percentile: 1
+      scatter = chart.create_datasets(the_items).first
+      sp10_title = ['SP-10 : Check in people at an event (81 days)']
+      point = scatter[:data].find { |data_point| data_point[:title] == sp10_title }
+      cap = chart.compute_cap(the_items)
+      aggregate_failures do
+        expect(point[:over]).to be true
+        expect(point[:y]).to eq cap[:pin_row]
+        expect(point[:title]).to eq ['SP-10 : Check in people at an event (81 days)']
+      end
+    end
+  end
 end

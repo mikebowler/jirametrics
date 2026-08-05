@@ -39,6 +39,7 @@ class TimeBasedScatterplot < TimeBasedChart
   end
 
   def create_datasets items
+    @cap = compute_cap items
     data_sets = []
 
     group_issues(items).each do |rules, items_by_type|
@@ -74,7 +75,7 @@ class TimeBasedScatterplot < TimeBasedChart
     calculator = TrendLineCalculator.new(points)
     data_points = calculator.chart_datapoints(
       range: time_range.begin.to_i..time_range.end.to_i,
-      max_y: @highest_y_value
+      max_y: (@cap ? @cap[:cutoff] : @highest_y_value)
     )
     data_points.each do |point_hash|
       point_hash[:x] = chart_format Time.at(point_hash[:x])
@@ -103,13 +104,17 @@ class TimeBasedScatterplot < TimeBasedChart
     min = minimum_y_value
     return nil if min && y < min
 
-    @highest_y_value = y if @highest_y_value < y
+    over = @cap && y > @cap[:cutoff]
+    plotted_y = over ? @cap[:pin_row] : y
+    @highest_y_value = plotted_y if @highest_y_value < plotted_y
 
-    {
-      y: y,
+    point = {
+      y: plotted_y,
       x: chart_format(x_value(item)),
       title: [title_value(item, rules: rules)]
     }
+    point[:over] = true if over
+    point
   end
 
   def calculate_percent_line items
