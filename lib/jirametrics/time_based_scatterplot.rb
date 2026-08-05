@@ -117,27 +117,20 @@ class TimeBasedScatterplot < TimeBasedChart
   end
 
   def percentile_value items, percentile
-    min = minimum_y_value
-    values = items.collect { |item| y_value(item) }
-    values.reject! { |value| min && value < min }
+    values = filtered_values(items)
     return nil if values.empty?
 
     index = [values.size * percentile / 100, values.size - 1].min
     values.sort[index]
   end
 
-  # rubocop:disable Metrics/CyclomaticComplexity
-  # The multiple guard clauses and conditional blocks are necessary for the cap layout logic:
-  # validating the cap is enabled, computing the cutoff percentile, filtering values by minimum,
-  # counting outliers, and building the result hash. Extracting further would fragment the logic.
   def compute_cap items
     return nil unless @y_axis_cap_percentile
 
     cutoff = percentile_value items, @y_axis_cap_percentile
     return nil unless cutoff
 
-    min = minimum_y_value
-    values = items.collect { |item| y_value(item) }.reject { |value| min && value < min }
+    values = filtered_values(items)
     outlier_count = values.count { |value| value > cutoff }
     return nil if outlier_count.zero?
 
@@ -152,5 +145,13 @@ class TimeBasedScatterplot < TimeBasedChart
       outlier_count: outlier_count
     }
   end
-  # rubocop:enable Metrics/CyclomaticComplexity
+
+  private
+
+  def filtered_values items
+    min = minimum_y_value
+    values = items.collect { |item| y_value(item) }
+    values.reject! { |value| min && value < min }
+    values
+  end
 end
