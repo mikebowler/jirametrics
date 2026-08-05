@@ -11,6 +11,9 @@ spec/tmp/
 *.log
 extra.css
 
+# Local git worktree scratch space (isolated feature/hotfix checkouts)
+.claude/worktrees/
+
 # Node.js dependencies
 node_modules/
 package-lock.json
