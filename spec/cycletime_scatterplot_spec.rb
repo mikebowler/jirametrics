@@ -177,10 +177,17 @@ describe CycletimeScatterplot do
     end
 
     it 'excludes overall lines so they survive a group toggle' do
-      chart.date_range = Date.parse('2020-01-01')..Date.parse('2020-02-01')
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2021-12-31')
       allow(chart).to receive(:wrap_and_render).and_return('')
       chart.run
-      expect(chart.legend_annotation_map.values.flatten).not_to include 'overall_85'
+
+      aggregate_failures do
+        # The overall line must actually exist in this run, otherwise the second expectation
+        # below is vacuously true.
+        expect(chart.percentage_lines.collect { |line| line[:id] }).to include 'overall_85'
+        expect(chart.legend_annotation_map.values.flatten).not_to include 'overall_85'
+        expect(chart.legend_annotation_map['Story']).to include 'group0_85'
+      end
     end
   end
 
