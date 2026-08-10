@@ -123,7 +123,18 @@ label and its styling is hand-matched rather than inherited. `capLabel` already 
 this, so we are following an existing pattern, not inventing one.
 
 No dash-pattern or opacity encoding. Density is the user's choice; hover identification is
-enough. Legend text drops the parenthetical and reads just `"Story"`.
+enough.
+
+Legend text KEEPS its parenthetical, generalised to N values. An earlier draft dropped it in
+favour of hover, which was wrong on two counts: it contradicts the byte-identical guarantee in
+Section 8, and it moves always-visible information behind an interaction. Format:
+
+- one percentile: `Story (85% at 81 days)`, character-for-character what ships today
+- several: `Story (50% at 3 days, 85% at 12 days, 98% at 40 days)`
+- none (group set to `[]`): `Story`, no parenthetical
+
+Long labels are the user's problem to manage by asking for fewer lines, consistent with
+density being their choice.
 
 We are on `chartjs-plugin-annotation` 3.1.0 (`index.erb:9`), which is the current latest
 release. No upgrade is needed or available.
