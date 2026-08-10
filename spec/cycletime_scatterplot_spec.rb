@@ -170,10 +170,22 @@ describe CycletimeScatterplot do
       chart.issues = [issue]
     end
 
-    it 'maps a group label to its own annotation ids' do
+    it "maps a dataset index to that group's own annotation ids" do
       chart.percentiles [50, 85]
       chart.create_datasets [issue]
-      expect(chart.legend_annotation_map).to eq({ 'Story' => %w[group0_50 group0_85] })
+      expect(chart.legend_annotation_map).to eq({ 0 => %w[group0_50 group0_85] })
+    end
+
+    it 'keeps two groups apart even when they share a label' do
+      # eql? compares label AND colour, so this is two groups, not one. Keying the map by label
+      # would merge them and one legend click would toggle both groups' lines.
+      other_issue = load_issue('SP-14', board: board)
+      chart.grouping_rules do |grouped_issue, rule|
+        rule.label = 'Story'
+        rule.color = grouped_issue.key == 'SP-10' ? 'blue' : 'green'
+      end
+      chart.create_datasets [issue, other_issue]
+      expect(chart.legend_annotation_map).to eq({ 0 => %w[group0_85], 2 => %w[group1_85] })
     end
 
     it 'excludes overall lines so they survive a group toggle' do
@@ -186,7 +198,7 @@ describe CycletimeScatterplot do
         # below is vacuously true.
         expect(chart.percentage_lines.collect { |line| line[:id] }).to include 'overall_85'
         expect(chart.legend_annotation_map.values.flatten).not_to include 'overall_85'
-        expect(chart.legend_annotation_map['Story']).to include 'group0_85'
+        expect(chart.legend_annotation_map[0]).to include 'group0_85'
       end
     end
   end
@@ -223,8 +235,17 @@ describe CycletimeScatterplot do
 
     it 'says nothing when the lines are switched off' do
       chart.percentiles []
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = [85]
+      end
       chart.run
-      expect(chart.percentile_description).to eq ''
+      aggregate_failures do
+        # The group still draws its own lines, so an empty data set can't be the thing making
+        # the description empty. Only the overall lines were switched off.
+        expect(chart.percentage_lines).not_to be_empty
+        expect(chart.percentile_description).to eq ''
+      end
     end
 
     it 'renders the configured percentiles into description_text at render time' do

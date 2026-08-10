@@ -130,7 +130,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           <% end %>
 
           <% @percentage_lines.each do |line| %>
-          <%= line[:id] %>: {
+          <%= line[:id].to_json %>: {
             type: 'line',
             yMin: <%= line[:value] %>,
             yMax: <%= line[:value] %>,
@@ -150,8 +150,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }
           },
           <% end %>
-        },
-        interaction: { intersect: false }
+        }
       },
       legend: {
         onClick: (evt, legendItem, legend) => {
@@ -163,14 +162,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
 
           // Hide/show every percentile line belonging to this group. The map is keyed by the
-          // group's label rather than computed from the dataset index, because a group can own
-          // any number of lines.
+          // dataset index we just worked out, which is unambiguous even when two groups share a
+          // label. A group with no lines of its own simply isn't in the map.
           const annotationMap = <%= legend_annotation_map.to_json %>;
-          // Strip only the trailing percentile parenthetical, e.g. " (85% at 81 days)". The
-          // inner character class excludes parens so a group label that legitimately ends in
-          // its own "(...)" is left alone; a greedy ".*" here would eat back through it too.
-          const groupLabel = legendItem.text.replace(/ \([^()]*\)$/, '');
-          (annotationMap[groupLabel] || []).forEach((id) => {
+          (annotationMap[i] || []).forEach((id) => {
             legend.chart.options.plugins.annotation.annotations[id].display = nextVisibility;
           });
 

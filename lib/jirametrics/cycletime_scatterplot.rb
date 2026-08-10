@@ -64,7 +64,7 @@ class CycletimeScatterplot < TimeBasedScatterplot
   # describe. Values come from percentage_lines because run has already computed them, and
   # because this string is not run through ERB a second time.
   def percentile_description
-    overall_lines = percentage_lines.select { |line| line[:group_label].nil? }
+    overall_lines = percentage_lines.select { |line| line[:dataset_index].nil? }
     return '' if overall_lines.empty?
 
     if overall_lines.size == 1
@@ -95,9 +95,10 @@ class CycletimeScatterplot < TimeBasedScatterplot
     <<-HTML
       <div class="p">
         The #{color_block '--cycletime-scatterplot-overall-trendline-color'} lines indicate the
-        #{described.join ', '} percentiles across all items on this chart. If a line sits at N
-        days then that percentage of items completed in N days or less. The same percentiles are
-        drawn for each type of work in that type's own colour. Hover any line to see its value.
+        #{described.join ', '} percentiles across all items on this chart. Each one says that
+        this percentage of items completed in that many days or less. Every type of work also
+        gets its own lines in its own colour, drawn at whichever percentiles were configured for
+        that type. Hover any line to see its value.
       </div>
     HTML
   end

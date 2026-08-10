@@ -1,8 +1,20 @@
 # frozen_string_literal: true
 
+require 'jirametrics/percentile_validation'
+
 class GroupingRules < Rules
-  attr_accessor :label, :issue_hint, :label_hint, :percentiles
-  attr_reader :color, :last_day_of_period
+  include PercentileValidation
+
+  attr_accessor :label, :issue_hint, :label_hint
+  attr_reader :color, :last_day_of_period, :percentiles
+
+  # nil means "inherit whatever the chart is configured with" and an empty list means "draw no
+  # lines for this group", so neither is validated. Everything else gets the same treatment as
+  # the chart level setter, because these numbers become JavaScript identifiers downstream and a
+  # bad one takes the whole chart out with a syntax error.
+  def percentiles= list
+    @percentiles = list.nil? ? nil : validate_percentiles(list)
+  end
 
   def last_day_of_period= value
     @last_day_of_period = value.is_a?(String) ? Date.parse(value) : value

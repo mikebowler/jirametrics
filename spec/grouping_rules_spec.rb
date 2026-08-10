@@ -92,6 +92,39 @@ describe GroupingRules do
       expect(rules.percentiles).to eq [50, 85]
     end
 
+    it 'accepts nil, which means inherit from the chart' do
+      rules.percentiles = [50]
+      rules.percentiles = nil
+      expect(rules.percentiles).to be_nil
+    end
+
+    it 'accepts an empty list, which means draw none' do
+      rules.percentiles = []
+      expect(rules.percentiles).to eq []
+    end
+
+    it 'rejects values outside 0..100' do
+      expect { rules.percentiles = [-10] }.to raise_error(
+        ArgumentError, /percentile -10 must be between 0 and 100/
+      )
+    end
+
+    it 'rejects non-integers' do
+      aggregate_failures do
+        expect { rules.percentiles = [85.5] }.to raise_error(
+          ArgumentError, /percentile 85.5 must be an integer/
+        )
+        expect { rules.percentiles = ['85'] }.to raise_error(
+          ArgumentError, /percentile 85 must be an integer/
+        )
+      end
+    end
+
+    it 'removes duplicates and sorts' do
+      rules.percentiles = [98, 50, 98]
+      expect(rules.percentiles).to eq [50, 98]
+    end
+
     it 'does not participate in group identity' do
       one = described_class.new.tap do |rule_set|
         rule_set.label = 'Story'

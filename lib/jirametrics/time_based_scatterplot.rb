@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/percentile_validation'
 require 'jirametrics/time_based_chart'
 
 class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
+  include PercentileValidation
 
+  # percentage_lines is internal, not part of the documented config DSL. It exists so that specs
+  # and the ERB can see the computed lines without reaching into instance variables. Its shape,
+  # including the :id strings that encode positional group indices, is free to change.
   attr_reader :y_axis_cap_percentile, :percentage_lines
 
   def initialize
@@ -41,7 +46,7 @@ class TimeBasedScatterplot < TimeBasedChart
     percentile_lines_for(items, @percentiles).each do |percentile, value|
       @percentage_lines << {
         percentile: percentile, value: value, color: overall_color,
-        id: "overall_#{percentile}", group_label: nil
+        id: "overall_#{percentile}", dataset_index: nil
       }
     end
 
@@ -62,6 +67,10 @@ class TimeBasedScatterplot < TimeBasedChart
       color = rules.color
       lines = percentile_lines_for items_by_type, (rules.percentiles || @percentiles)
       data = items_by_type.filter_map { |item| data_for_item(item, rules: rules) }
+
+      # Where this group's scatter set is about to land. The legend handler knows the clicked
+      # dataset by index, so that's what the annotation map is keyed by.
+      dataset_index = data_sets.size
       data_sets << {
         label: percentile_label(label, lines),
         data: data,
@@ -75,7 +84,7 @@ class TimeBasedScatterplot < TimeBasedChart
       lines.each do |percentile, value|
         @percentage_lines << {
           percentile: percentile, value: value, color: color,
-          id: "group#{group_index}_#{percentile}", group_label: label
+          id: "group#{group_index}_#{percentile}", dataset_index: dataset_index
         }
       end
     end
@@ -94,12 +103,14 @@ class TimeBasedScatterplot < TimeBasedChart
     @show_trend_lines = true
   end
 
-  # Group label to the annotation ids belonging to that group, so the legend handler can toggle
-  # all of a group's lines. Overall lines are deliberately absent; they are not owned by any
-  # group and stay visible when a group is switched off.
+  # Dataset index to the annotation ids belonging to that dataset's group, so the legend handler
+  # can toggle all of a group's lines. Keyed by index rather than by label because two groups may
+  # legitimately share a label while differing in colour, and keying by label would then toggle
+  # both of them at once. Overall lines are deliberately absent; they are not owned by any group
+  # and stay visible when a group is switched off.
   def legend_annotation_map
-    @percentage_lines.reject { |line| line[:group_label].nil? }
-      .group_by { |line| line[:group_label] }
+    @percentage_lines.reject { |line| line[:dataset_index].nil? }
+      .group_by { |line| line[:dataset_index] }
       .transform_values { |lines| lines.collect { |line| line[:id] } }
   end
 
@@ -211,14 +222,5 @@ class TimeBasedScatterplot < TimeBasedChart
     values = items.collect { |item| y_value(item) }
     values.reject! { |value| min && value < min }
     values
-  end
-
-  def validate_percentiles list
-    list.each do |percentile|
-      raise ArgumentError, "percentile #{percentile} must be an integer" unless percentile.is_a? Integer
-
-      raise ArgumentError, "percentile #{percentile} must be between 0 and 100" unless percentile.between?(0, 100)
-    end
-    list.uniq.sort
   end
 end
