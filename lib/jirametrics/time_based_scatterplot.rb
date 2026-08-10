@@ -133,10 +133,12 @@ class TimeBasedScatterplot < TimeBasedChart
     percentile_value items, 85
   end
 
-  # Returns [[percentile, value], ...] for the requested percentiles, dropping any that have no
-  # value because the item list is empty after filtering.
+  # Returns [[percentile, value], ...] for the requested percentiles, sorted ascending by
+  # percentile and dropping any that have no value because the item list is empty after
+  # filtering. Sorting happens here, not in the caller, because GroupingRules#percentiles is
+  # user-assigned with no ordering guarantee.
   def percentile_lines_for items, percentiles
-    percentiles.filter_map do |percentile|
+    percentiles.sort.filter_map do |percentile|
       value = percentile_value items, percentile
       [percentile, value] unless value.nil?
     end

@@ -220,6 +220,10 @@ describe CycletimeScatterplot do
     it 'drops percentiles that have no value' do
       expect(chart.percentile_lines_for([], [85])).to be_empty
     end
+
+    it 'sorts unsorted input ascending by percentile' do
+      expect(chart.percentile_lines_for(issues, [98, 50]).collect(&:first)).to eq [50, 98]
+    end
   end
 
   describe '#compute_cap' do
