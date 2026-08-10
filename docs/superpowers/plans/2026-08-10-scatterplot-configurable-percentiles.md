@@ -270,8 +270,8 @@ def percentile_lines_for items, percentiles
   end
 end
 
-# Kept because the cap invariant test calls it directly. Returns the single 85th percentile
-# value the chart used before percentiles became configurable.
+# Temporary bridge so the cap invariant test and the description keep working while the other
+# tasks land. Task 8 deletes this and repoints the test at percentile_value.
 def calculate_percent_line items
   percentile_value items, 85
 end
@@ -835,6 +835,23 @@ end
 
 Now delete the `overall_percent_line` local that Task 5 deliberately kept alive, along with its
 `rubocop:disable Lint/UselessAssignment` comment. This description was its only consumer.
+
+Then delete `calculate_percent_line` entirely. Task 3 kept it as a bridge, but with the
+description no longer using it nothing in production calls it, and a method hardcoding 85 that
+exists only to satisfy a test is dead code. Repoint the cap invariant test at the primitive it
+actually cares about, `spec/cycletime_scatterplot_spec.rb:250-256`:
+
+```ruby
+it 'computes the same 85% line with capping on and off' do
+  uncapped = chart.percentile_value(issues, 85)
+  chart.cap_y_axis percentile: 90
+  capped = chart.percentile_value(issues, 85)
+  expect(capped).to eq uncapped
+end
+```
+
+The invariant under test is unchanged: percentile values are computed from the full data set,
+never from capped display values.
 
 - [ ] **Step 4: Verify the default prose is unchanged**
 
