@@ -66,8 +66,7 @@ Note this setter is public API (config-block DSL), so the shape is a compatibili
 
 ## Section 2: Group identity
 
-`Rules#hash` returns the constant `2` (`rules.rb:13-15`), so all rules objects land in one
-bucket and `GroupingRules#eql?` alone decides grouping, comparing label and colour only.
+Group identity is defined by `GroupingRules#eql?`, which compares label and colour only.
 
 `percentiles` must stay OUT of `eql?`. If it participated, two issues that differ only in
 percentiles would split into two groups sharing a label and a colour, producing duplicate
@@ -77,6 +76,15 @@ Leaving it out means that if two issues in the same group somehow receive differ
 lists, whichever issue was seen first silently wins (Ruby `Hash` retains the original key
 object). That can only be a config mistake, so detect it and raise, naming the group and both
 lists, rather than letting it pass. The check belongs in `group_issues`.
+
+A note for whoever fixes `Rules#hash` later, not a task for this slice. It currently returns
+the constant `2` (`rules.rb:13-15`), which is a performance problem and nothing more:
+everything collides into one bucket and `eql?` still decides correctly. The trap is that
+identity is ALREADY defined in two places that must agree, `eql?` and `group` (which returns
+`[@label, @color]` and is used for comparison at `daily_wip_chart.rb:84` and `:147`), and a
+real `hash` would make three. All three must derive from the same fields, so the consistent
+fix is `def hash = group.hash`. Whatever else happens, `percentiles` must stay out of all
+three, or grouping breaks in a way that only shows up with per-group overrides set.
 
 ## Section 3: Calculation
 
