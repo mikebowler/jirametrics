@@ -133,6 +133,15 @@ class TimeBasedScatterplot < TimeBasedChart
     percentile_value items, 85
   end
 
+  # Returns [[percentile, value], ...] for the requested percentiles, dropping any that have no
+  # value because the item list is empty after filtering.
+  def percentile_lines_for items, percentiles
+    percentiles.filter_map do |percentile|
+      value = percentile_value items, percentile
+      [percentile, value] unless value.nil?
+    end
+  end
+
   def percentile_value items, percentile
     values = filtered_values(items)
     return nil if values.empty?

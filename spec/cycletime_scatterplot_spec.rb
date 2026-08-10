@@ -197,6 +197,31 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#percentile_lines_for' do
+    let(:board) { load_complete_sample_board }
+    let(:issues) { %w[SP-10 SP-14].map { |key| load_issue(key, board: board) } }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'returns a pair per requested percentile' do
+      result = chart.percentile_lines_for(issues, [50, 85])
+      expect(result.collect(&:first)).to eq [50, 85]
+    end
+
+    it 'pairs each percentile with its value' do
+      expect(chart.percentile_lines_for(issues, [85]))
+        .to eq [[85, chart.percentile_value(issues, 85)]]
+    end
+
+    it 'returns nothing for an empty list' do
+      expect(chart.percentile_lines_for(issues, [])).to be_empty
+    end
+
+    it 'drops percentiles that have no value' do
+      expect(chart.percentile_lines_for([], [85])).to be_empty
+    end
+  end
+
   describe '#compute_cap' do
     let(:items) { Array.new(20) { |index| "item#{index}" } }
     let(:values) { (1..19).to_a + [500] }
