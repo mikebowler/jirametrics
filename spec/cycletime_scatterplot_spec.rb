@@ -359,4 +359,29 @@ describe CycletimeScatterplot do
       end
     end
   end
+
+  describe '#group_issues percentile conflicts' do
+    let(:board) { load_complete_sample_board }
+    let(:issues) { %w[SP-10 SP-14].map { |key| load_issue(key, board: board) } }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'raises when one group is given two different percentile lists' do
+      chart.grouping_rules do |issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = issue.key == 'SP-10' ? [50] : [98]
+      end
+      expect { chart.group_issues issues }.to raise_error(
+        ArgumentError, /group "Everything" was given conflicting percentiles: \[50\] and \[98\]/
+      )
+    end
+
+    it 'allows the same list to be set repeatedly' do
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = [50]
+      end
+      expect { chart.group_issues issues }.not_to raise_error
+    end
+  end
 end
