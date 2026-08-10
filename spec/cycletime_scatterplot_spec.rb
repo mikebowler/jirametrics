@@ -161,6 +161,29 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#legend_annotation_map' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+    end
+
+    it 'maps a group label to its own annotation ids' do
+      chart.percentiles [50, 85]
+      chart.create_datasets [issue]
+      expect(chart.legend_annotation_map).to eq({ 'Story' => %w[group0_50 group0_85] })
+    end
+
+    it 'excludes overall lines so they survive a group toggle' do
+      chart.date_range = Date.parse('2020-01-01')..Date.parse('2020-02-01')
+      allow(chart).to receive(:wrap_and_render).and_return('')
+      chart.run
+      expect(chart.legend_annotation_map.values.flatten).not_to include 'overall_85'
+    end
+  end
+
   describe '#group_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }

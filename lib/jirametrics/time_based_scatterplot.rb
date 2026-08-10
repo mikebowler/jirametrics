@@ -98,6 +98,15 @@ class TimeBasedScatterplot < TimeBasedChart
     @show_trend_lines = true
   end
 
+  # Group label to the annotation ids belonging to that group, so the legend handler can toggle
+  # all of a group's lines. Overall lines are deliberately absent; they are not owned by any
+  # group and stay visible when a group is switched off.
+  def legend_annotation_map
+    @percentage_lines.reject { |line| line[:group_label].nil? }
+      .group_by { |line| line[:group_label] }
+      .transform_values { |lines| lines.collect { |line| line[:id] } }
+  end
+
   def trend_line_data_set label:, data:, color:
     points = data.collect do |hash|
       [Time.parse(hash[:x]).to_i, hash[:true_y] || hash[:y]]

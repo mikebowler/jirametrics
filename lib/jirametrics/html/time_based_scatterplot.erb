@@ -162,8 +162,17 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           }
           nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
 
-          // Hide/show the 85% line for that dataset
-          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
+          // Hide/show every percentile line belonging to this group. The map is keyed by the
+          // group's label rather than computed from the dataset index, because a group can own
+          // any number of lines.
+          const annotationMap = <%= legend_annotation_map.to_json %>;
+          // Strip only the trailing percentile parenthetical, e.g. " (85% at 81 days)". The
+          // inner character class excludes parens so a group label that legitimately ends in
+          // its own "(...)" is left alone; a greedy ".*" here would eat back through it too.
+          const groupLabel = legendItem.text.replace(/ \([^()]*\)$/, '');
+          (annotationMap[groupLabel] || []).forEach((id) => {
+            legend.chart.options.plugins.annotation.annotations[id].display = nextVisibility;
+          });
 
           // Hide/show the trendline for this dataset, if they were enabled. The trendline is always
           // there but not always visible.
