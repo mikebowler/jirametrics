@@ -13,6 +13,7 @@ class TimeBasedScatterplot < TimeBasedChart
 
     @percentage_lines = []
     @highest_y_value = 0
+    @percentiles = [85]
   end
 
   # On a scatterplot the cycle time is plotted up the y-axis.
@@ -22,6 +23,14 @@ class TimeBasedScatterplot < TimeBasedChart
 
   def cap_y_axis percentile: 98
     @y_axis_cap_percentile = percentile
+  end
+
+  # Percentile reference lines. The chart level value defines the lines drawn across the whole
+  # data set AND the default for each group; a group can override with rule.percentiles.
+  # An empty list switches the lines off.
+  def percentiles list = nil
+    @percentiles = validate_percentiles(list) unless list.nil?
+    @percentiles
   end
 
   def run
@@ -167,5 +176,14 @@ class TimeBasedScatterplot < TimeBasedChart
     values = items.collect { |item| y_value(item) }
     values.reject! { |value| min && value < min }
     values
+  end
+
+  def validate_percentiles list
+    list.each do |percentile|
+      raise ArgumentError, "percentile #{percentile} must be an integer" unless percentile.is_a? Integer
+
+      raise ArgumentError, "percentile #{percentile} must be between 0 and 100" unless percentile.between?(0, 100)
+    end
+    list.uniq.sort
   end
 end

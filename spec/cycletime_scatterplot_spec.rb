@@ -10,6 +10,39 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#percentiles' do
+    it 'defaults to the 85th' do
+      expect(chart.percentiles).to eq [85]
+    end
+
+    it 'accepts a replacement list' do
+      chart.percentiles [50, 85, 98]
+      expect(chart.percentiles).to eq [50, 85, 98]
+    end
+
+    it 'accepts an empty list to switch all lines off' do
+      chart.percentiles []
+      expect(chart.percentiles).to eq []
+    end
+
+    it 'rejects values outside 0..100' do
+      expect { chart.percentiles [50, 150] }.to raise_error(
+        ArgumentError, /percentile 150 must be between 0 and 100/
+      )
+    end
+
+    it 'rejects non-integers' do
+      expect { chart.percentiles [85.5] }.to raise_error(
+        ArgumentError, /percentile 85.5 must be an integer/
+      )
+    end
+
+    it 'removes duplicates and sorts' do
+      chart.percentiles [98, 50, 98]
+      expect(chart.percentiles).to eq [50, 98]
+    end
+  end
+
   describe '#cycletime_unit' do
     it 'accepts :days (the only supported unit)' do
       expect { chart.cycletime_unit :days }.not_to raise_error
