@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class GroupingRules < Rules
-  attr_accessor :label, :issue_hint, :label_hint
+  attr_accessor :label, :issue_hint, :label_hint, :percentiles
   attr_reader :color, :last_day_of_period
 
   def last_day_of_period= value

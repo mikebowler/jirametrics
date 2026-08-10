@@ -81,4 +81,30 @@ describe GroupingRules do
       expect(rules.last_day_of_period).to eq Date.parse('2026-01-31')
     end
   end
+
+  describe '#percentiles' do
+    it 'defaults to nil so that unset is distinguishable from empty' do
+      expect(described_class.new.percentiles).to be_nil
+    end
+
+    it 'round trips a list' do
+      rules.percentiles = [50, 85]
+      expect(rules.percentiles).to eq [50, 85]
+    end
+
+    it 'does not participate in group identity' do
+      one = described_class.new.tap do |rule_set|
+        rule_set.label = 'Story'
+        rule_set.percentiles = [50]
+      end
+      two = described_class.new.tap do |rule_set|
+        rule_set.label = 'Story'
+        rule_set.percentiles = [98]
+      end
+      aggregate_failures do
+        expect(one).to eql(two)
+        expect(one.group).to eq two.group
+      end
+    end
+  end
 end
