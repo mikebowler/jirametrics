@@ -38,10 +38,6 @@ class TimeBasedScatterplot < TimeBasedChart
     data_sets = create_datasets items
     overall_color = CssVariable['--cycletime-scatterplot-overall-trendline-color']
 
-    # Still needed by the description text, which Task 8 templates. Remove it there, not here,
-    # so this task leaves a working chart behind.
-    overall_percent_line = calculate_percent_line(items)
-
     percentile_lines_for(items, @percentiles).each do |percentile, value|
       @percentage_lines << {
         percentile: percentile, value: value, color: overall_color,
@@ -159,10 +155,6 @@ class TimeBasedScatterplot < TimeBasedChart
       point[:true_y] = y
     end
     point
-  end
-
-  def calculate_percent_line items
-    percentile_value items, 85
   end
 
   # Returns [[percentile, value], ...] for the requested percentiles, sorted ascending by

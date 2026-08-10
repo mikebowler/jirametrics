@@ -191,6 +191,43 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#percentile_description' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2021-12-31')
+      allow(chart).to receive(:wrap_and_render).and_return('')
+    end
+
+    it 'describes a single percentile with its complement' do
+      chart.percentiles [85]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '85th percentile'
+        expect(chart.percentile_description).to include 'remaining 15%'
+      end
+    end
+
+    it 'describes several percentiles without the singular framing' do
+      chart.percentiles [50, 85]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '50th'
+        expect(chart.percentile_description).to include '85th'
+        expect(chart.percentile_description).not_to include 'reasonable proxy'
+      end
+    end
+
+    it 'says nothing when the lines are switched off' do
+      chart.percentiles []
+      chart.run
+      expect(chart.percentile_description).to eq ''
+    end
+  end
+
   describe '#group_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }
@@ -378,9 +415,9 @@ describe CycletimeScatterplot do
     before { board.cycletime = default_cycletime_config }
 
     it 'computes the same 85% line with capping on and off' do
-      uncapped = chart.calculate_percent_line(issues)
+      uncapped = chart.percentile_value(issues, 85)
       chart.cap_y_axis percentile: 90
-      capped = chart.calculate_percent_line(issues)
+      capped = chart.percentile_value(issues, 85)
       expect(capped).to eq uncapped
     end
   end
