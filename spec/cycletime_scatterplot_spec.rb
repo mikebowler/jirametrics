@@ -383,5 +383,37 @@ describe CycletimeScatterplot do
       end
       expect { chart.group_issues issues }.not_to raise_error
     end
+
+    it 'never reconciles percentiles across different groups' do
+      chart.grouping_rules do |issue, rule|
+        if issue.key == 'SP-10'
+          rule.label = 'Group A'
+          rule.percentiles = [50]
+        else
+          rule.label = 'Group B'
+        end
+      end
+      result = chart.group_issues issues
+      group_a = result.keys.find { |rule| rule.label == 'Group A' }
+      group_b = result.keys.find { |rule| rule.label == 'Group B' }
+      aggregate_failures do
+        expect(result.size).to eq 2
+        expect(group_a.percentiles).to eq [50]
+        expect(group_b.percentiles).to be_nil
+      end
+    end
+
+    it 'reconciles to the same percentiles regardless of arrival order' do
+      chart.grouping_rules do |issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = [50] if issue.key == 'SP-14'
+      end
+      nil_arriving_first = chart.group_issues issues
+      value_arriving_first = chart.group_issues issues.reverse
+      aggregate_failures do
+        expect(nil_arriving_first.keys.first.percentiles).to eq [50]
+        expect(value_arriving_first.keys.first.percentiles).to eq [50]
+      end
+    end
   end
 end
