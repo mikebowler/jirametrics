@@ -226,6 +226,18 @@ describe CycletimeScatterplot do
       chart.run
       expect(chart.percentile_description).to eq ''
     end
+
+    it 'renders the configured percentiles into description_text at render time' do
+      # Regression guard for the ERB tag on description_text: it must be <%= percentile_description %>
+      # (render time, against run's binding) and not #{percentile_description} (construction time,
+      # before the config block below has set percentiles). If someone "simplifies" that tag back to
+      # interpolation, description_text is built during initialize, before chart.percentiles [50, 85]
+      # below ever runs, so it would silently describe the default [85] instead.
+      chart.percentiles [50, 85]
+      chart.run
+      rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
+      expect(rendered).to include '50th'
+    end
   end
 
   describe '#group_issues' do
