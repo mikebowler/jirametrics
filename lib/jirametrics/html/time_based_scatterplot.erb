@@ -129,18 +129,29 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           },
           <% end %>
 
-          <% @percentage_lines.each_with_index do |args, index| %>
-          <%   percent, color = args %>
-          line<%= index %>: {
+          <% @percentage_lines.each do |line| %>
+          <%= line[:id] %>: {
             type: 'line',
-            yMin: <%= percent %>,
-            yMax: <%= percent %>,
-            borderColor: <%= color.to_json %>,
+            yMin: <%= line[:value] %>,
+            yMax: <%= line[:value] %>,
+            borderColor: <%= line[:color].to_json %>,
             borderWidth: 1,
-            drawTime: 'beforeDraw'
+            hitTolerance: 6,
+            drawTime: 'beforeDraw',
+            label: {
+              display: false,
+              content: '<%= line[:percentile] %>% at <%= label_days line[:value] %>',
+              position: 'end',
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              color: '#fff',
+              font: { size: 11 }
+            },
+            enter(ctx) { ctx.element.label.options.display = true; ctx.chart.draw(); },
+            leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }
           },
           <% end %>
-        }
+        },
+        interaction: { intersect: false }
       },
       legend: {
         onClick: (evt, legendItem, legend) => {
