@@ -122,7 +122,7 @@ class WipByColumnChart < ChartBase
       cumulative = 0
       stat.wip_history.sort.find do |_wip, seconds|
         cumulative += seconds
-        cumulative / total >= 0.85
+        cumulative / total >= (85 / 100.0)
       end&.first
     end
   end
