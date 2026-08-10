@@ -123,6 +123,44 @@ describe CycletimeScatterplot do
      ])
   end
 
+  describe 'percentage lines' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+    end
+
+    it 'labels a single percentile exactly as it always has' do
+      expect(chart.create_datasets([issue]).first[:label]).to eq 'Story (85% at 81 days)'
+    end
+
+    it 'lists every configured percentile in the label' do
+      chart.percentiles [50, 85]
+      expect(chart.create_datasets([issue]).first[:label])
+        .to eq 'Story (50% at 81 days, 85% at 81 days)'
+    end
+
+    it 'omits the parenthetical when the group has no percentiles' do
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = []
+      end
+      expect(chart.create_datasets([issue]).first[:label]).to eq 'Story'
+    end
+
+    it 'lets a group override the chart default' do
+      chart.percentiles [85]
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = [50]
+      end
+      chart.create_datasets [issue]
+      expect(chart.percentage_lines.collect { |line| line[:percentile] }).to eq [50]
+    end
+  end
+
   describe '#group_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }

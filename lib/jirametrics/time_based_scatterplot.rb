@@ -6,7 +6,7 @@ require 'jirametrics/time_based_chart'
 class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
 
-  attr_reader :y_axis_cap_percentile
+  attr_reader :y_axis_cap_percentile, :percentage_lines
 
   def initialize
     super
@@ -36,8 +36,18 @@ class TimeBasedScatterplot < TimeBasedChart
   def run
     items = all_items
     data_sets = create_datasets items
+    overall_color = CssVariable['--cycletime-scatterplot-overall-trendline-color']
+
+    # Still needed by the description text, which Task 8 templates. Remove it there, not here,
+    # so this task leaves a working chart behind.
     overall_percent_line = calculate_percent_line(items)
-    @percentage_lines << [overall_percent_line, CssVariable['--cycletime-scatterplot-overall-trendline-color']]
+
+    percentile_lines_for(items, @percentiles).each do |percentile, value|
+      @percentage_lines << {
+        percentile: percentile, value: value, color: overall_color,
+        id: "overall_#{percentile}", group_label: nil
+      }
+    end
 
     if data_sets.empty?
       return "<h1 class='foldable'>#{@header_text}</h1>" \
@@ -51,13 +61,13 @@ class TimeBasedScatterplot < TimeBasedChart
     @cap = compute_cap items
     data_sets = []
 
-    group_issues(items).each do |rules, items_by_type|
+    group_issues(items).each_with_index do |(rules, items_by_type), group_index|
       label = rules.label
       color = rules.color
-      percent_line = calculate_percent_line items_by_type
+      lines = percentile_lines_for items_by_type, (rules.percentiles || @percentiles)
       data = items_by_type.filter_map { |item| data_for_item(item, rules: rules) }
       data_sets << {
-        label: "#{label} (85% at #{label_days(percent_line)})",
+        label: percentile_label(label, lines),
         data: data,
         fill: false,
         showLine: false,
@@ -66,9 +76,22 @@ class TimeBasedScatterplot < TimeBasedChart
 
       data_sets << trend_line_data_set(label: label, data: data, color: color)
 
-      @percentage_lines << [percent_line, color]
+      lines.each do |percentile, value|
+        @percentage_lines << {
+          percentile: percentile, value: value, color: color,
+          id: "group#{group_index}_#{percentile}", group_label: label
+        }
+      end
     end
     data_sets
+  end
+
+  # "Story (85% at 81 days)" for one, comma separated for several, bare label for none.
+  def percentile_label label, lines
+    return label if lines.empty?
+
+    parts = lines.collect { |percentile, value| "#{percentile}% at #{label_days value}" }
+    "#{label} (#{parts.join ', '})"
   end
 
   def show_trend_lines
