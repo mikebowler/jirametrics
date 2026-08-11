@@ -364,6 +364,20 @@ describe ChartBase do
     end
   end
 
+  describe '#comma_and' do
+    it 'joins two with and' do
+      expect(chart_base.comma_and %w[a b]).to eq 'a and b'
+    end
+
+    it 'joins three or more with commas and a final and' do
+      expect(chart_base.comma_and %w[a b c]).to eq 'a, b and c'
+    end
+
+    it 'returns a single phrase untouched' do
+      expect(chart_base.comma_and %w[a]).to eq 'a'
+    end
+  end
+
   describe '#ordinal' do
     it 'uses st, nd and rd for the values that need them' do
       aggregate_failures do

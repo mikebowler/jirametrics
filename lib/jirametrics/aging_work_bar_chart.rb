@@ -11,6 +11,7 @@ class AgingWorkBarChart < ChartBase
     super()
 
     @age_cutoff = nil
+    @percentage_lines = [] # Populated by run; the description reads it, so it must never be nil.
     percentiles [85]
     header_text 'Aging Work Bar Chart'
     description_text <<-HTML
@@ -34,6 +35,7 @@ class AgingWorkBarChart < ChartBase
           <% end %>
         </ol>
       </p>
+      <%= percentile_description %>
       #{describe_non_working_days}
     HTML
 
@@ -58,9 +60,10 @@ class AgingWorkBarChart < ChartBase
       .compact
 
     # An item sitting left of one of these lines has been aging longer than that percentage of
-    # everything we completed, so the line is drawn that many days back from today.
-    percentage_lines = percentile_lines.collect do |percentile, days|
-      { percentile: percentile, x: date_range.end - days, id: "percentile_#{percentile}" }
+    # everything we completed, so the line is drawn that many days back from today. Held on the
+    # instance because the description text reads it too, and it must not be computed twice.
+    @percentage_lines = percentile_lines.collect do |percentile, days|
+      { percentile: percentile, days: days, x: date_range.end - days, id: "percentile_#{percentile}" }
     end
 
     if aging_issues.empty?
@@ -328,6 +331,39 @@ class AgingWorkBarChart < ChartBase
   def percentiles list = nil
     @percentiles = validate_percentiles(list) unless list.nil?
     @percentiles
+  end
+
+  # Explains the vertical line or lines, following whatever was configured. Note the caller must
+  # be the ERB tag <%= percentile_description %> and NOT string interpolation: description_text is
+  # built during initialize, before the config block has run, so interpolation would freeze the
+  # default into every report while ignoring what the user asked for.
+  def percentile_description
+    lines = @percentage_lines
+    return '' if lines.empty?
+
+    swatch = color_block '--aging-work-bar-chart-percentage-line-color'
+    if lines.size == 1
+      percentile = lines.first[:percentile]
+      days = lines.first[:days]
+      <<-HTML
+        <p>
+          The vertical #{swatch} line marks the #{ordinal percentile} percentile of how long
+          completed work actually took (#{label_days days}). Anything still in progress that
+          extends past it has now been aging longer than #{percentile}% of everything we
+          finished, which makes it worth a conversation.
+        </p>
+      HTML
+    else
+      described = lines.collect { |line| ordinal line[:percentile] }
+      <<-HTML
+        <p>
+          The vertical #{swatch} lines mark the #{comma_and described} percentiles of how long
+          completed work actually took. Anything still in progress that extends past one of them
+          has been aging longer than that percentage of everything we finished. Hover a line to
+          see which one it is.
+        </p>
+      HTML
+    end
   end
 
   # Returns [[percentile, days], ...] for the configured percentiles, dropping any that have no

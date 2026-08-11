@@ -123,10 +123,4 @@ class CycletimeScatterplot < TimeBasedScatterplot
         'were configured for that type. Hover any line to see which one it is and its value.'
     end
   end
-
-  def comma_and phrases
-    return phrases.join ' and ' if phrases.size <= 2
-
-    "#{phrases[0..-2].join ', '} and #{phrases.last}"
-  end
 end

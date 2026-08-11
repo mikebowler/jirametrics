@@ -259,6 +259,13 @@ class ChartBase
     @description_text
   end
 
+  # "a and b" for two, "a, b and c" for more. Used when listing configured percentiles in prose.
+  def comma_and phrases
+    return phrases.join ' and ' if phrases.size <= 2
+
+    "#{phrases[0..-2].join ', '} and #{phrases.last}"
+  end
+
   # 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st. Percentiles are the main caller and they
   # range over 0..100, so blindly appending "th" would render "1th" and "22th".
   def ordinal number

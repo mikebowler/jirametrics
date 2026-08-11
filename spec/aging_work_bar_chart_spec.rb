@@ -414,6 +414,54 @@ describe AgingWorkBarChart do
     end
   end
 
+  describe '#percentile_description' do
+    # Rendered through run rather than called directly, so this also guards the ERB tag in
+    # description_text. It must be <%= percentile_description %>: description_text is built during
+    # initialize, before the config block runs, so interpolation would freeze the default in.
+    def render_with percentiles
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'), json: :not_mocked
+      )
+      aging = empty_issue created: '2024-01-15', board: board
+      done_early = empty_issue key: 'SP-90', created: '2024-01-01', board: board
+      done_late = empty_issue key: 'SP-91', created: '2024-01-01', board: board
+      board.cycletime = mock_cycletime_config stub_values: [
+        [aging, to_time('2024-01-15'), nil],
+        [done_early, to_time('2024-01-01'), to_time('2024-01-05')],
+        [done_late, to_time('2024-01-01'), to_time('2024-01-20')]
+      ]
+      add_mock_change(issue: aging, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
+      add_mock_change(issue: aging, field: 'priority', value: 'Medium', time: '2024-01-15')
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
+      chart.holiday_dates = []
+      chart.settings = board.project_config.settings
+      chart.issues = [aging, done_early, done_late]
+      chart.percentiles percentiles
+      chart.run
+    end
+
+    it 'names the single configured percentile and its value' do
+      output = render_with [85]
+      aggregate_failures do
+        expect(output).to include '85th percentile of how long'
+        expect(output).to include 'aging longer than 85% of everything'
+      end
+    end
+
+    it 'lists several percentiles without the singular framing' do
+      output = render_with [50, 85]
+      aggregate_failures do
+        expect(output).to include '50th and 85th percentiles'
+        expect(output).not_to include 'aging longer than 50% of everything'
+      end
+    end
+
+    it 'says nothing about lines when none are drawn' do
+      expect(render_with([])).not_to include 'percentile of how long'
+    end
+  end
+
   describe '#percentiles' do
     it 'defaults to the 85th' do
       expect(chart.percentiles).to eq [85]

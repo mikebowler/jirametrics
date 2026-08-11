@@ -40,7 +40,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         annotations: {
           <%= working_days_annotation %>
 
-          <% percentage_lines.each do |percentage_line| %>
+          <% @percentage_lines.each do |percentage_line| %>
           <%= percentage_line[:id].to_json %>: {
             type: 'line',
             scaleID: 'x',
