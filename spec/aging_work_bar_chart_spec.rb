@@ -460,6 +460,17 @@ describe AgingWorkBarChart do
     it 'says nothing about lines when none are drawn' do
       expect(render_with([])).not_to include 'percentile of how long'
     end
+
+    # color_block emits a div. A div inside a p is invalid HTML, so the browser closes the
+    # paragraph early and the rest of the sentence escapes it and reflows after the chart.
+    it 'does not wrap the colour swatch in a p element' do
+      output = render_with [85]
+      paragraph = output[%r{<p>[^<]*The vertical.*?</p>}m]
+      aggregate_failures do
+        expect(paragraph).to be_nil
+        expect(output).to match(/<div class="p">\s*The vertical/m)
+      end
+    end
   end
 
   describe '#percentiles' do

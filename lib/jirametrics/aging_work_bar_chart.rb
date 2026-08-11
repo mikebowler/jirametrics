@@ -345,23 +345,25 @@ class AgingWorkBarChart < ChartBase
     if lines.size == 1
       percentile = lines.first[:percentile]
       days = lines.first[:days]
+      # <div class="p"> rather than <p>: color_block emits a div, and a div inside a p is invalid
+      # HTML, so the browser closes the paragraph early and the rest of the sentence escapes it.
       <<-HTML
-        <p>
+        <div class="p">
           The vertical #{swatch} line marks the #{ordinal percentile} percentile of how long
           completed work actually took (#{label_days days}). Anything still in progress that
           extends past it has now been aging longer than #{percentile}% of everything we
           finished, which makes it worth a conversation.
-        </p>
+        </div>
       HTML
     else
       described = lines.collect { |line| ordinal line[:percentile] }
       <<-HTML
-        <p>
+        <div class="p">
           The vertical #{swatch} lines mark the #{comma_and described} percentiles of how long
           completed work actually took. Anything still in progress that extends past one of them
           has been aging longer than that percentage of everything we finished. Hover a line to
           see which one it is.
-        </p>
+        </div>
       HTML
     end
   end
