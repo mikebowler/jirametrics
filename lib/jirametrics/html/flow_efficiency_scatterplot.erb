@@ -57,7 +57,7 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           }
           nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
 
-          // Hide/show the 85% line for that dataset
+          // Hide/show the percentile lines for that dataset
           legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
 
           // Hide/show the trendline for this dataset, if they were enabled. The trendline is always

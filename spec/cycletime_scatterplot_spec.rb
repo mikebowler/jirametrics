@@ -10,6 +10,39 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#percentiles' do
+    it 'defaults to the 85th' do
+      expect(chart.percentiles).to eq [85]
+    end
+
+    it 'accepts a replacement list' do
+      chart.percentiles [50, 85, 98]
+      expect(chart.percentiles).to eq [50, 85, 98]
+    end
+
+    it 'accepts an empty list to switch all lines off' do
+      chart.percentiles []
+      expect(chart.percentiles).to eq []
+    end
+
+    it 'rejects values outside 0..100' do
+      expect { chart.percentiles [50, 150] }.to raise_error(
+        ArgumentError, /percentile 150 must be between 0 and 100/
+      )
+    end
+
+    it 'rejects non-integers' do
+      expect { chart.percentiles [85.5] }.to raise_error(
+        ArgumentError, /percentile 85.5 must be an integer/
+      )
+    end
+
+    it 'removes duplicates and sorts' do
+      chart.percentiles [98, 50, 98]
+      expect(chart.percentiles).to eq [50, 98]
+    end
+  end
+
   describe '#cycletime_unit' do
     it 'accepts :days (the only supported unit)' do
       expect { chart.cycletime_unit :days }.not_to raise_error
@@ -90,6 +123,144 @@ describe CycletimeScatterplot do
      ])
   end
 
+  describe 'percentage lines' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+    end
+
+    it 'labels a single percentile exactly as it always has' do
+      expect(chart.create_datasets([issue]).first[:label]).to eq 'Story (85% at 81 days)'
+    end
+
+    it 'lists every configured percentile in the label' do
+      chart.percentiles [50, 85]
+      expect(chart.create_datasets([issue]).first[:label])
+        .to eq 'Story (50% at 81 days, 85% at 81 days)'
+    end
+
+    it 'omits the parenthetical when the group has no percentiles' do
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = []
+      end
+      expect(chart.create_datasets([issue]).first[:label]).to eq 'Story'
+    end
+
+    it 'lets a group override the chart default' do
+      chart.percentiles [85]
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = [50]
+      end
+      chart.create_datasets [issue]
+      expect(chart.percentage_lines.collect { |line| line[:percentile] }).to eq [50]
+    end
+  end
+
+  describe '#legend_annotation_map' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+    end
+
+    it "maps a dataset index to that group's own annotation ids" do
+      chart.percentiles [50, 85]
+      chart.create_datasets [issue]
+      expect(chart.legend_annotation_map).to eq({ 0 => %w[group0_50 group0_85] })
+    end
+
+    it 'keeps two groups apart even when they share a label' do
+      # eql? compares label AND colour, so this is two groups, not one. Keying the map by label
+      # would merge them and one legend click would toggle both groups' lines.
+      other_issue = load_issue('SP-14', board: board)
+      chart.grouping_rules do |grouped_issue, rule|
+        rule.label = 'Story'
+        rule.color = grouped_issue.key == 'SP-10' ? 'blue' : 'green'
+      end
+      chart.create_datasets [issue, other_issue]
+      expect(chart.legend_annotation_map).to eq({ 0 => %w[group0_85], 2 => %w[group1_85] })
+    end
+
+    it 'excludes overall lines so they survive a group toggle' do
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2021-12-31')
+      allow(chart).to receive(:wrap_and_render).and_return('')
+      chart.run
+
+      aggregate_failures do
+        # The overall line must actually exist in this run, otherwise the second expectation
+        # below is vacuously true.
+        expect(chart.percentage_lines.collect { |line| line[:id] }).to include 'overall_85'
+        expect(chart.legend_annotation_map.values.flatten).not_to include 'overall_85'
+        expect(chart.legend_annotation_map[0]).to include 'group0_85'
+      end
+    end
+  end
+
+  describe '#percentile_description' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2021-12-31')
+      allow(chart).to receive(:wrap_and_render).and_return('')
+    end
+
+    it 'describes a single percentile with its complement' do
+      chart.percentiles [85]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '85th percentile'
+        expect(chart.percentile_description).to include 'remaining 15%'
+      end
+    end
+
+    it 'describes several percentiles without the singular framing' do
+      chart.percentiles [50, 85]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '50th'
+        expect(chart.percentile_description).to include '85th'
+        expect(chart.percentile_description).not_to include 'reasonable proxy'
+      end
+    end
+
+    it 'says nothing when the lines are switched off' do
+      chart.percentiles []
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Story'
+        rule.percentiles = [85]
+      end
+      chart.run
+      aggregate_failures do
+        # The group still draws its own lines, so an empty data set can't be the thing making
+        # the description empty. Only the overall lines were switched off.
+        expect(chart.percentage_lines).not_to be_empty
+        expect(chart.percentile_description).to eq ''
+      end
+    end
+
+    it 'renders the configured percentiles into description_text at render time' do
+      # Regression guard for the ERB tag on description_text: it must be <%= percentile_description %>
+      # (render time, against run's binding) and not #{percentile_description} (construction time,
+      # before the config block below has set percentiles). If someone "simplifies" that tag back to
+      # interpolation, description_text is built during initialize, before chart.percentiles [50, 85]
+      # below ever runs, so it would silently describe the default [85] instead.
+      chart.percentiles [50, 85]
+      chart.run
+      rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
+      expect(rendered).to include '50th'
+    end
+  end
+
   describe '#group_issues' do
     let(:board) { load_complete_sample_board }
     let(:issue1) { load_issue 'SP-1', board: board }
@@ -161,6 +332,35 @@ describe CycletimeScatterplot do
       values = (1..19).to_a + [500] # 20 values; index 20*85/100 = 17 -> sorted[17] = 18
       allow(chart).to receive(:y_value) { |item| values[items.index(item)] }
       expect(chart.percentile_value(items, 85)).to eq 18
+    end
+  end
+
+  describe '#percentile_lines_for' do
+    let(:board) { load_complete_sample_board }
+    let(:issues) { %w[SP-10 SP-14].map { |key| load_issue(key, board: board) } }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'returns a pair per requested percentile' do
+      result = chart.percentile_lines_for(issues, [50, 85])
+      expect(result.collect(&:first)).to eq [50, 85]
+    end
+
+    it 'pairs each percentile with its value' do
+      expect(chart.percentile_lines_for(issues, [85]))
+        .to eq [[85, chart.percentile_value(issues, 85)]]
+    end
+
+    it 'returns nothing for an empty list' do
+      expect(chart.percentile_lines_for(issues, [])).to be_empty
+    end
+
+    it 'drops percentiles that have no value' do
+      expect(chart.percentile_lines_for([], [85])).to be_empty
+    end
+
+    it 'sorts unsorted input ascending by percentile' do
+      expect(chart.percentile_lines_for(issues, [98, 50]).collect(&:first)).to eq [50, 98]
     end
   end
 
@@ -248,9 +448,9 @@ describe CycletimeScatterplot do
     before { board.cycletime = default_cycletime_config }
 
     it 'computes the same 85% line with capping on and off' do
-      uncapped = chart.calculate_percent_line(issues)
+      uncapped = chart.percentile_value(issues, 85)
       chart.cap_y_axis percentile: 90
-      capped = chart.calculate_percent_line(issues)
+      capped = chart.percentile_value(issues, 85)
       expect(capped).to eq uncapped
     end
   end
@@ -294,6 +494,63 @@ describe CycletimeScatterplot do
         expect(point[:over]).to be true
         expect(point[:y]).to eq cap[:pin_row]
         expect(point[:true_y]).to eq 306
+      end
+    end
+  end
+
+  describe '#group_issues percentile conflicts' do
+    let(:board) { load_complete_sample_board }
+    let(:issues) { %w[SP-10 SP-14].map { |key| load_issue(key, board: board) } }
+
+    before { board.cycletime = default_cycletime_config }
+
+    it 'raises when one group is given two different percentile lists' do
+      chart.grouping_rules do |issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = issue.key == 'SP-10' ? [50] : [98]
+      end
+      expect { chart.group_issues issues }.to raise_error(
+        ArgumentError, /group "Everything" was given conflicting percentiles: \[50\] and \[98\]/
+      )
+    end
+
+    it 'allows the same list to be set repeatedly' do
+      chart.grouping_rules do |_issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = [50]
+      end
+      expect { chart.group_issues issues }.not_to raise_error
+    end
+
+    it 'never reconciles percentiles across different groups' do
+      chart.grouping_rules do |issue, rule|
+        if issue.key == 'SP-10'
+          rule.label = 'Group A'
+          rule.percentiles = [50]
+        else
+          rule.label = 'Group B'
+        end
+      end
+      result = chart.group_issues issues
+      group_a = result.keys.find { |rule| rule.label == 'Group A' }
+      group_b = result.keys.find { |rule| rule.label == 'Group B' }
+      aggregate_failures do
+        expect(result.size).to eq 2
+        expect(group_a.percentiles).to eq [50]
+        expect(group_b.percentiles).to be_nil
+      end
+    end
+
+    it 'reconciles to the same percentiles regardless of arrival order' do
+      chart.grouping_rules do |issue, rule|
+        rule.label = 'Everything'
+        rule.percentiles = [50] if issue.key == 'SP-14'
+      end
+      nil_arriving_first = chart.group_issues issues
+      value_arriving_first = chart.group_issues issues.reverse
+      aggregate_failures do
+        expect(nil_arriving_first.keys.first.percentiles).to eq [50]
+        expect(value_arriving_first.keys.first.percentiles).to eq [50]
       end
     end
   end

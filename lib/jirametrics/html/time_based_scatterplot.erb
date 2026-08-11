@@ -129,15 +129,28 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           },
           <% end %>
 
-          <% @percentage_lines.each_with_index do |args, index| %>
-          <%   percent, color = args %>
-          line<%= index %>: {
+          <% @percentage_lines.each do |line| %>
+          <%= line[:id].to_json %>: {
             type: 'line',
-            yMin: <%= percent %>,
-            yMax: <%= percent %>,
-            borderColor: <%= color.to_json %>,
+            yMin: <%= line[:value] %>,
+            yMax: <%= line[:value] %>,
+            borderColor: <%= line[:color].to_json %>,
             borderWidth: 1,
-            drawTime: 'beforeDraw'
+            hitTolerance: 6,
+            drawTime: 'beforeDraw',
+            label: {
+              display: false,
+              content: '<%= line[:percentile] %>% at <%= label_days line[:value] %>',
+              position: 'end',
+              // The line itself draws early so it sits under the dots, but the hover label has to
+              // draw last or the non-working-day hatching (also beforeDraw) covers it.
+              drawTime: 'afterDraw',
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              color: '#fff',
+              font: { size: 11 }
+            },
+            enter(ctx) { ctx.element.label.options.display = true; ctx.chart.draw(); },
+            leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }
           },
           <% end %>
         }
@@ -151,8 +164,13 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           }
           nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
 
-          // Hide/show the 85% line for that dataset
-          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
+          // Hide/show every percentile line belonging to this group. The map is keyed by the
+          // dataset index we just worked out, which is unambiguous even when two groups share a
+          // label. A group with no lines of its own simply isn't in the map.
+          const annotationMap = <%= legend_annotation_map.to_json %>;
+          (annotationMap[i] || []).forEach((id) => {
+            legend.chart.options.plugins.annotation.annotations[id].display = nextVisibility;
+          });
 
           // Hide/show the trendline for this dataset, if they were enabled. The trendline is always
           // there but not always visible.

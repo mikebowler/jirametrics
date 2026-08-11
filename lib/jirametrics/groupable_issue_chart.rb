@@ -31,7 +31,7 @@ module GroupableIssueChart
 
       @issue_hints[issue] = rules.issue_hint
       @issue_periods[issue] = rules.last_day_of_period
-      (result[rules] ||= []) << issue
+      accumulate_issue_for_group result, rules, issue
     end
 
     completed_issues.reject! { |issue| ignored_issues.include? issue }
@@ -40,5 +40,30 @@ module GroupableIssueChart
       rules.color = random_color if rules.color.nil?
     end
     result
+  end
+
+  # Ruby's Hash keeps whichever key object it saw first, so a later issue whose rules object
+  # has different percentiles needs to be reconciled against that retained key rather than
+  # just appended under its own (discarded) key.
+  def accumulate_issue_for_group result, rules, issue
+    existing_key = result.keys.find { |key| key.eql? rules }
+    reconcile_percentiles existing_key, rules if existing_key
+    (result[existing_key || rules] ||= []) << issue
+  end
+
+  # The retained hash key is whichever rules object arrived first, so a later issue setting a
+  # different list would silently lose. That can only be a config error, so say so.
+  def reconcile_percentiles existing_key, rules
+    incoming = rules.percentiles
+    return if incoming.nil?
+
+    existing = existing_key.percentiles
+    if existing.nil?
+      existing_key.percentiles = incoming
+    elsif existing != incoming
+      raise ArgumentError,
+        "group #{existing_key.label.inspect} was given conflicting percentiles: " \
+        "#{existing.inspect} and #{incoming.inspect}"
+    end
   end
 end

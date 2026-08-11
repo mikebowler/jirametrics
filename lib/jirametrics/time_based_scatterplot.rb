@@ -1,18 +1,24 @@
 # frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/percentile_validation'
 require 'jirametrics/time_based_chart'
 
 class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
+  include PercentileValidation
 
-  attr_reader :y_axis_cap_percentile
+  # percentage_lines is internal, not part of the documented config DSL. It exists so that specs
+  # and the ERB can see the computed lines without reaching into instance variables. Its shape,
+  # including the :id strings that encode positional group indices, is free to change.
+  attr_reader :y_axis_cap_percentile, :percentage_lines
 
   def initialize
     super
 
     @percentage_lines = []
     @highest_y_value = 0
+    @percentiles = [85]
   end
 
   # On a scatterplot the cycle time is plotted up the y-axis.
@@ -24,11 +30,25 @@ class TimeBasedScatterplot < TimeBasedChart
     @y_axis_cap_percentile = percentile
   end
 
+  # Percentile reference lines. The chart level value defines the lines drawn across the whole
+  # data set AND the default for each group; a group can override with rule.percentiles.
+  # An empty list switches the lines off.
+  def percentiles list = nil
+    @percentiles = validate_percentiles(list) unless list.nil?
+    @percentiles
+  end
+
   def run
     items = all_items
     data_sets = create_datasets items
-    overall_percent_line = calculate_percent_line(items)
-    @percentage_lines << [overall_percent_line, CssVariable['--cycletime-scatterplot-overall-trendline-color']]
+    overall_color = CssVariable['--cycletime-scatterplot-overall-trendline-color']
+
+    percentile_lines_for(items, @percentiles).each do |percentile, value|
+      @percentage_lines << {
+        percentile: percentile, value: value, color: overall_color,
+        id: "overall_#{percentile}", dataset_index: nil
+      }
+    end
 
     if data_sets.empty?
       return "<h1 class='foldable'>#{@header_text}</h1>" \
@@ -42,13 +62,17 @@ class TimeBasedScatterplot < TimeBasedChart
     @cap = compute_cap items
     data_sets = []
 
-    group_issues(items).each do |rules, items_by_type|
+    group_issues(items).each_with_index do |(rules, items_by_type), group_index|
       label = rules.label
       color = rules.color
-      percent_line = calculate_percent_line items_by_type
+      lines = percentile_lines_for items_by_type, (rules.percentiles || @percentiles)
       data = items_by_type.filter_map { |item| data_for_item(item, rules: rules) }
+
+      # Where this group's scatter set is about to land. The legend handler knows the clicked
+      # dataset by index, so that's what the annotation map is keyed by.
+      dataset_index = data_sets.size
       data_sets << {
-        label: "#{label} (85% at #{label_days(percent_line)})",
+        label: percentile_label(label, lines),
         data: data,
         fill: false,
         showLine: false,
@@ -57,13 +81,37 @@ class TimeBasedScatterplot < TimeBasedChart
 
       data_sets << trend_line_data_set(label: label, data: data, color: color)
 
-      @percentage_lines << [percent_line, color]
+      lines.each do |percentile, value|
+        @percentage_lines << {
+          percentile: percentile, value: value, color: color,
+          id: "group#{group_index}_#{percentile}", dataset_index: dataset_index
+        }
+      end
     end
     data_sets
   end
 
+  # "Story (85% at 81 days)" for one, comma separated for several, bare label for none.
+  def percentile_label label, lines
+    return label if lines.empty?
+
+    parts = lines.collect { |percentile, value| "#{percentile}% at #{label_days value}" }
+    "#{label} (#{parts.join ', '})"
+  end
+
   def show_trend_lines
     @show_trend_lines = true
+  end
+
+  # Dataset index to the annotation ids belonging to that dataset's group, so the legend handler
+  # can toggle all of a group's lines. Keyed by index rather than by label because two groups may
+  # legitimately share a label while differing in colour, and keying by label would then toggle
+  # both of them at once. Overall lines are deliberately absent; they are not owned by any group
+  # and stay visible when a group is switched off.
+  def legend_annotation_map
+    @percentage_lines.reject { |line| line[:dataset_index].nil? }
+      .group_by { |line| line[:dataset_index] }
+      .transform_values { |lines| lines.collect { |line| line[:id] } }
   end
 
   def trend_line_data_set label:, data:, color:
@@ -120,8 +168,15 @@ class TimeBasedScatterplot < TimeBasedChart
     point
   end
 
-  def calculate_percent_line items
-    percentile_value items, 85
+  # Returns [[percentile, value], ...] for the requested percentiles, sorted ascending by
+  # percentile and dropping any that have no value because the item list is empty after
+  # filtering. Sorting happens here, not in the caller, because GroupingRules#percentiles is
+  # user-assigned with no ordering guarantee.
+  def percentile_lines_for items, percentiles
+    percentiles.sort.filter_map do |percentile|
+      value = percentile_value items, percentile
+      [percentile, value] unless value.nil?
+    end
   end
 
   def percentile_value items, percentile

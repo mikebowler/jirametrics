@@ -14,14 +14,7 @@ class CycletimeScatterplot < TimeBasedScatterplot
         This chart shows only completed work and indicates both what day it completed as well as
         how many days it took to get done. Hovering over a dot will show you the ID of the work item.
       </div>
-      <div class="p">
-        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} line indicates the 85th
-        percentile (<%= overall_percent_line %> days). 85% of all
-        items on this chart fall on or below the line and the remaining 15% are above the line. 85%
-        is a reasonable proxy for "most" so that we can say that based on this data set, we can
-        predict that most work of this type will complete in <%= overall_percent_line %> days or
-        less. The other lines reflect the 85% line for that respective type of work.
-      </div>
+      <%= percentile_description %>
       #{describe_non_working_days}
     HTML
     @x_axis_title = 'Date completed'
@@ -65,4 +58,48 @@ class CycletimeScatterplot < TimeBasedScatterplot
 
   # Kept for backwards compatibility with existing callers and specs
   alias data_for_issue data_for_item
+
+  # The prose follows the configuration. With one percentile we keep the original "proxy for
+  # most" framing; with several that framing makes no sense, and with none there is nothing to
+  # describe. Values come from percentage_lines because run has already computed them, and
+  # because this string is not run through ERB a second time.
+  def percentile_description
+    overall_lines = percentage_lines.select { |line| line[:dataset_index].nil? }
+    return '' if overall_lines.empty?
+
+    if overall_lines.size == 1
+      single_percentile_description(overall_lines.first)
+    else
+      multi_percentile_description(overall_lines)
+    end
+  end
+
+  def single_percentile_description line
+    percentile = line[:percentile]
+    days = line[:value]
+    <<-HTML
+      <div class="p">
+        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} line indicates the
+        #{percentile}th percentile (#{days} days). #{percentile}% of all
+        items on this chart fall on or below the line and the remaining #{100 - percentile}% are
+        above the line. #{percentile}% is a reasonable proxy for "most" so that we can say that
+        based on this data set, we can predict that most work of this type will complete in
+        #{days} days or less. The other lines reflect the #{percentile}% line for that
+        respective type of work.
+      </div>
+    HTML
+  end
+
+  def multi_percentile_description lines
+    described = lines.collect { |line| "#{line[:percentile]}th at #{label_days line[:value]}" }
+    <<-HTML
+      <div class="p">
+        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} lines indicate the
+        #{described.join ', '} percentiles across all items on this chart. Each one says that
+        this percentage of items completed in that many days or less. Every type of work also
+        gets its own lines in its own colour, drawn at whichever percentiles were configured for
+        that type. Hover any line to see its value.
+      </div>
+    HTML
+  end
 end
