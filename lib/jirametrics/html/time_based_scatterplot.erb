@@ -142,6 +142,9 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
               display: false,
               content: '<%= line[:percentile] %>% at <%= label_days line[:value] %>',
               position: 'end',
+              // The line itself draws early so it sits under the dots, but the hover label has to
+              // draw last or the non-working-day hatching (also beforeDraw) covers it.
+              drawTime: 'afterDraw',
               backgroundColor: 'rgba(0,0,0,0.85)',
               color: '#fff',
               font: { size: 11 }
