@@ -124,18 +124,6 @@ class CycletimeScatterplot < TimeBasedScatterplot
     end
   end
 
-  # 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st. Percentiles are validated to 0..100, and
-  # blindly appending "th" would render "1th" and "22th".
-  def ordinal number
-    suffix =
-      if [11, 12, 13].include?(number % 100)
-        'th'
-      else
-        { 1 => 'st', 2 => 'nd', 3 => 'rd' }.fetch(number % 10, 'th')
-      end
-    "#{number}#{suffix}"
-  end
-
   def comma_and phrases
     return phrases.join ' and ' if phrases.size <= 2
 

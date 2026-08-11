@@ -364,6 +364,37 @@ describe ChartBase do
     end
   end
 
+  describe '#ordinal' do
+    it 'uses st, nd and rd for the values that need them' do
+      aggregate_failures do
+        expect(chart_base.ordinal 1).to eq '1st'
+        expect(chart_base.ordinal 2).to eq '2nd'
+        expect(chart_base.ordinal 3).to eq '3rd'
+        expect(chart_base.ordinal 21).to eq '21st'
+        expect(chart_base.ordinal 22).to eq '22nd'
+        expect(chart_base.ordinal 23).to eq '23rd'
+      end
+    end
+
+    # The teens are the exception that a naive "look at the last digit" rule gets wrong.
+    it 'uses th for the teens' do
+      aggregate_failures do
+        expect(chart_base.ordinal 11).to eq '11th'
+        expect(chart_base.ordinal 12).to eq '12th'
+        expect(chart_base.ordinal 13).to eq '13th'
+      end
+    end
+
+    it 'uses th for everything else' do
+      aggregate_failures do
+        expect(chart_base.ordinal 0).to eq '0th'
+        expect(chart_base.ordinal 50).to eq '50th'
+        expect(chart_base.ordinal 85).to eq '85th'
+        expect(chart_base.ordinal 100).to eq '100th'
+      end
+    end
+  end
+
   describe '#format_integer' do
     it 'formats for three digits or less' do
       expect(chart_base.format_integer 5).to eq '5'

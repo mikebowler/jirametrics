@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 require 'jirametrics/groupable_issue_chart'
+require 'jirametrics/percentile_validation'
 require 'jirametrics/time_based_chart'
 
 class TimeBasedHistogram < TimeBasedChart
   include GroupableIssueChart
+  include PercentileValidation
 
   attr_reader :show_stats
 
@@ -20,13 +22,35 @@ class TimeBasedHistogram < TimeBasedChart
     @x_axis_title = title
   end
 
-  def percentiles percs = nil
-    @percentiles = percs unless percs.nil?
+  # Which percentiles to show as columns in the statistics table. An empty list drops the columns
+  # entirely. Values are validated here rather than at use, because they feed the percentile
+  # arithmetic and the table headers, where a bad one produces a wrong chart instead of an error.
+  def percentiles list = nil
+    @percentiles = validate_percentiles(list) unless list.nil?
     @percentiles
   end
 
   def disable_stats
     @show_stats = false
+  end
+
+  # What a given percentile is actually good for. These used to be a hardcoded list describing
+  # the 50th, 85th and 98th, sitting underneath a table whose columns follow the configuration,
+  # so the two drifted apart the moment anyone changed the setting. Bands rather than exact
+  # values, because 90 deserves an answer just as much as 85 does.
+  def percentile_explanation percentile
+    case percentile
+    when 0..49
+      'below the median, so half or more of your work takes longer than this. Useful for ' \
+        'understanding your faster cases, but not a number to plan around.'
+    when 50
+      'also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor ' \
+        "that it's not drifting to the right."
+    when 51..94
+      'useful to establish service level expectations, accounting for rare events.'
+    else
+      'useful to gauge worst case expectations.'
+    end
   end
 
   def run

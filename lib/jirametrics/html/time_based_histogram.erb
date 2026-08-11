@@ -83,8 +83,8 @@ if show_stats
         <th>Max</th>
         <th>Avg</th>
         <th>Mode</th>
-        <% percentiles.each do |p| %>
-           <th><%= p %>th</th>
+        <% percentiles.each do |percentile| %>
+           <th><%= ordinal percentile %></th>
         <% end %>
       </tr>
       <% the_stats.each do |k, v| %>
@@ -94,8 +94,8 @@ if show_stats
             <td style="text-align: right;"><%= v[:max] %></td>
             <td style="text-align: right;"><%= sprintf('%.2f', v[:average]) %></td>
             <td><%= v[:mode].join(', ') %></td>
-            <% percentiles.each do |p| %>
-               <td style="text-align: right;"><%= v[:percentiles][p] %></td>
+            <% percentiles.each do |percentile| %>
+               <td style="text-align: right;"><%= v[:percentiles][percentile] %></td>
             <% end %>
           </tr>
        <% end %>
@@ -107,12 +107,14 @@ if show_stats
       <li><b>Min & Max:</b> the observed spread for the data set. Useful to judge how wide the variation is. </li>
       <li><b>Average:</b> the arithmetic mean of the data set. Useful as a <i>"typical representative"</i> of the complete set.</li>
       <li><b>Mode:</b> the most repeated value(s) in the data set. This is the value we're most likely to remember. </li>
-      <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of values are X or less. Typical percentiles of interest are:</li>
+      <% unless percentiles.empty? %>
+      <li><b>Percentiles:</b> they partition the data set. If X is the Nth percentile, it means that N% of values are X or less. The ones in the table above:</li>
       <ul>
-        <li><b>50%</b>: also known as the <b>Median</b>. Useful to establish short feedback loops, to monitor that it's not drifting to the right.</li>
-        <li><b>85%</b>: useful to establish service level expectations, accounting for rare events..</li>
-        <li><b>98% (or higher)</b>: useful to gauge worst case expectations..</li>
+        <% percentiles.each do |percentile| %>
+          <li><b><%= percentile %>%</b>: <%= percentile_explanation percentile %></li>
+        <% end %>
       </ul>
+      <% end %>
     </ul>
   </div>
 </div>

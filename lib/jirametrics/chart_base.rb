@@ -259,6 +259,18 @@ class ChartBase
     @description_text
   end
 
+  # 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st. Percentiles are the main caller and they
+  # range over 0..100, so blindly appending "th" would render "1th" and "22th".
+  def ordinal number
+    suffix =
+      if [11, 12, 13].include?(number % 100)
+        'th'
+      else
+        { 1 => 'st', 2 => 'nd', 3 => 'rd' }.fetch(number % 10, 'th')
+      end
+    "#{number}#{suffix}"
+  end
+
   # Convert a number like 1234567 into the string "1,234,567"
   def format_integer number
     number.to_s.reverse.scan(/.{1,3}/).join(',').reverse
