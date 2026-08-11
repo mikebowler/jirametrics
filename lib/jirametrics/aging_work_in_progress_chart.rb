@@ -13,12 +13,15 @@ class AgingWorkInProgressChart < ChartBase
   def initialize block
     super()
     header_text 'Aging Work in Progress'
+    # div class="p" rather than <p>: the notes below are a ul, which is block level and not legal
+    # inside a paragraph, so a browser closes the p early. Harmless while the list is the last
+    # thing in the block, but it breaks the moment any text follows it.
     description_text <<-HTML
-      <p>
+      <div class="p">
         This chart shows only work items that have started but not completed, grouped by the column
         they're currently in. Hovering over a dot will show you the ID of that work item.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         The shaded areas indicate what percentage of the work has passed that column within that time.
         Notes:
         <ul>
@@ -30,7 +33,7 @@ class AgingWorkInProgressChart < ChartBase
              backwards athough it could also indicate that a ticket jumped over columns as it moved to the right.
            </li>
         </ul>
-      </p>
+      </div>
       <div style="border: 1px solid gray; padding: 0.2em">
         <% @percentiles.keys.sort.reverse.each do |percent| %>
           <span style="padding-left: 0.5em; padding-right: 0.5em; vertical-align: middle;"><%= color_block @percentiles[percent] %> <%= percent %>%</span>
@@ -230,8 +233,9 @@ class AgingWorkInProgressChart < ChartBase
     end
 
     if has_unmapped && @description_text
-      @description_text += "<p>The items shown in #{column_name.inspect} are not visible on the " \
-        'board but are still active. Most likely everyone has forgotten about them.</p>'
+      @description_text += "<div class=\"p\">The items shown in #{column_name.inspect} are not " \
+        'visible on the board but are still active. Most likely everyone has forgotten about ' \
+        'them.</div>'
     else
       # @column_headings.pop
       @board_columns.pop

@@ -13,23 +13,25 @@ class AgingWorkTable < ChartBase
     @age_cutoff = 0
 
     header_text 'Aging Work Table'
+    # div class="p" rather than <p>: the legend below is a ul, which is block level and not legal
+    # inside a paragraph, so a browser closes the p early.
     description_text <<-TEXT
-      <p>
+      <div class="p">
         This chart shows all active (started but not completed) work, ordered from oldest at the top to
         newest at the bottom.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         If there are expedited items that haven't yet started then they're at the bottom of the table.
         By the very definition of expedited, if we haven't started them already, we'd better get on that.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         Legend:
         <ul>
         <li><b>E:</b> Whether this item is <b>E</b>xpedited.</li>
         <li><b>B/S:</b> Whether this item is either <b>B</b>locked or <b>S</b>talled.</li>
         <li><b>Forecast:</b> A forecast of how long it is likely to take to finish this work item.</li>
         </ul>
-      </p>
+      </div>
     TEXT
 
     instance_eval(&block)
