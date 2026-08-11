@@ -119,10 +119,13 @@ class BoardMovementCalculator
     "#{days} day#{'s' unless days == 1}"
   end
 
-  def forecasted_days_remaining_and_message issue:, today:
+  # percentile is passed in rather than held on the calculator because this class is shared: the
+  # aging work in progress chart builds one too and never forecasts, so it has no business
+  # carrying a forecast setting.
+  def forecasted_days_remaining_and_message issue:, today:, percentile: 85
     return [nil, 'Already done'] if issue.done?
 
-    likely_age_data = age_data_for percentage: 85
+    likely_age_data = age_data_for percentage: percentile
 
     column_name, entry_time = find_current_column_and_entry_time_in_column issue
     return [nil, 'This issue is not visible on the board. No way to predict when it will be done.'] if column_name.nil?
@@ -145,14 +148,23 @@ class BoardMovementCalculator
 
     remaining_in_current_column = likely_age_data[column_index] - age_in_column
     if remaining_in_current_column.negative?
-      message = "This item is an outlier at #{label_days issue.board.cycletime.age(issue, today: today)} " \
-        "in the #{column_name.inspect} column. Most items on this board have left this column in " \
-        "#{label_days likely_age_data[column_index]} or less, so we cannot forecast when it will be done."
-      remaining_in_current_column = 0
-      return [nil, message]
+      return [nil, outlier_message(
+        issue: issue, today: today, column_name: column_name, percentile: percentile,
+        column_age: likely_age_data[column_index]
+      )]
     end
 
     forecasted_days = last_non_zero_datapoint - likely_age_data[column_index] + remaining_in_current_column
     [forecasted_days, message]
+  end
+
+  # Why we cannot forecast: this item has already been in the column longer than the historical
+  # figure we would forecast from. "Most" is only a fair description near the default; at the
+  # median it would be plainly wrong, so any other percentile states the number instead.
+  def outlier_message issue:, today:, column_name:, percentile:, column_age:
+    proportion = percentile == 85 ? 'Most items' : "#{percentile}% of items"
+    "This item is an outlier at #{label_days issue.board.cycletime.age(issue, today: today)} " \
+      "in the #{column_name.inspect} column. #{proportion} on this board have left this column in " \
+      "#{label_days column_age} or less, so we cannot forecast when it will be done."
   end
 end

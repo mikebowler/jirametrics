@@ -17,4 +17,10 @@ module PercentileValidation
     end
     list.uniq.sort
   end
+
+  # For the places where exactly one value is meaningful, such as a forecast that has to produce a
+  # single number of days. Returns the value; raises the same errors as the list form.
+  def validate_percentile value
+    validate_percentiles([value]).first
+  end
 end

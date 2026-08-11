@@ -2,7 +2,11 @@
 
 require 'jirametrics/chart_base'
 
+require 'jirametrics/percentile_validation'
+
 class AgingWorkTable < ChartBase
+  include PercentileValidation
+
   attr_accessor :today
   attr_reader :any_scrum_boards
 
@@ -11,6 +15,7 @@ class AgingWorkTable < ChartBase
     @stalled_threshold = 5
     @dead_threshold = 45
     @age_cutoff = 0
+    @percentile = 85
 
     header_text 'Aging Work Table'
     # div class="p" rather than <p>: the legend below is a ul, which is block level and not legal
@@ -127,7 +132,7 @@ class AgingWorkTable < ChartBase
 
   def dates_text issue
     days_remaining, error = @calculators[issue.board.id].forecasted_days_remaining_and_message(
-      issue: issue, today: @today
+      issue: issue, today: @today, percentile: percentile
     )
     message = nil
     message, error = due_date_status(issue, days_remaining, error) unless error
@@ -158,6 +163,14 @@ class AgingWorkTable < ChartBase
     text << (days_remaining ? "#{label_days days_remaining} left" : 'Unable to forecast')
     text << ' | ' << message if message
     text
+  end
+
+  # Which percentile of historical column movement the Forecast column is based on. Singular,
+  # unlike the charts' "percentiles", because a forecast has to resolve to one number of days: the
+  # due date risk calculation compares that single figure against the due date.
+  def percentile value = nil
+    @percentile = validate_percentile(value) unless value.nil?
+    @percentile
   end
 
   def age_cutoff age = nil

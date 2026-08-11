@@ -34,6 +34,29 @@ describe AgingWorkTable do
     end
   end
 
+  describe '#percentile' do
+    it 'defaults to the 85th' do
+      expect(table.percentile).to eq 85
+    end
+
+    it 'accepts a replacement' do
+      table.percentile 90
+      expect(table.percentile).to eq 90
+    end
+
+    it 'rejects values outside 0..100' do
+      expect { table.percentile 150 }.to raise_error(
+        ArgumentError, /percentile 150 must be between 0 and 100/
+      )
+    end
+
+    it 'rejects non-integers' do
+      expect { table.percentile 85.5 }.to raise_error(
+        ArgumentError, /percentile 85.5 must be an integer/
+      )
+    end
+  end
+
   describe '#icon_span' do
     it 'creates span' do
       expect(table.icon_span title: 'foo', icon: 'x').to eq "<span title='foo' style='font-size: 0.8em;'>x</span>"
@@ -324,6 +347,19 @@ describe AgingWorkTable do
       issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
       table.initialize_calculator
       expect(table.dates_text issue).to eq '3 days left'
+    end
+
+    # Guards the wiring, not the arithmetic: removing "percentile: percentile" from the call to
+    # the calculator leaves every other example in this file passing.
+    # Guards the wiring, not the arithmetic: removing "percentile: percentile" from the call to the
+    # calculator leaves every other example in this file passing. Only two issues back this fixture,
+    # so age_data_for's index collapses to the same element for everything below 100; the 100th is
+    # the value that actually discriminates here.
+    it 'forecasts from the configured percentile rather than always the 85th' do
+      issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      table.percentile 100
+      table.initialize_calculator
+      expect(table.dates_text issue).to eq '12 days left'
     end
 
     it 'handles due date earlier than forecast' do

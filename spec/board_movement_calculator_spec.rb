@@ -231,6 +231,30 @@ describe BoardMovementCalculator do
       expect(calculator.forecasted_days_remaining_and_message issue: new_issue, today: today).to eq [3, nil]
     end
 
+    it 'uses the requested percentile rather than always the 85th' do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: today
+      new_issue = create_issue_from_aging_data board: board, ages_by_column: [1], today: today.to_s, key: 'SP-100'
+      at_default = calculator.forecasted_days_remaining_and_message issue: new_issue, today: today
+      at_median = calculator.forecasted_days_remaining_and_message issue: new_issue, today: today, percentile: 50
+      aggregate_failures do
+        expect(at_default.first).to eq 3
+        # A lower percentile describes faster historical movement, so it must not forecast longer.
+        expect(at_median.first).to be <= at_default.first
+      end
+    end
+
+    it 'stops calling it "most" when the percentile is not the default' do
+      calculator = described_class.new board: board, issues: [issue1, issue2], today: today
+      new_issue = create_issue_from_aging_data board: board, ages_by_column: [2], today: today.to_s, key: 'SP-100'
+      _days, message = calculator.forecasted_days_remaining_and_message(
+        issue: new_issue, today: today, percentile: 50
+      )
+      aggregate_failures do
+        expect(message).to include '50% of items on this board'
+        expect(message).not_to include 'Most items'
+      end
+    end
+
     it 'is already an outlier in the first column' do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       new_issue = create_issue_from_aging_data board: board, ages_by_column: [2], today: today.to_s, key: 'SP-100'
