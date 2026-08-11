@@ -211,11 +211,7 @@ class TimeBasedScatterplot < TimeBasedChart
   end
 
   def percentile_value items, percentile
-    values = filtered_values(items)
-    return nil if values.empty?
-
-    index = [values.size * percentile / 100, values.size - 1].min
-    values.sort[index]
+    percentile_of filtered_values(items), percentile
   end
 
   def compute_cap items

@@ -381,11 +381,10 @@ class AgingWorkBarChart < ChartBase
   end
 
   def calculate_percent_line percentage: 85
-    days = completed_issues_in_range.filter_map { |issue| issue.board.cycletime.cycletime(issue) }.sort
-    return nil if days.empty?
-
-    # Clamp: at 100 the index lands one past the end and would return nil.
-    days[[days.length * percentage / 100, days.length - 1].min]
+    percentile_of(
+      completed_issues_in_range.filter_map { |issue| issue.board.cycletime.cycletime(issue) },
+      percentage
+    )
   end
 
   def age_cutoff days

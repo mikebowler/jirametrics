@@ -364,6 +364,62 @@ describe ChartBase do
     end
   end
 
+  describe '#percentile_of' do
+    # Nearest rank: the smallest value with at least this percentage of the data at or below it.
+    it 'returns the value with that share of the data at or below it' do
+      values = (1..10).to_a
+      aggregate_failures do
+        expect(chart_base.percentile_of values, 50).to eq 5
+        expect(chart_base.percentile_of values, 85).to eq 9
+        expect(chart_base.percentile_of values, 100).to eq 10
+        expect(chart_base.percentile_of values, 0).to eq 1
+      end
+    end
+
+    # The old formula overshot by one whenever size * percentile / 100 came out exact, so the
+    # 85th on 100 items reported the 86th value. That is the bug this method exists to fix.
+    it 'does not overshoot when the rank lands exactly on a boundary' do
+      aggregate_failures do
+        expect(chart_base.percentile_of (1..100).to_a, 85).to eq 85
+        expect(chart_base.percentile_of (1..20).to_a, 85).to eq 17
+        expect(chart_base.percentile_of (1..40).to_a, 85).to eq 34
+      end
+    end
+
+    it 'is not confused by unsorted input or duplicates' do
+      aggregate_failures do
+        expect(chart_base.percentile_of [9, 1, 5, 5, 3], 50).to eq 5
+        expect(chart_base.percentile_of [5, 5, 5, 5], 85).to eq 5
+      end
+    end
+
+    it 'returns nil for no values' do
+      expect(chart_base.percentile_of [], 85).to be_nil
+    end
+
+    it 'returns the only value when there is one' do
+      expect(chart_base.percentile_of [7], 50).to eq 7
+    end
+  end
+
+  # The reason percentile_of exists. Three call sites used to compute percentiles independently,
+  # and they disagreed whenever the rank landed exactly on a boundary, so the same percentile of
+  # the same data could read differently on the scatterplot and the histogram.
+  describe 'percentile agreement across the charts' do
+    it 'gives the histogram and the flat-list charts the same answer' do
+      values = (1..100).to_a
+      histogram_data = values.tally
+      histogram = TimeBasedHistogram.new
+      aggregate_failures do
+        [0, 25, 50, 75, 85, 98, 100].each do |percentile|
+          from_list = chart_base.percentile_of values, percentile
+          from_histogram = histogram.percentiles_for(histogram_data, [percentile], values.size)[percentile]
+          expect(from_histogram).to eq(from_list), "percentile #{percentile} disagreed"
+        end
+      end
+    end
+  end
+
   describe '#comma_and' do
     it 'joins two with and' do
       expect(chart_base.comma_and %w[a b]).to eq 'a and b'

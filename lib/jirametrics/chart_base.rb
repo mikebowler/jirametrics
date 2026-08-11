@@ -259,6 +259,19 @@ class ChartBase
     @description_text
   end
 
+  # The nearest rank percentile: the smallest value with at least this percentage of the data at
+  # or below it. One implementation for the whole product, because three call sites used to
+  # compute this separately and two of them overshot by one whenever the rank landed exactly on a
+  # boundary, so the same percentile of the same data could read differently on two charts.
+  # Returns nil when there is nothing to measure.
+  def percentile_of values, percentile
+    return nil if values.empty?
+
+    sorted = values.sort
+    rank = (percentile / 100.0 * sorted.size).ceil
+    sorted[rank.clamp(1, sorted.size) - 1]
+  end
+
   # "a and b" for two, "a, b and c" for more. Used when listing configured percentiles in prose.
   def comma_and phrases
     return phrases.join ' and ' if phrases.size <= 2

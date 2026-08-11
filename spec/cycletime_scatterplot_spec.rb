@@ -447,9 +447,12 @@ describe CycletimeScatterplot do
   describe '#percentile_value' do
     it 'returns the value at the requested percentile, min-filtered' do
       items = Array.new(20) { |index| "item#{index}" }
-      values = (1..19).to_a + [500] # 20 values; index 20*85/100 = 17 -> sorted[17] = 18
+      # 20 values, so the 85th lands exactly on a rank boundary. Nearest rank gives the 17th
+      # value, which has precisely 85% of the data at or below it. The old formula returned 18,
+      # which had 90% at or below, and that was the overshoot fixed here.
+      values = (1..19).to_a + [500]
       allow(chart).to receive(:y_value) { |item| values[items.index(item)] }
-      expect(chart.percentile_value(items, 85)).to eq 18
+      expect(chart.percentile_value(items, 85)).to eq 17
     end
   end
 
@@ -498,27 +501,30 @@ describe CycletimeScatterplot do
     end
 
     it 'computes the cap layout from the full set' do
-      chart.cap_y_axis percentile: 85 # cutoff = 18; values 19 and 500 exceed it
+      chart.cap_y_axis percentile: 85 # cutoff = 17; values 18, 19 and 500 exceed it
       cap = chart.compute_cap(items)
       aggregate_failures do
-        expect(cap[:cutoff]).to eq 18
-        expect(cap[:outlier_count]).to eq 2
-        expect(cap[:sep]).to be_within(0.001).of(18 + (18 * 0.06))
-        expect(cap[:axis_max]).to eq (18 + (18 * 0.06) + (18 * 0.15)).ceil
-        expect(cap[:pin_row]).to be_within(0.001).of((18 + (18 * 0.06)) + (18 * 0.15 * 0.55))
+        expect(cap[:cutoff]).to eq 17
+        expect(cap[:outlier_count]).to eq 3
+        expect(cap[:sep]).to be_within(0.001).of(17 + (17 * 0.06))
+        expect(cap[:axis_max]).to eq (17 + (17 * 0.06) + (17 * 0.15)).ceil
+        expect(cap[:pin_row]).to be_within(0.001).of((17 + (17 * 0.06)) + (17 * 0.15 * 0.55))
       end
     end
 
     it 'pluralizes and rounds the label for a single outlier' do
-      chart.cap_y_axis percentile: 85 # cutoff = 18; values 19 and 500 exceed it
+      chart.cap_y_axis percentile: 85 # cutoff = 17; values 18, 19 and 500 exceed it
       cap = chart.compute_cap(items)
-      expect(cap[:label]).to eq '2 items above 18 days'
+      expect(cap[:label]).to eq '3 items above 17 days'
     end
 
     it 'uses the singular word and rounds a fractional cutoff for exactly one outlier' do
-      fractional_values = (1..18).to_a + [18.4, 500] # 20 values; percentile 90 -> cutoff = 18.4
+      # 20 values at the 95th gives rank 19, so the cutoff is the 19th value and exactly one sits
+      # above it. The 90th would put two above, which would defeat the point of this example.
+      # Keeping the cutoff fractional is what exercises the rounding in the label.
+      fractional_values = (1..18).to_a + [18.4, 500]
       allow(chart).to receive(:y_value) { |item| fractional_values[items.index(item)] }
-      chart.cap_y_axis percentile: 90
+      chart.cap_y_axis percentile: 95
       cap = chart.compute_cap(items)
       aggregate_failures do
         expect(cap[:outlier_count]).to eq 1

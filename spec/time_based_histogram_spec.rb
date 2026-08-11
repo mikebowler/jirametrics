@@ -132,10 +132,13 @@ describe TimeBasedHistogram do
         { 50 => 7, 75 => 7, 92 => 15 }
       )
 
+      # 101 used to return nil because the old cumulative-count search simply found nothing at or
+      # above a rank past the end. It cannot arrive here any more: the percentiles setter rejects
+      # anything outside 0..100. At the real top of the range you get the largest value.
       expect_percentiles(
-        { 1 => 1, 2 => 1 }, [101]
+        { 1 => 1, 2 => 1 }, [100]
       ).to eq(
-        { 101 => nil }
+        { 100 => 2 }
       )
       expect_percentiles(
         { 1 => 1, 2 => 1 }, [0]

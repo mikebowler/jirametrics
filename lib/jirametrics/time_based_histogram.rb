@@ -122,19 +122,13 @@ class TimeBasedHistogram < TimeBasedChart
     sorted_by_frequency.select { |_value, frequency| frequency == max_frequency }.collect(&:first).sort
   end
 
-  def percentiles_for histogram_data, percentiles, total_values
-    sorted_values = histogram_data.keys.sort
-    cumulative_counts = {}
-    cumulative_sum = 0
-    sorted_values.each do |value|
-      cumulative_sum += histogram_data[value]
-      cumulative_counts[value] = cumulative_sum
-    end
-
-    percentiles.to_h do |percentile|
-      rank = (percentile / 100.0) * total_values
-      [percentile, sorted_values.find { |value| cumulative_counts[value] >= rank }]
-    end
+  # The data arrives as value => count. Expanded back to a flat list so that the one shared
+  # percentile implementation is used here too: this chart and the scatterplot must not report
+  # different answers for the same percentile of the same data. Chart sized data makes the
+  # expansion cheap.
+  def percentiles_for histogram_data, percentiles, _total_values
+    values = histogram_data.flat_map { |value, count| Array.new(count, value) }
+    percentiles.to_h { |percentile| [percentile, percentile_of(values, percentile)] }
   end
 
   def sort_items items
