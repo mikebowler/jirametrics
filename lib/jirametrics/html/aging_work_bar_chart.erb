@@ -40,15 +40,26 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
         annotations: {
           <%= working_days_annotation %>
 
-          <% if percentage_line_x %>
-          line: {
+          <% percentage_lines.each do |percentage_line| %>
+          <%= percentage_line[:id].to_json %>: {
             type: 'line',
             scaleID: 'x',
-            value: '<%= percentage_line_x %>',
+            value: '<%= percentage_line[:x] %>',
             borderColor: <%= CssVariable.new('--aging-work-bar-chart-percentage-line-color').to_json %>,
             borderWidth: 1,
-            drawTime: 'afterDraw'
-          }
+            hitTolerance: 6,
+            drawTime: 'afterDraw',
+            label: {
+              display: false,
+              content: <%= "#{ordinal percentage_line[:percentile]} percentile of completed work".to_json %>,
+              position: 'start',
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              color: '#fff',
+              font: { size: 11 }
+            },
+            enter(ctx) { ctx.element.label.options.display = true; ctx.chart.draw(); },
+            leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }
+          },
           <% end %>
         }
       },

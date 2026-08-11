@@ -2,12 +2,16 @@
 
 require 'jirametrics/chart_base'
 require 'jirametrics/bar_chart_range'
+require 'jirametrics/percentile_validation'
 
 class AgingWorkBarChart < ChartBase
+  include PercentileValidation
+
   def initialize block
     super()
 
     @age_cutoff = nil
+    percentiles [85]
     header_text 'Aging Work Bar Chart'
     description_text <<-HTML
       <p>
@@ -53,8 +57,11 @@ class AgingWorkBarChart < ChartBase
       .flatten
       .compact
 
-    percentage = calculate_percent_line
-    percentage_line_x = date_range.end - calculate_percent_line if percentage
+    # An item sitting left of one of these lines has been aging longer than that percentage of
+    # everything we completed, so the line is drawn that many days back from today.
+    percentage_lines = percentile_lines.collect do |percentile, days|
+      { percentile: percentile, x: date_range.end - days, id: "percentile_#{percentile}" }
+    end
 
     if aging_issues.empty?
       @description_text = '<p>There is no aging work</p>'
@@ -315,11 +322,29 @@ class AgingWorkBarChart < ChartBase
     )
   end
 
+  # Which percentiles of completed cycle time to mark with a vertical line. An empty list draws
+  # none. The lines all share one colour because, unlike the scatterplot, they do not stand for
+  # groups; their position is what tells them apart.
+  def percentiles list = nil
+    @percentiles = validate_percentiles(list) unless list.nil?
+    @percentiles
+  end
+
+  # Returns [[percentile, days], ...] for the configured percentiles, dropping any that have no
+  # value because nothing completed in range.
+  def percentile_lines
+    percentiles.filter_map do |percentile|
+      days = calculate_percent_line percentage: percentile
+      [percentile, days] unless days.nil?
+    end
+  end
+
   def calculate_percent_line percentage: 85
     days = completed_issues_in_range.filter_map { |issue| issue.board.cycletime.cycletime(issue) }.sort
     return nil if days.empty?
 
-    days[days.length * percentage / 100]
+    # Clamp: at 100 the index lands one past the end and would return nil.
+    days[[days.length * percentage / 100, days.length - 1].min]
   end
 
   def age_cutoff days

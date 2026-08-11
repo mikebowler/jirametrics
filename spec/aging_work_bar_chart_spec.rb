@@ -396,6 +396,49 @@ describe AgingWorkBarChart do
         expect(chart.calculate_percent_line percentage: 95).to eq 30
       end
     end
+
+    # The index is length * percentage / 100, which lands one past the end at 100. Unreachable
+    # while the percentage was hardcoded to 85; reachable now that it is configurable.
+    it 'returns the largest value rather than nil at the top of the range' do
+      issue1 = empty_issue key: 'SP-1', created: '2024-01-01', board: board
+      issue2 = empty_issue key: 'SP-2', created: '2024-01-01', board: board
+
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-01', '2024-01-10'], # age 10
+        [issue2, '2024-01-01', '2024-01-20']  # age 20
+      ]
+      chart.issues = [issue1, issue2]
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+
+      expect(chart.calculate_percent_line percentage: 100).to eq 20
+    end
+  end
+
+  describe '#percentiles' do
+    it 'defaults to the 85th' do
+      expect(chart.percentiles).to eq [85]
+    end
+
+    it 'accepts a replacement list' do
+      chart.percentiles [50, 85]
+      expect(chart.percentiles).to eq [50, 85]
+    end
+
+    it 'accepts an empty list to switch the line off' do
+      chart.percentiles []
+      expect(chart.percentiles).to eq []
+    end
+
+    it 'rejects values outside 0..100' do
+      expect { chart.percentiles [150] }.to raise_error(
+        ArgumentError, /percentile 150 must be between 0 and 100/
+      )
+    end
+
+    it 'removes duplicates and sorts' do
+      chart.percentiles [85, 50, 85]
+      expect(chart.percentiles).to eq [50, 85]
+    end
   end
 
   describe '#grow_chart_height_if_too_many_issues' do
@@ -443,6 +486,59 @@ describe AgingWorkBarChart do
 
       output = chart.run
       expect(output).to include("max: '2024-02-01'")
+    end
+
+    # These annotations are hand written into the ERB, so a missing comma or an unquoted key
+    # breaks the whole chart script at runtime while every Ruby test still passes.
+    it 'renders one annotation per configured percentile' do
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
+        json: :not_mocked
+      )
+      aging = empty_issue created: '2024-01-15', board: board
+      done_early = empty_issue key: 'SP-90', created: '2024-01-01', board: board
+      done_late = empty_issue key: 'SP-91', created: '2024-01-01', board: board
+      board.cycletime = mock_cycletime_config stub_values: [
+        [aging, to_time('2024-01-15'), nil],
+        [done_early, to_time('2024-01-01'), to_time('2024-01-05')],
+        [done_late, to_time('2024-01-01'), to_time('2024-01-20')]
+      ]
+      add_mock_change(issue: aging, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
+      add_mock_change(issue: aging, field: 'priority', value: 'Medium', time: '2024-01-15')
+
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
+      chart.holiday_dates = []
+      chart.settings = board.project_config.settings
+      chart.issues = [aging, done_early, done_late]
+      chart.percentiles [50, 85]
+
+      output = chart.run
+      aggregate_failures do
+        expect(output).to include '"percentile_50":'
+        expect(output).to include '"percentile_85":'
+        expect(output).to include '50th percentile of completed work'
+      end
+    end
+
+    it 'renders no percentile annotations when the list is empty' do
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
+        json: :not_mocked
+      )
+      issue = empty_issue created: '2024-01-15', board: board
+      board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
+      add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
+      add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')
+
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
+      chart.holiday_dates = []
+      chart.settings = board.project_config.settings
+      chart.issues = [issue]
+      chart.percentiles []
+
+      expect(chart.run).not_to include 'percentile_'
     end
   end
 
