@@ -13,7 +13,11 @@ Scope is the scatterplot family only: `CycletimeScatterplot` and
 (`flow_efficiency_scatterplot.rb:57`) and is unaffected. Once we are happy with the result
 here, the same pattern extends to the other charts tracked in bead jirametrics-4ad.
 
-85 remains the default everywhere. An unchanged config must render byte-identical output.
+85 remains the default everywhere. An unchanged config must render the same values and the same
+visible chart. Note this is deliberately NOT a byte-identical HTML guarantee: Section 4 mandates new
+annotation attributes (ids, hitTolerance, hover labels), so the emitted JavaScript necessarily
+changes. What must not change is any number the user reads, the legend text, or the description
+prose.
 
 ## Section 1: Configuration DSL
 
@@ -126,7 +130,7 @@ No dash-pattern or opacity encoding. Density is the user's choice; hover identif
 enough.
 
 Legend text KEEPS its parenthetical, generalised to N values. An earlier draft dropped it in
-favour of hover, which was wrong on two counts: it contradicts the byte-identical guarantee in
+favour of hover, which was wrong on two counts: it contradicts the unchanged-output guarantee in
 Section 8, and it moves always-visible information behind an interaction. Format:
 
 - one percentile: `Story (85% at 81 days)`, character-for-character what ships today
@@ -194,7 +198,8 @@ The JS comments at `time_based_scatterplot.erb:154` and
 Follow the established pattern: stub `wrap_and_render` and assert the ivars `run` builds.
 
 - Default config produces exactly one overall line at 85 and one line per group at 85, and the
-  generated output is unchanged from today. This is the byte-identical guarantee.
+  values, legend text, and description prose are unchanged from today. The emitted annotation
+  JavaScript does change, by design (see the Overview).
 - `percentiles []` produces no lines and no prose paragraph.
 - Chart-level list of several produces the right count and values.
 - `rule.percentiles` overrides for one group while others inherit.
