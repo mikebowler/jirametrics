@@ -37,7 +37,7 @@ module GroupableIssueChart
     completed_issues.reject! { |issue| ignored_issues.include? issue }
 
     result.each_key do |rules|
-      rules.color = random_color if rules.color.nil?
+      rules.color = next_palette_color if rules.color.nil?
     end
     result
   end

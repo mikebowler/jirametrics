@@ -150,7 +150,7 @@ class DailyWipChart < ChartBase
   end
 
   def background_color_for grouping_rule
-    color = grouping_rule.color || random_color
+    color = grouping_rule.color || next_palette_color
     return color unless grouping_rule.highlight
 
     RawJavascript.new("createDiagonalPattern(#{color.to_json})")

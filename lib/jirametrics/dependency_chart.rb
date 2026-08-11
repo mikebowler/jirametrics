@@ -119,7 +119,7 @@ class DependencyChart < ChartBase
       'Defect' => '#ffdab9',
       'Epic' => '#fafad2',
       'Spike' => '#DDA0DD' # light purple
-    }[type] ||= random_color
+    }[type] ||= next_palette_color
   end
 
   def build_dot_graph

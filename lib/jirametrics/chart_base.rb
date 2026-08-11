@@ -14,7 +14,7 @@ class ChartBase
   ].freeze
   attr_accessor :timezone_offset, :board_id, :all_boards, :date_range,
     :time_range, :data_quality, :holiday_dates, :settings, :issues, :file_system,
-    :atlassian_document_format, :x_axis_title, :y_axis_title, :fix_versions
+    :atlassian_document_format, :x_axis_title, :y_axis_title, :fix_versions, :color_palette
   attr_writer :aggregated_project
   attr_reader :canvas_width, :canvas_height
 
@@ -83,7 +83,7 @@ class ChartBase
   end
 
   def color_for type:
-    @chart_colors[type] ||= random_color
+    @chart_colors[type] ||= next_palette_color
   end
 
   # Defines label_days, label_hours, label_minutes and label_issues - each renders a pluralised count
@@ -343,9 +343,11 @@ class ChartBase
     end
   end
 
-  def random_color
-    @palette_index = (@palette_index || -1) + 1
-    OKABE_ITO_PALETTE[@palette_index % OKABE_ITO_PALETTE.size]
+  # A colour for something that needs telling apart, where no specific colour is wanted. If a
+  # specific colour matters, configure it instead. See ColorPalette for why this is not random and
+  # why it must not become random again.
+  def next_palette_color
+    (@color_palette ||= ColorPalette.default).next_color
   end
 
   def canvas width:, height:, responsive: true

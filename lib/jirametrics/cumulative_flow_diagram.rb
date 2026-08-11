@@ -116,7 +116,7 @@ class CumulativeFlowDiagram < ChartBase
 
     daily_marginals = marginal_band_heights(daily_counts, column_count)
 
-    border_colors = active_rules.map { |rules| rules.color || random_color }
+    border_colors = active_rules.map { |rules| rules.color || next_palette_color }
 
     fill_colors = active_rules.zip(border_colors).map { |rules, border| fill_color_for(rules, border) }
 
@@ -206,14 +206,17 @@ class CumulativeFlowDiagram < ChartBase
     )
   end
 
-  def hex_to_rgba hex, alpha
-    r, g, b = hex.delete_prefix('#').scan(/../).map { |c| c.to_i(16) }
-    "rgba(#{r}, #{g}, #{b}, #{alpha})"
+  # The fill is a translucent version of the border colour. Border colours may now be CssVariable
+  # rather than a literal, and Ruby cannot resolve one, so the alpha is applied in the browser.
+  def translucent border, alpha
+    RawJavascript.new "withAlpha(#{border.to_json}, #{alpha})"
   end
 
+  # A colour the user set explicitly is used as given. Anything else, including a palette colour,
+  # gets the translucent treatment.
   def fill_color_for rules, border
-    if rules.color.nil? || rules.color.match?(/\A#[0-9a-fA-F]{6}\z/)
-      hex_to_rgba(border, 0.35)
+    if rules.color.nil? || rules.color.is_a?(CssVariable) || rules.color.match?(/\A#[0-9a-fA-F]{6}\z/)
+      translucent border, 0.35
     else
       rules.color
     end

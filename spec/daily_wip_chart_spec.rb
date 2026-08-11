@@ -474,17 +474,17 @@ end
       expect(data_set[:data].first[:title]).to eq ['foo (1 issue)', 'SP-1 : padded summary (hint)']
     end
 
-    it 'falls back to a random color when the grouping rule has none' do
+    it 'falls back to a palette colour when the grouping rule has none' do
       rule = DailyGroupingRules.new
       rule.label = 'foo'
       rule.color = nil
       rule.group_priority = 0
-      allow(chart).to receive(:random_color).and_return('#abcdef')
+      allow(chart).to receive(:next_palette_color).and_return(CssVariable['--palette-color-3'])
 
       issue_rules_by_active_date = { to_date('2022-01-01') => [[issue1, rule]] }
 
       data_set = chart.make_data_set grouping_rule: rule, issue_rules_by_active_date: issue_rules_by_active_date
-      expect(data_set[:backgroundColor]).to eq '#abcdef'
+      expect(data_set[:backgroundColor]).to eq CssVariable['--palette-color-3']
     end
   end
 

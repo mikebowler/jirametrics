@@ -8,6 +8,20 @@
   --cycletime-scatterplot-cap-rule-color: #555555;
   --cycletime-scatterplot-cap-gutter-color: rgba(0, 0, 0, 0.05);
 
+  /* Palette for things that need telling apart where no specific colour is wanted. Okabe-Ito,
+     chosen because it stays distinguishable under the common forms of colour vision deficiency.
+     If you need a SPECIFIC colour, configure it rather than relying on whichever slot comes up.
+     Add a slot by defining the next number; the count is read from this file, not hardcoded.
+     These deliberately have no dark mode overrides yet: lightening them for dark backgrounds
+     collapses blue into sky blue, and getting it right needs measuring. See jirametrics-60z. */
+  --palette-color-1: #0072B2;  /* Okabe-Ito blue */
+  --palette-color-2: #E69F00;  /* Okabe-Ito orange */
+  --palette-color-3: #009E73;  /* Okabe-Ito bluish green */
+  --palette-color-4: #56B4E9;  /* Okabe-Ito sky blue */
+  --palette-color-5: #D55E00;  /* Okabe-Ito vermilion */
+  --palette-color-6: #CC79A7;  /* Okabe-Ito reddish purple */
+  --palette-color-7: #F0E442;  /* Okabe-Ito yellow */
+
   --non-working-days-color: #F0F0F0;
   --expedited-color: #D55E00;        /* Okabe-Ito vermilion */
   --blocked-color: #D55E00;          /* Okabe-Ito vermilion */

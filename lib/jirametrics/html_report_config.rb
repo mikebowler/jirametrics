@@ -106,9 +106,8 @@ class HtmlReportConfig < HtmlGenerator
     @file_config.project_config.exporter.timezone_offset
   end
 
-  def random_color
-    @palette_index = (@palette_index || -1) + 1
-    ChartBase::OKABE_ITO_PALETTE[@palette_index % ChartBase::OKABE_ITO_PALETTE.size]
+  def next_palette_color
+    color_palette.next_color
   end
 
   def html string, type: :body
@@ -137,6 +136,7 @@ class HtmlReportConfig < HtmlGenerator
     project_config = @file_config.project_config
 
     chart.file_system = file_system
+    chart.color_palette = color_palette
     chart.issues = issues
     chart.time_range = project_config.time_range
     chart.timezone_offset = timezone_offset

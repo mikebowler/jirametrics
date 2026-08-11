@@ -533,8 +533,16 @@ describe ChartBase do
     expect(chart_base.status_category_color(status)).to eq CssVariable['--status-category-unknown-color']
   end
 
-  it 'returns reasonable random color' do
-    expect(chart_base.random_color).to match(/^#[0-9a-fA-F]{6}$/)
+  # Returns a CssVariable rather than a literal so the colour follows the theme and can be
+  # overridden in a user's stylesheet. It is also not random; see ColorPalette.
+  it 'hands out a palette slot as a css variable' do
+    expect(chart_base.next_palette_color).to eq CssVariable['--palette-color-1']
+  end
+
+  it 'moves on to the next slot each time' do
+    expect([chart_base.next_palette_color, chart_base.next_palette_color]).to eq [
+      CssVariable['--palette-color-1'], CssVariable['--palette-color-2']
+    ]
   end
 
   describe '#to_human_readable' do
