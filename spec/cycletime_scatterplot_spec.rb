@@ -160,6 +160,21 @@ describe CycletimeScatterplot do
       expect(chart.percentage_lines.collect { |line| line[:percentile] }).to eq [50]
     end
 
+    it "carries each group's name so the hover label can say which line it is" do
+      chart.percentiles [85]
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2022-12-31')
+      chart.issues = [issue]
+      allow(chart).to receive(:wrap_and_render).and_return('')
+      chart.run
+
+      # The overall line has no legend entry of its own, so without a name there is nothing at all
+      # to identify it when hovering. "All items" matches the wording already used in the
+      # description prose and excludes anything a grouping rule ignored.
+      aggregate_failures do
+        expect(chart.percentage_lines.collect { |line| line[:label] }).to eq ['Story', 'All items']
+      end
+    end
+
     # Every other example overrides at most one group. This pins the case where all three levels
     # carry a different NUMBER of percentiles at once, since each group resolves independently and
     # the annotation ids have to stay distinct across groups of differing size.

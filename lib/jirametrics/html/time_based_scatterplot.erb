@@ -140,7 +140,9 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
             drawTime: 'beforeDraw',
             label: {
               display: false,
-              content: '<%= line[:percentile] %>% at <%= label_days line[:value] %>',
+              <%# to_json rather than quoting by hand: the group label comes from the user's %>
+              <%# grouping_rules block and an apostrophe in it would otherwise end the string. %>
+              content: <%= "#{line[:label]} #{line[:percentile]}% at #{label_days line[:value]}".to_json %>,
               position: 'end',
               // The line itself draws early so it sits under the dots, but the hover label has to
               // draw last or the non-working-day hatching (also beforeDraw) covers it.

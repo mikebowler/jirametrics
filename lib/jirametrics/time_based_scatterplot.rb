@@ -6,6 +6,12 @@ require 'jirametrics/time_based_chart'
 
 class TimeBasedScatterplot < TimeBasedChart
   include GroupableIssueChart
+
+  # What the whole-data-set percentile lines call themselves when you hover them. They have no
+  # legend entry, so without this there is nothing identifying them at all. "items" rather than
+  # "data" or "everything" because it matches the description prose and because anything a
+  # grouping rule ignored has already been dropped by the time these lines are calculated.
+  OVERALL_LABEL = 'All items'
   include PercentileValidation
 
   # percentage_lines is internal, not part of the documented config DSL. It exists so that specs
@@ -46,7 +52,7 @@ class TimeBasedScatterplot < TimeBasedChart
     percentile_lines_for(items, @percentiles).each do |percentile, value|
       @percentage_lines << {
         percentile: percentile, value: value, color: overall_color,
-        id: "overall_#{percentile}", dataset_index: nil
+        id: "overall_#{percentile}", dataset_index: nil, label: OVERALL_LABEL
       }
     end
 
@@ -84,7 +90,7 @@ class TimeBasedScatterplot < TimeBasedChart
       lines.each do |percentile, value|
         @percentage_lines << {
           percentile: percentile, value: value, color: color,
-          id: "group#{group_index}_#{percentile}", dataset_index: dataset_index
+          id: "group#{group_index}_#{percentile}", dataset_index: dataset_index, label: label
         }
       end
     end
