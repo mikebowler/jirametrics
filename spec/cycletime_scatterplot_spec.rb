@@ -248,6 +248,43 @@ describe CycletimeScatterplot do
     end
   end
 
+  describe '#trend_line_description' do
+    let(:board) { load_complete_sample_board }
+    let(:issue) { load_issue('SP-10', board: board) }
+
+    before do
+      board.cycletime = default_cycletime_config
+      chart.issues = [issue]
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2021-12-31')
+      allow(chart).to receive(:wrap_and_render).and_return('')
+    end
+
+    # The lines are always built but hidden unless asked for, so describing them unconditionally
+    # would explain something most readers cannot see.
+    it 'says nothing when trend lines are switched off' do
+      chart.run
+      expect(chart.trend_line_description).to eq ''
+    end
+
+    it 'explains the lines when they are switched on' do
+      chart.show_trend_lines
+      chart.run
+      aggregate_failures do
+        expect(chart.trend_line_description).to include 'dashed'
+        expect(chart.trend_line_description).to include 'slope'
+      end
+    end
+
+    # Same trap as percentile_description: description_text is built during initialize, before the
+    # config block has called show_trend_lines, so interpolation would freeze "off" in forever.
+    it 'reaches description_text at render time rather than construction time' do
+      chart.show_trend_lines
+      chart.run
+      rendered = ERB.new(chart.description_text).result(chart.instance_eval { binding })
+      expect(rendered).to include 'dashed'
+    end
+  end
+
   describe '#percentile_description' do
     let(:board) { load_complete_sample_board }
     let(:issue) { load_issue('SP-10', board: board) }

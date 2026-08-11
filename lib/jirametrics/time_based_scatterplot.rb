@@ -109,6 +109,29 @@ class TimeBasedScatterplot < TimeBasedChart
     @show_trend_lines = true
   end
 
+  # The lines are always built but drawn hidden unless asked for, so this stays empty until they
+  # are actually switched on. Note the caller must be the ERB tag <%= trend_line_description %>:
+  # description_text is built during initialize, before the config block has called
+  # show_trend_lines, so interpolation would freeze "off" in permanently.
+  def trend_line_description
+    return '' unless @show_trend_lines
+
+    <<-HTML
+      <div class="p">
+        The dashed lines are trend lines, one per group in that group's colour. Each is a straight
+        line fitted through that group's dots, so the slope tells you whether cycle times have been
+        getting longer or shorter across the period shown. A line sloping up means work of that
+        kind has been taking progressively longer to finish.
+      </div>
+      <div class="p">
+        Read the slope as a description of this window rather than a prediction. It is a straight
+        line, so it cannot show a trend that changed direction partway through, and a handful of
+        unusually long items will tilt it noticeably. If the slope surprises you, look at the dots
+        before you believe it.
+      </div>
+    HTML
+  end
+
   # Dataset index to the annotation ids belonging to that dataset's group, so the legend handler
   # can toggle all of a group's lines. Keyed by index rather than by label because two groups may
   # legitimately share a label while differing in colour, and keying by label would then toggle

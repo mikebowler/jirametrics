@@ -13,6 +13,7 @@ class PullRequestCycleTimeScatterplot < TimeBasedScatterplot
       <div class="p">
         This graph shows the cycle time for all closed pull requests (time from opened to closed).
       </div>
+      <%= trend_line_description %>
       #{describe_non_working_days}
     HTML
 

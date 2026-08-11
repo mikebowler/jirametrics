@@ -15,6 +15,7 @@ class CycletimeScatterplot < TimeBasedScatterplot
         how many days it took to get done. Hovering over a dot will show you the ID of the work item.
       </div>
       <%= percentile_description %>
+      <%= trend_line_description %>
       #{describe_non_working_days}
     HTML
     @x_axis_title = 'Date completed'
