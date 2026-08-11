@@ -4,9 +4,13 @@
     <title><%= project_name.empty? ? 'JiraMetrics' : "JiraMetrics - #{project_name}" %></title>
     <link rel="icon" type="image/png" href="https://github.com/mikebowler/jirametrics/blob/main/favicon.png?raw=true" />
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Pinned to a major version, not to an exact one: patch and minor releases still arrive
+         automatically, but a new major cannot land in someone's report unannounced. The charts
+         depend on specific annotation plugin behaviour (hitTolerance, enter/leave, the label's own
+         drawTime), and nothing in the test suite reaches browser behaviour to catch a break. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.1.0/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
     <script type="text/javascript">
 <%= javascript %>
     </script>
