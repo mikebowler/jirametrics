@@ -159,6 +159,36 @@ describe CycletimeScatterplot do
       chart.create_datasets [issue]
       expect(chart.percentage_lines.collect { |line| line[:percentile] }).to eq [50]
     end
+
+    # Every other example overrides at most one group. This pins the case where all three levels
+    # carry a different NUMBER of percentiles at once, since each group resolves independently and
+    # the annotation ids have to stay distinct across groups of differing size.
+    it 'gives each group its own count of lines while the overall keeps the chart default' do
+      second_issue = load_issue 'SP-14', board: board
+      chart.percentiles [85]
+      # Wide enough to cover both fixtures: SP-10 resolves 2021-09-06 and SP-14 resolves 2022-04-19.
+      # Too narrow a range drops an issue and quietly turns this into a one-group test.
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2022-12-31')
+      chart.issues = [issue, second_issue]
+      chart.grouping_rules do |grouped_issue, rule|
+        if grouped_issue.key == 'SP-10'
+          rule.label = 'Story'
+          rule.percentiles = [85, 50] # out of order on purpose; the setter sorts it
+        else
+          rule.label = 'Bug'
+          rule.percentiles = [50, 85, 95]
+        end
+      end
+      allow(chart).to receive(:wrap_and_render).and_return('')
+      chart.run
+
+      aggregate_failures do
+        expect(chart.percentage_lines.collect { |line| line[:id] })
+          .to eq %w[group0_50 group0_85 group1_50 group1_85 group1_95 overall_85]
+        expect(chart.legend_annotation_map)
+          .to eq({ 0 => %w[group0_50 group0_85], 2 => %w[group1_50 group1_85 group1_95] })
+      end
+    end
   end
 
   describe '#legend_annotation_map' do
