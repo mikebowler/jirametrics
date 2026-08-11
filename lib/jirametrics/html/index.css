@@ -268,7 +268,14 @@ html[data-theme="dark"] {
   --wip-by-column-chart-limit-line-color: #E69F00;        /* Okabe-Ito orange */
   --wip-by-column-chart-recommendation-color: #2DCB9A;    /* lighter bluish green for dark bg */
   --wip-chart-completed-color: #2DCB9A;                   /* lighter bluish green */
-  --wip-chart-duration-more-than-four-weeks-color: #DE9AC4; /* lighter reddish purple */
+  /* Was inheriting the light #92D9C0, which sat too close to the completed colour above for
+     anyone with protanopia or deuteranopia. Those two mean "completed" and "completed but not
+     started", so they are exactly the pair a reader must separate. See jirametrics-3fg. */
+  --wip-chart-completed-but-not-started-color: #00A062;
+  /* Was #DE9AC4, a lightened reddish purple that collided with the sky blue used for the fastest
+     band. Those are the two ends of the duration ramp, so confusing them is the worst case. This
+     stays in the same warm family so the ramp still reads cool to warm as work ages. */
+  --wip-chart-duration-more-than-four-weeks-color: #B16BAE;
   --estimate-accuracy-chart-completed-border-color: #2DCB9A;
   --estimate-accuracy-chart-active-border-color: #E69F00;
   --expedited-chart-dot-issue-stopped-color: #2DCB9A;
@@ -422,12 +429,12 @@ html[data-theme="light"] {
     --hierarchy-table-inactive-item-text-color: #939393;
 
     --wip-chart-completed-color: #2DCB9A;                   /* lighter bluish green */
-    --wip-chart-completed-but-not-started-color: #92D9C0;
+    --wip-chart-completed-but-not-started-color: #00A062;   /* see jirametrics-3fg */
     --wip-chart-duration-less-than-day-color: #56B4E9;
     --wip-chart-duration-week-or-less-color: #F0E442;
     --wip-chart-duration-two-weeks-or-less-color: #E69F00;
     --wip-chart-duration-four-weeks-or-less-color: #D55E00;
-    --wip-chart-duration-more-than-four-weeks-color: #DE9AC4; /* lighter reddish purple */
+    --wip-chart-duration-more-than-four-weeks-color: #B16BAE; /* see jirametrics-3fg */
 
     --estimate-accuracy-chart-completed-border-color: #2DCB9A;
     --estimate-accuracy-chart-active-border-color: #E69F00;
