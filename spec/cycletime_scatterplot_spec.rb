@@ -272,6 +272,10 @@ describe CycletimeScatterplot do
       aggregate_failures do
         expect(chart.trend_line_description).to include 'dashed'
         expect(chart.trend_line_description).to include 'slope'
+        # TrendLineCalculator gates on three or more points and on the slope not being vertical.
+        # It never checks goodness of fit, so the reader has to be told that a line existing is
+        # not evidence that a trend does.
+        expect(chart.trend_line_description).to include 'nothing checks how well it actually fits'
       end
     end
 

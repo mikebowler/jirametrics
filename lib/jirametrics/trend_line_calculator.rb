@@ -3,9 +3,12 @@
 class TrendLineCalculator
   # Using math from https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
 
+  # Three points minimum. Two will always fit a straight line perfectly, so the result looks
+  # authoritative while carrying no evidence of a trend at all; drawing it was misleading.
+  MINIMUM_POINTS = 3
+
   def initialize points
-    # We can't do trend calculations with less than two data points
-    @valid = points.size >= 2
+    @valid = points.size >= MINIMUM_POINTS
     return unless valid?
 
     sum_of_x = points.sum { |x, _y| x }

@@ -124,10 +124,12 @@ class TimeBasedScatterplot < TimeBasedChart
         kind has been taking progressively longer to finish.
       </div>
       <div class="p">
-        Read the slope as a description of this window rather than a prediction. It is a straight
-        line, so it cannot show a trend that changed direction partway through, and a handful of
-        unusually long items will tilt it noticeably. If the slope surprises you, look at the dots
-        before you believe it.
+        Read the slope as a description of this window rather than a prediction. A line is drawn
+        whenever a group has at least three dots and nothing checks how well it actually fits
+        them, so a scattered cloud with no real trend in it still gets a confident looking line.
+        It is a straight line, so it cannot show a trend that changed direction partway through,
+        and a handful of unusually long items will tilt it noticeably. If the slope surprises you,
+        look at the dots before you believe it.
       </div>
     HTML
   end

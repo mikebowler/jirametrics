@@ -13,14 +13,24 @@ describe TrendLineCalculator do
       expect(described_class.new [[1, 2]]).not_to be_valid
     end
 
-    it 'Two points' do
-      expect(described_class.new [[1, 2], [3, 4]]).to be_valid
+    it 'two points, which is not enough to claim a trend' do
+      expect(described_class.new [[1, 2], [3, 4]]).not_to be_valid
+    end
+
+    it 'three points' do
+      expect(described_class.new [[1, 2], [3, 4], [5, 6]]).to be_valid
+    end
+
+    # Any number of points still gives nothing when they all share an x, because the slope is
+    # infinite. Plenty of real data can look like this, such as a batch all closed the same day.
+    it 'many points that are all vertical' do
+      expect(described_class.new [[12, 1], [12, 2], [12, 3], [12, 4]]).not_to be_valid
     end
   end
 
   describe '#calc_y' do
     it 'calculates for two simple points' do
-      calculator = described_class.new [[3, 3], [2, 2]]
+      calculator = described_class.new [[3, 3], [2, 2], [4, 4]]
       aggregate_failures do
         expect(calculator.calc_y x: 4).to eq 4.0
         expect(calculator.calc_y x: 1).to eq 1.0
@@ -28,20 +38,20 @@ describe TrendLineCalculator do
     end
 
     it 'calculates for a perfect horizontal trend' do
-      calculator = described_class.new [[1, 2], [2, 2]]
+      calculator = described_class.new [[1, 2], [2, 2], [3, 2]]
       expect(calculator.calc_y x: 4).to eq 2.0
     end
   end
 
   describe '#line_crosses_at' do
     it 'calculates for two simple points' do
-      calculator = described_class.new [[4, 3], [3, 2]]
+      calculator = described_class.new [[4, 3], [3, 2], [5, 4]]
       expect(calculator).not_to be_horizontal
       expect(calculator.line_crosses_at y: 0).to eq 1.0
     end
 
     it 'calculates for a perfect horizontal trend' do
-      calculator = described_class.new [[1, 2], [2, 2]]
+      calculator = described_class.new [[1, 2], [2, 2], [3, 2]]
       expect(calculator).to be_horizontal
       expect { calculator.line_crosses_at y: 0 }.to raise_error(
         'line will never cross 0. Trend is perfectly horizontal'
@@ -56,7 +66,7 @@ describe TrendLineCalculator do
     end
 
     it 'returns a pair of points for a perfect horizontal' do
-      calculator = described_class.new [[1, 2], [2, 2]]
+      calculator = described_class.new [[1, 2], [2, 2], [3, 2]]
       expect(calculator.chart_datapoints range: 3..4, max_y: 100).to eq([
         { x: 3, y: 2 },
         { x: 4, y: 2 }
@@ -64,7 +74,7 @@ describe TrendLineCalculator do
     end
 
     it 'stops at zero for a descending line' do
-      calculator = described_class.new [[1, 2], [2, 1]]
+      calculator = described_class.new [[1, 2], [2, 1], [3, 0]]
       expect(calculator.chart_datapoints range: 1..4, max_y: 100).to eq([
         { x: 1, y: 2 },
         { x: 3, y: 0 }
@@ -72,7 +82,7 @@ describe TrendLineCalculator do
     end
 
     it 'starts at zero for a ascending line' do
-      calculator = described_class.new [[12, 3], [13, 4]]
+      calculator = described_class.new [[12, 3], [13, 4], [14, 5]]
       expect(calculator.chart_datapoints range: 0..15, max_y: 100).to eq([
         { x: 9, y: 0 },
         { x: 15, y: 6 }
@@ -80,7 +90,7 @@ describe TrendLineCalculator do
     end
 
     it 'does not exceed max_y for an ascending line' do
-      calculator = described_class.new [[12, 3], [13, 4]]
+      calculator = described_class.new [[12, 3], [13, 4], [14, 5]]
       expect(calculator.chart_datapoints range: 0..15, max_y: 5).to eq([
         { x: 9, y: 0 },
         { x: 14, y: 5 }
@@ -88,7 +98,7 @@ describe TrendLineCalculator do
     end
 
     it 'does not exceed max_y for a descending line' do
-      calculator = described_class.new [[12, 9], [13, 8]]
+      calculator = described_class.new [[12, 9], [13, 8], [14, 7]]
       expect(calculator.chart_datapoints range: 0..15, max_y: 10).to eq([
         { x: 11, y: 10 },
         { x: 15, y: 6 }
@@ -96,12 +106,12 @@ describe TrendLineCalculator do
     end
 
     it 'handles a vertical line' do
-      calculator = described_class.new [[12, 9], [12, 8]]
+      calculator = described_class.new [[12, 9], [12, 8], [12, 7]]
       expect(calculator.chart_datapoints range: 0..15, min_y: 2, max_y: 10).to eq([])
     end
 
     it 'raises error if max_y is nil' do
-      calculator = described_class.new [[12, 9], [12, 8]]
+      calculator = described_class.new [[12, 9], [12, 8], [12, 7]]
       expect { calculator.chart_datapoints range: 0..15, max_y: nil }.to raise_error 'max_y is nil'
     end
   end
