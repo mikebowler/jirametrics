@@ -268,13 +268,45 @@ describe CycletimeScatterplot do
       end
     end
 
-    it 'describes several percentiles without the singular framing' do
+    it 'keeps the proxy-for-most claim when 85 is one of several percentiles' do
       chart.percentiles [50, 85]
       chart.run
       aggregate_failures do
         expect(chart.percentile_description).to include '50th'
         expect(chart.percentile_description).to include '85th'
+        expect(chart.percentile_description).to include 'reasonable proxy'
+      end
+    end
+
+    # The claim is only defensible near 85. At the median half the work runs longer, so saying
+    # "most work will complete in N days or less" would be plainly false.
+    it 'drops the proxy-for-most claim when 85 is not among the percentiles' do
+      chart.percentiles [50, 98]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '50th'
+        expect(chart.percentile_description).to include '98th'
         expect(chart.percentile_description).not_to include 'reasonable proxy'
+      end
+    end
+
+    it 'drops the proxy-for-most claim for a single percentile that is not 85' do
+      chart.percentiles [50]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '50th percentile'
+        expect(chart.percentile_description).not_to include 'reasonable proxy'
+        expect(chart.percentile_description).not_to include 'most work'
+      end
+    end
+
+    it 'renders ordinals correctly for values that are not Nth' do
+      chart.percentiles [1, 22, 63]
+      chart.run
+      aggregate_failures do
+        expect(chart.percentile_description).to include '1st'
+        expect(chart.percentile_description).to include '22nd'
+        expect(chart.percentile_description).to include '63rd'
       end
     end
 

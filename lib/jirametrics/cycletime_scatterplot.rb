@@ -59,47 +59,86 @@ class CycletimeScatterplot < TimeBasedScatterplot
   # Kept for backwards compatibility with existing callers and specs
   alias data_for_issue data_for_item
 
-  # The prose follows the configuration. With one percentile we keep the original "proxy for
-  # most" framing; with several that framing makes no sense, and with none there is nothing to
-  # describe. Values come from percentage_lines because run has already computed them, and
-  # because this string is not run through ERB a second time.
+  # The number that the "reasonable proxy for most" claim is actually about. That claim is only
+  # defensible near this value: at the median half the work runs longer, and at the 98th you are
+  # describing the worst case, not the typical one. So the sentence appears when this percentile
+  # is on the chart and is silently dropped when it is not, rather than being reworded into
+  # something that sounds authoritative and is wrong.
+  PROXY_FOR_MOST_PERCENTILE = 85
+
+  # The prose follows the configuration, so it has to read well for one percentile or several,
+  # and say nothing at all for none. Values come from percentage_lines because run has already
+  # computed them, and because this string is not run through ERB a second time.
   def percentile_description
     overall_lines = percentage_lines.select { |line| line[:dataset_index].nil? }
     return '' if overall_lines.empty?
 
-    if overall_lines.size == 1
-      single_percentile_description(overall_lines.first)
+    sentences = [
+      percentile_summary_sentence(overall_lines),
+      proxy_for_most_sentence(overall_lines),
+      per_type_sentence(overall_lines)
+    ].compact
+    <<-HTML
+      <div class="p">
+        #{sentences.join ' '}
+      </div>
+    HTML
+  end
+
+  # Mechanical and true whatever the configured percentiles are. Singular phrasing is preserved
+  # word for word from the original so the default chart reads exactly as it always has.
+  def percentile_summary_sentence lines
+    swatch = color_block '--cycletime-scatterplot-overall-trendline-color'
+    if lines.size == 1
+      percentile = lines.first[:percentile]
+      "The #{swatch} line indicates the #{ordinal percentile} percentile " \
+        "(#{lines.first[:value]} days). #{percentile}% of all items on this chart fall on or " \
+        "below the line and the remaining #{100 - percentile}% are above the line."
     else
-      multi_percentile_description(overall_lines)
+      # No values inline here. With several lines the sentence turns into a wall of parentheses,
+      # and each value is already on the line's hover label and in that group's legend entry.
+      described = lines.collect { |line| ordinal line[:percentile] }
+      "The #{swatch} lines indicate the #{comma_and described} percentiles of all items on " \
+        'this chart. For each line, that percentage of items fall on or below it and the rest ' \
+        'are above.'
     end
   end
 
-  def single_percentile_description line
-    percentile = line[:percentile]
-    days = line[:value]
-    <<-HTML
-      <div class="p">
-        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} line indicates the
-        #{percentile}th percentile (#{days} days). #{percentile}% of all
-        items on this chart fall on or below the line and the remaining #{100 - percentile}% are
-        above the line. #{percentile}% is a reasonable proxy for "most" so that we can say that
-        based on this data set, we can predict that most work of this type will complete in
-        #{days} days or less. The other lines reflect the #{percentile}% line for that
-        respective type of work.
-      </div>
-    HTML
+  # Only emitted when 85 is actually among the configured percentiles. See PROXY_FOR_MOST_PERCENTILE.
+  def proxy_for_most_sentence lines
+    line = lines.find { |candidate| candidate[:percentile] == PROXY_FOR_MOST_PERCENTILE }
+    return nil unless line
+
+    "#{PROXY_FOR_MOST_PERCENTILE}% is a " \
+      '<a href="https://jirametrics.org/faq/#why-85">reasonable proxy</a> for "most" so that we ' \
+      'can say that based on this data set, we can predict that most work of this type will ' \
+      "complete in #{line[:value]} days or less."
   end
 
-  def multi_percentile_description lines
-    described = lines.collect { |line| "#{line[:percentile]}th at #{label_days line[:value]}" }
-    <<-HTML
-      <div class="p">
-        The #{color_block '--cycletime-scatterplot-overall-trendline-color'} lines indicate the
-        #{described.join ', '} percentiles across all items on this chart. Each one says that
-        this percentage of items completed in that many days or less. Every type of work also
-        gets its own lines in its own colour, drawn at whichever percentiles were configured for
-        that type. Hover any line to see its value.
-      </div>
-    HTML
+  def per_type_sentence lines
+    if lines.size == 1
+      "The other lines reflect the #{lines.first[:percentile]}% line for that respective type of work."
+    else
+      'Each type of work also gets its own lines in its own colour, at whichever percentiles ' \
+        'were configured for that type. Hover any line to see which one it is and its value.'
+    end
+  end
+
+  # 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st. Percentiles are validated to 0..100, and
+  # blindly appending "th" would render "1th" and "22th".
+  def ordinal number
+    suffix =
+      if [11, 12, 13].include?(number % 100)
+        'th'
+      else
+        { 1 => 'st', 2 => 'nd', 3 => 'rd' }.fetch(number % 10, 'th')
+      end
+    "#{number}#{suffix}"
+  end
+
+  def comma_and phrases
+    return phrases.join ' and ' if phrases.size <= 2
+
+    "#{phrases[0..-2].join ', '} and #{phrases.last}"
   end
 end
