@@ -280,7 +280,10 @@ html[data-theme="dark"] {
   --sprint-burndown-sprint-color-4: #CC79A7;  /* reddish purple (vermilion → orange conflicts with color-2) */
   --sprint-burndown-sprint-color-5: #F0E442;  /* yellow */
   --sprint-burndown-sprint-color-6: #D55E00;  /* vermilion (sky blue conflicts with color-1) */
-  --sprint-burndown-sprint-color-7: #92D9C0;  /* light teal (yellow conflicts with color-5) */
+  --sprint-burndown-sprint-color-7: #388CF3;  /* lightened blue. Was #92D9C0 light teal, which
+     sat too close to color-3 for anyone with protanopia or deuteranopia. Blue is the one
+     Okabe-Ito hue the dark set was missing, since the original is too dark on this
+     background. See jirametrics-60z for the measurements. */
   --daily-view-selected-issue-background: #474747;
   --daily-view-issue-border: #2DCB9A;
   --daily-view-selected-issue-border: #E69F00;
@@ -439,7 +442,10 @@ html[data-theme="light"] {
     --sprint-burndown-sprint-color-4: #CC79A7;  /* reddish purple (vermilion → orange conflicts with color-2) */
     --sprint-burndown-sprint-color-5: #F0E442;  /* yellow */
     --sprint-burndown-sprint-color-6: #D55E00;  /* vermilion (sky blue conflicts with color-1) */
-    --sprint-burndown-sprint-color-7: #92D9C0;  /* light teal (yellow conflicts with color-5) */
+    --sprint-burndown-sprint-color-7: #388CF3;  /* lightened blue. Was #92D9C0 light teal, which
+     sat too close to color-3 for anyone with protanopia or deuteranopia. Blue is the one
+     Okabe-Ito hue the dark set was missing, since the original is too dark on this
+     background. See jirametrics-60z for the measurements. */
 
     --daily-view-selected-issue-background: #474747;
     --daily-view-issue-border: #2DCB9A;
