@@ -243,7 +243,7 @@ describe BoardMovementCalculator do
       end
     end
 
-    it 'stops calling it "most" when the percentile is not the default' do
+    it 'names the percentile in the outlier message' do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       new_issue = create_issue_from_aging_data board: board, ages_by_column: [2], today: today.to_s, key: 'SP-100'
       _days, message = calculator.forecasted_days_remaining_and_message(
@@ -259,8 +259,8 @@ describe BoardMovementCalculator do
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       new_issue = create_issue_from_aging_data board: board, ages_by_column: [2], today: today.to_s, key: 'SP-100'
       expect(calculator.forecasted_days_remaining_and_message issue: new_issue, today: today).to eq(
-        [nil, 'This item is an outlier at 2 days in the "Ready" column. Most items on this board have ' \
-          'left this column in 1 day or less, so we cannot forecast when it will be done.']
+        [nil, 'This item is an outlier at 2 days in the "Ready" column. 85% of items on this board ' \
+          'have left this column in 1 day or less, so we cannot forecast when it will be done.']
       )
     end
   end

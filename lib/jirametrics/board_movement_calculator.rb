@@ -159,12 +159,11 @@ class BoardMovementCalculator
   end
 
   # Why we cannot forecast: this item has already been in the column longer than the historical
-  # figure we would forecast from. "Most" is only a fair description near the default; at the
-  # median it would be plainly wrong, so any other percentile states the number instead.
+  # figure we would forecast from. The message names the percentile rather than characterising it
+  # as "most", which was only ever a fair description at the default and plainly wrong at the median.
   def outlier_message issue:, today:, column_name:, percentile:, column_age:
-    proportion = percentile == 85 ? 'Most items' : "#{percentile}% of items"
     "This item is an outlier at #{label_days issue.board.cycletime.age(issue, today: today)} " \
-      "in the #{column_name.inspect} column. #{proportion} on this board have left this column in " \
-      "#{label_days column_age} or less, so we cannot forecast when it will be done."
+      "in the #{column_name.inspect} column. #{percentile}% of items on this board have left this " \
+      "column in #{label_days column_age} or less, so we cannot forecast when it will be done."
   end
 end
