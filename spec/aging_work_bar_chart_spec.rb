@@ -414,6 +414,34 @@ describe AgingWorkBarChart do
     end
   end
 
+  describe '#priority_color' do
+    it 'uses the variable for a priority that has a colour' do
+      expect(chart.priority_color('Medium')).to eq CssVariable['--priority-color-medium']
+    end
+
+    it 'strips spaces and case the same way the css names do' do
+      expect(chart.priority_color('Highest')).to eq CssVariable['--priority-color-highest']
+    end
+
+    # Jira admins can define any priority they like, so this is reachable with real data. Two of
+    # the sample reports request colours for "Immediate Gating" and "Ignored", neither of which
+    # ships a variable.
+    it 'warns once, with the line to paste, for a priority that has no colour' do
+      chart.priority_color 'Immediate Gating'
+      chart.priority_color 'Immediate Gating'
+      warnings = chart.file_system.log_messages.select { |m| m.include? 'Immediate Gating' }
+      aggregate_failures do
+        expect(warnings.size).to eq 1
+        expect(warnings.first).to include '--priority-color-immediategating: #0072B2;'
+        expect(warnings.first).to include 'include_css'
+      end
+    end
+
+    it 'still returns a variable for the unknown priority so the chart keeps drawing' do
+      expect(chart.priority_color('Ignored')).to eq CssVariable['--priority-color-ignored']
+    end
+  end
+
   describe '#percentile_description' do
     # Rendered through run rather than called directly, so this also guards the ERB tag in
     # description_text. It must be <%= percentile_description %>: description_text is built during

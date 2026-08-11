@@ -322,7 +322,7 @@ class AgingWorkBarChart < ChartBase
     BarChartRange.new(
       start: previous_change.time,
       stop: stop_time,
-      color: CssVariable["--priority-color-#{previous_change.value.downcase.gsub(/\s/, '')}"],
+      color: priority_color(previous_change.value),
       title: title,
       highlight: expedited
     )
@@ -385,6 +385,42 @@ class AgingWorkBarChart < ChartBase
       completed_issues_in_range.filter_map { |issue| issue.board.cycletime.cycletime(issue) },
       percentage
     )
+  end
+
+  # Priority names come from Jira and an admin can define whatever they like, so the variable we
+  # build from one may simply not exist, in which case the bar draws black. That is acceptable, but
+  # silently is not, so say it once per unknown priority and hand over the line to paste.
+  def priority_color priority_name
+    key = priority_name.downcase.gsub(/\s/, '')
+    warn_about_unknown_priority priority_name, key unless defined_priority_colors.include? key
+    CssVariable["--priority-color-#{key}"]
+  end
+
+  def warn_about_unknown_priority priority_name, key
+    @warned_priorities ||= []
+    return if @warned_priorities.include? key
+
+    @warned_priorities << key
+    file_system.log(
+      "Warning: the priority #{priority_name.inspect} has no colour defined, so it will be drawn " \
+      'in black on the aging work bar chart. That is fine if you do not mind how it looks. To ' \
+      'give it a colour, add this to the CSS file named by your include_css setting: ' \
+      ":root { --priority-color-#{key}: #0072B2; }",
+      also_write_to_stderr: true
+    )
+  end
+
+  # Read from the CSS rather than kept as a list here, so that defining a new priority colour is a
+  # CSS edit and the two cannot drift apart. Includes the user's own stylesheet, so defining the
+  # colour there silences the warning.
+  def defined_priority_colors
+    @defined_priority_colors ||=
+      begin
+        css = File.read File.join(html_directory, 'index.css')
+        extra = settings && settings['include_css']
+        css += File.read(extra) if extra && File.exist?(extra)
+        css.scan(/--priority-color-([a-z0-9]+)\s*:/).flatten.uniq
+      end
   end
 
   def age_cutoff days
