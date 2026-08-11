@@ -36,20 +36,30 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'),
       annotation: {
         annotations: {
           <%
-            results = the_stats[:all][:percentiles]
-            results.each do |percentile, value|
+            # Guard the nil value: an unlabelled annotation would emit "value:" with nothing after
+            # it, which is a syntax error that takes the whole chart script out.
+            (the_stats.dig(:all, :percentiles) || {}).each do |percentile, value|
+              next if value.nil?
           %>
-          percentile<%= percentile.to_s %>: {
+          <%= "percentile#{percentile}".to_json %>: {
             type: 'line',
             scaleID: 'x',
             value: <%= value %>,
             borderWidth: 1,
+            hitTolerance: 6,
             drawTime: 'beforeDatasetsDraw',
             label: {
-              enabled: true,
-              content: '<%= "#{percentile}%" %>',
+              display: false,
+              content: <%= "#{ordinal percentile} percentile at #{label_cycletime value}".to_json %>,
               position: 'start',
-            }
+              // Drawn late so the label sits on top of the bars rather than behind them.
+              drawTime: 'afterDraw',
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              color: '#fff',
+              font: { size: 11 }
+            },
+            enter(ctx) { ctx.element.label.options.display = true; ctx.chart.draw(); },
+            leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }
           },
           <% end %>
         },

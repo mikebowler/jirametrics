@@ -21,6 +21,44 @@ describe CycletimeHistogram do
     end
   end
 
+  # The percentile lines carried label: { enabled: true }, which is the v1 plugin option. Under
+  # the v3 plugin that is a no-op and the label defaults to display: false, so those markers had
+  # been silently invisible. They are hover revealed now, matching the scatterplot.
+  describe 'percentile line annotations' do
+    let(:rendered) do
+      chart.file_system = MockFileSystem.new
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/time_based_histogram.erb'), json: :not_mocked
+      )
+      board.cycletime = default_cycletime_config
+      chart.holiday_dates = []
+      chart.settings = load_settings
+      chart.time_range = to_time('2021-01-01')..to_time('2022-12-31')
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2022-12-31')
+      chart.issues = [issue10]
+      chart.run
+    end
+
+    it 'uses the option name the installed plugin actually reads' do
+      aggregate_failures do
+        expect(rendered).to include 'display: false'
+        expect(rendered).not_to include 'enabled: true'
+      end
+    end
+
+    it 'reveals the label on hover with a hit area big enough to reach' do
+      aggregate_failures do
+        expect(rendered).to include 'hitTolerance: 6'
+        expect(rendered).to include 'enter(ctx)'
+        expect(rendered).to include 'leave(ctx)'
+      end
+    end
+
+    it 'names the percentile and its value in the label' do
+      expect(rendered).to match(/content: "\d+\w\w percentile at \d+ days?"/)
+    end
+  end
+
   describe '#histogram_data_for' do
     it 'handles no issues' do
       expect(chart.histogram_data_for items: []).to be_empty
