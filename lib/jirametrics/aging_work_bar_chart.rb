@@ -14,12 +14,15 @@ class AgingWorkBarChart < ChartBase
     @percentage_lines = [] # Populated by run; the description reads it, so it must never be nil.
     percentiles [85]
     header_text 'Aging Work Bar Chart'
+    # div class="p" throughout rather than <p>: color_block emits a div and the list below is an
+    # ol, neither of which is legal inside a paragraph. A browser closes the p at the first one,
+    # which strands the rest of the text outside it. This is what the other charts use.
     description_text <<-HTML
-      <p>
+      <div class="p">
         This chart shows all active (started but not completed) work, ordered from oldest at the top to
         newest at the bottom.
-      </p>
-      <p>
+      </div>
+      <div class="p">
         There are <%= (aggregated_project? || current_board.scrum?) ? 'four' : 'three' %> bars for each issue, and hovering over any of the bars will provide more details.
         <ol>
           <li>Status: The status the issue was in at any time. The colour indicates the
@@ -34,7 +37,7 @@ class AgingWorkBarChart < ChartBase
             <li>Sprints: The sprints that the issue was in.</li>
           <% end %>
         </ol>
-      </p>
+      </div>
       <%= percentile_description %>
       #{describe_non_working_days}
     HTML
