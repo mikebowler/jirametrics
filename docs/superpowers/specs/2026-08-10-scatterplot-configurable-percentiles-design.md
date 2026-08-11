@@ -120,7 +120,20 @@ Each entry becomes one Chart.js line annotation, as today, with three additions:
   (`time_based_scatterplot.erb:114-129`): `rgba(0,0,0,0.85)` background, white text, size 11.
 - `enter`/`leave` callbacks flipping `label.options.display` and calling `chart.draw()`.
 
-Content reads `"85% at 12 days"`, reusing `label_days` so pluralisation stays consistent.
+Content reads `"Story 85% at 12 days"`, reusing `label_days` so pluralisation stays consistent.
+The line NAMES itself, because colour was otherwise the only thing identifying it, which fails for
+colour-blind readers and across the light and dark palettes. The whole-data-set lines call
+themselves `All items` (the `OVERALL_LABEL` constant): they have no legend entry, so without a name
+nothing identified them at all. "items" rather than "data" or "everything" because it matches the
+description prose and because ignored issues are already excluded by the time those lines are
+computed.
+
+Emit the content with `to_json`, NOT inside hand-written quotes. The group name comes from the
+user's `grouping_rules` block, so an apostrophe in it would otherwise terminate the string and take
+the whole chart script out. This is the same failure class as the unquoted annotation key.
+
+(This paragraph was amended on 2026-08-11 after the naming was added; the original shipped as
+`"85% at 12 days"` with no name.)
 
 The annotation plugin does not feed Chart.js's native tooltip, so this is the plugin's own
 label and its styling is hand-matched rather than inherited. `capLabel` already does exactly
