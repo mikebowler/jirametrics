@@ -16,6 +16,40 @@ pasted from support cases) and must **never** be committed or pushed here.
   repo; `bd dolt push` sends **beads data only** to the private repo. Keep them separate.
 - If you ever see `.beads/issues.jsonl` staged for the public repo, stop and unstage it.
 
+## Separate an instruction from an observation
+
+Not every remark about behaviour is a request to change it. Before writing code, decide which
+you were given.
+
+**An instruction** tells you to act: "fix it", "add X", "do that next", "make it configurable".
+Act on it. Do not ask for permission you already have, and do not offer to do work that was
+just deferred - if asked to file an issue, file it and carry on rather than proposing to do it
+now anyway.
+
+**An observation** describes expected or surprising behaviour and invites discussion:
+
+- "I would have thought it would ..."
+- "I'm not convinced that ..."
+- "It's reasonable that it does X"
+- "Is it possible to ...?"
+- "That's a good starting default"
+
+These are opinions being tested, not specifications. Answer them, put the options and the
+trade-offs, and get a decision before implementing. A wrong guess here costs more than the
+question would have: it produces work that has to be unpicked, and it quietly transfers design
+authority from the person who owns the project to you.
+
+Passing a test is not evidence you built the right thing.
+
+## Name the decisions you made
+
+When you do implement, a request rarely determines every choice. Wording, where output goes,
+how much detail to show, what the default is - these get decided whether or not anyone notices.
+State the ones a reasonable person might have decided differently, briefly, when you report the
+work. Burying them in a diff is how the wrong behaviour ships unchallenged.
+
+If you find yourself making the third or fourth such choice in a row without checking, stop and
+ask instead.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
