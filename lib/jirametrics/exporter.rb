@@ -303,11 +303,11 @@ class Exporter
     end
   end
 
-  # Only the unexpected case is announced. Being used is the common one, and saying so every time
-  # would be noise on top of the dump the user actually asked for.
-  IGNORED_ISSUE_NOTE =
-    'This issue was IGNORED, so it appears in no chart. A filter in your configuration excluded ' \
-    'it, such as ignore_types or ignore_issues.'
+  # Only the unexpected case is announced. Not being filtered is the common one, and saying so
+  # every time would be noise on top of the dump that was actually asked for. Note the claim is
+  # about the filter, not about charts: an issue that survives filtering may still be absent from
+  # a given chart for its own reasons, so there is no matching note for the other case.
+  IGNORED_ISSUE_NOTE = 'IGNORED by a filter such as ignore_types or ignore_issues. No chart uses it.'
 
   # One line per project saying where its issues were read from and what was there, so that a
   # missing issue can be traced to the wrong directory rather than guessed at.
