@@ -257,27 +257,60 @@ class Exporter
 
   def info key, name_filter:
     selected = []
+    searched = []
     file_system.log_only = true
     each_project_config(name_filter: name_filter) do |project|
       project.evaluate_next_level
 
       project.run load_only: true
-      selected.concat matching_issues_in(project, key)
+      matches = matching_issues_in(project, key)
+      searched << describe_search(project: project, matches: matches.size)
+      selected.concat matches
     rescue => e # rubocop:disable Style/RescueStandardError
       # This happens when we're attempting to load an aggregated project because it hasn't been
       # properly initialized. Since we don't care about aggregated projects, we just ignore it.
       raise unless e.message.start_with? 'This is an aggregated project and issues should have been included'
+
+      searched << "  #{project.name.inspect}: skipped, this is an aggregated project"
     end
     file_system.log_only = false
 
+    # Verbose in the log, sparse in the terminal. Where we looked is almost always what you need
+    # when an issue you know was downloaded cannot be found, and it is noise the rest of the time.
+    where_we_looked =
+      if searched.empty?
+        'No project configurations were searched at all. Either none are defined in the config ' \
+          'file or none of them matched the name filter.'
+      else
+        "Searched these projects for #{key.inspect}:\n#{searched.join "\n"}"
+      end
+
     if selected.empty?
-      file_system.log "No issues found to match #{key.inspect}"
+      file_system.log(
+        "No issues found to match #{key.inspect}", more: where_we_looked, also_write_to_stderr: true
+      )
     else
+      file_system.log where_we_looked
       selected.each do |project, issue|
         file_system.log "\nProject #{project.name}", also_write_to_stderr: true
         file_system.log issue.dump, also_write_to_stderr: true
       end
     end
+  end
+
+  # One line per project saying where its issues were read from and what was there, so that a
+  # missing issue can be traced to the wrong directory rather than guessed at.
+  def describe_search project:, matches:
+    prefix = project.get_file_prefix raise_if_not_set: false
+    path = prefix.nil? ? '(no file_prefix set)' : File.join(project.target_path.to_s, "#{prefix}_issues")
+    loaded =
+      begin
+        project.issues.size
+      rescue StandardError
+        nil
+      end
+    counts = loaded.nil? ? 'could not be read' : "#{loaded} issues loaded, #{matches} matched"
+    "  #{project.name.inspect}: #{path} (#{counts})"
   end
 
   def matching_issues_in project, key
@@ -317,9 +350,21 @@ class Exporter
 
   def target_path path = nil
     unless path.nil?
+      previous = @target_path
       @target_path = path
       @target_path += File::SEPARATOR unless @target_path.end_with? File::SEPARATOR
       FileUtils.mkdir_p @target_path
+      # A config is allowed to switch target directories partway through, and when it does, an
+      # issue can be downloaded into one and looked for in another. Recording every change makes
+      # that visible rather than something to guess at. See GitHub issue 77.
+      # The constructor seeds this with a bare '.', and the setter always appends a separator, so
+      # an unseparated '.' is the untouched default rather than something the config chose. Setting
+      # the same path twice is not a change and saying so would be actively misleading.
+      if previous == '.'
+        file_system.diagnostic "target_path set to #{@target_path.inspect}"
+      elsif previous != @target_path
+        file_system.diagnostic "target_path changed from #{previous.inspect} to #{@target_path.inspect}"
+      end
     end
     @target_path
   end

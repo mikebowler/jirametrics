@@ -10,6 +10,7 @@ describe BlockedStalledChangeStreamBuilder do
       'stalled_statuses' => status_collection_for(board: board, names: %w[Stalled Stalled2]),
       'blocked_link_text' => ['is blocked by'],
       'stalled_threshold_days' => 5,
+      'stalled_ignored_fields' => ['RemoteIssueLink'],
       'flagged_means_blocked' => true
     }
   end
@@ -198,6 +199,38 @@ describe BlockedStalledChangeStreamBuilder do
       BlockedStalledChange.new(time: to_time('2021-10-08')),
       BlockedStalledChange.new(time: to_time('2021-10-10'))
     ]
+  end
+
+  # Adding a Jira issue macro to a Confluence page writes a RemoteIssueLink into the changelog. It
+  # is not someone working on the item, so it should not reset the inactivity clock. Reported as
+  # GitHub issue 77, where the field name was confirmed from the reporter's own changelog JSON.
+  describe 'stalled_ignored_fields' do
+    it 'does not let an ignored field reset the inactivity clock' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      # Lands in the middle of what would otherwise be one long gap.
+      add_mock_change(issue: issue, field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
+      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+      expect(stream(issue, settings: settings, end_time: to_time('2021-10-10'))).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
+        BlockedStalledChange.new(time: to_time('2021-10-08')),
+        BlockedStalledChange.new(time: to_time('2021-10-10'))
+      ]
+    end
+
+    it 'lets the same change reset the clock when the field is not ignored' do
+      issue = empty_issue created: '2021-10-01', board: board
+      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      add_mock_change(issue: issue, field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
+      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+      not_ignored = settings.merge 'stalled_ignored_fields' => []
+      # Two gaps of three days each, so nothing is stalled at a five day threshold.
+      expect(stream(issue, settings: not_ignored, end_time: to_time('2021-10-10'))).to eq [
+        BlockedStalledChange.new(time: to_time('2021-10-01')),
+        BlockedStalledChange.new(time: to_time('2021-10-10'))
+      ]
+    end
   end
 
   it 'handles contiguous stalled status' do

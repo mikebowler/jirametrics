@@ -31,12 +31,16 @@ class BlockedStalledChangeStreamBuilder
     mock_change = ChangeItem.new time: end_time, artificial: true, raw: { 'field' => '' }, author_raw: nil
 
     (@changes + [mock_change]).each do |change|
-      previous_was_active = false if check_for_stalled(
+      counts_as_activity = !ignored_for_stalled?(change)
+
+      if counts_as_activity && check_for_stalled(
         change_time: change.time,
         previous_change_time: previous_change_time,
         stalled_threshold: @settings['stalled_threshold_days'],
         blocking_stalled_changes: result
       )
+        previous_was_active = false
+      end
 
       update_blocking_state state, change
 
@@ -47,11 +51,20 @@ class BlockedStalledChangeStreamBuilder
       result << new_change if record_change? new_change, previous_was_active, change, mock_change
 
       previous_was_active = new_change.active?
-      previous_change_time = change.time
+      # An ignored change must not advance the clock, or it would split one long gap into two
+      # short ones and hide a stall.
+      previous_change_time = change.time if counts_as_activity
     end
 
     finalize_stalled_tail result
     result
+  end
+
+  # Some changelog entries are not somebody working on the item. Adding a Jira issue macro to a
+  # Confluence page writes a RemoteIssueLink, which should not reset the inactivity clock. They are
+  # still processed for blocking, so putting a field here only affects the stalled calculation.
+  def ignored_for_stalled? change
+    (@settings['stalled_ignored_fields'] || []).include? change.field
   end
 
   def update_blocking_state state, change

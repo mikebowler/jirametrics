@@ -86,6 +86,38 @@ describe Exporter do
     end
   end
 
+  # A config may switch target directories partway through, which is how an issue ends up
+  # downloaded into one directory and searched for in another. See GitHub issue 77.
+  describe '#target_path logging' do
+    it 'records the first one it is given' do
+      exporter.target_path TARGET_PATH
+      expect(file_system.log_messages.join("\n")).to include 'target_path set to "spec/tmp/testdir/"'
+    end
+
+    it 'records a change, naming both the old and the new' do
+      exporter.target_path TARGET_PATH
+      exporter.target_path 'spec/tmp/elsewhere'
+      expect(file_system.log_messages.join("\n"))
+        .to include 'target_path changed from "spec/tmp/testdir/" to "spec/tmp/elsewhere/"'
+    end
+
+    # A config that sets the same path twice has not changed anything, and reporting a change
+    # would send someone hunting for a switch that never happened.
+    it 'says nothing when the path is set again to the same value' do
+      exporter.target_path TARGET_PATH
+      before = file_system.log_messages.size
+      exporter.target_path TARGET_PATH
+      expect(file_system.log_messages.size).to eq before
+    end
+
+    it 'says nothing when only reading the value' do
+      exporter.target_path TARGET_PATH
+      before = file_system.log_messages.size
+      exporter.target_path
+      expect(file_system.log_messages.size).to eq before
+    end
+  end
+
   describe '#holiday_dates' do
     it 'allows simple dates' do
       expect(exporter.holiday_dates '2022-02-03').to eq([Date.parse('2022-02-03')])
@@ -435,9 +467,42 @@ describe Exporter do
   describe '#info' do
     it 'does not match on any issue' do
       exporter.info 'SP-1', name_filter: '*'
+      # The pair is the terminal line plus the detail that only goes to the log file.
       expect(file_system.log_messages).to match_strings([
-        'No issues found to match "SP-1"'
+        ['No issues found to match "SP-1"',
+         'No project configurations were searched at all. Either none are defined in the config ' \
+           'file or none of them matched the name filter.']
       ])
+    end
+
+    # The terminal stays sparse; the detail goes to the log. Without it a user whose issue was
+    # downloaded but not found has nothing to go on, which is what happened in GitHub issue 77.
+    describe '#describe_search' do
+      it 'names the project and the directory its issues came from' do
+        project = instance_double(
+          ProjectConfig, name: 'Sampler', target_path: 'target/', issues: Array.new(12)
+        )
+        allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return('sample')
+        expect(exporter.describe_search project: project, matches: 0)
+          .to eq '  "Sampler": target/sample_issues (12 issues loaded, 0 matched)'
+      end
+
+      it 'says so when no file_prefix has been set, rather than inventing a path' do
+        project = instance_double ProjectConfig, name: 'Half built', target_path: 'target/', issues: []
+        allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return(nil)
+        expect(exporter.describe_search project: project, matches: 0)
+          .to include '(no file_prefix set)'
+      end
+
+      # A project whose issues cannot be read at all must still appear in the list. Dropping it
+      # would leave the user wondering whether it was searched.
+      it 'still reports a project whose issues could not be read' do
+        project = instance_double ProjectConfig, name: 'Broken', target_path: 'target/'
+        allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return('broken')
+        allow(project).to receive(:issues).and_raise('no data found')
+        expect(exporter.describe_search project: project, matches: 0)
+          .to include 'could not be read'
+      end
     end
   end
 

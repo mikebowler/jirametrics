@@ -1,6 +1,7 @@
 {
   "stalled_threshold_days": 5,
   "stalled_statuses": [],
+  "stalled_ignored_fields": ["RemoteIssueLink"],
 
   "blocked_link_text": ["is blocked by"],
   "blocked_statuses": [],
