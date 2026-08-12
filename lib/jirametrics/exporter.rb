@@ -298,14 +298,13 @@ class Exporter
     file_system.log where_we_looked
     selected.each do |project, issue, ignored|
       file_system.log "\nProject #{project.name}", also_write_to_stderr: true
-      file_system.log((ignored ? IGNORED_ISSUE_NOTE : USED_ISSUE_NOTE), also_write_to_stderr: true)
+      file_system.log(IGNORED_ISSUE_NOTE, also_write_to_stderr: true) if ignored
       file_system.log issue.dump, also_write_to_stderr: true
     end
   end
 
-  # Whether the report actually used this issue is context you need to make sense of everything
-  # below it, so it is always stated rather than only mentioned when something is wrong.
-  USED_ISSUE_NOTE = 'This issue was used in the report.'
+  # Only the unexpected case is announced. Being used is the common one, and saying so every time
+  # would be noise on top of the dump the user actually asked for.
   IGNORED_ISSUE_NOTE =
     'This issue was IGNORED, so it appears in no chart. A filter in your configuration excluded ' \
     'it, such as ignore_types or ignore_issues.'
