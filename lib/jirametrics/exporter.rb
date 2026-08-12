@@ -275,50 +275,72 @@ class Exporter
     end
     file_system.log_only = false
 
-    # Verbose in the log, sparse in the terminal. Where we looked is almost always what you need
-    # when an issue you know was downloaded cannot be found, and it is noise the rest of the time.
-    where_we_looked =
-      if searched.empty?
-        'No project configurations were searched at all. Either none are defined in the config ' \
-          'file or none of them matched the name filter.'
-      else
-        "Searched these projects for #{key.inspect}:\n#{searched.join "\n"}"
-      end
+    report_info_results key: key, selected: selected, where_we_looked: describe_where_we_looked(key, searched)
+  end
 
+  # Verbose in the log, sparse in the terminal. Where we looked is almost always what you need when
+  # an issue you know was downloaded cannot be found, and it is noise the rest of the time.
+  def describe_where_we_looked key, searched
+    return "Searched these projects for #{key.inspect}:\n#{searched.join "\n"}" unless searched.empty?
+
+    'No project configurations were searched at all. Either none are defined in the config file ' \
+      'or none of them matched the name filter.'
+  end
+
+  def report_info_results key:, selected:, where_we_looked:
     if selected.empty?
       file_system.log(
         "No issues found to match #{key.inspect}", more: where_we_looked, also_write_to_stderr: true
       )
-    else
-      file_system.log where_we_looked
-      selected.each do |project, issue|
-        file_system.log "\nProject #{project.name}", also_write_to_stderr: true
-        file_system.log issue.dump, also_write_to_stderr: true
-      end
+      return
+    end
+
+    file_system.log where_we_looked
+    selected.each do |project, issue, ignored|
+      file_system.log "\nProject #{project.name}", also_write_to_stderr: true
+      file_system.log((ignored ? IGNORED_ISSUE_NOTE : USED_ISSUE_NOTE), also_write_to_stderr: true)
+      file_system.log issue.dump, also_write_to_stderr: true
     end
   end
+
+  # Whether the report actually used this issue is context you need to make sense of everything
+  # below it, so it is always stated rather than only mentioned when something is wrong.
+  USED_ISSUE_NOTE = 'This issue was used in the report.'
+  IGNORED_ISSUE_NOTE =
+    'This issue was IGNORED, so it appears in no chart. A filter in your configuration excluded ' \
+    'it, such as ignore_types or ignore_issues.'
 
   # One line per project saying where its issues were read from and what was there, so that a
   # missing issue can be traced to the wrong directory rather than guessed at.
   def describe_search project:, matches:
     prefix = project.get_file_prefix raise_if_not_set: false
     path = prefix.nil? ? '(no file_prefix set)' : File.join(project.target_path.to_s, "#{prefix}_issues")
-    loaded =
+    counts =
       begin
-        project.issues.size
+        collection = project.issues
+        excluded = collection.hidden.size
+        detail = "#{collection.size} issues loaded"
+        detail << ", #{excluded} excluded by filters" if excluded.positive?
+        "#{detail}, #{matches} matched"
       rescue StandardError
-        nil
+        'could not be read'
       end
-    counts = loaded.nil? ? 'could not be read' : "#{loaded} issues loaded, #{matches} matched"
     "  #{project.name.inspect}: #{path} (#{counts})"
   end
 
+  # Asking about a specific issue should always show that issue, whether or not the report used it.
+  # An issue removed by something like ignore_types is exactly when somebody runs info to find out
+  # what happened, and reporting it as missing sends them hunting for a download problem that is
+  # not there. The hidden list is searched first. Returns [project, issue, ignored] triples.
   def matching_issues_in project, key
     matches = []
-    project.issues.each do |issue|
-      matches << [project, issue] if key == issue.key
-      issue.subtasks.each do |subtask|
-        matches << [project, subtask] if key == subtask.key
+    collection = project.issues
+    [[collection.hidden, true], [collection, false]].each do |issues, ignored|
+      issues.each do |issue|
+        matches << [project, issue, ignored] if key == issue.key
+        issue.subtasks.each do |subtask|
+          matches << [project, subtask, ignored] if key == subtask.key
+        end
       end
     end
     matches

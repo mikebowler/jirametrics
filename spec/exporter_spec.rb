@@ -475,23 +475,66 @@ describe Exporter do
       ])
     end
 
+    # A config that filters out an issue type, such as ignore_types, leaves that issue nowhere to
+    # be found, and info used to report it as missing. Reported in GitHub issue 77, where the
+    # reporter spent a day chasing a download problem that was really a filter.
+    describe '#matching_issues_in' do
+      let(:board) { load_complete_sample_board }
+      let(:project) do
+        instance_double ProjectConfig, name: 'Sampler', issues: collection
+      end
+      let(:visible) { load_issue 'SP-1', board: board }
+      let(:excluded) { load_issue 'SP-2', board: board }
+      let(:collection) do
+        c = IssueCollection[visible, excluded]
+        c.reject! { |issue| issue.key == 'SP-2' }
+        c
+      end
+
+      it 'finds an issue that is still in play, and marks it as used' do
+        expect(exporter.matching_issues_in(project, 'SP-1')).to eq [[project, visible, false]]
+      end
+
+      it 'finds an issue a filter removed, and marks it as ignored' do
+        expect(exporter.matching_issues_in(project, 'SP-2')).to eq [[project, excluded, true]]
+      end
+
+      it 'still finds nothing for a key that is not there at all' do
+        expect(exporter.matching_issues_in(project, 'SP-999')).to be_empty
+      end
+    end
+
     # The terminal stays sparse; the detail goes to the log. Without it a user whose issue was
     # downloaded but not found has nothing to go on, which is what happened in GitHub issue 77.
     describe '#describe_search' do
       it 'names the project and the directory its issues came from' do
         project = instance_double(
-          ProjectConfig, name: 'Sampler', target_path: 'target/', issues: Array.new(12)
+          ProjectConfig, name: 'Sampler', target_path: 'target/', issues: IssueCollection.new
         )
+        12.times { project.issues << 'issue' }
         allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return('sample')
         expect(exporter.describe_search project: project, matches: 0)
           .to eq '  "Sampler": target/sample_issues (12 issues loaded, 0 matched)'
       end
 
       it 'says so when no file_prefix has been set, rather than inventing a path' do
-        project = instance_double ProjectConfig, name: 'Half built', target_path: 'target/', issues: []
+        project = instance_double ProjectConfig, name: 'Half built', target_path: 'target/',
+          issues: IssueCollection.new
         allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return(nil)
         expect(exporter.describe_search project: project, matches: 0)
           .to include '(no file_prefix set)'
+      end
+
+      # Filtered-out issues are still on disk and still findable, so the count has to distinguish
+      # them from issues that were never loaded.
+      it 'reports how many issues a filter removed' do
+        collection = IssueCollection.new
+        %w[a b c].each { |k| collection << k }
+        collection.reject! { |issue| issue == 'c' }
+        project = instance_double ProjectConfig, name: 'Sampler', target_path: 'target/', issues: collection
+        allow(project).to receive(:get_file_prefix).with(raise_if_not_set: false).and_return('sample')
+        expect(exporter.describe_search project: project, matches: 0)
+          .to eq '  "Sampler": target/sample_issues (2 issues loaded, 1 excluded by filters, 0 matched)'
       end
 
       # A project whose issues cannot be read at all must still appear in the list. Dropping it
