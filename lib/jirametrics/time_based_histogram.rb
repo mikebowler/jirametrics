@@ -95,9 +95,9 @@ class TimeBasedHistogram < TimeBasedChart
   end
 
   # One cell of the statistics table. A group can survive grouping and still have nothing to plot,
-  # when every item in it finished before it started, and then there are no statistics to show for
-  # it at all. Dashing the cells keeps the group visible: dropping the row would make it look like
-  # the group had never existed.
+  # when every item in it was excluded for having no measurable cycle time, and then there are no
+  # statistics to show for it at all. Dashing the cells keeps the group visible: dropping the row
+  # would make it look like the group had never existed.
   def stats_cell value
     return '&ndash;' if value.nil?
 

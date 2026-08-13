@@ -108,14 +108,14 @@ describe CycletimeHistogram do
     end
 
     it 'explains the dash in a footnote' do
-      expect(rendered).to include 'finished before it started'
+      expect(rendered).to include 'no usable data for that group'
     end
 
     it 'drops the footnote when every group has data' do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue2, '2021-10-01', '2021-10-04']
       ]
-      expect(render_with([issue2])).not_to include 'finished before it started'
+      expect(render_with([issue2])).not_to include 'no usable data for that group'
     end
   end
 

@@ -111,8 +111,8 @@ if show_stats
        <% end %>
      </table>
      <% if any_empty_stats? the_stats %>
-       <p><b>&ndash;</b> means no usable data for that group. Every item in it finished before it started, so there
-       was no cycle time to plot. The Data Quality report lists the specific items.</p>
+       <p><b>&ndash;</b> means no usable data for that group. Every item in it was excluded from the histogram
+       because it had no measurable cycle time. The Data Quality report has the details.</p>
      <% end %>
   </div>
   <div>
