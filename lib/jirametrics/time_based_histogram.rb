@@ -94,6 +94,20 @@ class TimeBasedHistogram < TimeBasedChart
     items_hash
   end
 
+  # One cell of the statistics table. A group can survive grouping and still have nothing to plot,
+  # when every item in it finished before it started, and then there are no statistics to show for
+  # it at all. Dashing the cells keeps the group visible: dropping the row would make it look like
+  # the group had never existed.
+  def stats_cell value
+    return '&ndash;' if value.nil?
+
+    block_given? ? yield(value) : value
+  end
+
+  def any_empty_stats? the_stats
+    the_stats.any? { |_label, stats| stats.empty? }
+  end
+
   def stats_for histogram_data:, percentiles:
     return {} if histogram_data.empty?
 

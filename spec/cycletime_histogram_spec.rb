@@ -59,6 +59,66 @@ describe CycletimeHistogram do
     end
   end
 
+  # An item that finished before it started has a cycletime of zero or less, so the histogram
+  # drops it. A group where that happens to every item survives the grouping but ends up with no
+  # data at all, which used to take the entire report down with "can't convert nil into Float"
+  # when the stats table tried to format an average that was never calculated. See issue 79.
+  describe 'statistics table for a group with no usable data' do
+    let(:chart) do
+      described_class.new(lambda do |_|
+        grouping_rules do |issue, rule|
+          rule.label = issue.key == 'SP-1' ? 'Backwards' : 'Forwards'
+        end
+      end)
+    end
+
+    let(:rendered) do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2021-10-10', '2021-10-08'],
+        [issue2, '2021-10-01', '2021-10-04']
+      ]
+      render_with [issue1, issue2]
+    end
+
+    def render_with issues
+      chart.file_system = MockFileSystem.new
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/time_based_histogram.erb'), json: :not_mocked
+      )
+      chart.holiday_dates = []
+      chart.settings = load_settings
+      chart.time_range = to_time('2021-01-01')..to_time('2022-12-31')
+      chart.date_range = Date.parse('2021-01-01')..Date.parse('2022-12-31')
+      chart.issues = issues
+      chart.run
+    end
+
+    # The cells of one row of the statistics table, excluding the label in the first column.
+    def stats_row rendered, label
+      row = rendered[%r{<tr>\s*<td>#{label}</td>(.*?)</tr>}m, 1]
+      row.scan(%r{<td[^>]*>(.*?)</td>}m).flatten.collect(&:strip)
+    end
+
+    it 'dashes every column rather than dropping the row' do
+      expect(stats_row rendered, 'Backwards').to eq(['&ndash;'] * 7)
+    end
+
+    it 'leaves the groups that do have data alone' do
+      expect(stats_row rendered, 'Forwards').to eq(%w[4 4 4.00 4 4 4 4])
+    end
+
+    it 'explains the dash in a footnote' do
+      expect(rendered).to include 'finished before it started'
+    end
+
+    it 'drops the footnote when every group has data' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue2, '2021-10-01', '2021-10-04']
+      ]
+      expect(render_with([issue2])).not_to include 'finished before it started'
+    end
+  end
+
   describe '#histogram_data_for' do
     it 'handles no issues' do
       expect(chart.histogram_data_for items: []).to be_empty

@@ -100,16 +100,20 @@ if show_stats
       <% the_stats.each do |k, v| %>
           <tr>
             <td><%= k %></td>
-            <td style="text-align: right;"><%= v[:min] %></td>
-            <td style="text-align: right;"><%= v[:max] %></td>
-            <td style="text-align: right;"><%= sprintf('%.2f', v[:average]) %></td>
-            <td><%= v[:mode].join(', ') %></td>
+            <td style="text-align: right;"><%= stats_cell v[:min] %></td>
+            <td style="text-align: right;"><%= stats_cell v[:max] %></td>
+            <td style="text-align: right;"><%= stats_cell(v[:average]) { |average| format '%.2f', average } %></td>
+            <td><%= stats_cell(v[:mode]) { |modes| modes.join ', ' } %></td>
             <% percentiles.each do |percentile| %>
-               <td style="text-align: right;"><%= v[:percentiles][percentile] %></td>
+               <td style="text-align: right;"><%= stats_cell v.dig(:percentiles, percentile) %></td>
             <% end %>
           </tr>
        <% end %>
      </table>
+     <% if any_empty_stats? the_stats %>
+       <p><b>&ndash;</b> means no usable data for that group. Every item in it finished before it started, so there
+       was no cycle time to plot. The Data Quality report lists the specific items.</p>
+     <% end %>
   </div>
   <div>
     <p>These statistics help understand the <i>"shape"</i> of the histogram distribution, to help us with predictions.</p>
