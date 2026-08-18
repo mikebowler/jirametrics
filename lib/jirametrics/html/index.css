@@ -35,19 +35,25 @@
 
   /* The dependency chart is drawn by graphviz, which sets the label text inside the node rather
      than beside it, so unlike --type-*-color above these are judged against the text and not
-     against the page. Every one is a full strength Okabe-Ito colour clearing 4.5:1 against
-     --dependency-chart-label-color. They are opaque, so the fill is the background the text sits
-     on and there is nothing for a dark theme to override.
+     against the page. They are opaque, so the fill is the background the text sits on and there
+     is nothing for a dark theme to override.
 
-     Okabe-Ito blue is deliberately missing. It reaches only 4.05:1 against black, which is why
-     task is sky blue here rather than the blue it gets elsewhere. Do not pastel these if you
-     replace them: lightening compresses colours together and is exactly what stops people with
-     colour vision deficiency separating them. */
-  --dependency-chart-story-color: #009E73;   /* Okabe-Ito bluish green */
-  --dependency-chart-task-color: #56B4E9;    /* Okabe-Ito sky blue */
-  --dependency-chart-bug-color: #D55E00;     /* Okabe-Ito vermilion, also used for Defect */
-  --dependency-chart-epic-color: #F0E442;    /* Okabe-Ito yellow */
-  --dependency-chart-spike-color: #CC79A7;   /* Okabe-Ito reddish purple */
+     These are Okabe-Ito hues rather than Okabe-Ito itself. At full strength three of them left
+     black text at only 5.4 to 6.9:1, which passes AA and still reads as muddy, so hue and chroma
+     are kept exactly and lightness is raised until every one clears 7:1. Measured that way the
+     closest pair is 13.5 (sky blue against the mauve, under protanopia), which is better than the
+     11.7 the full Okabe-Ito set manages against itself, so the lift costs no separation.
+
+     Two things to avoid if you replace them. Do not flatten the lightness: the spread is what
+     keeps the orange and the yellow apart under deuteranopia, where hue alone cannot, and levelling
+     them measured 3.0. Do not pastel them either, which is what the original colours here did and
+     measured 4.7. Okabe-Ito blue is also deliberately absent, since nothing in its hue clears 7:1
+     against black, which is why task is sky blue here rather than the blue it gets elsewhere. */
+  --dependency-chart-story-color: #20AA7E;   /* Okabe-Ito bluish green, lifted */
+  --dependency-chart-task-color: #56B4E9;    /* Okabe-Ito sky blue, unchanged */
+  --dependency-chart-bug-color: #EE721E;     /* Okabe-Ito vermilion, lifted. Also used for Defect */
+  --dependency-chart-epic-color: #F0E442;    /* Okabe-Ito yellow, unchanged */
+  --dependency-chart-spike-color: #CF7CAA;   /* Okabe-Ito reddish purple, lifted */
   --dependency-chart-label-color: black;
   --dependency-chart-link-color: gray;
 

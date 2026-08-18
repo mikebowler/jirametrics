@@ -433,6 +433,13 @@ describe DependencyChart do
     it 'gives two unknown types different colours' do
       expect(chart.color_for type: 'Sub-task').not_to eq(chart.color_for type: 'Incident')
     end
+
+    # The shared palette is a set of line colours judged against the page. Its first slot is
+    # Okabe-Ito blue, which leaves black label text at 4.05:1 once it becomes the fill behind it.
+    it 'draws an unknown type from its own fills rather than the shared palette' do
+      known = %w[Story Task Bug Epic Spike].collect { |type| chart.color_for type: type }
+      expect(known).to include(chart.color_for(type: 'Sub-task'))
+    end
   end
 
   describe 'the CSS variables it names' do

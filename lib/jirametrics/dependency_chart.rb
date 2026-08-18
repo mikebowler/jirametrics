@@ -32,6 +32,14 @@ class DependencyChart < ChartBase
     attr_accessor :color, :label
   end
 
+  FILL_COLORS = {
+    story: CssVariable['--dependency-chart-story-color'],
+    task: CssVariable['--dependency-chart-task-color'],
+    bug: CssVariable['--dependency-chart-bug-color'],
+    epic: CssVariable['--dependency-chart-epic-color'],
+    spike: CssVariable['--dependency-chart-spike-color']
+  }.freeze
+
   def initialize rules_block
     super()
 
@@ -39,12 +47,12 @@ class DependencyChart < ChartBase
     # them and those are line colours, judged against the page rather than against the text. See
     # index.css for which colours these are and why.
     @chart_colors = {
-      'Story' => CssVariable['--dependency-chart-story-color'],
-      'Task' => CssVariable['--dependency-chart-task-color'],
-      'Bug' => CssVariable['--dependency-chart-bug-color'],
-      'Defect' => CssVariable['--dependency-chart-bug-color'],
-      'Epic' => CssVariable['--dependency-chart-epic-color'],
-      'Spike' => CssVariable['--dependency-chart-spike-color']
+      'Story' => FILL_COLORS[:story],
+      'Task' => FILL_COLORS[:task],
+      'Bug' => FILL_COLORS[:bug],
+      'Defect' => FILL_COLORS[:bug],
+      'Epic' => FILL_COLORS[:epic],
+      'Spike' => FILL_COLORS[:spike]
     }
 
     header_text 'Dependencies'
@@ -168,6 +176,17 @@ class DependencyChart < ChartBase
 
   def default_link_color
     CssVariable['--dependency-chart-link-color']
+  end
+
+  # An issue type we have no colour for cannot come from the shared palette, the way it does on
+  # every other chart. That palette holds line colours, judged against the page, and its first slot
+  # is Okabe-Ito blue, which leaves black label text at 4.05:1 once it becomes the fill behind it.
+  # These rotate this chart's own fills, which are all known to be comfortable. Two unknown types
+  # can therefore land on the same colour as each other or as a known type, which costs little:
+  # every node already names its type in the label.
+  def next_palette_color
+    @fallback_color_index = (@fallback_color_index || -1) + 1
+    FILL_COLORS.values[@fallback_color_index % FILL_COLORS.size]
   end
 
   def build_dot_graph
