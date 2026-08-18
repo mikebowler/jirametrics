@@ -290,6 +290,49 @@ describe DependencyChart do
     end
   end
 
+  describe '#run' do
+    let(:rendered_svg) { %(<svg width="10pt" height="5pt">body</svg>) }
+
+    before do
+      chart.issues = [issue13, issue14, issue15]
+      chart.time_range = to_time('2021-06-01')..to_time('2021-12-01')
+    end
+
+    # Graphviz has no idea what a CSS variable is. Handed one it silently draws black, which is
+    # how the chart ended up as black text on a black background.
+    it 'never puts a css variable in the graph it hands to graphviz' do
+      # A type with no colour of its own falls back to the palette, which deals in CSS variables.
+      chart.issue_rules { |_issue, rules| rules.color = chart.color_for(type: 'Sub-task') }
+      dot_graph = nil
+      allow(chart).to receive(:execute_graphviz) do |dot|
+        dot_graph = dot
+        rendered_svg
+      end
+      chart.run
+      expect(dot_graph).not_to include 'var('
+    end
+
+    it 'maps the placeholders back to variables in the rendered svg' do
+      chart.issue_rules { |_issue, rules| rules.color = CssVariable['--palette-color-1'] }
+      allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)
+      fill_rule = %([fill="#fe0001"]{fill:var(--palette-color-1)})
+      stroke_rule = %([stroke="#fe0001"]{stroke:var(--palette-color-1)})
+      expect(chart.run).to include %(<style>#{fill_rule}#{stroke_rule}</style>)
+    end
+  end
+
+  describe '#make_dot_link' do
+    it 'substitutes a placeholder when the line colour is a CSS variable' do
+      rules = DependencyChart::LinkRules.new
+      rules.line_color = CssVariable['--palette-color-1']
+      target = instance_double(IssueLink, label: 'blocks', origin: double(key: 'SP-1'),
+        other_issue: double(key: 'SP-2'))
+      expect(chart.make_dot_link issue_link: target, link_rules: rules).to(
+        eq(%("SP-1" -> "SP-2"[label="blocks",color="#fe0001",fontcolor="#fe0001"];))
+      )
+    end
+  end
+
   describe '#make_dot_issue' do
     it 'handles simple case' do
       rules = DependencyChart::IssueRules.new
@@ -305,6 +348,15 @@ describe DependencyChart do
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
           %(,style=filled,fillcolor="red"]))
+      )
+    end
+
+    it 'substitutes a placeholder when the colour is a CSS variable' do
+      rules = DependencyChart::IssueRules.new
+      rules.color = CssVariable['--palette-color-1']
+      expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
+          %(,style=filled,fillcolor="#fe0001"]))
       )
     end
 
@@ -324,6 +376,62 @@ describe DependencyChart do
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
       )
+    end
+  end
+
+  describe '#color_for' do
+    it 'gives a type it knows about that specific colour' do
+      expect(chart.color_for type: 'Story').to eq '#90EE90'
+    end
+
+    it 'gives the same unknown type the same colour every time' do
+      first_call = chart.color_for type: 'Sub-task'
+      expect(chart.color_for type: 'Sub-task').to eq first_call
+    end
+
+    it 'gives two unknown types different colours' do
+      expect(chart.color_for type: 'Sub-task').not_to eq(chart.color_for type: 'Incident')
+    end
+  end
+
+  describe '#graphviz_color' do
+    it 'passes a literal colour through untouched' do
+      expect(chart.graphviz_color('red')).to eq 'red'
+    end
+
+    it 'substitutes a placeholder for a CSS variable, which graphviz cannot parse' do
+      expect(chart.graphviz_color(CssVariable['--palette-color-1'])).to eq '#fe0001'
+    end
+
+    it 'gives the same variable the same placeholder and a different one its own' do
+      first = chart.graphviz_color(CssVariable['--palette-color-1'])
+      second = chart.graphviz_color(CssVariable['--palette-color-2'])
+      aggregate_failures do
+        expect(chart.graphviz_color(CssVariable['--palette-color-1'])).to eq first
+        expect(second).not_to eq first
+      end
+    end
+  end
+
+  describe '#restore_css_variables' do
+    it 'leaves the svg alone when no colour was a variable' do
+      svg = %(<svg width="10pt"><path fill="black"/></svg>)
+      expect(chart.restore_css_variables svg).to eq svg
+    end
+
+    it 'maps each placeholder back to its variable, for both fill and stroke' do
+      chart.graphviz_color CssVariable['--palette-color-1']
+      fill_rule = %([fill="#fe0001"]{fill:var(--palette-color-1)})
+      stroke_rule = %([stroke="#fe0001"]{stroke:var(--palette-color-1)})
+      expect(chart.restore_css_variables %(<svg width="10pt">body</svg>)).to eq(
+        %(<svg width="10pt"><style>#{fill_rule}#{stroke_rule}</style>body</svg>)
+      )
+    end
+
+    it 'handles the multi-line opening tag that graphviz actually emits' do
+      chart.graphviz_color CssVariable['--palette-color-1']
+      svg = %(<svg width="10pt" height="5pt"\n viewBox="0 0 10 5" xmlns="http://www.w3.org/2000/svg">body</svg>)
+      expect(chart.restore_css_variables(svg)).to include %(xmlns="http://www.w3.org/2000/svg"><style>)
     end
   end
 

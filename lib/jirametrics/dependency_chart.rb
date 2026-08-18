@@ -35,6 +35,19 @@ class DependencyChart < ChartBase
   def initialize rules_block
     super()
 
+    # The inherited colours are line colours, far too saturated to sit behind the black label
+    # text that graphviz draws on top of them, so this chart keeps its own pale set. They are
+    # literals rather than CSS variables only because nobody has yet decided what the dark theme
+    # versions should be.
+    @chart_colors = {
+      'Story' => '#90EE90',
+      'Task' => '#87CEFA',
+      'Bug' => '#ffdab9',
+      'Defect' => '#ffdab9',
+      'Epic' => '#fafad2',
+      'Spike' => '#DDA0DD' # light purple
+    }
+
     header_text 'Dependencies'
     description_text <<-HTML
       <p>
@@ -57,7 +70,7 @@ class DependencyChart < ChartBase
         '<div>No data matched the selected criteria. Nothing to show.</div>'
     end
 
-    svg = execute_graphviz(dot_graph.join("\n"))
+    svg = restore_css_variables execute_graphviz(dot_graph.join("\n"))
     "<h1 class='foldable'>#{@header_text}</h1><div>#{@description_text}#{shrink_svg svg}</div>"
   end
 
@@ -77,6 +90,42 @@ class DependencyChart < ChartBase
     result
   end
 
+  # Graphviz has never heard of CSS variables. Handed one it emits a warning nobody sees and
+  # falls back to black, which is how a node ends up as black text on a black background. So a
+  # variable is swapped for a placeholder colour here and mapped back to the variable in the
+  # generated SVG, by #restore_css_variables. Anything that isn't a variable is left alone.
+  #
+  # The placeholders only need to be colours that nobody would ever choose deliberately, so that
+  # the CSS selectors matching them in the SVG cannot hit anything else.
+  def graphviz_color color
+    return color unless color.is_a? CssVariable
+
+    css_variable_placeholders[color.name] ||= format '#fe00%02x', css_variable_placeholders.size + 1
+  end
+
+  def css_variable_placeholders
+    @css_variable_placeholders ||= {}
+  end
+
+  # Turns the placeholders from #graphviz_color back into the variables they stood for, by way of
+  # a stylesheet that selects on the placeholder value. Rewriting the attributes in place would be
+  # the obvious move, but var() is only legal in a CSS value and not in an SVG presentation
+  # attribute, so the colour has to arrive as a real CSS rule. Author rules beat presentation
+  # attributes, so the placeholder never wins.
+  #
+  # fillcolor and fontcolor come out of graphviz as fill and color comes out as stroke, and an
+  # arrowhead uses both, so every placeholder gets a rule for each.
+  def restore_css_variables svg
+    return svg if css_variable_placeholders.empty?
+
+    rules = css_variable_placeholders.map do |name, placeholder|
+      %([fill="#{placeholder}"]{fill:var(#{name})}[stroke="#{placeholder}"]{stroke:var(#{name})})
+    end
+    svg.sub(/(?<opening_tag><svg\b[^>]*>)/) do
+      "#{Regexp.last_match[:opening_tag]}<style>#{rules.join}</style>"
+    end
+  end
+
   def make_dot_link issue_link:, link_rules:
     result = +''
     result << issue_link.origin.key.inspect
@@ -84,8 +133,9 @@ class DependencyChart < ChartBase
     result << issue_link.other_issue.key.inspect
     result << '['
     result << 'label=' << (link_rules.label || issue_link.label).inspect
-    result << ',color=' << (link_rules.line_color || 'gray').inspect
-    result << ',fontcolor=' << (link_rules.line_color || 'gray').inspect
+    line_color = graphviz_color(link_rules.line_color || 'gray')
+    result << ',color=' << line_color.inspect
+    result << ',fontcolor=' << line_color.inspect
     result << ',dir=both' if link_rules.bidirectional_arrows?
     result << '];'
     result
@@ -102,24 +152,11 @@ class DependencyChart < ChartBase
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
     unless issue_rules.color == :none
-      result << %(,style=filled,fillcolor="#{issue_rules.color || color_for(type: issue.type)}")
+      fill_color = graphviz_color(issue_rules.color || color_for(type: issue.type))
+      result << %(,style=filled,fillcolor="#{fill_color}")
     end
     result << ']'
     result
-  end
-
-  # This used to pull colours from chart_base but the migration to CSS colours kept breaking
-  # this chart so we moved it here, until we're finished with the rest. TODO: Revisit whether
-  # this can also use customizable CSS colours
-  def color_for type:
-    @chart_colors = {
-      'Story' => '#90EE90',
-      'Task' => '#87CEFA',
-      'Bug' => '#ffdab9',
-      'Defect' => '#ffdab9',
-      'Epic' => '#fafad2',
-      'Spike' => '#DDA0DD' # light purple
-    }[type] ||= next_palette_color
   end
 
   def build_dot_graph
