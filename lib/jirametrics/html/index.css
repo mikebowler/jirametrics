@@ -40,15 +40,15 @@
 
      These are Okabe-Ito hues rather than Okabe-Ito itself. At full strength three of them left
      black text at only 5.4 to 6.9:1, which passes AA and still reads as muddy, so hue and chroma
-     are kept exactly and lightness is raised until every one clears 7:1. Measured that way the
-     closest pair is 13.5 (sky blue against the mauve, under protanopia), which is better than the
-     11.7 the full Okabe-Ito set manages against itself, so the lift costs no separation.
+     are kept exactly and lightness is raised until every one clears 7:1. Run `rake check_colors`
+     for what they currently measure, against the full Okabe-Ito set as a reference ceiling.
 
-     Two things to avoid if you replace them. Do not flatten the lightness: the spread is what
+     Three things to avoid if you replace them. Do not flatten the lightness: the spread is what
      keeps the orange and the yellow apart under deuteranopia, where hue alone cannot, and levelling
-     them measured 3.0. Do not pastel them either, which is what the original colours here did and
-     measured 4.7. Okabe-Ito blue is also deliberately absent, since nothing in its hue clears 7:1
-     against black, which is why task is sky blue here rather than the blue it gets elsewhere. */
+     them scores about 3. Do not pastel them either, which is what the original colours here did
+     and scored about 4.7. And Okabe-Ito blue is deliberately absent, because nothing in its hue
+     clears 7:1 against black; that is why task is sky blue here rather than the blue it gets
+     elsewhere. */
   --dependency-chart-story-color: #20AA7E;   /* Okabe-Ito bluish green, lifted */
   --dependency-chart-task-color: #56B4E9;    /* Okabe-Ito sky blue, unchanged */
   --dependency-chart-bug-color: #EE721E;     /* Okabe-Ito vermilion, lifted. Also used for Defect */
