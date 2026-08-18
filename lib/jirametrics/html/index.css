@@ -41,19 +41,19 @@
      These are Okabe-Ito hues rather than Okabe-Ito itself. At full strength they sit in a middle
      band of lightness where NEITHER black nor white text is comfortable on them, which is the
      thing to understand before changing any of this. Contrast ratio alone will mislead you here:
-     the first attempt cleared 7:1, the ratio WCAG calls AAA, and still looked muddy in a real
-     report. Each hue is therefore moved out of that middle band, whichever way it had furthest to
-     go, and takes whichever of black or white then reads on it. That is why some of these fills
-     are light and some are dark, and why each one carries its own label colour: they are a pair,
-     and changing a fill without rechecking its label is how you get unreadable nodes.
+     two earlier attempts cleared 7:1 and then 9:1, both of which WCAG calls comfortable, and both
+     still read as muddy in a real report. A mid-toned fill with dark text on it looks wrong at
+     almost any ratio. Going DARK and putting white text on it is what actually reads, so most of
+     these fills are dark, and each carries its own label colour: they are a pair, and changing a
+     fill without rechecking its label is how you get unreadable nodes.
 
-     Run `rake check_colors` for what they currently measure, against the full Okabe-Ito set as a
-     reference ceiling. Two things that wreck the score, both measured: flattening the lightness
-     drops it to about 3, because the spread is what keeps orange and yellow apart under
-     deuteranopia where hue alone cannot, and pastelling drops it to about 4.7, which is what the
-     original colours here did. */
-  --dependency-chart-story-color: #41C093;         /* Okabe-Ito bluish green, lightened */
-  --dependency-chart-story-label-color: black;
+     They are not all dark, because the lightness spread is what does most of the work of keeping
+     them apart. Levelling them all to the same darkness measures about 3, which is unusable;
+     pastelling them all measures about 4.7, which is what the original colours here did. Run
+     `rake check_colors` for what they currently measure, against the full Okabe-Ito set as a
+     reference ceiling. */
+  --dependency-chart-story-color: #015C41;         /* Okabe-Ito bluish green, darkened */
+  --dependency-chart-story-label-color: white;
   --dependency-chart-task-color: #56B4E9;          /* Okabe-Ito sky blue, unchanged */
   --dependency-chart-task-label-color: black;
   --dependency-chart-bug-color: #783200;           /* Okabe-Ito vermilion, darkened. Also Defect */
