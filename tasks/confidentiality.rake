@@ -22,7 +22,7 @@
 ALLOWED_GITHUB_ORGS = %w[example example-org owner acme foo sample mikebowler].freeze
 
 # Jira hosts permitted in specs: neutral placeholders plus our own instance.
-ALLOWED_JIRA_HOSTS = %w[example sample improvingflow].freeze
+ALLOWED_JIRA_HOSTS = %w[acme example sample improvingflow].freeze
 
 GITHUB_ORG_PATTERN = %r{github\.com[/:]([A-Za-z0-9_.-]+)}
 JIRA_HOST_PATTERN = /([A-Za-z0-9_-]+)\.atlassian\.net/
