@@ -32,12 +32,23 @@ class DependencyChart < ChartBase
     attr_accessor :color, :label
   end
 
-  FILL_COLORS = {
-    story: CssVariable['--dependency-chart-story-color'],
-    task: CssVariable['--dependency-chart-task-color'],
-    bug: CssVariable['--dependency-chart-bug-color'],
-    epic: CssVariable['--dependency-chart-epic-color'],
-    spike: CssVariable['--dependency-chart-spike-color']
+  # A fill and the label colour that goes on top of it, kept together because they are not
+  # independent choices: some of these fills are light and take black text, others are dark and
+  # take white, and a node that took its fill from one and its label from another would be
+  # unreadable. Always hand them out as a pair.
+  Palette = Struct.new :fill, :label
+
+  def self.palette_entry name
+    Palette.new CssVariable["--dependency-chart-#{name}-color"],
+      CssVariable["--dependency-chart-#{name}-label-color"]
+  end
+
+  PALETTE = {
+    story: palette_entry('story'),
+    task: palette_entry('task'),
+    bug: palette_entry('bug'),
+    epic: palette_entry('epic'),
+    spike: palette_entry('spike')
   }.freeze
 
   def initialize rules_block
@@ -46,13 +57,13 @@ class DependencyChart < ChartBase
     # Not the inherited type colours, because these are fills with label text sitting on top of
     # them and those are line colours, judged against the page rather than against the text. See
     # index.css for which colours these are and why.
-    @chart_colors = {
-      'Story' => FILL_COLORS[:story],
-      'Task' => FILL_COLORS[:task],
-      'Bug' => FILL_COLORS[:bug],
-      'Defect' => FILL_COLORS[:bug],
-      'Epic' => FILL_COLORS[:epic],
-      'Spike' => FILL_COLORS[:spike]
+    @palette_by_type = {
+      'Story' => PALETTE[:story],
+      'Task' => PALETTE[:task],
+      'Bug' => PALETTE[:bug],
+      'Defect' => PALETTE[:bug],
+      'Epic' => PALETTE[:epic],
+      'Spike' => PALETTE[:spike]
     }
 
     header_text 'Dependencies'
@@ -158,20 +169,33 @@ class DependencyChart < ChartBase
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
-    filled = issue_rules.color != :none
-    if filled
+    unless issue_rules.color == :none
       fill_color = graphviz_color(issue_rules.color || color_for(type: issue.type))
       result << %(,style=filled,fillcolor="#{fill_color}")
     end
-    # A filled node is its own background, so its label is measured against the fill. An unfilled
-    # one sits on the page and has to follow the theme instead.
-    result << %(,fontcolor="#{graphviz_color label_color(filled: filled)}")
+    result << %(,fontcolor="#{graphviz_color label_color(issue: issue, issue_rules: issue_rules)}")
     result << ']'
     result
   end
 
-  def label_color filled:
-    CssVariable[filled ? '--dependency-chart-label-color' : '--default-text-color']
+  # A filled node is its own background, so its label is measured against the fill rather than
+  # against the page.
+  def label_color issue:, issue_rules:
+    return CssVariable['--default-text-color'] if issue_rules.color == :none
+
+    # A colour somebody configured is one we know nothing about, so guessing that a particular
+    # type's label would suit it is worse than falling back to the general one.
+    return CssVariable['--dependency-chart-label-color'] if issue_rules.color
+
+    palette_for(issue.type).label
+  end
+
+  def color_for type:
+    palette_for(type).fill
+  end
+
+  def palette_for type
+    @palette_by_type[type] ||= next_palette_entry
   end
 
   def default_link_color
@@ -181,12 +205,12 @@ class DependencyChart < ChartBase
   # An issue type we have no colour for cannot come from the shared palette, the way it does on
   # every other chart. That palette holds line colours, judged against the page, and its first slot
   # is Okabe-Ito blue, which leaves black label text at 4.05:1 once it becomes the fill behind it.
-  # These rotate this chart's own fills, which are all known to be comfortable. Two unknown types
+  # These rotate this chart's own entries, which are all known to be comfortable. Two unknown types
   # can therefore land on the same colour as each other or as a known type, which costs little:
   # every node already names its type in the label.
-  def next_palette_color
+  def next_palette_entry
     @fallback_color_index = (@fallback_color_index || -1) + 1
-    FILL_COLORS.values[@fallback_color_index % FILL_COLORS.size]
+    PALETTE.values[@fallback_color_index % PALETTE.size]
   end
 
   def build_dot_graph

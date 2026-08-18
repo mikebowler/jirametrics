@@ -372,7 +372,15 @@ describe DependencyChart do
 
     # A filled node is its own background so the label is measured against the fill, while an
     # unfilled one sits on the page and has to follow the theme instead.
-    it 'labels a filled node with the dependency chart label colour' do
+    it 'labels a node filled from the palette with that fill\'s own label colour' do
+      rules = DependencyChart::IssueRules.new
+      chart.make_dot_issue issue: issue13, issue_rules: rules
+      expect(chart.css_variable_placeholders).to include('--dependency-chart-story-label-color' => '#fe0002')
+    end
+
+    # A colour somebody configured is one we know nothing about, so guessing that a particular
+    # type's label suits it would be worse than falling back to the general one.
+    it 'labels a node filled with a configured colour with the general label colour' do
       rules = DependencyChart::IssueRules.new
       rules.color = 'red'
       chart.make_dot_issue issue: issue13, issue_rules: rules
@@ -442,14 +450,45 @@ describe DependencyChart do
     end
   end
 
+  describe '#palette_for' do
+    it 'gives a known type the label colour that belongs to its fill' do
+      expect(chart.palette_for('Story')).to have_attributes(
+        fill: CssVariable['--dependency-chart-story-color'],
+        label: CssVariable['--dependency-chart-story-label-color']
+      )
+    end
+
+    # Some fills are dark with white text and some light with black, so a type that took its fill
+    # from one entry and its label from another would be unreadable. They have to move together.
+    it 'keeps fill and label together for an unknown type' do
+      entry = chart.palette_for 'Sub-task'
+      known = %w[Story Task Bug Epic Spike].collect { |type| chart.palette_for type }
+      expect(known).to include(have_attributes(fill: entry.fill, label: entry.label))
+    end
+
+    it 'gives the same unknown type the same entry every time' do
+      first_call = chart.palette_for 'Sub-task'
+      expect(chart.palette_for('Sub-task')).to eq first_call
+    end
+  end
+
+  def configured_rules color
+    DependencyChart::IssueRules.new.tap { |rules| rules.color = color }
+  end
+
   describe 'the CSS variables it names' do
     # A name the stylesheet does not define resolves to nothing rather than raising, so the colour
     # would quietly vanish and nobody would find out until a chart looked wrong. That is precisely
     # how the black-on-black bug survived, so the two sides are tied together here.
     it 'are all defined in index.css' do
       css = File.read 'lib/jirametrics/html/index.css'
-      used = %w[Story Task Bug Defect Epic Spike].collect { |type| chart.color_for type: type }
-      used << chart.label_color(filled: true) << chart.label_color(filled: false) << chart.default_link_color
+      used = %w[Story Task Bug Defect Epic Spike].flat_map do |type|
+        entry = chart.palette_for type
+        [entry.fill, entry.label]
+      end
+      used << chart.default_link_color
+      used << chart.label_color(issue: issue13, issue_rules: configured_rules('red'))
+      used << chart.label_color(issue: issue13, issue_rules: configured_rules(:none))
       undefined = used.uniq.collect(&:name).reject { |name| css.match?(/^\s*#{Regexp.escape name}:/) }
       expect(undefined).to be_empty
     end

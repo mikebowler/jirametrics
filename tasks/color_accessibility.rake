@@ -37,6 +37,28 @@ def describe_separation label, palette
     label == MEASURED_GROUPS.keys.first
 end
 
+# Each fill declares the label colour that goes on it, so measure the pair as declared rather than
+# the best available. Reporting only the best would hide the failure mode this is here to catch:
+# a fill changed without its label being rechecked.
+def describe_label css, fill_name, fill
+  label_name = fill_name.sub(/-color$/, '-label-color')
+  declared = css[/#{Regexp.escape label_name}\s*:\s*([^;]+);/, 1]&.strip
+  if declared.nil?
+    return format('    %<name>-38s %<fill>-7s  no %<label>s declared', name: fill_name, fill: fill,
+      label: label_name)
+  end
+
+  ratio = ColorAccessibility.contrast_ratio fill, declared == 'white' ? '#FFFFFF' : '#000000'
+  best, best_ratio = ColorAccessibility.best_text_color fill
+  verdict =
+    if ratio >= AAA_TEXT then 'comfortable'
+    elsif ratio >= AA_TEXT then "passes AA but reads muddy -- #{best} would give #{format '%.2f', best_ratio}"
+    else "TOO LOW -- #{best} would give #{format '%.2f', best_ratio}"
+    end
+  format('    %<name>-38s %<fill>-7s %<ratio>5.2f  %<verdict>s', name: fill_name, fill: fill, ratio: ratio,
+    verdict: "#{declared} text, #{verdict}")
+end
+
 desc 'Report how the shipped palettes hold up for readers with colour vision deficiency'
 task :check_colors do
   css = File.read CSS_FILE
@@ -50,17 +72,8 @@ task :check_colors do
 
     next unless FILLED_GROUPS.include? label
 
-    puts '  text on each fill:'
-    palette.each do |name, value|
-      text, ratio = ColorAccessibility.best_text_color value
-      verdict =
-        if ratio >= AAA_TEXT then 'comfortable'
-        elsif ratio >= AA_TEXT then 'passes AA but reads muddy'
-        else 'TOO LOW'
-        end
-      puts format('    %<name>-38s %<value>-7s %<ratio>5.2f  %<verdict>s', name: name, value: value,
-        ratio: ratio, verdict: "#{text} text, #{verdict}")
-    end
+    puts '  label text as declared on each fill:'
+    palette.each { |name, value| puts describe_label css, name, value }
   end
 
   puts "\nFor reference, the full Okabe-Ito palette measured the same way:"

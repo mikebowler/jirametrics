@@ -32,12 +32,18 @@ html[data-theme="light"] {
 
   /* The dependency chart's original pastels. They are pleasant but they are not safe: pale
      colours sit close together, and green, peach and pale yellow are hard to separate for anyone
-     with red-green colour vision deficiency. */
+     with red-green colour vision deficiency. Every one of them is light, so the label colours all
+     go back to black; the shipped set has dark fills that need white. */
   --dependency-chart-story-color: #90EE90;
+  --dependency-chart-story-label-color: black;
   --dependency-chart-task-color: #87CEFA;
+  --dependency-chart-task-label-color: black;
   --dependency-chart-bug-color: #ffdab9;
+  --dependency-chart-bug-label-color: black;
   --dependency-chart-epic-color: #fafad2;
+  --dependency-chart-epic-label-color: black;
   --dependency-chart-spike-color: #DDA0DD;
+  --dependency-chart-spike-label-color: black;
   --dependency-chart-link-color: gray;
 
   --status-category-todo-color: gray;

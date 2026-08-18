@@ -38,22 +38,33 @@
      against the page. They are opaque, so the fill is the background the text sits on and there
      is nothing for a dark theme to override.
 
-     These are Okabe-Ito hues rather than Okabe-Ito itself. At full strength three of them left
-     black text at only 5.4 to 6.9:1, which passes AA and still reads as muddy, so hue and chroma
-     are kept exactly and lightness is raised until every one clears 7:1. Run `rake check_colors`
-     for what they currently measure, against the full Okabe-Ito set as a reference ceiling.
+     These are Okabe-Ito hues rather than Okabe-Ito itself. At full strength they sit in a middle
+     band of lightness where NEITHER black nor white text is comfortable on them, which is the
+     thing to understand before changing any of this. Contrast ratio alone will mislead you here:
+     the first attempt cleared 7:1, the ratio WCAG calls AAA, and still looked muddy in a real
+     report. Each hue is therefore moved out of that middle band, whichever way it had furthest to
+     go, and takes whichever of black or white then reads on it. That is why some of these fills
+     are light and some are dark, and why each one carries its own label colour: they are a pair,
+     and changing a fill without rechecking its label is how you get unreadable nodes.
 
-     Three things to avoid if you replace them. Do not flatten the lightness: the spread is what
-     keeps the orange and the yellow apart under deuteranopia, where hue alone cannot, and levelling
-     them scores about 3. Do not pastel them either, which is what the original colours here did
-     and scored about 4.7. And Okabe-Ito blue is deliberately absent, because nothing in its hue
-     clears 7:1 against black; that is why task is sky blue here rather than the blue it gets
-     elsewhere. */
-  --dependency-chart-story-color: #20AA7E;   /* Okabe-Ito bluish green, lifted */
-  --dependency-chart-task-color: #56B4E9;    /* Okabe-Ito sky blue, unchanged */
-  --dependency-chart-bug-color: #EE721E;     /* Okabe-Ito vermilion, lifted. Also used for Defect */
-  --dependency-chart-epic-color: #F0E442;    /* Okabe-Ito yellow, unchanged */
-  --dependency-chart-spike-color: #CF7CAA;   /* Okabe-Ito reddish purple, lifted */
+     Run `rake check_colors` for what they currently measure, against the full Okabe-Ito set as a
+     reference ceiling. Two things that wreck the score, both measured: flattening the lightness
+     drops it to about 3, because the spread is what keeps orange and yellow apart under
+     deuteranopia where hue alone cannot, and pastelling drops it to about 4.7, which is what the
+     original colours here did. */
+  --dependency-chart-story-color: #41C093;         /* Okabe-Ito bluish green, lightened */
+  --dependency-chart-story-label-color: black;
+  --dependency-chart-task-color: #56B4E9;          /* Okabe-Ito sky blue, unchanged */
+  --dependency-chart-task-label-color: black;
+  --dependency-chart-bug-color: #783200;           /* Okabe-Ito vermilion, darkened. Also Defect */
+  --dependency-chart-bug-label-color: white;
+  --dependency-chart-epic-color: #F0E442;          /* Okabe-Ito yellow, unchanged */
+  --dependency-chart-epic-label-color: black;
+  --dependency-chart-spike-color: #762A58;         /* Okabe-Ito reddish purple, darkened */
+  --dependency-chart-spike-label-color: white;
+
+  /* For a node whose fill was set in the config rather than coming from the palette above, where
+     we cannot know what would read on it. */
   --dependency-chart-label-color: black;
   --dependency-chart-link-color: gray;
 
