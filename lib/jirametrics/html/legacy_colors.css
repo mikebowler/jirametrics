@@ -30,6 +30,16 @@ html[data-theme="light"] {
   --type-bug-color: orange;
   --type-spike-color: #9400D3;
 
+  /* The dependency chart's original pastels. They are pleasant but they are not safe: pale
+     colours sit close together, and green, peach and pale yellow are hard to separate for anyone
+     with red-green colour vision deficiency. */
+  --dependency-chart-story-color: #90EE90;
+  --dependency-chart-task-color: #87CEFA;
+  --dependency-chart-bug-color: #ffdab9;
+  --dependency-chart-epic-color: #fafad2;
+  --dependency-chart-spike-color: #DDA0DD;
+  --dependency-chart-link-color: gray;
+
   --status-category-todo-color: gray;
   --status-category-inprogress-color: #2663ff;
   --status-category-done-color: #00ff00;
@@ -106,6 +116,7 @@ html[data-theme="light"] {
 html[data-theme="dark"] {
   --warning-banner: #9F2B00;
   --non-working-days-color: #2f2f2f;
+  --dependency-chart-link-color: gray;   /* the chart had no dark variant originally */
   --type-story-color: #6fb86f;
   --type-task-color: #0021b3;
   --type-bug-color: #bb5603;
@@ -139,6 +150,7 @@ html[data-theme="dark"] {
   :root {
     --warning-banner: #9F2B00;
     --non-working-days-color: #2f2f2f;
+    --dependency-chart-link-color: gray;   /* the chart had no dark variant originally */
     --type-story-color: #6fb86f;
     --type-task-color: #0021b3;
     --type-bug-color: #bb5603;

@@ -35,17 +35,16 @@ class DependencyChart < ChartBase
   def initialize rules_block
     super()
 
-    # The inherited colours are line colours, far too saturated to sit behind the black label
-    # text that graphviz draws on top of them, so this chart keeps its own pale set. They are
-    # literals rather than CSS variables only because nobody has yet decided what the dark theme
-    # versions should be.
+    # Not the inherited type colours, because these are fills with label text sitting on top of
+    # them and those are line colours, judged against the page rather than against the text. See
+    # index.css for which colours these are and why.
     @chart_colors = {
-      'Story' => '#90EE90',
-      'Task' => '#87CEFA',
-      'Bug' => '#ffdab9',
-      'Defect' => '#ffdab9',
-      'Epic' => '#fafad2',
-      'Spike' => '#DDA0DD' # light purple
+      'Story' => CssVariable['--dependency-chart-story-color'],
+      'Task' => CssVariable['--dependency-chart-task-color'],
+      'Bug' => CssVariable['--dependency-chart-bug-color'],
+      'Defect' => CssVariable['--dependency-chart-bug-color'],
+      'Epic' => CssVariable['--dependency-chart-epic-color'],
+      'Spike' => CssVariable['--dependency-chart-spike-color']
     }
 
     header_text 'Dependencies'
@@ -133,7 +132,7 @@ class DependencyChart < ChartBase
     result << issue_link.other_issue.key.inspect
     result << '['
     result << 'label=' << (link_rules.label || issue_link.label).inspect
-    line_color = graphviz_color(link_rules.line_color || 'gray')
+    line_color = graphviz_color(link_rules.line_color || default_link_color)
     result << ',color=' << line_color.inspect
     result << ',fontcolor=' << line_color.inspect
     result << ',dir=both' if link_rules.bidirectional_arrows?
@@ -151,12 +150,24 @@ class DependencyChart < ChartBase
     result << ',shape=Mrecord'
     tooltip = "#{issue.key}: #{issue.summary}"
     result << ",tooltip=#{tooltip[0..80].inspect}"
-    unless issue_rules.color == :none
+    filled = issue_rules.color != :none
+    if filled
       fill_color = graphviz_color(issue_rules.color || color_for(type: issue.type))
       result << %(,style=filled,fillcolor="#{fill_color}")
     end
+    # A filled node is its own background, so its label is measured against the fill. An unfilled
+    # one sits on the page and has to follow the theme instead.
+    result << %(,fontcolor="#{graphviz_color label_color(filled: filled)}")
     result << ']'
     result
+  end
+
+  def label_color filled:
+    CssVariable[filled ? '--dependency-chart-label-color' : '--default-text-color']
+  end
+
+  def default_link_color
+    CssVariable['--dependency-chart-link-color']
   end
 
   def build_dot_graph

@@ -12,6 +12,12 @@ describe DependencyChart do
   let(:issue15) { load_issue('SP-15') }
 
   describe '#build_dot_graph' do
+    # These tests all suppress the fill, so every label is the theme text colour. It is the second
+    # placeholder rather than the first because the links are built before the nodes.
+    def unfilled_node key, summary
+      %("#{key}"[label="#{key}|Story",shape=Mrecord,tooltip="#{key}: #{summary}",fontcolor="#fe0002"])
+    end
+
     it 'handles no issues' do
       chart.issues = []
       expect(chart.build_dot_graph).to be_nil
@@ -25,9 +31,9 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
         '}'
       ]
     end
@@ -42,10 +48,10 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
         '}'
       ]
     end
@@ -60,12 +66,12 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
         %("SP-13" -> "SP-15"[label="is cloned by",color="blue",fontcolor="blue"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
         %("SP-15" -> "SP-13"[label="clones",color="blue",fontcolor="blue"];),
         '}'
       ]
@@ -81,13 +87,13 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="foo",color="gray",fontcolor="gray"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-13"[label="foo",color="gray",fontcolor="gray"];),
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        %("SP-13" -> "SP-15"[label="foo",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-13"[label="foo",color="#fe0001",fontcolor="#fe0001"];),
         '}'
       ]
     end
@@ -102,13 +108,13 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        # "SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];) should be removed
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        # "SP-13" -> "SP-15"[label="is cloned by",color="#fe0001",fontcolor="#fe0001"];) should be removed
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-13"[label="clones",color="#fe0001",fontcolor="#fe0001"];),
         '}'
       ]
     end
@@ -123,13 +129,13 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray"];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        # %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];), should be removed
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
+        # %("SP-15" -> "SP-13"[label="clones",color="#fe0001",fontcolor="#fe0001"];), should be removed
         '}'
       ]
     end
@@ -149,13 +155,13 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
         # %("SP-13" -> "SP-15"[label="is cloned by",color="gray,fontcolor="gray""];), # Should be removed
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-13"[label="clones",color="#fe0001",fontcolor="#fe0001"];),
         '}'
       ]
     end
@@ -179,13 +185,13 @@ describe DependencyChart do
         'digraph mygraph {',
         'rankdir=LR',
         'bgcolor="transparent"',
-        %("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]),
-        %("SP-14"[label="SP-14|Story",shape=Mrecord,tooltip="SP-14: Save credit card information"]),
-        %("SP-15"[label="SP-15|Story",shape=Mrecord,tooltip="SP-15: CLONE - Report of people checked in at an event"]),
-        %("SP-13" -> "SP-15"[label="is cloned by",color="gray",fontcolor="gray",dir=both];),
-        %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];),
-        %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray",dir=both];),
+        unfilled_node('SP-13', 'Report of people checked in at an event'),
+        unfilled_node('SP-14', 'Save credit card information'),
+        unfilled_node('SP-15', 'CLONE - Report of people checked in at an event'),
+        %("SP-13" -> "SP-15"[label="is cloned by",color="#fe0001",fontcolor="#fe0001",dir=both];),
+        %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];),
+        %("SP-15" -> "SP-13"[label="clones",color="#fe0001",fontcolor="#fe0001",dir=both];),
         '}'
       ]
     end
@@ -213,9 +219,9 @@ describe DependencyChart do
       chart.issue_rules(&empty_issue_rules)
       graph = chart.build_dot_graph
       aggregate_failures do
-        expect(graph).to include %("SP-14" -> "SP-15"[label="blocks",color="gray",fontcolor="gray"];)
-        expect(graph).not_to include %("SP-15" -> "SP-14"[label="is blocked by",color="gray",fontcolor="gray"];)
-        expect(graph).to include %("SP-15" -> "SP-13"[label="clones",color="gray",fontcolor="gray"];)
+        expect(graph).to include %("SP-14" -> "SP-15"[label="blocks",color="#fe0001",fontcolor="#fe0001"];)
+        expect(graph).not_to include %("SP-15" -> "SP-14"[label="is blocked by",color="#fe0001",fontcolor="#fe0001"];)
+        expect(graph).to include %("SP-15" -> "SP-13"[label="clones",color="#fe0001",fontcolor="#fe0001"];)
       end
     end
   end
@@ -315,13 +321,25 @@ describe DependencyChart do
     it 'maps the placeholders back to variables in the rendered svg' do
       chart.issue_rules { |_issue, rules| rules.color = CssVariable['--palette-color-1'] }
       allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)
-      fill_rule = %([fill="#fe0001"]{fill:var(--palette-color-1)})
-      stroke_rule = %([stroke="#fe0001"]{stroke:var(--palette-color-1)})
-      expect(chart.run).to include %(<style>#{fill_rule}#{stroke_rule}</style>)
+      html = chart.run
+      placeholder = chart.css_variable_placeholders.fetch '--palette-color-1'
+      fill_rule = %([fill="#{placeholder}"]{fill:var(--palette-color-1)})
+      stroke_rule = %([stroke="#{placeholder}"]{stroke:var(--palette-color-1)})
+      expect(html).to include %(#{fill_rule}#{stroke_rule})
     end
   end
 
   describe '#make_dot_link' do
+    # Link lines and their labels sit on the page rather than inside a node, so gray had to go:
+    # it was down to about 2.4:1 against the dark theme background.
+    it 'defaults the line colour to an overridable variable' do
+      rules = DependencyChart::LinkRules.new
+      target = instance_double(IssueLink, label: 'blocks', origin: double(key: 'SP-1'),
+        other_issue: double(key: 'SP-2'))
+      chart.make_dot_link issue_link: target, link_rules: rules
+      expect(chart.css_variable_placeholders).to eq({ '--dependency-chart-link-color' => '#fe0001' })
+    end
+
     it 'substitutes a placeholder when the line colour is a CSS variable' do
       rules = DependencyChart::LinkRules.new
       rules.line_color = CssVariable['--palette-color-1']
@@ -338,7 +356,8 @@ describe DependencyChart do
       rules = DependencyChart::IssueRules.new
       rules.color = :none
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+        eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
+          %(,fontcolor="#fe0001"]))
       )
     end
 
@@ -347,8 +366,24 @@ describe DependencyChart do
       rules.color = 'red'
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
-          %(,style=filled,fillcolor="red"]))
+          %(,style=filled,fillcolor="red",fontcolor="#fe0001"]))
       )
+    end
+
+    # A filled node is its own background so the label is measured against the fill, while an
+    # unfilled one sits on the page and has to follow the theme instead.
+    it 'labels a filled node with the dependency chart label colour' do
+      rules = DependencyChart::IssueRules.new
+      rules.color = 'red'
+      chart.make_dot_issue issue: issue13, issue_rules: rules
+      expect(chart.css_variable_placeholders).to eq({ '--dependency-chart-label-color' => '#fe0001' })
+    end
+
+    it 'labels an unfilled node with the theme text colour' do
+      rules = DependencyChart::IssueRules.new
+      rules.color = :none
+      chart.make_dot_issue issue: issue13, issue_rules: rules
+      expect(chart.css_variable_placeholders).to eq({ '--default-text-color' => '#fe0001' })
     end
 
     it 'substitutes a placeholder when the colour is a CSS variable' do
@@ -356,7 +391,7 @@ describe DependencyChart do
       rules.color = CssVariable['--palette-color-1']
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
         eq(%("SP-13"[label="SP-13|Story",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
-          %(,style=filled,fillcolor="#fe0001"]))
+          %(,style=filled,fillcolor="#fe0001",fontcolor="#fe0002"]))
       )
     end
 
@@ -365,7 +400,8 @@ describe DependencyChart do
       rules.label = 'hello'
       rules.color = :none
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label="hello",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+        eq(%("SP-13"[label="hello",shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
+          %(,fontcolor="#fe0001"]))
       )
     end
 
@@ -374,14 +410,19 @@ describe DependencyChart do
       rules.label = '<hello>'
       rules.color = :none
       expect(chart.make_dot_issue issue: issue13, issue_rules: rules).to(
-        eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event"]))
+        eq(%("SP-13"[label=<hello>,shape=Mrecord,tooltip="SP-13: Report of people checked in at an event") +
+          %(,fontcolor="#fe0001"]))
       )
     end
   end
 
   describe '#color_for' do
-    it 'gives a type it knows about that specific colour' do
-      expect(chart.color_for type: 'Story').to eq '#90EE90'
+    it 'gives a type it knows about its own overridable variable' do
+      expect(chart.color_for type: 'Story').to eq CssVariable['--dependency-chart-story-color']
+    end
+
+    it 'gives Defect the same colour as Bug' do
+      expect(chart.color_for type: 'Defect').to eq(chart.color_for type: 'Bug')
     end
 
     it 'gives the same unknown type the same colour every time' do
@@ -391,6 +432,19 @@ describe DependencyChart do
 
     it 'gives two unknown types different colours' do
       expect(chart.color_for type: 'Sub-task').not_to eq(chart.color_for type: 'Incident')
+    end
+  end
+
+  describe 'the CSS variables it names' do
+    # A name the stylesheet does not define resolves to nothing rather than raising, so the colour
+    # would quietly vanish and nobody would find out until a chart looked wrong. That is precisely
+    # how the black-on-black bug survived, so the two sides are tied together here.
+    it 'are all defined in index.css' do
+      css = File.read 'lib/jirametrics/html/index.css'
+      used = %w[Story Task Bug Defect Epic Spike].collect { |type| chart.color_for type: type }
+      used << chart.label_color(filled: true) << chart.label_color(filled: false) << chart.default_link_color
+      undefined = used.uniq.collect(&:name).reject { |name| css.match?(/^\s*#{Regexp.escape name}:/) }
+      expect(undefined).to be_empty
     end
   end
 

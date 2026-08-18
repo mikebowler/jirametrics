@@ -33,6 +33,24 @@
   --type-bug-color: #D55E00;         /* Okabe-Ito vermilion */
   --type-spike-color: #CC79A7;       /* Okabe-Ito reddish purple */
 
+  /* The dependency chart is drawn by graphviz, which sets the label text inside the node rather
+     than beside it, so unlike --type-*-color above these are judged against the text and not
+     against the page. Every one is a full strength Okabe-Ito colour clearing 4.5:1 against
+     --dependency-chart-label-color. They are opaque, so the fill is the background the text sits
+     on and there is nothing for a dark theme to override.
+
+     Okabe-Ito blue is deliberately missing. It reaches only 4.05:1 against black, which is why
+     task is sky blue here rather than the blue it gets elsewhere. Do not pastel these if you
+     replace them: lightening compresses colours together and is exactly what stops people with
+     colour vision deficiency separating them. */
+  --dependency-chart-story-color: #009E73;   /* Okabe-Ito bluish green */
+  --dependency-chart-task-color: #56B4E9;    /* Okabe-Ito sky blue */
+  --dependency-chart-bug-color: #D55E00;     /* Okabe-Ito vermilion, also used for Defect */
+  --dependency-chart-epic-color: #F0E442;    /* Okabe-Ito yellow */
+  --dependency-chart-spike-color: #CC79A7;   /* Okabe-Ito reddish purple */
+  --dependency-chart-label-color: black;
+  --dependency-chart-link-color: gray;
+
   --status-category-todo-color: gray;
   --status-category-inprogress-color: #0072B2;  /* Okabe-Ito blue */
   --status-category-done-color: #009E73;         /* Okabe-Ito bluish green */
@@ -248,6 +266,10 @@ div.child_issue {
 html[data-theme="dark"] {
   --warning-banner: #9F2B00;
   --non-working-days-color: #2f2f2f;
+
+  /* See the matching comment in the prefers-color-scheme block below. */
+  --dependency-chart-link-color: #999999;
+
   --type-story-color: #2DCB9A;       /* lighter bluish green for dark bg */
   --type-task-color: #56B4E9;        /* sky blue for dark bg */
   --type-bug-color: #E69F00;         /* orange instead of vermilion for dark bg */
@@ -400,6 +422,12 @@ html[data-theme="light"] {
     --warning-banner: #9F2B00;
 
     --non-working-days-color: #2f2f2f;
+
+    /* The only dependency chart colour needing a dark variant. The fills do not, because they
+       are opaque and are their own background, but link lines and their labels sit on the page.
+       Plain gray manages only 2.4:1 here against 3.94:1 in light mode, so it is lifted to match. */
+    --dependency-chart-link-color: #999999;
+
     --type-story-color: #2DCB9A;       /* lighter bluish green for dark bg */
     --type-task-color: #56B4E9;        /* sky blue for dark bg */
     --type-bug-color: #E69F00;         /* orange instead of vermilion for dark bg */
