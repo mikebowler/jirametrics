@@ -193,22 +193,6 @@ describe BoardMovementCalculator do
     end
   end
 
-  describe '#stack_data' do
-    it 'stacks' do
-      calculator = described_class.new board: board, issues: [], today: today
-      inputs = [
-        [50, [0, 0, 2, 3, 3]],
-        [85, [0, 0, 11, 12, 14]],
-        [98, [0, 0, 34, 36, 36]]
-      ]
-      expect(calculator.stack_data inputs).to eq [
-        [50, [0, 0, 2, 3, 3]],
-        [85, [0, 0, 9, 9, 11]],
-        [98, [0, 0, 25, 27, 25]]
-      ]
-    end
-  end
-
   describe '#forecasted_days_remaining_and_message' do
     # The 85% ages across this table with issue1 and issue2 is 1, 2, 4
 

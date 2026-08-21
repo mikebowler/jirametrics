@@ -39,6 +39,78 @@ describe AgingWorkInProgressChart do
     chart
   end
 
+  describe '#run' do
+    # run assembles the chart into locals and ivars that only the ERB template ever reads. Stub the
+    # render out, capture the binding run hands it, and the assertions see exactly what the template
+    # would, without dragging ERB into the test.
+    def rendered chart
+      captured_binding = nil
+      allow(chart).to receive(:wrap_and_render) { |render_binding, _file| captured_binding = render_binding }
+      chart.run
+      {
+        data_sets: captured_binding.eval('data_sets'),
+        bar_data: captured_binding.eval('@bar_data'),
+        max_age: captured_binding.eval('@max_age')
+      }
+    end
+
+    # Five completed items, enough that 50%, 85% and 100% land on three different ones rather than
+    # collapsing onto the same element. Across Ready, In Progress, Review, Done that gives
+    # 50% => [3, 7, 14, 23], 85% => [4, 11, 22, 37] and 100% => [6, 17, 34, 57].
+    def completed_issues
+      ages_by_column = [[1, 2, 3, 7], [2, 4, 6, 8], [3, 5, 8, 10], [4, 8, 12, 16], [6, 12, 18, 24]]
+      ages_by_column.each_with_index.collect do |ages, index|
+        issue = create_issue_from_aging_data(
+          board: board, ages_by_column: ages, today: today.to_s, key: "SP-#{100 + index}"
+        )
+        issue.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
+        issue
+      end
+    end
+
+    # One item still in flight, sitting in In Progress, 11 days old on the day we render.
+    def aging_issue
+      empty_issue(created: '2021-06-18', board: board, key: 'SP-300').tap do |issue|
+        issue.status = board.possible_statuses.find_by_id board.visible_columns[1].status_ids.min
+        add_mock_change(
+          issue: issue, field: 'status', value: issue.status.name, value_id: issue.status.id,
+          time: to_time('2021-06-18')
+        )
+      end
+    end
+
+    def banded_chart show_all_columns: true
+      build_chart(board: board, issues: completed_issues + [aging_issue], show_all_columns: show_all_columns)
+        .tap { |chart| chart.percentiles 50 => '--fifty-color', 85 => '--eighty-five-color', 100 => '--hundred-color' }
+    end
+
+    it 'draws each percentile as a band from the previous percentile age up to its own' do
+      bands = rendered(banded_chart)[:data_sets].select { |set| set['type'] == 'bar' }
+
+      expect(bands.collect { |set| [set['label'], set['data']] }).to eq [
+        ['50%', [[0, 3], [0, 7], [0, 14], [0, 23]]],
+        ['85%', [[3, 4], [7, 11], [14, 22], [23, 37]]],
+        ['100%', [[4, 6], [11, 17], [22, 34], [37, 57]]]
+      ]
+    end
+
+    it 'tells the tooltip the age each band tops out at' do
+      expect(rendered(banded_chart)[:bar_data]).to eq [[3, 7, 14, 23], [4, 11, 22, 37], [6, 17, 34, 57]]
+    end
+
+    it 'lifts the ceiling above the tallest band and not just the oldest item' do
+      # The oldest item on the board is 11 days but the 100% band reaches 57, so a ceiling based on
+      # the items alone would cut the band off at the top of the plot.
+      expect(rendered(banded_chart)[:max_age]).to eq 57
+    end
+
+    it 'ignores columns that were trimmed away when lifting the ceiling' do
+      # Done gets trimmed here, so its band, the tallest on the board, must not set the ceiling.
+      # Otherwise there is empty space at the top that no visible bar accounts for.
+      expect(rendered(banded_chart(show_all_columns: false))[:max_age]).to eq 34
+    end
+  end
+
   describe '#column_for' do
     it 'returns name' do
       chart.run
@@ -90,7 +162,7 @@ describe AgingWorkInProgressChart do
      {
        'barPercentage' => 1.0,
        'categoryPercentage' => 1.0,
-       'data' => [1, 2, 4, 10],
+       'data' => [[0, 1], [0, 2], [0, 4], [0, 10]],
        'label' => '85%',
        'backgroundColor' => CssVariable['--aging-work-in-progress-chart-shading-color'],
        'type' => 'bar'
@@ -250,28 +322,6 @@ describe AgingWorkInProgressChart do
 
     it 'ignore zero in the middle' do
       expect(chart.indexes_of_leading_and_trailing_zeros [2, 0, 5, 0]).to eq [3]
-    end
-  end
-
-  describe '#adjust_bar_data' do
-    it 'returns empty for empty' do
-      expect(chart.adjust_bar_data []).to be_empty
-    end
-
-    it 'accumulates' do
-      input = [
-        [2, 4, 2, 0],
-        [4, 3, 5, 0],
-        [8, 7, 8, 0],
-        [6, 8, 6, 0]
-      ]
-
-      expect(chart.adjust_bar_data input).to eq [
-        [ 2,  4,  2, 0],
-        [ 6,  7,  7, 0],
-        [14, 14, 15, 0],
-        [20, 22, 21, 0]
-      ]
     end
   end
 

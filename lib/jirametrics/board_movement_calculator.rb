@@ -22,29 +22,6 @@ class BoardMovementCalculator
     columns.each_cons(2).any? { |previous, current| current < previous }
   end
 
-  def stacked_age_data_for percentages:
-    data_list = percentages.sort.collect do |percentage|
-      [percentage, age_data_for(percentage: percentage)]
-    end
-
-    stack_data data_list
-  end
-
-  def stack_data data_list
-    remainder = nil
-    data_list.collect do |percentage, data|
-      unless remainder.nil?
-        data = (0...data.length).collect do |i|
-          data[i] - remainder[i]
-        end
-
-      end
-      remainder = data
-
-      [percentage, data]
-    end
-  end
-
   def age_data_for percentage:
     data = []
     board.visible_columns.each_with_index do |_column, column_index|

@@ -91,15 +91,26 @@ class AgingWorkInProgressChart < ChartBase
 
     rules_to_issues = group_issues aging_issues
     data_sets = rules_to_issues.keys.collect { |rules| line_data_set(rules, rules_to_issues[rules]) }
-    # The y-axis is scaled to the oldest item, but never shorter than 20 days.
-    @max_age = data_sets.flat_map { |set| set['data'].collect { |point| point['y'] } }.push(20).max
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues, today: date_range.end
     column_indexes_to_remove = trim_board_columns data_sets: data_sets, calculator: calculator
     @row_index_offset = data_sets.size
 
     append_bar_data_sets data_sets, calculator, column_indexes_to_remove
+    @max_age = highest_plotted_age data_sets
     data_sets
+  end
+
+  # The y-axis ceiling is set a little above this so you can see that the tallest thing on the chart
+  # really does stop where it stops, rather than being clipped by the top of the plot. Bands count as
+  # much as dots do. Never shorter than 20 days.
+  # Called after the columns have been trimmed, so a column nobody can see can't push the ceiling up
+  # and leave unexplained space at the top.
+  def highest_plotted_age data_sets
+    data_sets.flat_map do |set|
+      # A dot is {x:, y:, title:}. A band is a floating bar, [bottom, top].
+      set['data'].collect { |point| point.is_a?(Hash) ? point['y'] : point.last }
+    end.push(20).max
   end
 
   def aging_issue_on_board? issue
@@ -128,32 +139,25 @@ class AgingWorkInProgressChart < ChartBase
     end
   end
 
+  # Each band is a floating bar running from the previous percentile's age up to its own, so it
+  # carries its own absolute position. Asking Chart.js to stack the bands instead hands it the
+  # positioning of every dataset on the chart, and it will stack the aging dots right along with them.
   def append_bar_data_sets data_sets, calculator, column_indexes_to_remove
-    bar_data = []
-    calculator.stacked_age_data_for(percentages: @percentiles.keys).each do |percentage, data|
-      column_indexes_to_remove.reverse_each { |index| data.delete_at index }
+    @bar_data = []
+    previous_ages = []
+
+    @percentiles.keys.sort.each do |percentage|
+      ages = calculator.age_data_for percentage: percentage
+      column_indexes_to_remove.reverse_each { |index| ages.delete_at index }
+
       data_sets << {
         'type' => 'bar', 'label' => "#{percentage}%", 'barPercentage' => 1.0, 'categoryPercentage' => 1.0,
-        'backgroundColor' => @percentiles[percentage], 'data' => data
+        'backgroundColor' => @percentiles[percentage],
+        'data' => ages.each_with_index.collect { |age, index| [previous_ages[index] || 0, age] }
       }
-      bar_data << data
+      @bar_data << ages
+      previous_ages = ages
     end
-    @bar_data = adjust_bar_data bar_data
-  end
-
-  def adjust_bar_data input
-    return [] if input.empty?
-
-    row_size = input.first.size
-
-    output = []
-    output << input.first
-    input.drop(1).each do |row|
-      previous_row = output.last
-      output << 0.upto(row_size - 1).collect { |i| row[i] + previous_row[i] }
-    end
-
-    output
   end
 
   def indexes_of_leading_and_trailing_zeros list
