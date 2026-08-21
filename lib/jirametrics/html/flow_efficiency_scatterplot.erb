@@ -1,81 +1,143 @@
 <%= seam_start %>
 <div class="chart">
+  <canvas id="<%= chart_id %>_median" width="<%= canvas_width %>" height="110"></canvas>
+</div>
+<div class="chart">
   <canvas id="<%= chart_id %>" width="<%= canvas_width %>" height="<%= canvas_height %>"></canvas>
 </div>
 <script>
-new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
-  type: 'scatter',
+// The median item's life, as one bar. This is the opening statement: nobody has to read an axis or
+// divide anything to see how much of it was spent waiting.
+new Chart(document.getElementById('<%= chart_id %>_median').getContext('2d'), {
+  type: 'bar',
   data: {
-    datasets: <%= JSON.generate(data_sets) %>
+    labels: ['The median work item'],
+    datasets: [
+      {
+        label: 'Adding value',
+        data: [<%= @median.round 1 %>],
+        backgroundColor: <%= CssVariable['--flow-efficiency-chart-bar-color'].to_json %>
+      },
+      {
+        label: 'Waiting',
+        data: [<%= (100 - @median).round 1 %>],
+        backgroundColor: <%= CssVariable['--flow-efficiency-chart-waiting-color'].to_json %>
+      }
+    ]
   },
   options: {
-    title: {
-      display: true,
-      text: "Cycletime Scatterplot"
-    },
-    responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen
+    indexAxis: 'y',
+    responsive: <%= canvas_responsive? %>,
     scales: {
       x: {
-        scaleLabel: {
-          display: true,
-          labelString: 'Days'
-        },
-        <%= render_axis_title :x %>
-        grid: {
-          color: <%= CssVariable['--grid-line-color'].to_json %>
-        },
-
+        stacked: true,
+        min: 0,
+        max: 100,
+        title: { display: true, text: 'Percentage of its life' },
+        grid: { color: <%= CssVariable['--grid-line-color'].to_json %> }
       },
-      y: {
-        scaleLabel: {
-          display: true,
-          labelString: 'Percentage',
-          min: 0,
-          max: <%= @highest_cycletime %>
-        },
-        <%= render_axis_title :y %>
-        grid: {
-          color: <%= CssVariable['--grid-line-color'].to_json %>
-        },
-      }
+      y: { stacked: true, grid: { display: false } }
     },
     plugins: {
+      legend: { position: 'bottom' },
       tooltip: {
         callbacks: {
           label: function(context) {
-            return context.dataset.data[context.dataIndex].title
-          }
-        }
-      },
-      autocolors: false,
-      legend: {
-        onClick: (evt, legendItem, legend) => {
-          // Find the datasetMeta that corresponds to the item clicked
-          var i = 0
-          while(legendItem.text != legend.chart.getDatasetMeta(i).label) {
-            i++;
-          }
-          nextVisibility = !!legend.chart.getDatasetMeta(i).hidden;
-
-          // Hide/show the percentile lines for that dataset
-          legend.chart.options.plugins.annotation.annotations["line"+(i/2)].display = nextVisibility;
-
-          // Hide/show the trendline for this dataset, if they were enabled. The trendline is always
-          // there but not always visible.
-          legend.chart.setDatasetVisibility(i+1, <%= !!@show_trend_lines %> && nextVisibility);
-
-          // Still run the default behaviour
-          Chart.defaults.plugins.legend.onClick(evt, legendItem, legend);
-        },
-        labels: {
-          filter: function(item, chart) {
-            // Logic to remove a particular legend item goes here
-            return !item.text.includes('Trendline');
+            return context.dataset.label + ': ' + context.raw + '% of the median item\'s life';
           }
         }
       }
     }
   }
 });
+
+// The distribution behind that median. The x-axis is pinned to 0-100 on purpose. Letting it follow
+// the data would fill the plot and make a terrible result look unremarkable, which is the one thing
+// this chart must not do.
+new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
+  type: 'bar',
+  data: {
+    datasets: [{
+      label: 'Work items',
+      data: <%= JSON.generate(@buckets) %>,
+      backgroundColor: <%= CssVariable['--flow-efficiency-chart-bar-color'].to_json %>,
+      barPercentage: 1.0,
+      categoryPercentage: 1.0
+    }]
+  },
+  options: {
+    responsive: <%= canvas_responsive? %>,
+    scales: {
+      x: {
+        type: 'linear',
+        min: 0,
+        max: 100,
+        offset: false,
+        title: { display: true, text: 'Percentage of the item\'s life spent adding value' },
+        ticks: { stepSize: 10 },
+        grid: { color: <%= CssVariable['--grid-line-color'].to_json %> }
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Work items' },
+        grid: { color: <%= CssVariable['--grid-line-color'].to_json %> }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: function(context) {
+            let centre = context[0].raw.x;
+            return (centre - <%= FlowEfficiencyScatterplot::BUCKET_SIZE %> / 2) + '% to ' +
+              (centre + <%= FlowEfficiencyScatterplot::BUCKET_SIZE %> / 2) + '% adding value';
+          },
+          label: function(context) {
+            let count = context.raw.y;
+            return count + (count === 1 ? ' work item' : ' work items');
+          }
+        }
+      },
+      annotation: {
+        annotations: {
+          band: {
+            type: 'box',
+            xScaleID: 'x',
+            xMin: <%= FlowEfficiencyScatterplot::BAND_FLOOR %>,
+            xMax: 100,
+            backgroundColor: <%= CssVariable['--flow-efficiency-chart-band-color'].to_json %>,
+            borderColor: <%= CssVariable['--flow-efficiency-chart-band-border-color'].to_json %>,
+            borderWidth: 1,
+            drawTime: 'beforeDatasetsDraw',
+            label: {
+              display: true,
+              content: ['worked on more than half', 'the time it was alive'],
+              color: <%= CssVariable['--default-text-color'].to_json %>,
+              font: { size: 12 }
+            }
+          }
+          <% @percentile_markers.each_with_index do |marker, index| %>
+          , percentile<%= index %>: {
+            type: 'line',
+            scaleID: 'x',
+            value: <%= marker['value'].round 2 %>,
+            borderColor: <%= CssVariable['--cycletime-scatterplot-overall-trendline-color'].to_json %>,
+            borderWidth: 2,
+            borderDash: [6, 4],
+            label: {
+              display: true,
+              content: <%= marker['label'].inspect %>,
+              position: 'start',
+              yAdjust: <%= index * 26 %>,
+              backgroundColor: 'rgba(70,70,70,0.9)',
+              font: { size: 11 }
+            }
+          }
+          <% end %>
+        }
+      }
+    }
+  }
+});
 </script>
-<%= seam_start %>
+<%= seam_end %>
