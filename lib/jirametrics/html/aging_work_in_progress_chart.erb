@@ -42,7 +42,18 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
           z: 1 // draw the grid lines on top of the bars
         },
         stacked: false,
-        max: <%= (@max_age * 1.1).to_i %>
+        max: <%= (@max_age * 1.1).to_i %>,
+        ticks: {
+          // The ceiling sits 10% above the tallest thing on the chart so you can see that nothing is
+          // clipped. Chart.js labels it, which gives you an arbitrary number like 169 crammed up
+          // against 160. Drop that label, but only when it really is crammed in: if the ceiling
+          // happens to land on a regular tick then the spacing is even and the label is worth having.
+          callback: function(value, index, ticks) {
+            if (index !== ticks.length - 1 || index < 2) return value;
+            let regularGap = ticks[index - 1].value - ticks[index - 2].value;
+            return value - ticks[index - 1].value < regularGap ? null : value;
+          }
+        }
       }
     },
     plugins: {
