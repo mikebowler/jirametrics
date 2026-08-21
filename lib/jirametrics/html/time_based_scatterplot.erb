@@ -82,9 +82,10 @@ new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
           color: <%= CssVariable['--grid-line-color'].to_json %>
         },
         ticks: {
+          // Uses labelExceptCrowdedCeiling() defined in index.js.
           callback: function(value, index, ticks) {
             <% if @cap %>if (value > <%= @cap[:cutoff] %>) return null;<% end %>
-            return index === ticks.length - 1 ? null : value;
+            return labelExceptCrowdedCeiling(value, index, ticks);
           }
         }
       }
