@@ -94,7 +94,6 @@ class AgingWorkInProgressChart < ChartBase
 
     calculator = BoardMovementCalculator.new board: @all_boards[@board_id], issues: issues, today: date_range.end
     column_indexes_to_remove = trim_board_columns data_sets: data_sets, calculator: calculator
-    @row_index_offset = data_sets.size
 
     append_bar_data_sets data_sets, calculator, column_indexes_to_remove
     @max_age = highest_plotted_age data_sets
@@ -143,7 +142,6 @@ class AgingWorkInProgressChart < ChartBase
   # carries its own absolute position. Asking Chart.js to stack the bands instead hands it the
   # positioning of every dataset on the chart, and it will stack the aging dots right along with them.
   def append_bar_data_sets data_sets, calculator, column_indexes_to_remove
-    @bar_data = []
     previous_ages = []
 
     @percentiles.keys.sort.each do |percentage|
@@ -155,7 +153,6 @@ class AgingWorkInProgressChart < ChartBase
         'backgroundColor' => @percentiles[percentage],
         'data' => ages.each_with_index.collect { |age, index| [previous_ages[index] || 0, age] }
       }
-      @bar_data << ages
       previous_ages = ages
     end
   end

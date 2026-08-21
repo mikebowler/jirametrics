@@ -52,10 +52,7 @@ new Chart(document.getElementById(<%= chart_id.inspect %>).getContext('2d'),
             let point = context.dataset.data[context.dataIndex];
             // A band is a floating bar, [bottom, top]. A dot is an object carrying its own title.
             if( Array.isArray(point) ) {
-              let full_data = <%= @bar_data.inspect %>;
-              let columnIndex = context.dataIndex;
-              let rowIndex = context.datasetIndex - <%= @row_index_offset %>;
-              return context.dataset.label + " of completed work items left this column in " +full_data[rowIndex][columnIndex] + " days or less";
+              return context.dataset.label + " of completed work items left this column in " + point[1] + " days or less";
             }
             else {
               return point.title;

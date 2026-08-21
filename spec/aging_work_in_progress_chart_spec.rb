@@ -49,7 +49,6 @@ describe AgingWorkInProgressChart do
       chart.run
       {
         data_sets: captured_binding.eval('data_sets'),
-        bar_data: captured_binding.eval('@bar_data'),
         max_age: captured_binding.eval('@max_age')
       }
     end
@@ -92,10 +91,6 @@ describe AgingWorkInProgressChart do
         ['85%', [[3, 4], [7, 11], [14, 22], [23, 37]]],
         ['100%', [[4, 6], [11, 17], [22, 34], [37, 57]]]
       ]
-    end
-
-    it 'tells the tooltip the age each band tops out at' do
-      expect(rendered(banded_chart)[:bar_data]).to eq [[3, 7, 14, 23], [4, 11, 22, 37], [6, 17, 34, 57]]
     end
 
     it 'lifts the ceiling above the tallest band and not just the oldest item' do
