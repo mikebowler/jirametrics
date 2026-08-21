@@ -29,7 +29,7 @@ class ExpeditedChart < ChartBase
         This chart only shows issues that have been expedited at some point. We care about these as
         any form of expedited work will affect the entire system and will slow down non-expedited work.
         Refer to this article on
-        <a href="https://improvingflow.com/2021/06/16/classes-of-service.html">classes of service</a>
+        <a href="https://blog.mikebowler.ca/2021/06/16/classes-of-service/">classes of service</a>
         for a longer explanation on why we want to avoid expedited work.
       </div>
       <div class="p">

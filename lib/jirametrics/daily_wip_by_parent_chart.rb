@@ -14,7 +14,7 @@ class DailyWipByParentChart < DailyWipChart
         indication of how focused we are on higher level objectives. If there are many parent
         tickets in progress at the same time, either this team has their focus scattered or we
         aren't doing a good job of
-        <a href="https://improvingflow.com/2024/02/21/slicing-epics.html">splitting those parent
+        <a href="https://blog.mikebowler.ca/2024/02/21/slicing-epics/">splitting those parent
         tickets</a>. Neither of those is desirable.
       </div>
       <div class="p">
