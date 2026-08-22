@@ -3,9 +3,11 @@
 require './spec/spec_helper'
 
 describe EstimateAccuracyChart do
+  let(:exporter) { Exporter.new(file_system: MockFileSystem.new) }
   let(:board) { sample_board }
   let(:chart) do
     described_class.new(empty_config_block).tap do |chart|
+      chart.file_system = exporter.file_system
       chart.all_boards = { board.id => board }
     end
   end
@@ -117,6 +119,74 @@ describe EstimateAccuracyChart do
       # vs treating each key as a single point (which would give r=0.5)
       hash = { [1, 2] => %i[a b], [3, 1] => %i[c], [5, 3] => %i[d] }
       expect(chart.correlation_coefficient(hash)).to be_within(0.0001).of(2.0 / Math.sqrt(22))
+    end
+  end
+
+  describe '#run' do
+    # description_text is stored raw and expanded at render time, so a reference in it to something
+    # that no longer exists is invisible until a report is actually generated. Running the chart for
+    # real is what catches that, and by this point run has already set everything the prose reads.
+    def rendered chart
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/estimate_accuracy_chart.erb'), json: :not_mocked
+      )
+      chart.run
+    end
+
+    # Distinct keys because cycletime stubs are looked up by key, not by object.
+    def estimated_issue key:, estimate:
+      empty_issue(created: '2024-01-01', board: board, key: key).tap do |issue|
+        add_mock_change(issue: issue, field: 'Story Points', value: estimate, time: '2024-01-01T02:00:00')
+      end
+    end
+
+    let(:completed_one) { estimated_issue key: 'SP-1', estimate: 5 }
+    let(:completed_two) { estimated_issue key: 'SP-2', estimate: 8 }
+    let(:aging) { estimated_issue key: 'SP-3', estimate: 3 }
+
+    before do
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+    end
+
+    def complete_two
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed_one, '2024-01-02', '2024-01-04'],
+        [completed_two, '2024-01-02', '2024-01-08']
+      ]
+      chart.issues = [completed_one, completed_two]
+    end
+
+    it 'describes the completed series' do
+      complete_two
+      expect(rendered(chart)).to include 'completed dots indicate'
+    end
+
+    it 'says nothing about arrows when nothing is still in progress' do
+      complete_two
+      expect(rendered(chart)).not_to include 'aging arrows'
+    end
+
+    it 'explains the arrows when something is still in progress' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed_one, '2024-01-02', '2024-01-04'],
+        [completed_two, '2024-01-02', '2024-01-08'],
+        [aging, '2024-01-02', nil]
+      ]
+      chart.issues = [completed_one, completed_two, aging]
+
+      expect(rendered(chart)).to include 'aging arrows'
+    end
+
+    it 'quotes the correlation coefficient when one could be calculated' do
+      complete_two
+      expect(rendered(chart)).to include 'correlation coefficient of <b>1.0</b>'
+    end
+
+    it 'omits the correlation sentence when there is only one completed item' do
+      board.cycletime = mock_cycletime_config stub_values: [[completed_one, '2024-01-02', '2024-01-04']]
+      chart.issues = [completed_one]
+
+      expect(rendered(chart)).not_to include 'correlation coefficient'
     end
   end
 
