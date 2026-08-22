@@ -24,6 +24,7 @@ class ExpeditedChart < ChartBase
     super()
 
     header_text 'Expedited work'
+    no_data_text '<%= render_header %><div>There is no expedited work in this time period.</div>'
     description_text <<-HTML
       <div class="p">
         This chart only shows issues that have been expedited at some point. We care about these as
@@ -49,11 +50,9 @@ class ExpeditedChart < ChartBase
       make_expedite_lines_data_set(issue: issue, expedite_data: prepare_expedite_data(issue))
     end
 
-    if data_sets.empty?
-      '<h1 class="foldable">Expedited work</h1><div>There is no expedited work in this time period.</div>'
-    else
-      wrap_and_render(binding, __FILE__)
-    end
+    return render_no_data if data_sets.empty?
+
+    wrap_and_render(binding, __FILE__)
   end
 
   def prepare_expedite_data issue

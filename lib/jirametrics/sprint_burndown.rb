@@ -37,7 +37,7 @@ class SprintBurndown < ChartBase
   end
 
   def run
-    return nil unless current_board.scrum?
+    return render_no_data unless current_board.scrum?
 
     sprints = sprints_in_time_range current_board
     change_data_by_sprint = gather_change_data_by_sprint sprints

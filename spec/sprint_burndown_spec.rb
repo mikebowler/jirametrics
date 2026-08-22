@@ -98,9 +98,17 @@ describe SprintBurndown do
       captured
     end
 
-    it 'returns nil when the board is not a scrum board' do
+    # A sprint chart has nothing to say about a kanban board, so it contributes nothing to the
+    # report rather than an empty box. Configurable through no_data_text like any other chart.
+    it 'contributes nothing when the board is not a scrum board' do
       sprint_burndown.options = :points_and_counts
-      expect(sprint_burndown.run).to be_nil
+      expect(sprint_burndown.run).to eq ''
+    end
+
+    it 'can be given something to say on a non scrum board' do
+      sprint_burndown.options = :points_and_counts
+      sprint_burndown.no_data_text '<div>Not a scrum board.</div>'
+      expect(sprint_burndown.run).to eq '<div>Not a scrum board.</div>'
     end
 
     it 'renders one chart per enabled measure, wiring the sprint data and the matching legend' do

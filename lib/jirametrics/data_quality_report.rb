@@ -63,7 +63,7 @@ class DataQualityReport < ChartBase
     scan_for_issues_on_multiple_boards entries: @entries
 
     entries_with_problems = entries_with_problems()
-    return '' if entries_with_problems.empty?
+    return render_no_data if entries_with_problems.empty?
 
     result = +''
     result << render_top_text
