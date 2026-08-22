@@ -34,6 +34,17 @@ describe AgingWorkTable do
     end
   end
 
+  describe '#run' do
+    # description_text is expanded at render time, so a reference in it to something that has been
+    # removed stays invisible until a report is generated. Running the table for real catches it.
+    it 'renders the description' do
+      table.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/aging_work_table.erb'), json: :not_mocked
+      )
+      expect(table.run).to include 'ordered from oldest at the top'
+    end
+  end
+
   describe '#percentile' do
     it 'defaults to the 85th' do
       expect(table.percentile).to eq 85

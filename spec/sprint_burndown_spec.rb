@@ -72,6 +72,13 @@ describe SprintBurndown do
       end
     end
 
+    # Every other test in this block stubs render_top_text, so nothing was checking that the
+    # description can still be expanded at all. This one lets it run and stubs only the template.
+    it 'expands the description' do
+      allow(scrum_chart).to receive(:render).and_return('')
+      expect(scrum_chart.run).to include 'Burndowns for all sprints in this time period'
+    end
+
     # Stub the render layer and record the locals run wires into each chart's binding. The stubs also
     # assert they receive a real Binding (and the template's own file), so run must pass them through.
     def capture_rendered_charts chart
