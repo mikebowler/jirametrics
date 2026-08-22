@@ -25,6 +25,16 @@ describe DailyView do
     # description_text is expanded at render time against the binding inside run, and this one reads
     # aging_issues, a LOCAL in that method. Removing or renaming that local would break the report
     # while leaving every other test green, so the count is asserted here on purpose.
+    it 'shows the header and an explanation when nothing is in progress' do
+      view.file_system = MockFileSystem.new
+      board.cycletime = mock_cycletime_config stub_values: []
+      view.issues = []
+
+      expect(view.run).to eq(
+        "<h1 class='foldable'>Daily View</h1><div>There are no items currently in progress</div>"
+      )
+    end
+
     it 'renders the description, including the count of aging issues' do
       view.file_system = MockFileSystem.new
       board.cycletime = mock_cycletime_config stub_values: [

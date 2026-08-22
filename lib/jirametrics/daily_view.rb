@@ -7,9 +7,10 @@ class DailyView < ChartBase
     super()
 
     header_text 'Daily View'
+    no_data_text '<%= render_header %><div>There are no items currently in progress</div>'
     description_text <<-HTML
       <div class="p">
-        This view shows all the items (<%= aging_issues.count %>) you'll want to discuss during your daily
+        This view shows all the items (<%= @aging_issues.count %>) you'll want to discuss during your daily
         coordination meeting
         (aka daily scrum, standup), in the order that you should be discussing them. The most important
         items are at the top, and the least at the bottom.
@@ -22,15 +23,13 @@ class DailyView < ChartBase
   end
 
   def run
-    aging_issues = select_aging_issues
+    @aging_issues = select_aging_issues
 
-    if aging_issues.empty?
-      return "<h1 class='foldable'>#{@header_text}</h1><div>There are no items currently in progress</div>"
-    end
+    return render_no_data if @aging_issues.empty?
 
     result = +''
-    result << render_top_text(binding)
-    aging_issues.each do |issue|
+    result << render_top_text
+    @aging_issues.each do |issue|
       result << render_issue(issue, child: false)
     end
     result

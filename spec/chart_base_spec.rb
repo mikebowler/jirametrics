@@ -5,6 +5,43 @@ require './spec/spec_helper'
 describe ChartBase do
   let(:chart_base) { described_class.new }
 
+  describe '#render_top_text' do
+    # Header, description and no-data text all expand the same way. Each gets its own scope, so a
+    # template that renders another template cannot clobber the outer one's ERB output buffer.
+    it 'expands the header as ERB, the same as the description' do
+      chart_base.header_text 'Total: <%= 2 + 2 %>'
+      chart_base.description_text 'Also <%= 3 + 3 %>'
+
+      expect(chart_base.render_top_text).to eq "<h1 class='foldable'>Total: 4</h1>Also 6"
+    end
+
+    it 'reaches instance variables and methods but not the caller locals' do
+      chart_base.header_text 'Days: <%= label_days 2 %>'
+      chart_base.description_text ''
+
+      expect(chart_base.render_top_text).to eq "<h1 class='foldable'>Days: 2 days</h1>"
+    end
+  end
+
+  describe '#render_no_data' do
+    it 'returns nothing at all when no text has been set' do
+      expect(chart_base.render_no_data).to eq ''
+    end
+
+    it 'returns nothing at all when the text is empty' do
+      chart_base.no_data_text ''
+      expect(chart_base.render_no_data).to eq ''
+    end
+
+    it 'expands the text as ERB, and it can render the header itself' do
+      chart_base.header_text 'My Chart'
+      chart_base.description_text ''
+      chart_base.no_data_text '<%= render_top_text %><div>Nothing to show.</div>'
+
+      expect(chart_base.render_no_data).to eq "<h1 class='foldable'>My Chart</h1><div>Nothing to show.</div>"
+    end
+  end
+
   describe '#label_days' do
     it 'is singular for one' do
       expect(chart_base.label_days(1)).to eq '1 day'

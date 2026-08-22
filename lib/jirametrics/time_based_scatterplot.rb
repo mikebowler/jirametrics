@@ -22,6 +22,7 @@ class TimeBasedScatterplot < TimeBasedChart
   def initialize
     super
 
+    no_data_text '<%= render_header %><div>No data matched the selected criteria. Nothing to show.</div>'
     @percentage_lines = []
     @highest_y_value = 0
     @percentiles = [85]
@@ -56,10 +57,7 @@ class TimeBasedScatterplot < TimeBasedChart
       }
     end
 
-    if data_sets.empty?
-      return "<h1 class='foldable'>#{@header_text}</h1>" \
-        '<div>No data matched the selected criteria. Nothing to show.</div>'
-    end
+    return render_no_data if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end

@@ -156,6 +156,13 @@ describe EstimateAccuracyChart do
       chart.issues = [completed_one, completed_two]
     end
 
+    # This chart deliberately contributes nothing at all when no issue carries an estimate, so that
+    # one config can serve boards that estimate and boards that do not.
+    it 'renders nothing at all when no issue has an estimate' do
+      chart.issues = []
+      expect(rendered(chart)).to eq ''
+    end
+
     it 'describes the completed series' do
       complete_two
       expect(rendered(chart)).to include 'completed dots indicate'

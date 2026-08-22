@@ -67,6 +67,7 @@ class DependencyChart < ChartBase
     }
 
     header_text 'Dependencies'
+    no_data_text '<%= render_header %><div>No data matched the selected criteria. Nothing to show.</div>'
     description_text <<-HTML
       <p>
         These are all the "linked issues" as defined in Jira
@@ -83,13 +84,10 @@ class DependencyChart < ChartBase
     instance_eval(&@rules_block) if @rules_block
 
     dot_graph = build_dot_graph
-    if dot_graph.nil?
-      return "<h1 class='foldable'>#{@header_text}</h1>" \
-        '<div>No data matched the selected criteria. Nothing to show.</div>'
-    end
+    return render_no_data if dot_graph.nil?
 
     svg = restore_css_variables execute_graphviz(dot_graph.join("\n"))
-    "#{render_top_text(binding)}<div>#{shrink_svg svg}</div>"
+    "#{render_top_text}<div>#{shrink_svg svg}</div>"
   end
 
   def link_rules &block

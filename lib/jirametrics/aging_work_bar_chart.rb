@@ -14,6 +14,7 @@ class AgingWorkBarChart < ChartBase
     @percentage_lines = [] # Populated by run; the description reads it, so it must never be nil.
     percentiles [85]
     header_text 'Aging Work Bar Chart'
+    no_data_text '<%= render_header %><p>There is no aging work</p>'
     # div class="p" throughout rather than <p>: color_block emits a div and the list below is an
     # ol, neither of which is legal inside a paragraph. A browser closes the p at the first one,
     # which strands the rest of the text outside it. This is what the other charts use.
@@ -69,10 +70,7 @@ class AgingWorkBarChart < ChartBase
       { percentile: percentile, days: days, x: date_range.end - days, id: "percentile_#{percentile}" }
     end
 
-    if aging_issues.empty?
-      @description_text = '<p>There is no aging work</p>'
-      return render_top_text(binding)
-    end
+    return render_no_data if aging_issues.empty?
 
     wrap_and_render(binding, __FILE__)
   end

@@ -43,7 +43,7 @@ class SprintBurndown < ChartBase
     change_data_by_sprint = gather_change_data_by_sprint sprints
 
     result = +''
-    result << render_top_text(binding)
+    result << render_top_text
 
     # HashEachMethods misreads this array of [method, title] pairs as a hash and thinks y_axis_title
     # is unused; in fact the ERB template reads it (and data_method) from the binding we pass to render.

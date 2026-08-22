@@ -47,7 +47,7 @@ class EstimateAccuracyChart < ChartBase
     end
     data_sets = scan_issues
 
-    return '' if data_sets.empty?
+    return render_no_data if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end

@@ -63,17 +63,40 @@ class ChartBase
     erb.result(caller_binding)
   end
 
-  def render_top_text caller_binding
-    result = +''
-    result << "<h1 class='foldable'>#{@header_text}</h1>" if @header_text
-    result << ERB.new(@description_text).result(caller_binding) if @description_text
+  # A fresh scope for every template expansion. self is still the chart, so instance variables and
+  # methods are reachable from a template, but the caller's local variables are not. That is the
+  # point: ERB#result assigns its output buffer into whatever binding you hand it, so two templates
+  # sharing one scope silently discard each other's output when one renders the other.
+  def render_binding = binding
+
+  def expand_template text
+    ERB.new(text).result(render_binding)
+  end
+
+  def render_header
+    return '' unless @header_text
+
+    "<h1 class='foldable'>#{expand_template @header_text}</h1>"
+  end
+
+  def render_top_text
+    result = +render_header
+    result << expand_template(@description_text) if @description_text
     result
+  end
+
+  # What a chart shows when it has nothing to show. Empty means show nothing at all, not even the
+  # header, which is what a chart that simply does not apply to this board wants.
+  def render_no_data
+    return '' if @no_data_text.nil? || @no_data_text.empty?
+
+    expand_template @no_data_text
   end
 
   # Render the file and then wrap it with standard headers and quality checks.
   def wrap_and_render caller_binding, file
     result = +''
-    result << render_top_text(caller_binding)
+    result << render_top_text
     result << render(caller_binding, file)
     result
   end
@@ -252,6 +275,11 @@ class ChartBase
   def header_text text = :none
     @header_text = text unless text == :none
     @header_text
+  end
+
+  def no_data_text text = :none
+    @no_data_text = text unless text == :none
+    @no_data_text
   end
 
   def description_text text = :none

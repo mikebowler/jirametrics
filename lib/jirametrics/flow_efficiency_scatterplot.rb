@@ -12,6 +12,7 @@ class FlowEfficiencyScatterplot < ChartBase
     super()
 
     header_text 'Flow Efficiency'
+    no_data_text '<%= render_header %><div>No data matched the selected criteria. Nothing to show.</div>'
     description_text <<-HTML
       <div class="p">
         This chart shows the active time against the the total time spent on a ticket.
@@ -63,10 +64,7 @@ class FlowEfficiencyScatterplot < ChartBase
       create_dataset(issues: issues, label: rules.label, color: rules.color)
     end
 
-    if data_sets.empty?
-      return "<h1 class='foldable'>#{@header_text}</h1>" \
-        '<div>No data matched the selected criteria. Nothing to show.</div>'
-    end
+    return render_no_data if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end

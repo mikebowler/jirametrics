@@ -13,6 +13,7 @@ class TimeBasedHistogram < TimeBasedChart
   def initialize
     super
 
+    no_data_text '<%= render_header %><div>No data matched the selected criteria. Nothing to show.</div>'
     percentiles [50, 85, 98]
     @show_stats = true
   end
@@ -77,10 +78,7 @@ class TimeBasedHistogram < TimeBasedChart
       )
     end
 
-    if data_sets.empty?
-      return "<h1 class='foldable'>#{@header_text}</h1>" \
-             '<div>No data matched the selected criteria. Nothing to show.</div>'
-    end
+    return render_no_data if data_sets.empty?
 
     wrap_and_render(binding, __FILE__)
   end

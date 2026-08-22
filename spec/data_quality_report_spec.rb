@@ -83,7 +83,11 @@ describe DataQualityReport do
       expect(report.file_system.log_messages).to be_empty
     end
 
-    excluded_methods = %i[render_top_text render_problem_type render_axis_title]
+    # render_binding, render_header and render_no_data take no arguments and are not problem
+    # renderers, so the generic "call it with an empty list" loop below does not apply to them.
+    excluded_methods = %i[
+      render_top_text render_problem_type render_axis_title render_binding render_header render_no_data
+    ]
     described_class.instance_methods.select { |m| m.to_s.start_with? 'render_' }.each do |method|
       next if excluded_methods.include? method
 

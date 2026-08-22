@@ -65,9 +65,8 @@ class DataQualityReport < ChartBase
     entries_with_problems = entries_with_problems()
     return '' if entries_with_problems.empty?
 
-    caller_binding = binding
     result = +''
-    result << render_top_text(caller_binding)
+    result << render_top_text
 
     result << '<ul class="quality_report">'
     result << render_problem_type(:discarded_changes)
