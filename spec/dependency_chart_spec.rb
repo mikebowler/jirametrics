@@ -318,9 +318,14 @@ describe DependencyChart do
       expect(dot_graph).not_to include 'var('
     end
 
-    # Unlike every other chart, this one interpolates @description_text straight into its output
-    # rather than going through render_top_text, so the description is never expanded as ERB. This
-    # only proves the description reaches the page. A <%= %> in it would be printed literally.
+    it 'expands the description as ERB, the same as every other chart' do
+      allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)
+      chart.description_text 'two plus two is <%= 2 + 2 %>'
+      expect(chart.run).to include 'two plus two is 4'
+    end
+
+    # description_text is expanded at render time, so a reference in it to something that has been
+    # removed stays invisible until a report is generated. Running the chart for real catches it.
     it 'renders the description' do
       allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)
       expect(chart.run).to include 'These are all the "linked issues" as defined in Jira'
