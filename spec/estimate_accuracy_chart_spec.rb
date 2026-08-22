@@ -125,11 +125,11 @@ describe EstimateAccuracyChart do
     # has to go as the square root of the issue count.
     it 'sizes bubbles so that area is proportional to the issue count' do
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
-      four_issues = Array.new(4) { load_issue 'SP-1', board: board }
-      one_issue = load_issue 'SP-2', board: board
+      four_issues = (1..4).collect { |number| empty_issue created: '2024-01-01', board: board, key: "SP-#{number}" }
+      one_issue = empty_issue created: '2024-01-01', board: board, key: 'SP-5'
 
       (four_issues + [one_issue]).each do |issue|
-        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01')
+        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01T02:00:00')
       end
 
       board.cycletime = mock_cycletime_config stub_values:
