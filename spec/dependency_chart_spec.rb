@@ -318,6 +318,14 @@ describe DependencyChart do
       expect(dot_graph).not_to include 'var('
     end
 
+    # Unlike every other chart, this one interpolates @description_text straight into its output
+    # rather than going through render_top_text, so the description is never expanded as ERB. This
+    # only proves the description reaches the page. A <%= %> in it would be printed literally.
+    it 'renders the description' do
+      allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)
+      expect(chart.run).to include 'These are all the "linked issues" as defined in Jira'
+    end
+
     it 'maps the placeholders back to variables in the rendered svg' do
       chart.issue_rules { |_issue, rules| rules.color = CssVariable['--palette-color-1'] }
       allow(chart).to receive(:execute_graphviz).and_return(rendered_svg)

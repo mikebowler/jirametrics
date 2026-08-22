@@ -19,6 +19,29 @@ describe PullRequestCycleTimeScatterplot do
     GroupingRules.new.tap { |r| r.label = 'my-repo' }
   end
 
+  describe '#run' do
+    # description_text is expanded at render time, so a reference in it to something that has been
+    # removed stays invisible until a report is generated. Running the chart for real catches it.
+    it 'renders the description' do
+      board = sample_board
+      issue = empty_issue created: '2024-01-01', board: board
+      issue.github_prs = [pull_request]
+
+      chart.file_system = MockFileSystem.new
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/time_based_scatterplot.erb'), json: :not_mocked
+      )
+      chart.all_boards = { board.id => board }
+      chart.issues = [issue]
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
+      chart.time_range = to_time('2024-01-01')..to_time('2024-01-31')
+      chart.holiday_dates = []
+      chart.settings = board.project_config.settings
+
+      expect(chart.run).to include 'cycle time for all closed pull requests'
+    end
+  end
+
   describe '#lines_changed_text' do
     def pr_with(additions:, deletions:, changed_files:)
       PullRequest.new(raw: {

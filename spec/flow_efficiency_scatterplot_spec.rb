@@ -21,6 +21,26 @@ describe FlowEfficiencyScatterplot do
     end
   end
 
+  describe '#run' do
+    # description_text is expanded at render time, so a reference in it to something that has been
+    # removed stays invisible until a report is generated. Running the chart for real catches it.
+    it 'renders the description' do
+      issue = empty_issue created: '2020-01-01', board: sample_board
+      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2020-01-02', '2020-01-20']]
+      settings['stalled_threshold_days'] = 50
+
+      chart.file_system.when_loading(
+        file: File.expand_path('./lib/jirametrics/html/flow_efficiency_scatterplot.erb'), json: :not_mocked
+      )
+      chart.all_boards = { issue.board.id => issue.board }
+      chart.issues = [issue]
+      chart.date_range = to_date('2020-01-01')..to_date('2020-02-01')
+      chart.holiday_dates = []
+
+      expect(chart.run).to include 'the active time against the'
+    end
+  end
+
   describe '#create_dataset' do
     it 'returns nil when no issues' do
       expect(chart.create_dataset issues: [], label: 'label', color: 'color').to be_nil

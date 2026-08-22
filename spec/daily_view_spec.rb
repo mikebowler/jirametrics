@@ -21,6 +21,23 @@ describe DailyView do
   let(:issue2) { load_issue('SP-2', board: board) }
   let(:issue10) { load_issue('SP-10', board: board) }
 
+  describe '#run' do
+    # description_text is expanded at render time against the binding inside run, and this one reads
+    # aging_issues, a LOCAL in that method. Removing or renaming that local would break the report
+    # while leaving every other test green, so the count is asserted here on purpose.
+    it 'renders the description, including the count of aging issues' do
+      view.file_system = MockFileSystem.new
+      board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2024-01-02', nil],
+        [issue2, '2024-01-03', nil]
+      ]
+      view.issues = [issue1, issue2]
+
+      output = view.run
+      expect(output).to include 'This view shows all the items (2)'
+    end
+  end
+
   describe '#select_aging_issues' do
     it 'selects only aging issues' do
       view.issues = [issue1, issue2, issue10]
