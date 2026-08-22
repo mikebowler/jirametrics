@@ -73,10 +73,14 @@ class ChartBase
     ERB.new(text).result(render_binding)
   end
 
+  # The header as the reader sees it. Stitch configs match on this through grab_by_title, so it has
+  # to be the expanded text rather than the template.
+  def expanded_header_text = @header_text.nil? ? '' : expand_template(@header_text)
+
   def render_header
     return '' unless @header_text
 
-    "<h1 class='foldable'>#{expand_template @header_text}</h1>"
+    "<h1 class='foldable'>#{expanded_header_text}</h1>"
   end
 
   def render_top_text
@@ -440,7 +444,7 @@ class ChartBase
   # reassemble the report. Generated because only the start/end word differs.
   %w[start end].each do |position|
     define_method "seam_#{position}" do |type = 'chart'|
-      "\n<!-- seam-#{position} | chart#{@@chart_counter} | #{self.class} | #{header_text} | #{type} -->\n"
+      "\n<!-- seam-#{position} | chart#{@@chart_counter} | #{self.class} | #{expanded_header_text} | #{type} -->\n"
     end
   end
 

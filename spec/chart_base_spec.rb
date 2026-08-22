@@ -23,6 +23,16 @@ describe ChartBase do
     end
   end
 
+  describe 'seam markers' do
+    # Stitch configs select content with grab_by_title, matching the title in the seam comment. That
+    # has to be the rendered header, not the template, or a templated header breaks every config
+    # that referred to the chart by the name a reader actually sees.
+    it 'carries the rendered header, not the raw template' do
+      chart_base.header_text 'Total <%= 2 + 2 %>'
+      expect(chart_base.seam_start).to include '| Total 4 |'
+    end
+  end
+
   describe '#render_no_data' do
     it 'returns nothing at all when no text has been set' do
       expect(chart_base.render_no_data).to eq ''

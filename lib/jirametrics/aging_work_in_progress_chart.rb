@@ -12,7 +12,7 @@ class AgingWorkInProgressChart < ChartBase
 
   def initialize block
     super()
-    header_text 'Aging Work in Progress'
+    header_text 'Aging Work in Progress on board: <%= current_board.name %>'
     # div class="p" rather than <p>: the notes below are a ul, which is block level and not legal
     # inside a paragraph, so a browser closes the p early. Harmless while the list is the last
     # thing in the block, but it breaks the moment any text follows it.
@@ -59,7 +59,6 @@ class AgingWorkInProgressChart < ChartBase
   def run
     determine_board_columns
 
-    @header_text += " on board: #{current_board.name}"
     data_sets = make_data_sets
 
     adjust_visibility_of_unmapped_status_column data_sets: data_sets

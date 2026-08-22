@@ -10,7 +10,7 @@ class WipByColumnChart < ChartBase
   # Long only because of the inline description_text heredoc and one-time setup; splitting wouldn't help.
   def initialize block # rubocop:disable Metrics/MethodLength
     super()
-    header_text 'WIP by column'
+    header_text 'WIP by column on board: <%= current_board.name %>'
     description_text <<-HTML
       <p>
         This chart shows how much time each board column has spent at different WIP (Work in Progress) levels.
@@ -58,7 +58,6 @@ class WipByColumnChart < ChartBase
   end
 
   def run
-    @header_text += " on board: #{current_board.name}"
     stats = column_stats
     @column_names = stats.collect(&:name)
     @wip_data = stats.collect do |stat|

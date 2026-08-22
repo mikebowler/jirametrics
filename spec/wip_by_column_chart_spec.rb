@@ -426,12 +426,21 @@ describe WipByColumnChart do
     it 'builds the per-column data for the board, trimming trailing empty columns' do
       ivars = run_ivars
       aggregate_failures do
-        expect(ivars[:header_text]).to eq "WIP by column on board: #{board.name}"
+        expect(chart.render_header).to eq "<h1 class='foldable'>WIP by column on board: #{board.name}</h1>"
         expect(ivars[:column_names]).to eq ['Ready'] # In Progress/Review/Done are all-zero and trimmed
         expect(ivars[:wip_data]).to eq [[{ 'wip' => 1, 'pct' => 100.0 }]]
         expect(ivars[:max_wip]).to eq 1
         expect(ivars[:wip_limits]).to eq [{ 'min' => 1, 'max' => 4 }]
       end
+    end
+
+    # The board name used to be appended to @header_text during run, so a second run appended it
+    # twice. It is part of the header template now, which cannot drift no matter how often it runs.
+    it 'says the same thing however many times it runs' do
+      run_ivars
+      first = chart.render_header
+      run_ivars
+      expect(chart.render_header).to eq first
     end
 
     it 'produces empty per-column data (and keeps every column) for a zero-length window' do
