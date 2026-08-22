@@ -120,6 +120,31 @@ describe EstimateAccuracyChart do
     end
   end
 
+  describe '#scan_issues' do
+    # Bubble area, not radius, is what a reader perceives as quantity, so the radius
+    # has to go as the square root of the issue count.
+    it 'sizes bubbles so that area is proportional to the issue count' do
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
+      four_issues = Array.new(4) { load_issue 'SP-1', board: board }
+      one_issue = load_issue 'SP-2', board: board
+
+      (four_issues + [one_issue]).each do |issue|
+        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01')
+      end
+
+      board.cycletime = mock_cycletime_config stub_values:
+        four_issues.collect { |issue| [issue, '2024-01-02', '2024-01-02T01:00:00'] } +
+        [[one_issue, '2024-01-02', '2024-01-03T01:00:00']]
+
+      chart.issues = four_issues + [one_issue]
+      radiuses = chart.scan_issues.first['data'].collect { |datum| datum['r'] }
+
+      # A four issue bubble should cover four times the area of a one issue bubble,
+      # which means twice the radius.
+      expect(radiuses).to eq [8.0, 4.0]
+    end
+  end
+
   describe '#split_into_completed_and_aging' do
     it 'works for no issues' do
       expect(chart.split_into_completed_and_aging issues: []).to eq [{}, {}]

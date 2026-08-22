@@ -77,7 +77,7 @@ class EstimateAccuracyChart < ChartBase
         {
           'x' => cycle_time,
           'y' => estimate,
-          'r' => values.size * 2,
+          'r' => bubble_radius(values.size),
           'title' => title
         }
       end
@@ -93,6 +93,15 @@ class EstimateAccuracyChart < ChartBase
         'hidden' => starts_hidden
       }
     end
+  end
+
+  # Chart.js sizes a bubble by its radius but the eye reads it by area, so the radius has
+  # to go as the square root of the count. This multiplier is the radius of a single issue
+  # and everything else scales up from there.
+  SINGLE_ISSUE_RADIUS = 4
+
+  def bubble_radius issue_count
+    (SINGLE_ISSUE_RADIUS * Math.sqrt(issue_count)).round 1
   end
 
   def estimate_label estimate:, estimation_units:
