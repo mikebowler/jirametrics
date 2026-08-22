@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Stubs are keyed by the issue's KEY, not by object identity. An Issue handed in is converted to its
+# key straight away and the lookup takes the FIRST tuple matching that key. This is deliberate, and
+# it means every issue in a test needs its own key. Build four of them as load_issue 'SP-1' and you
+# have one issue wearing four hats: all four resolve to the first SP-1 stub and the other three are
+# quietly discarded. Nothing raises, so the test still runs and may still pass, just against a
+# fixture that says something other than what it looks like it says. Give them SP-1, SP-2, SP-3.
 class MockCycleTimeConfig < CycleTimeConfig
   def initialize stub_values:
     super(possible_statuses: nil, label: nil, block: nil, settings: load_settings)
