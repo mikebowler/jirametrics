@@ -111,15 +111,6 @@
   --estimate-accuracy-chart-active-fill-color: #F4C6AD;       /* light vermilion */
   --estimate-accuracy-chart-active-border-color: #D55E00;     /* Okabe-Ito vermilion */
 
-  /* One series, so there is no categorical distinction here for anyone to fail to see. The bar is
-     the only thing carrying data; the waiting and band colours are deliberately recessive because
-     they are regions rather than measurements. Measured against white: bar 5.19, and 3.67 against
-     the waiting segment it sits beside, which is the comparison that has to hold up. */
-  --flow-efficiency-chart-bar-color: #0072B2;             /* Okabe-Ito blue */
-  --flow-efficiency-chart-waiting-color: #D9D9D9;
-  --flow-efficiency-chart-band-color: #EDEDED;
-  --flow-efficiency-chart-band-border-color: #CFCFCF;
-
   --expedited-chart-no-longer-expedited: gray;
   --expedited-chart-dot-issue-started-color: #E69F00;     /* Okabe-Ito orange */
   --expedited-chart-dot-issue-stopped-color: #009E73;     /* Okabe-Ito bluish green */
@@ -326,12 +317,6 @@ html[data-theme="dark"] {
   --wip-chart-duration-more-than-four-weeks-color: #B16BAE;
   --estimate-accuracy-chart-completed-border-color: #2DCB9A;
   --estimate-accuracy-chart-active-border-color: #E69F00;
-  /* Sky blue rather than the light theme's blue, which is too dark to read on this background.
-     Measured on #343434: bar 5.40, and 3.61 against the waiting segment beside it. */
-  --flow-efficiency-chart-bar-color: #56B4E9;
-  --flow-efficiency-chart-waiting-color: #4E4E4E;
-  --flow-efficiency-chart-band-color: #404040;
-  --flow-efficiency-chart-band-border-color: #565656;
   --expedited-chart-dot-issue-stopped-color: #2DCB9A;
   --expedited-chart-dot-expedite-started-color: #E69F00;
   --expedited-chart-dot-expedite-stopped-color: #2DCB9A;
@@ -498,12 +483,6 @@ html[data-theme="light"] {
 
     --estimate-accuracy-chart-completed-border-color: #2DCB9A;
     --estimate-accuracy-chart-active-border-color: #E69F00;
-
-    /* See the matching comment in the forced dark theme block above. */
-    --flow-efficiency-chart-bar-color: #56B4E9;
-    --flow-efficiency-chart-waiting-color: #4E4E4E;
-    --flow-efficiency-chart-band-color: #404040;
-    --flow-efficiency-chart-band-border-color: #565656;
 
     --expedited-chart-dot-issue-stopped-color: #2DCB9A;
     --expedited-chart-dot-expedite-started-color: #E69F00;

@@ -1,31 +1,22 @@
 # frozen_string_literal: true
 
-require 'jirametrics/percentile_validation'
+require 'jirametrics/groupable_issue_chart'
 
 class FlowEfficiencyScatterplot < ChartBase
-  include PercentileValidation
-
-  # The width of one histogram bar, in percentage points. Deliberately not configurable: bucket
-  # boundaries can be moved to create or flatten a spike, so we pick one round number and leave it
-  # alone whatever the data looks like.
-  BUCKET_SIZE = 5
-
-  # Items at or above this are reported as spending more than half their life being worked on.
-  # Almost always that means blocked and stalled time isn't being recorded rather than genuinely
-  # excellent flow, so the chart says so rather than letting it read as a good result.
-  BAND_FLOOR = 50
+  include GroupableIssueChart
 
   attr_accessor :possible_statuses
 
-  def initialize block
+  # Long only because of the inline description_text heredoc and one-time setup; splitting wouldn't help.
+  def initialize block # rubocop:disable Metrics/MethodLength
     super()
 
     header_text 'Flow Efficiency'
     description_text <<-HTML
       <div class="p">
-        This chart shows what proportion of each work item's life was actually spent adding value.
-        <a href="https://blog.mikebowler.ca/2024/07/06/flow-efficiency/">Flow efficiency</a> is that
-        ratio.
+        This chart shows the active time against the the total time spent on a ticket.
+        <a href="https://improvingflow.com/2024/07/06/flow-efficiency.html">Flow  efficiency</a> is the ratio
+        between these two numbers.
       </div>
       <div class="p">
         <math>
@@ -37,106 +28,90 @@ class FlowEfficiencyScatterplot < ChartBase
           </mfrac>
         </math>
       </div>
-      <div class="p">
-        This is a claim about the work item, not about how hard anyone worked. An item can sit
-        untouched for weeks while every person on the team is flat out on something else. That
-        distinction, between flow efficiency and
-        <a href="https://blog.mikebowler.ca/2023/05/20/busyness/">keeping our people busy</a>, is the
-        whole point: the two are different measures and improving one often makes the other worse.
-      </div>
-      <div style="border: 1px solid gray; padding: 0.2em">
-        Every gap in recording blocked and stalled time makes this chart look <b>better</b> than
-        reality, never worse. So a low number here is trustworthy. A high one is more likely to mean
-        you aren't capturing your waiting time than that your flow is excellent.
-        <%= band_warning %>
+      <div style="background: var(--warning-banner)">Note that for this calculation to be accurate, we must be moving items into a
+        blocked or stalled state the moment we stop working on it, and most teams don't do that.
+        So be aware that your team may have to change their behaviours if you want this chart to be useful.
       </div>
     HTML
+    @x_axis_title = 'Total time (days)'
+    @y_axis_title = 'Time adding value (days)'
 
-    @percentiles = [50, 85]
+    init_configuration_block block do
+      grouping_rules do |issue, rule|
+        active_time, total_time = issue.flow_efficiency_numbers end_time: time_range.end
+        flow_efficiency = active_time * 100.0 / total_time
 
-    instance_eval(&block)
-  end
+        if flow_efficiency > 99.0
+          rule.label = '~100%'
+          rule.color = 'green'
+        elsif flow_efficiency < 30.0
+          rule.label = '< 30%'
+          rule.color = 'orange'
+        else
+          rule.label = 'The rest'
+          rule.color = 'black'
+        end
+      end
+    end
 
-  # Which percentiles to draw as vertical lines. An empty list drops them.
-  def percentiles list = nil
-    @percentiles = validate_percentiles(list) unless list.nil?
-    @percentiles
+    @percentage_lines = []
+    @highest_cycletime = 0
   end
 
   def run
-    efficiencies = flow_efficiencies_for completed_issues_in_range(include_unstarted: false)
+    data_sets = group_issues(completed_issues_in_range include_unstarted: false).filter_map do |rules, issues|
+      create_dataset(issues: issues, label: rules.label, color: rules.color)
+    end
 
-    if efficiencies.empty?
+    if data_sets.empty?
       return "<h1 class='foldable'>#{@header_text}</h1>" \
         '<div>No data matched the selected criteria. Nothing to show.</div>'
     end
 
-    @item_count = efficiencies.size
-    @buckets = histogram_buckets efficiencies
-    @percentile_markers = percentile_markers_for efficiencies
-    @median = percentile_of efficiencies, 50
-    @above_band = efficiencies.count { |efficiency| efficiency >= BAND_FLOOR }
-
     wrap_and_render(binding, __FILE__)
   end
 
-  # One flow efficiency percentage per completed item.
-  def flow_efficiencies_for issues
-    issues.collect do |issue|
-      active_time, total_time = issue.flow_efficiency_numbers end_time: time_range.end, settings: settings
-      efficiency = active_time * 100.0 / total_time
-      next efficiency unless efficiency.nan?
+  def to_days seconds
+    seconds / 60 / 60 / 24
+  end
 
-      # Seen in production on a misconfigured board. Nothing to divide by, so nothing to report.
-      file_system.log(
-        "Issue(#{issue.key}) flow_efficiency: NaN, active_time: #{active_time}, total_time: #{total_time}"
+  def create_dataset issues:, label:, color:
+    return nil if issues.empty?
+
+    data = issues.filter_map do |issue|
+      active_time, total_time = issue.flow_efficiency_numbers(
+        end_time: time_range.end, settings: settings
       )
-      0.0
-    end
-  end
 
-  # One bar per BUCKET_SIZE band, plotted at the band's centre on a linear axis so each bar
-  # physically spans the range it counts rather than sitting centred on a tick.
-  def histogram_buckets efficiencies
-    (0...100).step(BUCKET_SIZE).collect do |low|
-      high = low + BUCKET_SIZE
-      { 'x' => low + (BUCKET_SIZE / 2.0), 'y' => efficiencies.count { |value| in_band? value, low, high } }
-    end
-  end
+      active_days = to_days(active_time)
+      total_days = to_days(total_time)
+      flow_efficiency = active_time * 100.0 / total_time
 
-  # 100 is the only value that can sit exactly on a band's upper edge, so the top band has to take
-  # it. An exclusive comparison everywhere would silently drop the one item a reader looks for first.
-  def in_band? value, low, high
-    value >= low && (value < high || (high == 100 && value <= 100))
-  end
-
-  # The label is built here rather than in the template because it's the sentence doing the
-  # persuading, and it's phrased to avoid ordinals so that any configured percentile reads properly.
-  def percentile_markers_for efficiencies
-    @percentiles.collect do |percentile|
-      value = percentile_of efficiencies, percentile
-      {
-        'percentile' => percentile,
-        'value' => value,
-        'label' => "#{percentile}% of items are below #{value.round 1}%"
-      }
-    end
-  end
-
-  # Only says anything when items actually land above BAND_FLOOR, because that's the case where the
-  # chart would otherwise read as praise.
-  def band_warning
-    return '' if @above_band.to_i.zero?
-
-    subject, possessive =
-      if @above_band == 1
-        ['One of your work items reports', 'its']
-      else
-        ["#{@above_band} of your work items report", 'their']
+      if flow_efficiency.nan?
+        # If this happens then something is probably misconfigured. We've seen it in production though
+        # so we have to handle it.
+        file_system.log(
+          "Issue(#{issue.key}) flow_efficiency: NaN, active_time: #{active_time}, total_time: #{total_time}"
+        )
+        flow_efficiency = 0.0
       end
 
-    "<div class=\"p\">#{subject} spending more than #{BAND_FLOOR}% of #{possessive} life being " \
-      'actively worked on. That is far more likely to mean the blocked and stalled time was never ' \
-      'recorded than that the flow was genuinely that good.</div>'
+      {
+        y: active_days,
+        x: total_days,
+        title: [
+          "#{issue.key} : #{issue.summary}, flow efficiency: #{flow_efficiency.to_i}%," \
+          " total: #{total_days.round(1)} days," \
+          " active: #{active_days.round(1)} days"
+        ]
+      }
+    end
+    {
+      label: label,
+      data: data,
+      fill: false,
+      showLine: false,
+      backgroundColor: color
+    }
   end
 end
