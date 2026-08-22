@@ -15,7 +15,7 @@ class FlowEfficiencyScatterplot < ChartBase
     description_text <<-HTML
       <div class="p">
         This chart shows the active time against the the total time spent on a ticket.
-        <a href="https://improvingflow.com/2024/07/06/flow-efficiency.html">Flow  efficiency</a> is the ratio
+        <a href="https://blog.mikebowler.ca/2024/07/06/flow-efficiency/">Flow  efficiency</a> is the ratio
         between these two numbers.
       </div>
       <div class="p">
