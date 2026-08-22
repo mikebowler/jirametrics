@@ -156,6 +156,81 @@ describe AtlassianDocumentFormat do
     end
   end
 
+  describe 'escaping' do
+    def paragraph(*nodes) = { 'type' => 'doc', 'content' => [{ 'type' => 'paragraph', 'content' => nodes }] }
+
+    it 'escapes markup that appears in the text of a document' do
+      input = paragraph({ 'type' => 'text', 'text' => 'deploy to <host> then check the <div>' })
+      expect(format.to_html input).to eq '<p>deploy to &lt;host&gt; then check the &lt;div&gt;</p>'
+    end
+
+    it 'escapes a mention' do
+      input = { 'type' => 'mention', 'attrs' => { 'id' => 'abc', 'text' => '<script>x</script>' } }
+      expect(format.adf_node_to_html input).to eq '<b>&lt;script&gt;x&lt;/script&gt;</b>'
+    end
+
+    it 'escapes emoji and status text' do
+      input = { 'type' => 'status', 'attrs' => { 'text' => '<b>done</b>', 'color' => 'green' } }
+      expect(format.adf_node_to_html input).to eq '&lt;b&gt;done&lt;/b&gt;'
+    end
+
+    it 'escapes an expand title' do
+      input = { 'type' => 'expand', 'attrs' => { 'title' => '</div><script>x</script>' } }
+      expect(format.adf_node_to_html input).to eq '<div>&lt;/div&gt;&lt;script&gt;x&lt;/script&gt;</div>'
+    end
+
+    it 'escapes a panel type' do
+      input = { 'type' => 'panel', 'attrs' => { 'panelType' => '<img onerror=x>' } }
+      expect(format.adf_node_to_html input).to eq '<div>&lt;IMG ONERROR=X&gt;</div>'
+    end
+
+    it 'escapes media alt text' do
+      input = { 'type' => 'media', 'attrs' => { 'alt' => '<script>x</script>', 'id' => 'a' } }
+      expect(format.adf_node_to_html input).to eq 'Media: &lt;script&gt;x&lt;/script&gt;'
+    end
+
+    it 'escapes an unparseable node type' do
+      input = { 'type' => '<script>x</script>' }
+      expect(format.adf_node_to_html input).to eq '<p>Unparseable section: &lt;script&gt;x&lt;/script&gt;</p>'
+    end
+
+    it 'escapes an inline card url in both the href and the text' do
+      input = { 'type' => 'inlineCard', 'attrs' => { 'url' => "http://x/'onmouseover='alert(1)" } }
+      expect(format.adf_node_to_html input).to eq(
+        "[Inline card]: <a href='http://x/&#39;onmouseover=&#39;alert(1)'>http://x/&#39;onmouseover=&#39;alert(1)</a>"
+      )
+    end
+
+    it 'escapes a link mark href and title so neither can break out of its attribute' do
+      marks = [{ 'type' => 'link', 'attrs' => { 'href' => "http://x/'z", 'title' => "it's here" } }]
+      input = paragraph({ 'type' => 'text', 'text' => 'click', 'marks' => marks })
+      expect(format.to_html input).to eq(
+        "<p><a href='http://x/&#39;z' title='it&#39;s here'>click</a></p>"
+      )
+    end
+
+    it 'escapes a text colour so it cannot break out of the style attribute' do
+      marks = [{ 'type' => 'textColor', 'attrs' => { 'color' => "red'onload='x" } }]
+      input = paragraph({ 'type' => 'text', 'text' => 'hi', 'marks' => marks })
+      expect(format.to_html input).to eq "<p><span style='color: red&#39;onload=&#39;x'>hi</span></p>"
+    end
+
+    it 'escapes a display name when expanding an account id' do
+      format.users << mock_user(
+        display_name: '<script>x</script>', account_id: 'abc', avatar_url: 'https://example.com/x.png'
+      )
+      expect(format.expand_account_id('abc')).to eq(
+        "<span class='account_id'>@&lt;script&gt;x&lt;/script&gt;</span>"
+      )
+    end
+
+    it 'escapes markup in a plain text (non ADF) description' do
+      expect(format.to_html 'watch out for <script>alert(1)</script>').to eq(
+        'watch out for &lt;script&gt;alert(1)&lt;/script&gt;'
+      )
+    end
+  end
+
   describe '#to_text' do
     it 'returns plain string as-is' do
       expect(format.to_text 'foobar').to eq 'foobar'

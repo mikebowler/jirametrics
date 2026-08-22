@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 class AtlassianDocumentFormat
   attr_reader :users
 
@@ -10,7 +12,7 @@ class AtlassianDocumentFormat
 
   def to_html input
     if input.is_a? String
-      input
+      escape(input)
         .gsub(/{color:(#\w{6})}([^{]+){color}/, '<span style="color: \1">\2</span>') # Colours
         # rubocop:disable Style/PerlBackrefs -- in a gsub block $1 reads cleaner than Regexp.last_match[:...]
         .gsub(/\[~accountid:([^\]]+)\]/) { expand_account_id $1 } # Tagged people
@@ -52,22 +54,22 @@ class AtlassianDocumentFormat
         [Time.at(node_attrs['timestamp'].to_i / 1000, in: @timezone_offset).to_date.to_s, nil]
       when 'decisionItem', 'listItem'  then ['<li>', '</li>']
       when 'decisionList'              then ['<div>Decisions<ul>', '</ul></div>']
-      when 'emoji', 'status'           then [node_attrs['text'], nil]
-      when 'expand'                    then ["<div>#{node_attrs['title']}</div>", nil]
+      when 'emoji', 'status'           then [escape(node_attrs['text']), nil]
+      when 'expand'                    then ["<div>#{escape node_attrs['title']}</div>", nil]
       when 'hardBreak'                 then ['<br />', nil]
       when 'heading'
         level = node_attrs['level']
         ["<h#{level}>", "</h#{level}>"]
       when 'inlineCard'
-        url = node_attrs['url']
+        url = escape node_attrs['url']
         ["[Inline card]: <a href='#{url}'>#{url}</a>", nil]
       when 'media'
-        text = node_attrs['alt'] || node_attrs['id']
+        text = escape(node_attrs['alt'] || node_attrs['id'])
         ["Media: #{text}", nil]
       when 'mediaSingle', 'mediaGroup' then ['<div>', '</div>']
-      when 'mention'                   then ["<b>#{node_attrs['text']}</b>", nil]
+      when 'mention'                   then ["<b>#{escape node_attrs['text']}</b>", nil]
       when 'orderedList'               then ['<ol>', '</ol>']
-      when 'panel'                     then ["<div>#{node_attrs['panelType'].upcase}</div>", nil]
+      when 'panel'                     then ["<div>#{escape node_attrs['panelType'].upcase}</div>", nil]
       when 'paragraph'                 then ['<p>', '</p>']
       when 'rule'                      then ['<hr />', nil]
       when 'table'                     then ['<table>', '</table>']
@@ -76,13 +78,13 @@ class AtlassianDocumentFormat
       when 'tableRow'                  then ['<tr>', '</tr>']
       when 'text'
         marks = adf_marks_to_html(n['marks'])
-        [marks.collect(&:first).join + n['text'], marks.collect(&:last).join]
+        [marks.collect(&:first).join + escape(n['text']), marks.collect(&:last).join]
       when 'taskItem'
         state = node_attrs['state'] == 'TODO' ? '☐' : '☑'
         ["<li>#{state} ", '</li>']
       when 'taskList' then ["<ul class='taskList'>", '</ul>']
       else
-        ["<p>Unparseable section: #{n['type']}</p>", nil]
+        ["<p>Unparseable section: #{escape n['type']}</p>", nil]
       end
     end
   end
@@ -135,11 +137,11 @@ class AtlassianDocumentFormat
     list.filter_map do |mark|
       type = mark['type']
       if type == 'textColor'
-        color = mark['attrs']['color']
+        color = escape mark['attrs']['color']
         ["<span style='color: #{color}'>", '</span>']
       elsif type == 'link'
-        href = mark['attrs']['href']
-        title = mark['attrs']['title']
+        href = escape mark['attrs']['href']
+        title = escape mark['attrs']['title']
         ["<a href='#{href}' title='#{title}'>", '</a>']
       else
         line = mappings.find { |key, _open, _close| key == type }
@@ -150,12 +152,18 @@ class AtlassianDocumentFormat
 
   def expand_account_id account_id
     user = @users.find { |u| u.account_id == account_id }
-    text = account_id
-    text = "@#{user.display_name}" if user
+    text = escape account_id
+    text = "@#{escape user.display_name}" if user
     "<span class='account_id'>#{text}</span>"
   end
 
   private
+
+  # The only markup in the output should be markup this class generated. Everything that comes out
+  # of the document is data written by whoever raised the issue, so it gets escaped on the way past.
+  def escape value
+    CGI.escapeHTML value.to_s
+  end
 
   def adf_node_render node, &render_node
     prefix, suffix = yield(node)
