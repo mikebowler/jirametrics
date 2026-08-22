@@ -143,6 +143,25 @@ describe EstimateAccuracyChart do
       # which means twice the radius.
       expect(radiuses).to eq [8.0, 4.0]
     end
+
+    it 'marks the still in progress data set so it can be drawn with arrows' do
+      chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
+      completed = load_issue 'SP-1', board: board
+      aging = load_issue 'SP-2', board: board
+
+      [completed, aging].each do |issue|
+        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01')
+      end
+
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed, '2024-01-02', '2024-01-03T01:00:00'],
+        [aging, '2024-01-02', nil]
+      ]
+
+      chart.issues = [completed, aging]
+      actual = chart.scan_issues.collect { |data_set| [data_set['label'], data_set['still_in_progress']] }
+      expect(actual).to eq [['Completed', false], ['Still in progress', true]]
+    end
   end
 
   describe '#split_into_completed_and_aging' do

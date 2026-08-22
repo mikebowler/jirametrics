@@ -14,10 +14,11 @@ class EstimateAccuracyChart < ChartBase
         The #{color_block '--estimate-accuracy-chart-completed-fill-color'} completed dots indicate
         cycletimes.
         <% if @has_aging_data %>
-          The #{color_block '--estimate-accuracy-chart-active-fill-color'} aging dots
+          The #{color_block '--estimate-accuracy-chart-active-fill-color'} aging arrows
           (click on the legend to turn them on) show the current
-          age of items, which will give you a hint as to where they might end up. If they're already
-          far to the right then you know you have a problem.
+          age of items, which will give you a hint as to where they might end up. They point right
+          because those items haven't finished yet, so every one of them will keep moving that way
+          until it does. If they're already far to the right then you know you have a problem.
         <% end %>
       </div>
       <% if @correlation_coefficient %>
@@ -90,7 +91,10 @@ class EstimateAccuracyChart < ChartBase
         'showLine' => false,
         'backgroundColor' => fill_color,
         'borderColor' => border_color,
-        'hidden' => starts_hidden
+        'hidden' => starts_hidden,
+        # The active series is drawn as right pointing arrows rather than discs, because its
+        # cycletime is a lower bound that keeps growing. The erb needs to know which one that is.
+        'still_in_progress' => completed_or_active == 'active'
       }
     end
   end

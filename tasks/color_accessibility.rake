@@ -13,7 +13,10 @@ CSS_FILE = 'lib/jirametrics/html/index.css'
 # ever seen on its own, where separation does not arise.
 MEASURED_GROUPS = {
   'fallback palette' => /--palette-color-\d+/,
-  'dependency chart fills' => /--dependency-chart-(?:story|task|bug|epic|spike)-color/
+  'dependency chart fills' => /--dependency-chart-(?:story|task|bug|epic|spike)-color/,
+  # Only the fills. The borders on this chart are deliberately the page colour rather than a hue,
+  # so there is nothing to tell apart there.
+  'estimate accuracy fills' => /--estimate-accuracy-chart-(?:completed|active)-fill-color/
 }.freeze
 
 # Colours drawn as a filled shape with text inside them, so the text has to be readable ON the

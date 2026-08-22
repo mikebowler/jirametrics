@@ -6,7 +6,40 @@
 new Chart(document.getElementById('<%= chart_id %>').getContext('2d'), {
   type: 'bubble',
   data: {
-    datasets: <%= JSON.generate(data_sets) %>
+    datasets: (function() {
+      const dataSets = <%= JSON.generate(data_sets) %>;
+      // The still in progress series is drawn as right pointing arrows rather than discs. Those
+      // items have not finished, so their cycletime is a lower bound that keeps growing and the
+      // arrow says "this one is still moving that way". Same idea as the capped-value arrows on
+      // the scatterplot, turned to point along the axis that is actually still moving.
+      //
+      // Sized per point rather than at a fixed size, because on this chart the radius carries the
+      // number of issues stacked at that spot and we would be throwing that away.
+      function movementArrow(color, radius) {
+        const size = Math.max(12, Math.round(radius * 3));
+        const glyph = document.createElement('canvas');
+        glyph.width = size; glyph.height = size;
+        const pen = glyph.getContext('2d');
+        const middle = size / 2, head = size * 0.3, tip = size * 0.88;
+        pen.strokeStyle = color;
+        pen.lineWidth = Math.max(2, radius * 0.42);
+        pen.lineCap = 'round'; pen.lineJoin = 'round';
+        pen.beginPath();
+        pen.moveTo(size * 0.12, middle); pen.lineTo(tip, middle);
+        pen.moveTo(tip - head, middle - head);
+        pen.lineTo(tip, middle);
+        pen.lineTo(tip - head, middle + head);
+        pen.stroke();
+        return glyph;
+      }
+      dataSets.forEach(function(dataSet) {
+        if (!dataSet.still_in_progress) return;
+        dataSet.pointStyle = dataSet.data.map(function(point) {
+          return movementArrow(dataSet.backgroundColor, point.r);
+        });
+      });
+      return dataSets;
+    })()
   },
   options: {
     responsive: <%= canvas_responsive? %>, // If responsive is true then it fills the screen

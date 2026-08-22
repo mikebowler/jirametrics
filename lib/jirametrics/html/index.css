@@ -106,10 +106,16 @@
   --wip-by-column-chart-limit-line-color: #D55E00;        /* Okabe-Ito vermilion */
   --wip-by-column-chart-recommendation-color: #009E73;    /* Okabe-Ito bluish green */
 
-  --estimate-accuracy-chart-completed-fill-color: #92D9C0;    /* light bluish green */
-  --estimate-accuracy-chart-completed-border-color: #009E73;  /* Okabe-Ito bluish green */
-  --estimate-accuracy-chart-active-fill-color: #F4C6AD;       /* light vermilion */
-  --estimate-accuracy-chart-active-border-color: #D55E00;     /* Okabe-Ito vermilion */
+  /* Full strength, not lightened. The pastel versions of these two collapsed into the same beige
+     under protanopia (4.45 apart, where the palette's own floor is 11.08) and measured 1.6 against
+     white, half the contrast WCAG asks of a shape you need to see. At full strength they are 18.45
+     apart and clear the contrast floor. The border is the page colour rather than a second hue, so
+     it separates overlapping bubbles instead of competing with the fill, and needs no dark mode
+     override. See jirametrics-7ss. */
+  --estimate-accuracy-chart-completed-fill-color: #009E73;    /* Okabe-Ito bluish green */
+  --estimate-accuracy-chart-completed-border-color: var(--body-background);
+  --estimate-accuracy-chart-active-fill-color: #D55E00;       /* Okabe-Ito vermilion */
+  --estimate-accuracy-chart-active-border-color: var(--body-background);
 
   --expedited-chart-no-longer-expedited: gray;
   --expedited-chart-dot-issue-started-color: #E69F00;     /* Okabe-Ito orange */
@@ -315,8 +321,6 @@ html[data-theme="dark"] {
      band. Those are the two ends of the duration ramp, so confusing them is the worst case. This
      stays in the same warm family so the ramp still reads cool to warm as work ages. */
   --wip-chart-duration-more-than-four-weeks-color: #B16BAE;
-  --estimate-accuracy-chart-completed-border-color: #2DCB9A;
-  --estimate-accuracy-chart-active-border-color: #E69F00;
   --expedited-chart-dot-issue-stopped-color: #2DCB9A;
   --expedited-chart-dot-expedite-started-color: #E69F00;
   --expedited-chart-dot-expedite-stopped-color: #2DCB9A;
@@ -480,9 +484,6 @@ html[data-theme="light"] {
     --wip-chart-duration-two-weeks-or-less-color: #E69F00;
     --wip-chart-duration-four-weeks-or-less-color: #D55E00;
     --wip-chart-duration-more-than-four-weeks-color: #B16BAE; /* see jirametrics-3fg */
-
-    --estimate-accuracy-chart-completed-border-color: #2DCB9A;
-    --estimate-accuracy-chart-active-border-color: #E69F00;
 
     --expedited-chart-dot-issue-stopped-color: #2DCB9A;
     --expedited-chart-dot-expedite-started-color: #E69F00;
