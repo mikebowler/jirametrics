@@ -25,7 +25,13 @@ class EstimateAccuracyChart < ChartBase
         <div class="p">
           The completed items here have a correlation coefficient of <b><%= @correlation_coefficient.round(3) %></b>.
           The closer it is to +1, the stronger the positive correlation. The closer it is to -1,
-          the stronger the negative collalation. Zero would mean no correlation at all.
+          the stronger the negative correlation. Zero would mean no correlation at all.
+        </div>
+      <% elsif @estimates_are_numeric == false %>
+        <div class="p">
+          There's no correlation coefficient here because these estimates are categories rather than
+          numbers. Working one out means measuring the gaps between values, and there's no defined
+          gap between one category and the next, so any number we showed you would be invented.
         </div>
       <% end %>
     HTML
@@ -54,7 +60,8 @@ class EstimateAccuracyChart < ChartBase
 
   def scan_issues
     completed_hash, aging_hash = split_into_completed_and_aging issues: issues
-    @correlation_coefficient = correlation_coefficient(completed_hash) unless completed_hash.empty?
+    @estimates_are_numeric = numeric_estimates? completed_hash
+    @correlation_coefficient = correlation_coefficient(completed_hash) if @estimates_are_numeric
     estimation_units = current_board.estimation_configuration.units
     @has_aging_data = !aging_hash.empty?
 
@@ -196,6 +203,15 @@ class EstimateAccuracyChart < ChartBase
 
   # Correlation coefficient is calculated using the Pearson Correlation Coefficient
   # r = Σ((xi - x̄)(yi - ȳ)) / sqrt(Σ(xi - x̄)² · Σ(yi - ȳ)²)
+  # A Pearson coefficient is arithmetic on the distances between values, so it needs a scale where
+  # those distances mean something. T-shirt sizes are ordered but not spaced: nothing says the gap
+  # from M to L matches the gap from S to M. Summing them used to raise and take the export with it.
+  def numeric_estimates? completed_hash
+    return false if completed_hash.empty?
+
+    completed_hash.keys.all? { |estimate, _cycle_time| estimate.is_a? Numeric }
+  end
+
   def correlation_coefficient completed_hash
     list1 = []
     list2 = []

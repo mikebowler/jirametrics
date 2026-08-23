@@ -184,6 +184,25 @@ describe EstimateAccuracyChart do
       expect(rendered(chart)).to include 'aging arrows'
     end
 
+    # A Pearson coefficient needs the gaps between values to mean something. With T-shirt sizes
+    # there is no defined gap between M and L, and summing them raised a TypeError that took the
+    # whole export down.
+    it 'explains itself rather than crashing when the estimates are categories' do
+      board.cycletime = mock_cycletime_config stub_values: [
+        [completed_one, '2024-01-02', '2024-01-04'],
+        [completed_two, '2024-01-02', '2024-01-08']
+      ]
+      chart.issues = [completed_one, completed_two]
+      sizes = { completed_one => 'M', completed_two => 'L' }
+      chart.y_axis(label: 'Size', sort_order: %w[XS S M L XL]) { |issue, _start| sizes[issue] }
+
+      output = rendered(chart)
+      aggregate_failures do
+        expect(output).not_to include 'correlation coefficient of'
+        expect(output).to include 'these estimates are categories rather than'
+      end
+    end
+
     it 'quotes the correlation coefficient when one could be calculated' do
       complete_two
       expect(rendered(chart)).to include 'correlation coefficient of <b>1.0</b>'
