@@ -8,7 +8,7 @@
 # fixture that says something other than what it looks like it says. Give them SP-1, SP-2, SP-3.
 class MockCycleTimeConfig < CycleTimeConfig
   def initialize stub_values:
-    super(possible_statuses: nil, label: nil, block: nil, settings: load_settings)
+    super(possible_statuses: nil, label: nil, block: nil, settings: SpecHelpers.load_settings)
 
     raise 'Stubs must be arrays of [issue, start_time, stop_time] tuples' unless stub_values.is_a? Array
 
@@ -23,8 +23,8 @@ class MockCycleTimeConfig < CycleTimeConfig
     end
 
     line[0] = line[0].key if line[0].is_a?(Issue)
-    line[1] = to_time(line[1]) if line[1].is_a? String
-    line[2] = to_time(line[2]) if line[2].is_a? String
+    line[1] = SpecHelpers.to_time(line[1]) if line[1].is_a? String
+    line[2] = SpecHelpers.to_time(line[2]) if line[2].is_a? String
   end
 
   def started_stopped_changes(issue)
@@ -41,7 +41,7 @@ class MockCycleTimeConfig < CycleTimeConfig
     when ChangeItem
       change
     else
-      mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
+      SpecHelpers.mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
     end
   end
 end

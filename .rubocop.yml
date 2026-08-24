@@ -93,6 +93,12 @@ Style/RedundantParentheses:
 Metrics/AbcSize:
   Enabled: false
 
+# spec_helper.rb is one module of fixture builders by design, so that the helpers have a scope
+# rather than sitting on Object. Splitting it to satisfy a line count would scatter them again.
+Metrics/ModuleLength:
+  Exclude:
+    - 'spec/spec_helper.rb'
+
 # Only count positional parameters. A method with many named keyword arguments (our DSL/config style)
 # is self-documenting at the call site, so keyword args don't count toward the limit.
 Metrics/ParameterLists:

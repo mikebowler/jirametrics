@@ -739,10 +739,15 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
             end
           end
 
-          # Force SP-1 back to the backlog
+          # Force SP-1 back to the backlog. Qualified because this block is instance_eval'd against a
+          # ProjectConfig, so unqualified helper names do not resolve here.
           issues.find { |issue| issue.key == 'SP-1' }.tap do |issue|
-            add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16')
-            add_mock_change(issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17')
+            SpecHelpers.add_mock_change(
+              issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16'
+            )
+            SpecHelpers.add_mock_change(
+              issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17'
+            )
           end
 
           discard_changes_before status_becomes: :backlog
