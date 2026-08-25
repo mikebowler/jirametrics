@@ -120,7 +120,8 @@ describe IssuePrinter do
       issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
       # Deliberately not added to the issue: the point is that it is discarded, reaching the printer
       # only through discarded_changes below.
-      discarded = mock_change(field: 'priority', value: 'Old', time: '2021-01-03', artificial: true)
+      discarded = MockChangeItem.new(field: 'priority', value: 'Old', time: '2021-01-03',
+artificial: true).to_change_item
       allow(issue1).to receive(:discarded_changes).and_return([discarded])
       expect(printer.change_entries.map { |entry| entry[0] }).to eq [to_time('2021-01-01'), to_time('2021-01-03')]
     end

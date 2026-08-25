@@ -180,17 +180,6 @@ module SpecHelpers
   end
 
   # If either value or old_value are statuses then the name and id will be pulled from that object
-  def mock_change(
-    field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
-    artificial: false, issue: nil, field_id: nil
-  )
-    MockChangeItem.new(
-      field: field, value: value, time: time.is_a?(String) ? to_time(time) : time,
-      value_id: value_id, old_value: old_value, old_value_id: old_value_id,
-      artificial: artificial, issue: issue, field_id: field_id
-    ).to_change_item
-  end
-
   def load_settings
     JSON.parse(File.read('./lib/jirametrics/settings.json')).tap do |settings|
       # Turn all caching off by default for tests.
@@ -209,7 +198,9 @@ module SpecHelpers
     block = lambda do |_|
       # instance_eval'd against a CycleTimeConfig, so unqualified helper names do not resolve here
       start_at lambda { |issue|
-        SpecHelpers.mock_change field: 'status', value: 'fake', value_id: 1_000_000, time: issue.created
+        MockChangeItem.new(
+          field: 'status', value: 'fake', value_id: 1_000_000, time: issue.created
+        ).to_change_item
       }
       stop_at last_resolution
     end

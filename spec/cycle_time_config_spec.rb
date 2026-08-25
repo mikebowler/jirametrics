@@ -108,7 +108,7 @@ describe CycleTimeConfig do
 
     # A ChangeItem at a given time, so the start/stop blocks can be driven directly.
     def change_at time
-      mock_change field: 'status', value: 'x', value_id: 1, time: time
+      MockChangeItem.new(field: 'status', value: 'x', value_id: 1, time: time).to_change_item
     end
 
     it 'treats a block returning false as no start (false becomes nil)' do

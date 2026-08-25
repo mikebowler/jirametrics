@@ -43,7 +43,7 @@ class MockCycleTimeConfig < CycleTimeConfig
     when ChangeItem
       change
     else
-      SpecHelpers.mock_change(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time)
+      MockChangeItem.new(field: 'status', value: 'fake', value_id: 1_000_001, time: change&.to_time).to_change_item
     end
   end
 end

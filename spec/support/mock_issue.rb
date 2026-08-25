@@ -22,10 +22,10 @@ class MockIssue < Issue
   # belonged to except the caller's care.
   def add_change field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
     artificial: false, field_id: nil
-    change = SpecHelpers.mock_change(
+    change = MockChangeItem.new(
       issue: self, field: field, time: time, value: value, value_id: value_id,
       old_value: old_value, old_value_id: old_value_id, artificial: artificial, field_id: field_id
-    )
+    ).to_change_item
     changes << change
     change
   end

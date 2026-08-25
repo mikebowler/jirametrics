@@ -572,31 +572,33 @@ describe ChartBase do
 
     it 'resolves a ChangeItem to its status via value_id' do
       review = board.possible_statuses.find { |s| s.name == 'Review' }
-      change = mock_change(field: 'status', value: 'Review', value_id: review.id, time: '2021-01-01')
+      change = MockChangeItem.new(field: 'status', value: 'Review', value_id: review.id,
+time: '2021-01-01').to_change_item
       expect(chart_base.format_status(change, board: board))
         .to eq chart_base.format_status(review, board: board)
     end
 
     it 'resolves a ChangeItem via old_value_id when use_old_status is set' do
       review = board.possible_statuses.find { |s| s.name == 'Review' }
-      change = mock_change(
+      change = MockChangeItem.new(
         field: 'status', value: 'New', value_id: 99_999, old_value: 'Review', old_value_id: review.id,
         time: '2021-01-01'
-      )
+      ).to_change_item
       expect(chart_base.format_status(change, board: board, use_old_status: true))
         .to eq chart_base.format_status(review, board: board)
     end
 
     it 'renders a red error span with the value when the status id is unknown' do
-      change = mock_change(field: 'status', value: 'Mystery', value_id: 99_999, time: '2021-01-01')
+      change = MockChangeItem.new(field: 'status', value: 'Mystery', value_id: 99_999,
+time: '2021-01-01').to_change_item
       expect(chart_base.format_status(change, board: board)).to eq "<span style='color: red'>Mystery</span>"
     end
 
     it 'renders the old value in the error span when use_old_status is set' do
-      change = mock_change(
+      change = MockChangeItem.new(
         field: 'status', value: 'NewMystery', value_id: 99_999, old_value: 'OldMystery', old_value_id: 88_888,
         time: '2021-01-01'
-      )
+      ).to_change_item
       expect(chart_base.format_status(change, board: board, use_old_status: true))
         .to eq "<span style='color: red'>OldMystery</span>"
     end

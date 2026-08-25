@@ -258,7 +258,8 @@ value_id: 10_012)
       issue1.changes.clear
       # Deliberately a status the board does not have, which is the thing under test. add_change
       # would validate it against the board and raise before the test could run.
-      issue1.changes << mock_change(field: 'status', value: 'Foo', value_id: 100, time: '2021-09-05')
+      issue1.changes << MockChangeItem.new(field: 'status', value: 'Foo', value_id: 100,
+time: '2021-09-05').to_change_item
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
@@ -729,12 +730,12 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
           # MockIssues, so there is no add_change on them and the change is built separately.
           # SpecHelpers is qualified because this block is instance_eval'd against a ProjectConfig.
           issues.find { |issue| issue.key == 'SP-1' }.tap do |issue|
-            issue.changes << SpecHelpers.mock_change(
+            issue.changes << MockChangeItem.new(
               field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16'
-            )
-            issue.changes << SpecHelpers.mock_change(
+            ).to_change_item
+            issue.changes << MockChangeItem.new(
               field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17'
-            )
+            ).to_change_item
           end
 
           discard_changes_before status_becomes: :backlog

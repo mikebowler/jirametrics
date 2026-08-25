@@ -10,7 +10,7 @@ describe MockChangeItem do
   # MockChangeItem and calls to_change_item, which is where the checks fire. In this board:
   # Backlog=1, In Progress=5, Done=9.
   def status_change(**opts)
-    mock_change(issue: issue, field: 'status', time: '2021-01-01', **opts)
+    MockChangeItem.new(issue: issue, field: 'status', time: '2021-01-01', **opts).to_change_item
   end
 
   it 'passes a well-formed status change through' do

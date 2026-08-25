@@ -476,19 +476,20 @@ describe DailyView do
     let(:done_status) { board.possible_statuses.find_by_id! 10_002 }
 
     it 'is comment' do
-      change = mock_change field: 'comment', value: 'foo', time: '2024-01-01'
+      change = MockChangeItem.new(field: 'comment', value: 'foo', time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'foo'
     end
 
     it 'changes from no status to status' do
-      change = mock_change field: 'status', value: review_status, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'status', value: review_status, time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         "Set to #{view.format_status review_status, board: board}"
       )
     end
 
     it 'changes from one status to another' do
-      change = mock_change field: 'status', value: done_status, old_value: review_status, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'status', value: done_status, old_value: review_status,
+time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         "Changed from #{view.format_status review_status, board: board} " \
           "to #{view.format_status done_status, board: board}"
@@ -496,62 +497,62 @@ describe DailyView do
     end
 
     it 'sets priority' do
-      change = mock_change field: 'priority', value: 'Medium', value_id: 3, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'priority', value: 'Medium', value_id: 3, time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         'Set to "Medium"'
       )
     end
 
     it 'sets flag on' do
-      change = mock_change field: 'Flagged', value: 'Flagged', value_id: 3, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'Flagged', value: 'Flagged', value_id: 3, time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         'On'
       )
     end
 
     it 'sets flag off' do
-      change = mock_change field: 'Flagged', value: '', value_id: 3, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'Flagged', value: '', value_id: 3, time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         'Off'
       )
     end
 
     it 'sets some generic field' do
-      change = mock_change field: 'estimatedtime', value: 'foo', value_id: 3, time: '2024-01-01'
+      change = MockChangeItem.new(field: 'estimatedtime', value: 'foo', value_id: 3, time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq(
         'foo'
       )
     end
 
     it 'renders a comment as html' do
-      change = mock_change field: 'comment', value: "foo\nbar", time: '2024-01-01'
+      change = MockChangeItem.new(field: 'comment', value: "foo\nbar", time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'foo<br />bar'
     end
 
     it 'renders a description as html' do
-      change = mock_change field: 'description', value: "foo\nbar", time: '2024-01-01'
+      change = MockChangeItem.new(field: 'description', value: "foo\nbar", time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'foo<br />bar'
     end
 
     it 'sets an assignee' do
-      change = mock_change field: 'assignee', value: 'Fred', time: '2024-01-01'
+      change = MockChangeItem.new(field: 'assignee', value: 'Fred', time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'Set to "Fred"'
     end
 
     it 'sets a due date' do
-      change = mock_change field: 'duedate', value: '2024-02-01', time: '2024-01-01'
+      change = MockChangeItem.new(field: 'duedate', value: '2024-02-01', time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'Set to "2024-02-01"'
     end
 
     it 'sets an issue type' do
-      change = mock_change field: 'issuetype', value: 'Bug', time: '2024-01-01'
+      change = MockChangeItem.new(field: 'issuetype', value: 'Bug', time: '2024-01-01').to_change_item
       expect(view.history_text change: change, board: board).to eq 'Set to "Bug"'
     end
 
     it 'changes a non-status field from an old value to a new one' do
-      change = mock_change(
+      change = MockChangeItem.new(
         field: 'priority', value: 'High', old_value: 'Low', value_id: 3, old_value_id: 1, time: '2024-01-01'
-      )
+      ).to_change_item
       expect(view.history_text change: change, board: board).to eq 'Changed from "Low" to "High"'
     end
   end

@@ -479,16 +479,16 @@ describe ProjectConfig do
         # Throw in one change that isn't a status to see if we blow up.
         # These use statuses the board does not have, on purpose. add_change validates against the
         # board and would raise before the assertion is reached.
-        issue.changes << mock_change(field: 'Flagged', time: '2024-01-02', value: 'Flagged')
+        issue.changes << MockChangeItem.new(field: 'Flagged', time: '2024-01-02', value: 'Flagged').to_change_item
 
-        issue.changes << mock_change(
+        issue.changes << MockChangeItem.new(
           field: 'status', time: '2024-01-02',
           value: 'Walk', value_id: 99, old_value: 'Walk', old_value_id: 100
-        )
-        issue.changes << mock_change(
+        ).to_change_item
+        issue.changes << MockChangeItem.new(
           field: 'status', time: '2024-01-03',
           value: 'Run', value_id: 101
-        )
+        ).to_change_item
         subject.add_issues([issue])
       end
     end

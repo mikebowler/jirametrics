@@ -11,7 +11,8 @@ class MockChangeItem
   )
     @field = field
     @value = value
-    @time = time
+    # Callers write dates as strings far more often than as Times.
+    @time = time.is_a?(String) ? SpecHelpers.to_time(time) : time
     @value_id = value_id
     @old_value = old_value
     @old_value_id = old_value_id
