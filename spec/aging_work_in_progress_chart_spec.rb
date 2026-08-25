@@ -69,7 +69,7 @@ describe AgingWorkInProgressChart do
 
     # One item still in flight, sitting in In Progress, 11 days old on the day we render.
     def aging_issue
-      MockIssue.empty(board: board, key: 'SP-300').tap do |issue|
+      MockIssue.empty(board: board, key: 'SP-300', created: '2021-06-18').tap do |issue|
         issue.status = board.possible_statuses.find_by_id board.visible_columns[1].status_ids.min
         issue.add_change(field: 'status', value: issue.status.name, value_id: issue.status.id,
           time: to_time('2021-06-18'))
