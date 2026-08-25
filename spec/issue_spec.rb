@@ -298,38 +298,29 @@ describe Issue do
 
     it 'gets complex history with a mix of field types' do
       issue10 = load_issue('SP-10', board: board)
-      expect(issue10.changes).to eq [
-        mock_change(issue: issue10, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:42:52.754'),
-        mock_change(issue: issue10, field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52.754'),
-        mock_change(
-          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-08-29T18:06:28'
-        ),
-        mock_change(issue: issue10, field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28'),
-        mock_change(issue: issue10, field: 'priority', value: 'Highest', time: '2021-08-29T18:06:43'),
-        mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-08-29T18:06:55'),
-        mock_change(
-          issue: issue10, field: 'status', value: 'Selected for Development', value_id: 3,
-          time: '2021-09-06T04:33:11'
-        ),
-        mock_change(issue: issue10, field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30'),
-        mock_change(issue: issue10, field: 'priority', value: 'Medium', time: '2021-09-06T04:33:50'),
-        mock_change(issue: issue10, field: 'Flagged', value: '', time: '2021-09-06T04:33:55'),
-        mock_change(issue: issue10, field: 'status', value: 'In Progress', value_id: 5, time: '2021-09-06T04:34:02'),
-        mock_change(issue: issue10, field: 'status', value: 'Review', value_id: 7, time: '2021-09-06T04:34:21'),
-        mock_change(issue: issue10, field: 'status', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26'),
-        mock_change(issue: issue10, field: 'resolution', value: 'Done', value_id: 9, time: '2021-09-06T04:34:26')
-       ]
+      expect(issue10).to have_changes [
+        { field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-06-18T18:42:52' },
+        { field: 'priority', value: 'Medium', time: '2021-06-18T18:42:52' },
+        { field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-08-29T18:06:28' },
+        { field: 'Rank', value: 'Ranked higher', time: '2021-08-29T18:06:28' },
+        { field: 'priority', value: 'Highest', time: '2021-08-29T18:06:43' },
+        { field: 'status', value: 'In Progress', value_id: 3, time: '2021-08-29T18:06:55' },
+        { field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-09-06T04:33:11' },
+        { field: 'Flagged', value: 'Impediment', time: '2021-09-06T04:33:30' },
+        { field: 'priority', value: 'Medium', time: '2021-09-06T04:33:50' },
+        { field: 'Flagged', value: '', time: '2021-09-06T04:33:55' },
+        { field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-06T04:34:02' },
+        { field: 'status', value: 'Review', value_id: 10_011, time: '2021-09-06T04:34:21' },
+        { field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26' },
+        { field: 'resolution', value: 'Done', value_id: 10_000, time: '2021-09-06T04:34:26' }
+      ]
     end
 
     it "defaults the first status if there really hasn't been any yet" do
       issue = MockIssue.empty created: '2021-08-29T18:00:00+00:00'
-      expect(issue.changes).to eq [
-        mock_change(
-          issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00'
-        ),
-        mock_change(
-          issue: issue, field: 'priority', value: 'Medium', value_id: 3, time: '2021-08-29T18:00:00+00:00'
-        )
+      expect(issue).to have_changes [
+        { field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00' },
+        { field: 'priority', value: 'Medium', value_id: 3, time: '2021-08-29T18:00:00+00:00' }
       ]
     end
   end

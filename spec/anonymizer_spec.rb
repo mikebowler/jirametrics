@@ -288,17 +288,16 @@ describe Anonymizer do
   describe '#shift_all_dates' do
     it 'changes nothing when shift is zero' do
       issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
-      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 0
       aggregate_failures do
-        expect(changes).to eq [
-          'status  2021-06-18 18:41:29 +0000',
-          'priority  2021-06-18 18:41:29 +0000',
-          'status  2021-06-18 18:43:34 +0000',
-          'status  2021-06-18 18:44:21 +0000',
-          'Flagged  2021-08-29 18:04:39 +0000',
-          'status  2021-12-14 00:30:15 +0000'
+        expect(issue1).to have_changes [
+          { field: 'status', time: '2021-06-18T18:41:29+00:00' },
+          { field: 'priority', time: '2021-06-18T18:41:29+00:00' },
+          { field: 'status', time: '2021-06-18T18:43:34+00:00' },
+          { field: 'status', time: '2021-06-18T18:44:21+00:00' },
+          { field: 'Flagged', time: '2021-08-29T18:04:39+00:00' },
+          { field: 'status', time: '2021-12-14T00:30:15+00:00' }
         ]
         expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-14 00:30:15 +0000'
       end
@@ -310,17 +309,18 @@ describe Anonymizer do
 
     it 'shifts everything by one day' do
       issue1 = anonymizer.project_config.issues.find { |i| i.key == 'SP-1' }
-      changes = issue1.changes.collect { |c| "#{c.field}  #{c.time.strftime('%Y-%m-%d %H:%M:%S %z')}" }
 
       anonymizer.shift_all_dates date_adjustment: 1
+      # Every change moved forward a day. Asserted after the shift, on the issue itself, because
+      # collecting them into strings beforehand only ever compared a snapshot to itself.
       aggregate_failures do
-        expect(changes).to eq [
-          'status  2021-06-18 18:41:29 +0000',
-          'priority  2021-06-18 18:41:29 +0000',
-          'status  2021-06-18 18:43:34 +0000',
-          'status  2021-06-18 18:44:21 +0000',
-          'Flagged  2021-08-29 18:04:39 +0000',
-          'status  2021-12-14 00:30:15 +0000'
+        expect(issue1).to have_changes [
+          { field: 'status', time: '2021-06-19T18:41:29+00:00' },
+          { field: 'priority', time: '2021-06-19T18:41:29+00:00' },
+          { field: 'status', time: '2021-06-19T18:43:34+00:00' },
+          { field: 'status', time: '2021-06-19T18:44:21+00:00' },
+          { field: 'Flagged', time: '2021-08-30T18:04:39+00:00' },
+          { field: 'status', time: '2021-12-15T00:30:15+00:00' }
         ]
         expect(issue1.updated.strftime('%Y-%m-%d %H:%M:%S %z')).to eql '2021-12-15 00:30:15 +0000'
       end
