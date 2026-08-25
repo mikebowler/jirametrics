@@ -8,7 +8,23 @@
 #
 #   require 'jirametrics/testing'
 #
+# What is supported is exactly what this module holds: the Mock* classes below, plus the methods
+# to_time, to_date and empty_config_block. The require above loads the rest of the library too,
+# and that is a side effect of loading rather than a promise about any of it.
+#
+# The methods, and only the methods, arrive through include. Constants do not, because constant
+# lookup in an example block runs through the block's lexical scope rather than the ancestors of
+# the class it runs against:
+#
 #   RSpec.configure { |config| config.include JiraMetrics::Testing }
+#
+#   to_time '2024-01-01'                        # works, include supplies it
+#   JiraMetrics::Testing::MockIssue.empty(...)  # classes are named in full
+#
+# Add your own alias if the full name grates. That is your namespace to spend, so we don't spend
+# it for you:
+#
+#   MockIssue = JiraMetrics::Testing::MockIssue
 #
 # The require of 'jirametrics' below is not optional. This file nests inside the JiraMetrics class,
 # and reopening it before Thor has defined it raises a superclass mismatch.
@@ -30,6 +46,7 @@ class JiraMetrics
       (?<remainder>T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?<fraction>\.\d+)?
       \s*(?<offset>[+-]\d{2}:?\d{2})?)?$
     /x
+    private_constant :TIME_PATTERN
 
     extend self
 
@@ -47,6 +64,13 @@ class JiraMetrics
     def to_date input
       input.is_a?(Date) ? input : Date.parse(input)
     end
+
+    # Every chart is constructed with a configuration block, so a test that only wants to exercise
+    # the chart itself still has to supply one. This is that block, doing nothing:
+    #
+    #   chart = MyCustomChart.new empty_config_block
+    #   chart.issues = [issue]
+    def empty_config_block = ->(_) {}
 
     private
 

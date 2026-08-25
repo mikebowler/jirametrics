@@ -44,4 +44,33 @@ describe JiraMetrics::Testing do
       expect(to_date(date)).to be date
     end
   end
+
+  describe '.empty_config_block' do
+    # Charts instance_eval the block they're given, so "empty" has to mean both accepted and
+    # inert. Asserting the chart's own default header survived covers the second half: a block
+    # that configured anything would have had the chance to overwrite it.
+    it 'satisfies a chart that requires a configuration block, and configures nothing' do
+      chart = ThroughputChart.new empty_config_block
+      expect(chart.header_text).to eq 'Throughput Chart'
+    end
+  end
+
+  # These two are the supported surface, and the whole of it. Adding to either list is a decision to
+  # freeze that signature, since exposed means deprecation on change, so they exist to force the
+  # decision rather than let something arrive unnoticed. Four mocks became public exactly that way.
+  #
+  # Failing here is not a bug. It means something was added or removed and nobody said which.
+  describe 'the supported surface' do
+    it 'is exactly these classes' do
+      expect(described_class.constants).to match_array %i[
+        MockBoard MockChangeItem MockCycleTimeConfig MockIssue
+      ]
+    end
+
+    it 'is exactly these methods' do
+      expect(described_class.public_instance_methods(false)).to match_array %i[
+        empty_config_block to_date to_time
+      ]
+    end
+  end
 end

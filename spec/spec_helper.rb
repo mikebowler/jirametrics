@@ -26,6 +26,15 @@ end
 require 'require_all'
 require_all 'lib'
 
+# Short names for our own specs only. The classes live in JiraMetrics::Testing, which is where the
+# supported boundary is drawn and what an outside author writes. These aliases are deliberately here
+# rather than in the gem: polluting the top-level namespace is a choice each consumer makes for
+# themselves, and we are only making it for ourselves.
+MockBoard = JiraMetrics::Testing::MockBoard
+MockChangeItem = JiraMetrics::Testing::MockChangeItem
+MockCycleTimeConfig = JiraMetrics::Testing::MockCycleTimeConfig
+MockIssue = JiraMetrics::Testing::MockIssue
+
 # Auto-load shared test support classes (mocks, matchers, builders) from spec/support.
 Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |file| require file }
 
@@ -199,18 +208,6 @@ module SpecHelpers
     else
       object.to_s
     end
-  end
-
-  # Create a Time from the input string. Supported formats are below. When a timezone isn't specified,
-  # it uses UTC rather than local so that all tests will continue to work, regardless of what timezone
-  # they're run in.
-  # 2024-01-01
-  # 2024-01-01T12:34:56
-  # 2024-01-01T12:34:56.789
-  # 2024-01-01T12:34:56.789+00:00
-  # 2024-01-01T12:34:56+00:00
-  def empty_config_block
-    ->(_) {}
   end
 
   def create_issue_from_aging_data board:, ages_by_column:, today:, key: 'SP-1'
