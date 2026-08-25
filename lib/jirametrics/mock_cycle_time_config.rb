@@ -43,7 +43,7 @@ class MockCycleTimeConfig < CycleTimeConfig
   private
 
   def normalize_time value
-    value.is_a?(String) ? MockChangeItem.parse_time(value) : value
+    value.is_a?(String) ? JiraMetrics::Testing.to_time(value) : value
   end
 
   # Only the first stub for a key is reachable, so a second one always means the test is asserting

@@ -77,7 +77,7 @@ class MockIssue < Issue
         else
           {}
         end
-      created_time = MockChangeItem.parse_time(created).to_s
+      created_time = JiraMetrics::Testing.to_time(created).to_s
       {
         'key' => key,
         'changelog' => { 'histories' => [] },

@@ -4,30 +4,8 @@ require './spec/spec_helper'
 require 'open3'
 require 'tmpdir'
 
-# spec_helper is a bag of helper functions (to_time, etc.), not a class, so we describe a string.
+# spec_helper is a bag of helper functions, not a class, so we describe a string.
 describe 'spec_helper' do # rubocop:disable RSpec/DescribeClass
-  describe '#to_time' do
-    it 'parses date only' do
-      expect(to_time('2024-01-01').inspect).to eq '2024-01-01 00:00:00 +0000'
-    end
-
-    it 'parses date/time' do
-      expect(to_time('2024-01-01T12:34:56').inspect).to eq '2024-01-01 12:34:56 +0000'
-    end
-
-    it 'parses date/time with fractional seconds' do
-      expect(to_time('2024-01-01T12:34:56.789').inspect).to eq '2024-01-01 12:34:56.789 +0000'
-    end
-
-    it 'parses date/time with fractional seconds and offset' do
-      expect(to_time('2024-01-01T12:34:56.789+10:00').inspect).to eq '2024-01-01 12:34:56.789 +1000'
-    end
-
-    it 'parses date/time with offset' do
-      expect(to_time('2024-01-01T12:34:56 +10:00').inspect).to eq '2024-01-01 12:34:56 +1000'
-    end
-  end
-
   describe '#create_issue_from_aging_data' do
     let(:board) { sample_board }
 

@@ -6,32 +6,6 @@
 # an id is wanted, a time given as a string) and, for status changes with an issue, validates the
 # status against that issue's board so a typo surfaces loudly rather than silently passing.
 class MockChangeItem
-  # Accepts the date formats a test is likely to write, rather than only what Time.parse takes.
-  TIME_PATTERN = /
-    ^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})
-    (?<remainder>T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?<fraction>\.\d+)?
-    \s*(?<offset>[+-]\d{2}:?\d{2})?)?$
-  /x
-
-  def self.parse_time input
-    return input unless input.is_a? String
-
-    matches = input.match TIME_PATTERN
-    raise "Can't parse string: #{input.inspect}" unless matches
-
-    Time.parse format_matched_time(matches)
-  end
-
-  def self.format_matched_time matches
-    format(
-      '%<year>04d-%<month>02d-%<day>02dT-%<hour>02d:%<minute>02d:%<second>02d%<fraction>s%<offset>s',
-      year: matches[:year].to_i, month: matches[:month].to_i, day: matches[:day].to_i,
-      hour: (matches[:hour] || 0).to_i, minute: (matches[:minute] || 0).to_i,
-      second: (matches[:second] || 0).to_i,
-      fraction: matches[:fraction] || '', offset: matches[:offset] || '+0000'
-    )
-  end
-
   def initialize(
     field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
     artificial: false, issue: nil, field_id: nil
@@ -39,7 +13,7 @@ class MockChangeItem
     @field = field
     @value = value
     # Callers write dates as strings far more often than as Times.
-    @time = self.class.parse_time time
+    @time = JiraMetrics::Testing.to_time time
     @value_id = value_id
     @old_value = old_value
     @old_value_id = old_value_id

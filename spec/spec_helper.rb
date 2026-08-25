@@ -209,14 +209,6 @@ module SpecHelpers
   # 2024-01-01T12:34:56.789
   # 2024-01-01T12:34:56.789+00:00
   # 2024-01-01T12:34:56+00:00
-  def to_time input
-    MockChangeItem.parse_time input
-  end
-
-  def to_date string
-    Date.parse string
-  end
-
   def empty_config_block
     ->(_) {}
   end

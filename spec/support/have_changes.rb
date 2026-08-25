@@ -51,7 +51,7 @@ class HaveChanges
       if key == :time
         # To the second, matching how ChangeItem itself compares times, so an expectation does not
         # have to carry the fractional part Jira happens to record.
-        wanted = SpecHelpers.to_time(wanted) if wanted.is_a?(String)
+        wanted = JiraMetrics::Testing.to_time(wanted) if wanted.is_a?(String)
         got, wanted = [got, wanted].collect { |time| time.strftime '%Y-%m-%d %H:%M:%S %z' }
       end
       next if got == wanted
