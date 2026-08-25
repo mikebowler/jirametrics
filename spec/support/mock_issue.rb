@@ -11,7 +11,11 @@ class MockIssue < Issue
 
   # Most tests do not care when an issue was created, and making them say so is the friction
   # that pushed people towards load_issue 'SP-1' and its accidental coupling to that fixture.
-  DEFAULT_CREATED = '2024-01-01'
+  #
+  # A leap day on purpose. Anything that does its own date arithmetic, assumes 365-day years, or
+  # round-trips through a format that cannot represent Feb 29 will trip over this default rather
+  # than sailing past on a date that hides the bug.
+  DEFAULT_CREATED = '2024-02-29'
 
   class << self
     # Reset between examples so a generated key never depends on how many issues earlier tests
