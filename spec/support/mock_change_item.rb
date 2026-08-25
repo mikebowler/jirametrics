@@ -35,6 +35,8 @@ class MockChangeItem
   end
 
   # If either value or old_value is a Status object then pull the name and id off it.
+  private
+
   def normalize_status_arguments
     if @value.is_a? Status
       @value_id = @value.id
