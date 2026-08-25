@@ -11,7 +11,7 @@ describe CycleTimeConfig do
 
     ProjectConfig.new(exporter: exporter, target_path: target_path, jira_config: nil, block: nil)
   end
-  let(:issue) { load_issue 'SP-1' }
+  let(:issue) { MockIssue.empty }
 
   describe 'start_at / stop_at return values' do
     it 'raises when a block returns a bare time rather than a ChangeItem or nil' do

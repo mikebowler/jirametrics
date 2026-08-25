@@ -156,7 +156,7 @@ describe DailyView do
 
     it 'returns link when parent is in issues list' do
       view.issues = IssueCollection[issue1, issue2]
-      issue = load_issue('SP-1', board: board)
+      issue = MockIssue.empty(board: board)
       issue.raw['fields']['parent'] = { 'key' => 'SP-2' }
 
       expect(view.make_parent_lines issue).to eq [

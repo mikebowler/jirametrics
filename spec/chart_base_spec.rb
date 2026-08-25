@@ -186,7 +186,7 @@ describe ChartBase do
 
   describe '#completed_issues_in_range' do
     let(:board) { load_complete_sample_board }
-    let(:issue1) { load_issue('SP-1', board: board) }
+    let(:issue1) { MockIssue.empty(board: board) }
 
     it 'returns empty when no issues match' do
       chart_base.issues = [issue1]

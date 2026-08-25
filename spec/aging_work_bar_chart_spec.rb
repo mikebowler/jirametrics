@@ -12,7 +12,7 @@ describe AgingWorkBarChart do
       chart.all_boards = { board.id => board }
     end
   end
-  let(:issue1) { load_issue('SP-1', board: board) }
+  let(:issue1) { MockIssue.empty(board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
 
   describe '#description_text' do
@@ -274,7 +274,7 @@ describe AgingWorkBarChart do
     end
 
     it 'selects only aging' do
-      issue3 = load_issue 'SP-1', board: board
+      issue3 = MockIssue.empty board: board
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, nil, nil],                  # not started

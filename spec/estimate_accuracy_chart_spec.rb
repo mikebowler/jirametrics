@@ -277,8 +277,8 @@ describe EstimateAccuracyChart do
 
       # Loaded as SP-1 for the known JSON, then renamed. Cycletime stubs are looked up by key, so
       # leaving three issues called SP-1 would give them all issue1's stub.
-      issue_with_no_estimate = load_issue('SP-1', board: board).tap { |issue| issue.raw['key'] = 'SP-3' }
-      issue_not_started = load_issue('SP-1', board: board).tap { |issue| issue.raw['key'] = 'SP-4' }
+      issue_with_no_estimate = MockIssue.empty(board: board).tap { |issue| issue.raw['key'] = 'SP-3' }
+      issue_not_started = MockIssue.empty(board: board).tap { |issue| issue.raw['key'] = 'SP-4' }
 
       board.cycletime = mock_cycletime_config stub_values: [
         [issue1, '2024-01-02', '2024-01-02T01:00:00'],

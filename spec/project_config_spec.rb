@@ -19,7 +19,7 @@ describe ProjectConfig do
     board.project_config = project_config
     board
   end
-  let(:issue1) { load_issue('SP-1', board: board) }
+  let(:issue1) { MockIssue.empty(board: board) }
 
   describe '#load_all_boards' do
     it 'loads each board with its columns parsed' do
@@ -436,7 +436,7 @@ describe ProjectConfig do
   describe '#add_issues' do
     it 'adds both boards and issues' do
       board = sample_board
-      issue = load_issue('SP-1', board: board)
+      issue = MockIssue.empty(board: board)
       project_config.add_issues([issue])
 
       aggregate_failures do
@@ -446,7 +446,7 @@ describe ProjectConfig do
     end
 
     it 'accumulates boards across multiple calls' do
-      issue1 = load_issue('SP-1', board: board)
+      issue1 = MockIssue.empty(board: board)
 
       raw = JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json'))
       raw['id'] = 2

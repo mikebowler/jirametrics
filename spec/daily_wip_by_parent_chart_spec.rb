@@ -10,7 +10,7 @@ describe DailyWipByParentChart do
     chart
   end
   let(:board) { load_complete_sample_board }
-  let(:issue1) { load_issue('SP-1', board: board).tap { |i| i.changes.clear } }
+  let(:issue1) { MockIssue.empty(board: board).tap { |i| i.changes.clear } }
   let(:issue2) { load_issue('SP-2', board: board).tap { |i| i.changes.clear } }
 
   it 'compiles and runs text with embedded erb' do

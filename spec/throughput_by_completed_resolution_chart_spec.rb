@@ -5,7 +5,7 @@ require 'jirametrics/throughput_by_completed_resolution_chart'
 
 describe ThroughputByCompletedResolutionChart do
   let(:board) { load_complete_sample_board }
-  let(:issue1) { load_issue 'SP-1', board: board }
+  let(:issue1) { MockIssue.empty board: board }
 
   it 'sets a descriptive header_text' do
     chart = described_class.new empty_config_block

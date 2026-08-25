@@ -11,7 +11,7 @@ describe DailyWipByBlockedStalledChart do
       chart
     end
     let(:board) { load_complete_sample_board }
-    let(:issue1) { load_issue('SP-1', board: board).tap { |i| i.changes.clear } }
+    let(:issue1) { MockIssue.empty(board: board).tap { |i| i.changes.clear } }
 
     it 'handles active items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-02-02').to_s

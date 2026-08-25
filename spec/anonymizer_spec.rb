@@ -74,7 +74,7 @@ describe Anonymizer do
     end
 
     it 'has changed links' do
-      issue1 = load_issue('SP-1')
+      issue1 = MockIssue.empty
       anonymizer.project_config.issues << issue1
       issue1.raw['fields']['issuelinks'] = [
         {

@@ -211,7 +211,7 @@ describe AggregateConfig do
 
   describe '#adjust_issue_links' do
     it 'adjusts link' do
-      issue1 = load_issue('SP-1')
+      issue1 = MockIssue.empty
       issue2 = load_issue('SP-2')
       issue1.issue_links << IssueLink.new(origin: issue1, raw: {
         'type' => { 'inward' => 'Clones' },

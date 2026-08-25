@@ -288,7 +288,7 @@ describe SprintBurndown do
   end
 
   describe '#changes_for_one_issue' do
-    let(:issue) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
+    let(:issue) { MockIssue.empty(board: board).tap { |issue| issue.changes.clear } }
 
     it 'returns empty list for no changes' do
       board.cycletime = mock_cycletime_config stub_values: []
