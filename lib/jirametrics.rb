@@ -157,10 +157,12 @@ class JiraMetrics < Thor
         exit 1
       end
 
-      # Everything except the testing surface. testing.rb require_rel's the whole directory itself,
-      # so it has to be excluded too or it pulls the mocks straight back in.
+      # The testing surface has no place in a production run, and the examples are opt-in: a config
+      # that wants standard_project requires it by name. Matching on the prefix also excludes
+      # testing.rb, which has to go with its directory because it require_rel's the whole tree.
+      not_autoloaded = %w[testing examples].collect { |name| File.join __dir__, 'jirametrics', name }
       require_all(Dir[File.join(__dir__, 'jirametrics', '**', '*.rb')]
-        .reject { |file| file.start_with? File.join(__dir__, 'jirametrics', 'testing') })
+        .reject { |file| not_autoloaded.any? { |prefix| file.start_with? prefix } })
       # Set only after the require above, so Exporter is defined. The config file we load below calls
       # Exporter.configure, which opens this log; the MCP server passes its own name so it doesn't
       # truncate jirametrics.log.
