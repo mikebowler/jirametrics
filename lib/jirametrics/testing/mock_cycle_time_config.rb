@@ -15,10 +15,11 @@ class MockCycleTimeConfig < CycleTimeConfig
     @stubs = []
   end
 
-  # The same file ProjectConfig reads, found the same way, so this resolves from wherever the
-  # caller happens to be rather than only from a checkout of this repo.
+  # The same file ProjectConfig reads, resolved from this file's own location so that it works from
+  # wherever the caller happens to be rather than only from a checkout of this repo.
   def self.default_settings
-    JSON.parse(File.read(File.join(__dir__, 'settings.json'), encoding: 'UTF-8')).tap do |settings|
+    settings_file = File.expand_path '../settings.json', __dir__
+    JSON.parse(File.read(settings_file, encoding: 'UTF-8')).tap do |settings|
       # A cached cycle time would outlive the stub that produced it, so a second stub for the same
       # issue would appear to have no effect.
       settings['cache_cycletime_calculations'] = false
