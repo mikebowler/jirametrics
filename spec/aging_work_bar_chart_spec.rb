@@ -713,8 +713,9 @@ describe AgingWorkBarChart do
       board.sprints << active_sprint
 
       issue = MockIssue.empty board: board
-      issue.add_change(field: 'Sprint', value: active_sprint.name, value_id: active_sprint.id.to_s,
-time: '2021-01-05')
+      issue.add_change(
+        field: 'Sprint', value: active_sprint.name, value_id: active_sprint.id.to_s, time: '2021-01-05'
+      )
 
       expect(chart.collect_sprint_ranges(issue: issue)).to eq [
         BarChartRange.new(
@@ -753,8 +754,9 @@ time: '2021-01-05')
       board.sprints << future_sprint
 
       issue = MockIssue.empty board: board
-      issue.add_change(field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s,
-time: '2021-01-05')
+      issue.add_change(
+        field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s, time: '2021-01-05'
+      )
 
       expect(chart.collect_sprint_ranges(issue: issue)).to eq []
     end

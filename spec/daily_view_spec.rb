@@ -488,8 +488,9 @@ describe DailyView do
     end
 
     it 'changes from one status to another' do
-      change = MockChangeItem.new(field: 'status', value: done_status, old_value: review_status,
-time: '2024-01-01').to_change_item
+      change = MockChangeItem.new(
+        field: 'status', value: done_status, old_value: review_status, time: '2024-01-01'
+      ).to_change_item
       expect(view.history_text change: change, board: board).to eq(
         "Changed from #{view.format_status review_status, board: board} " \
           "to #{view.format_status done_status, board: board}"
@@ -607,16 +608,18 @@ time: '2024-01-01').to_change_item
 
     it 'returns nil when scrum board with active sprint and status in visible column' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' }
+      )
       issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       expect(view.make_not_visible_line(issue1)).to be_nil
     end
 
     it 'returns message when scrum board and not in any active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' }
+      )
       issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       result = view.make_not_visible_line(issue1)
       expect(result).to eq(
@@ -626,8 +629,9 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
 
     it 'returns both reasons when scrum board, no active sprint, and status not in visible column' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' }
+      )
       issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       status = board.possible_statuses.find_all_by_name('Backlog').first
       issue1.raw['fields']['status'] = {

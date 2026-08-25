@@ -615,8 +615,9 @@ describe Issue do
       end
 
       it 'returns nil when in visible status but no sprint' do
-        issue.add_change(field: 'status', value: 'Selected for Development', value_id: 3,
-time: '2021-10-03')
+        issue.add_change(
+          field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-03'
+        )
         expect(issue.first_time_visible_on_board).to be_nil
       end
 
@@ -631,15 +632,17 @@ time: '2021-10-03')
         add_active_sprint id: 10, start_date: '2021-10-02'
         issue.add_change(field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-02', field_id: 'customfield_10020')
-        issue.add_change(field: 'status', value: 'Selected for Development', value_id: 3,
-time: '2021-10-05')
+        issue.add_change(
+          field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-05'
+        )
         expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-05')
       end
 
       it 'returns the sprint add time when sprint add is later than status change' do
         add_active_sprint id: 10, start_date: '2021-10-02'
-        issue.add_change(field: 'status', value: 'Selected for Development', value_id: 3,
-time: '2021-10-02')
+        issue.add_change(
+          field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02'
+        )
         issue.add_change(field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-05', field_id: 'customfield_10020')
         expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-05')
@@ -653,8 +656,9 @@ time: '2021-10-02')
           'startDate' => '2021-10-06T00:00:00.000Z',
           'originBoardId' => scrum_board.id
         }, timezone_offset: '+00:00')
-        issue.add_change(field: 'status', value: 'Selected for Development', value_id: 3,
-time: '2021-10-02')
+        issue.add_change(
+          field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02'
+        )
         issue.add_change(field: 'Sprint', value: 'Sprint 10', value_id: '10',
           time: '2021-10-03', field_id: 'customfield_10020')
         expect(issue.first_time_visible_on_board&.time).to eq to_time('2021-10-06')
@@ -978,8 +982,9 @@ time: '2021-10-02')
 
     it 'returns empty when scrum issue is in active sprint and visible status' do
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
-      scrum_board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      scrum_board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' }
+      )
       scrum_issue = MockIssue.empty board: scrum_board,
         creation_status: scrum_board.possible_statuses.find_by_id(3)
       scrum_issue.add_change(field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-10-03')

@@ -141,10 +141,12 @@ describe DataQualityReport do
 
       issue10.changes.clear
       issue10.add_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-      done_change = issue10.add_change(field: 'status', value: 'Done', value_id: 10_002,
-time: '2021-09-06T04:34:26+00:00')
-      in_progress_change = issue10.add_change(field: 'status', value: 'In Progress', value_id: 3,
-time: '2021-09-07T04:34:26+00:00')
+      done_change = issue10.add_change(
+        field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
+      )
+      in_progress_change = issue10.add_change(
+        field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
+      )
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new(
@@ -237,8 +239,9 @@ time: '2021-09-07T04:34:26+00:00')
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      fake_backlog_status = issue1.add_change(field: 'status', value: 'FakeBacklog', time: '2021-09-05',
-value_id: 10_012)
+      fake_backlog_status = issue1.add_change(
+        field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012
+      )
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
@@ -258,8 +261,9 @@ value_id: 10_012)
       issue1.changes.clear
       # Deliberately a status the board does not have, which is the thing under test. add_change
       # would validate it against the board and raise before the test could run.
-      issue1.changes << MockChangeItem.new(field: 'status', value: 'Foo', value_id: 100,
-time: '2021-09-05').to_change_item
+      issue1.changes << MockChangeItem.new(
+        field: 'status', value: 'Foo', value_id: 100, time: '2021-09-05'
+      ).to_change_item
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
@@ -386,8 +390,9 @@ time: '2021-09-05').to_change_item
 
     it 'does nothing when issue is in an active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' }
+      )
       issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry
@@ -396,8 +401,9 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'reports when scrum issue is not in any active sprint' do
       board.raw['type'] = 'scrum'
-      board.sprints << Sprint.new(timezone_offset: '00:00',
-raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
+      board.sprints << Sprint.new(
+        timezone_offset: '00:00', raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' }
+      )
       issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry

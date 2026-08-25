@@ -572,8 +572,9 @@ describe ChartBase do
 
     it 'resolves a ChangeItem to its status via value_id' do
       review = board.possible_statuses.find { |s| s.name == 'Review' }
-      change = MockChangeItem.new(field: 'status', value: 'Review', value_id: review.id,
-time: '2021-01-01').to_change_item
+      change = MockChangeItem.new(
+        field: 'status', value: 'Review', value_id: review.id, time: '2021-01-01'
+      ).to_change_item
       expect(chart_base.format_status(change, board: board))
         .to eq chart_base.format_status(review, board: board)
     end
@@ -589,8 +590,9 @@ time: '2021-01-01').to_change_item
     end
 
     it 'renders a red error span with the value when the status id is unknown' do
-      change = MockChangeItem.new(field: 'status', value: 'Mystery', value_id: 99_999,
-time: '2021-01-01').to_change_item
+      change = MockChangeItem.new(
+        field: 'status', value: 'Mystery', value_id: 99_999, time: '2021-01-01'
+      ).to_change_item
       expect(chart_base.format_status(change, board: board)).to eq "<span style='color: red'>Mystery</span>"
     end
 
