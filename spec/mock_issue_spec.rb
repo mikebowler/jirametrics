@@ -22,9 +22,11 @@ describe MockIssue do
       expect(keys.uniq.size).to eq 3
     end
 
+    # The literal is deliberate. Comparing against the constant would just restate the
+    # implementation and pass no matter what the constant became.
     it 'generates keys clear of the hand-written ones that fixtures use' do
       number = described_class.empty(board: board).key.delete_prefix('SP-').to_i
-      expect(number).to be >= described_class::FIRST_GENERATED_KEY_NUMBER
+      expect(number).to be >= 1000
     end
 
     it 'uses the key it was given' do
