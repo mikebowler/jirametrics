@@ -322,7 +322,7 @@ describe AgingWorkBarChart do
 
   describe '#collect_priority_ranges' do
     it 'returns empty array when issue has no priority changes at all' do
-      issue = MockIssue.empty created: '2021-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2021-01-02'
       issue.changes.reject!(&:priority?)
       chart.settings = board.project_config.settings
       chart.time_range = to_time('2021-01-01')..to_time('2021-01-10')
@@ -330,7 +330,7 @@ describe AgingWorkBarChart do
     end
 
     it 'handles no priority changes' do
-      issue = MockIssue.empty created: '2021-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2021-01-02'
       chart.settings = board.project_config.settings
       chart.time_range = to_time('2021-01-01')..to_time('2021-01-10')
       expect(chart.collect_priority_ranges(issue: issue)).to eq [
@@ -343,7 +343,7 @@ describe AgingWorkBarChart do
     end
 
     it 'handles priority changes' do
-      issue = MockIssue.empty created: '2021-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2021-01-02'
       chart.settings = board.project_config.settings
       chart.time_range = to_time('2021-01-01')..to_time('2021-01-10')
 

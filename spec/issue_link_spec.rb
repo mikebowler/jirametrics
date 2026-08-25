@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe IssueLink do
   let(:issue_link) do
-    described_class.new origin: MockIssue.empty(key: 'SP-1'), raw: {
+    described_class.new origin: MockIssue.empty(board: sample_board, key: 'SP-1'), raw: {
       'id' => '10001',
       'self' => 'https://improvingflow.atlassian.net/rest/api/2/issueLink/10001',
       'type' => {

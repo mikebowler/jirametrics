@@ -2,6 +2,9 @@
 
 # An Issue you can build without a fixture file and then add history to.
 #
+# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
+# documented, and not something we announce.
+#
 # MockIssue.new keeps Issue's own signature (raw:, board:) so that a MockIssue is substitutable for
 # an Issue everywhere, including MockCycleTimeConfig's is_a?(Issue) check. The friendly constructor
 # is MockIssue.empty, which builds the minimal raw hash for you.
@@ -31,7 +34,10 @@ class MockIssue < Issue
   end
 
   class << self
-    def empty created: DEFAULT_CREATED, board: SpecHelpers.sample_board, key: nil, creation_status: nil,
+    # board has no default. Supplying one would mean either packaging a sample board or reading
+    # from this repo's spec directory, and neither belongs in a shipped gem. MockBoard.load builds
+    # one from the files jirametrics already downloads.
+    def empty board:, created: DEFAULT_CREATED, key: nil, creation_status: nil,
       current_sprint_ids: nil
       new(
         raw: raw_for(
@@ -79,7 +85,7 @@ class MockIssue < Issue
         else
           {}
         end
-      created_time = SpecHelpers.to_time(created).to_s
+      created_time = MockChangeItem.parse_time(created).to_s
       {
         'key' => key,
         'changelog' => { 'histories' => [] },

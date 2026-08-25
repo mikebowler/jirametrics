@@ -14,13 +14,13 @@ describe EstimateAccuracyChart do
 
   describe '#estimate_at' do
     it 'handles no story points' do
-      issue = MockIssue.empty created: '2023-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2023-01-02'
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-03')
       expect(estimate).to be_nil
     end
 
     it 'handles a single estimate set' do
-      issue = MockIssue.empty created: '2023-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2023-01-02'
       issue.add_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
 
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
@@ -28,7 +28,7 @@ describe EstimateAccuracyChart do
     end
 
     it 'handles estimates set before and after' do
-      issue = MockIssue.empty created: '2023-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2023-01-02'
       issue.add_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
       issue.add_change(field: 'Story Points', value: '6.0', time: '2023-01-05')
 
@@ -37,7 +37,7 @@ describe EstimateAccuracyChart do
     end
 
     it 'handles estimates in time' do
-      issue = MockIssue.empty created: '2023-01-02'
+      issue = MockIssue.empty board: sample_board, created: '2023-01-02'
       two_days = (60 * 60 * 24 * 2).to_s
       issue.add_change(field: 'timeoriginalestimate', value: two_days, time: '2023-01-03')
 

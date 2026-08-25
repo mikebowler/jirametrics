@@ -620,7 +620,7 @@ describe ChartBase do
   end
 
   describe '#link_to_issue' do
-    let(:issue1) { MockIssue.empty(key: 'SP-1') }
+    let(:issue1) { MockIssue.empty(board: sample_board, key: 'SP-1') }
 
     it 'handles easy case' do
       expect(chart_base.link_to_issue issue1).to eq(

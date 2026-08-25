@@ -996,7 +996,7 @@ describe DownloaderForCloud do
 
   describe '#bulk_fetch_issues' do
     let(:raw_issue) do
-      raw_issue = MockIssue.empty(created: '2025-01-01', key: 'SP-1').raw
+      raw_issue = MockIssue.empty(board: sample_board, created: '2025-01-01', key: 'SP-1').raw
       raw_issue['changelog'] = nil
       raw_issue['id'] = '123'
       raw_issue
@@ -1036,7 +1036,7 @@ describe DownloaderForCloud do
     end
 
     it 'fetches' do
-      raw_issue = MockIssue.empty(created: '2025-01-01', key: 'SP-1').raw
+      raw_issue = MockIssue.empty(board: sample_board, created: '2025-01-01', key: 'SP-1').raw
       raw_issue['changelog'] = nil
       raw_issue['id'] = '123'
 
@@ -1113,7 +1113,7 @@ describe DownloaderForCloud do
     end
 
     it 'skips issues returned by Jira with a key not in the request (moved issues)' do
-      moved_raw = MockIssue.empty.raw
+      moved_raw = MockIssue.empty(board: sample_board).raw
       moved_raw['changelog'] = nil
       moved_raw['id'] = '999'
       moved_raw['key'] = 'OTHER-999' # Jira returned a different key than we requested

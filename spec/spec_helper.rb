@@ -64,15 +64,10 @@ module SpecHelpers
   end
 
   def sample_board
-    statuses = load_statuses './spec/testdata/sample_statuses.json'
-    board = Board.new(
-      raw: JSON.parse(file_read('spec/testdata/sample_board_1_configuration.json')),
-      possible_statuses: statuses
+    MockBoard.load(
+      statuses: './spec/testdata/sample_statuses.json',
+      configuration: './spec/testdata/sample_board_1_configuration.json'
     )
-    board.project_config = ProjectConfig.new(
-      exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
-    )
-    board
   end
 
   # A board whose statuses are replaced with a fixed, known set (ids 1-15) so blocked/stalled tests
@@ -148,13 +143,10 @@ module SpecHelpers
   end
 
   def load_complete_sample_board
-    json = JSON.parse(file_read('./spec/complete_sample/sample_board_1_configuration.json'))
-    board = Board.new raw: json, possible_statuses: load_complete_sample_statuses
-    board.project_config = ProjectConfig.new(
-      exporter: Exporter.new, target_path: 'spec/testdata/', jira_config: nil, block: nil
+    MockBoard.load(
+      statuses: './spec/complete_sample/sample_statuses.json',
+      configuration: './spec/complete_sample/sample_board_1_configuration.json'
     )
-
-    board
   end
 
   def load_complete_sample_statuses
@@ -170,13 +162,7 @@ module SpecHelpers
   end
 
   def load_statuses input_file
-    statuses = StatusCollection.new
-
-    json = JSON.parse(File.read(input_file))
-    json.each do |status_config|
-      statuses << Status.from_raw(status_config)
-    end
-    statuses
+    MockBoard.load_statuses input_file
   end
 
   # If either value or old_value are statuses then the name and id will be pulled from that object
@@ -228,27 +214,7 @@ module SpecHelpers
   # 2024-01-01T12:34:56.789+00:00
   # 2024-01-01T12:34:56+00:00
   def to_time input
-    regex = /
-      ^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})
-      (?<remainder>T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?<fraction>\.\d+)?
-      \s*(?<offset>[+-]\d{2}:?\d{2})?)?$
-    /x
-    matches = input.match regex
-    raise "Can't parse string: #{input.inspect}" unless matches
-
-    adjusted = format(
-      '%<year>04d-%<month>02d-%<day>02dT-%<hour>02d:%<minute>02d:%<second>02d%<fraction>s%<offset>s',
-      year: matches[:year].to_i,
-      month: matches[:month].to_i,
-      day: matches[:day].to_i,
-      hour: (matches[:hour] || 0).to_i,
-      minute: (matches[:minute] || 0).to_i,
-      second: (matches[:second] || 0).to_i,
-      fraction: matches[:fraction] || '',
-      offset: matches[:offset] || '+0000'
-    )
-
-    Time.parse adjusted
+    MockChangeItem.parse_time input
   end
 
   def to_date string

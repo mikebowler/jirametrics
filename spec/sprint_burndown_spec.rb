@@ -474,8 +474,8 @@ describe SprintBurndown do
   end
 
   describe '#data_set_by_story_points' do
-    let(:issue1) { MockIssue.empty(key: 'SP-1').tap { |issue| issue.changes.clear } }
-    let(:issue2) { MockIssue.empty(key: 'SP-2').tap { |issue| issue.changes.clear } }
+    let(:issue1) { MockIssue.empty(board: sample_board, key: 'SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue2) { MockIssue.empty(board: sample_board, key: 'SP-2').tap { |issue| issue.changes.clear } }
 
     it 'handles an empty active sprint' do
       change_data = []
@@ -770,8 +770,8 @@ describe SprintBurndown do
   end
 
   describe '#data_set_by_story_counts' do
-    let(:issue1) { MockIssue.empty(key: 'SP-1').tap { |issue| issue.changes.clear } }
-    let(:issue2) { MockIssue.empty(key: 'SP-2').tap { |issue| issue.changes.clear } }
+    let(:issue1) { MockIssue.empty(board: sample_board, key: 'SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue2) { MockIssue.empty(board: sample_board, key: 'SP-2').tap { |issue| issue.changes.clear } }
 
     it 'handles an empty active sprint' do
       change_data = []

@@ -72,7 +72,7 @@ describe AggregateConfig do
       exporter.file_system.when_foreach root: 'spec/testdata/', result: []
       solo_project.file_prefix 'sample'
       solo_project.run
-      solo_project.issues << MockIssue.empty(key: 'SP-1', created: '2023-01-01')
+      solo_project.issues << MockIssue.empty(board: sample_board, key: 'SP-1', created: '2023-01-01')
       exporter.project_configs << solo_project
 
       subject = described_class.new project_config: aggregated_project, block: nil
@@ -99,7 +99,8 @@ describe AggregateConfig do
 
     it 'pulls issues from the first file section when file sections exist' do
       project = included_project 'withfile'
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-2', created: '2023-01-01')])
+      issue = MockIssue.empty board: sample_board, key: 'SP-2', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
 
       subject = described_class.new project_config: aggregated_project, block: nil
       subject.include_issues_from 'withfile'
@@ -111,8 +112,10 @@ describe AggregateConfig do
 
     it 'uses the first file section and warns when more than one is defined' do
       project = included_project 'multifile'
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-2', created: '2023-01-01')])
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-9', created: '2023-01-01')])
+      issue = MockIssue.empty board: sample_board, key: 'SP-2', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
+      issue = MockIssue.empty board: sample_board, key: 'SP-9', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
 
       subject = described_class.new project_config: aggregated_project, block: nil
       subject.include_issues_from 'multifile'
@@ -137,7 +140,8 @@ describe AggregateConfig do
 
     it 'brings fix versions over from the included project' do
       project = included_project 'fv'
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-3', created: '2023-01-01')])
+      issue = MockIssue.empty board: sample_board, key: 'SP-3', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
       project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1')
       project.fix_versions << FixVersion.new('id' => 2, 'name' => 'v2')
 
@@ -149,7 +153,8 @@ describe AggregateConfig do
     it 'does not bring over a fix version already present in the aggregate' do
       aggregated_project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1')
       project = included_project 'fv'
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-3', created: '2023-01-01')])
+      issue = MockIssue.empty board: sample_board, key: 'SP-3', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
       project.fix_versions << FixVersion.new('id' => 1, 'name' => 'v1-again')
       project.fix_versions << FixVersion.new('id' => 2, 'name' => 'v2')
 
@@ -160,7 +165,8 @@ describe AggregateConfig do
 
     it 'records the included project' do
       project = included_project 'tracked'
-      project.file_configs << file_section(project, issues: [MockIssue.empty(key: 'SP-4', created: '2023-01-01')])
+      issue = MockIssue.empty board: sample_board, key: 'SP-4', created: '2023-01-01'
+      project.file_configs << file_section(project, issues: [issue])
 
       subject = described_class.new project_config: aggregated_project, block: nil
       subject.include_issues_from 'tracked'
@@ -211,8 +217,8 @@ describe AggregateConfig do
 
   describe '#adjust_issue_links' do
     it 'adjusts link' do
-      issue1 = MockIssue.empty
-      issue2 = MockIssue.empty(key: 'SP-2')
+      issue1 = MockIssue.empty board: sample_board
+      issue2 = MockIssue.empty(board: sample_board, key: 'SP-2')
       issue1.issue_links << IssueLink.new(origin: issue1, raw: {
         'type' => { 'inward' => 'Clones' },
         'inwardIssue' => { 'key' => 'SP-2' }

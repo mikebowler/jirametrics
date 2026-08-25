@@ -474,7 +474,7 @@ describe ProjectConfig do
 
         subject.file_prefix 'sample'
         subject.load_status_category_mappings
-        issue = MockIssue.empty created: '2024-01-01'
+        issue = MockIssue.empty board: sample_board, created: '2024-01-01'
 
         # Throw in one change that isn't a status to see if we blow up.
         # These use statuses the board does not have, on purpose. add_change validates against the

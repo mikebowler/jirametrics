@@ -704,7 +704,7 @@ describe DataQualityReport do
       target_path = 'spec/complete_sample/'
       html_path = File.expand_path('./lib/jirametrics/html/')
 
-      sp1_json = MockIssue.empty(created: '2021-09-15', key: 'SP-1').raw
+      sp1_json = MockIssue.empty(board: sample_board, created: '2021-09-15', key: 'SP-1').raw
       exporter.file_system.when_loading file: "#{target_path}sample_statuses.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_meta.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_board_1_configuration.json", json: :not_mocked

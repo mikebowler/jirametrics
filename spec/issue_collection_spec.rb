@@ -3,8 +3,8 @@
 require './spec/spec_helper'
 
 describe IssueCollection do
-  let(:issue1) { MockIssue.empty(key: 'SP-1') }
-  let(:issue2) { MockIssue.empty(key: 'SP-2') }
+  let(:issue1) { MockIssue.empty(board: sample_board, key: 'SP-1') }
+  let(:issue2) { MockIssue.empty(board: sample_board, key: 'SP-2') }
   let(:with_rejected) do
     described_class.new.tap do |collection|
       collection << issue1

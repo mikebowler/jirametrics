@@ -317,7 +317,7 @@ describe Issue do
     end
 
     it "defaults the first status if there really hasn't been any yet" do
-      issue = MockIssue.empty created: '2021-08-29T18:00:00+00:00'
+      issue = MockIssue.empty board: sample_board, created: '2021-08-29T18:00:00+00:00'
       expect(issue).to have_changes [
         { field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00' },
         { field: 'priority', value: 'Medium', value_id: 3, time: '2021-08-29T18:00:00+00:00' }
@@ -1064,7 +1064,7 @@ describe Issue do
 
   describe '#inspect' do
     it 'returns a simplified representation' do
-      expect(MockIssue.empty(key: 'SP-1').inspect).to eql 'Issue("SP-1")'
+      expect(MockIssue.empty(board: sample_board, key: 'SP-1').inspect).to eql 'Issue("SP-1")'
     end
   end
 
@@ -1085,19 +1085,19 @@ describe Issue do
     end
 
     it 'handles the case where there are no resolutions' do
-      issue = MockIssue.empty created: '2021-10-01'
+      issue = MockIssue.empty board: sample_board, created: '2021-10-01'
       expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
     end
   end
 
   describe '#resolution' do
     it 'returns nil when not resolved' do
-      issue = MockIssue.empty created: '2021-10-01'
+      issue = MockIssue.empty board: sample_board, created: '2021-10-01'
       expect(issue.resolution).to be_nil
     end
 
     it 'returns resolution' do
-      issue = MockIssue.empty created: '2021-10-01'
+      issue = MockIssue.empty board: sample_board, created: '2021-10-01'
       issue.raw['fields']['resolution'] = { 'name' => 'Done' }
       expect(issue.resolution).to eq 'Done'
     end
@@ -1212,7 +1212,7 @@ describe Issue do
   end
 
   describe '#parent_key' do
-    let(:issue) { MockIssue.empty created: '2020-01-01' }
+    let(:issue) { MockIssue.empty board: sample_board, created: '2020-01-01' }
 
     it 'returns nil when no parent found' do
       expect(issue.parent_key).to be_nil
@@ -1288,7 +1288,7 @@ describe Issue do
   end
 
   describe '#looks_like_issue_key?' do
-    let(:issue) { MockIssue.empty created: '2020-01-01' }
+    let(:issue) { MockIssue.empty board: sample_board, created: '2020-01-01' }
 
     it 'returns true for valid key' do
       expect(issue.looks_like_issue_key? 'ABC-123').to be true
@@ -1426,14 +1426,14 @@ describe Issue do
 
   describe 'sorting' do
     it 'sorts when project key is the same and the numbers are different' do
-      a = MockIssue.empty(key: 'SP-1', created: '2022-01-01')
-      b = MockIssue.empty(key: 'SP-2', created: '2022-01-01')
+      a = MockIssue.empty(board: sample_board, key: 'SP-1', created: '2022-01-01')
+      b = MockIssue.empty(board: sample_board, key: 'SP-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SP-1 SP-2]
     end
 
     it 'sorts when project keys are different and the numbers are same' do
-      a = MockIssue.empty(key: 'SPA-1', created: '2022-01-01')
-      b = MockIssue.empty(key: 'SPB-2', created: '2022-01-01')
+      a = MockIssue.empty(board: sample_board, key: 'SPA-1', created: '2022-01-01')
+      b = MockIssue.empty(board: sample_board, key: 'SPB-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SPA-1 SPB-2]
     end
   end
@@ -1711,22 +1711,22 @@ describe Issue do
 
   describe '#<=>' do
     it 'compares numerically when projects are the same' do
-      issue1 = MockIssue.empty key: 'SP-1'
-      issue2 = MockIssue.empty key: 'SP-2'
+      issue1 = MockIssue.empty board: sample_board, key: 'SP-1'
+      issue2 = MockIssue.empty board: sample_board, key: 'SP-2'
 
       expect(issue1 <=> issue2).to be_negative
     end
 
     it 'compares alphametically by project name when projects are different' do
-      issue1 = MockIssue.empty key: 'SP-1'
-      issue2 = MockIssue.empty key: 'ABC-2'
+      issue1 = MockIssue.empty board: sample_board, key: 'SP-1'
+      issue2 = MockIssue.empty board: sample_board, key: 'ABC-2'
 
       expect(issue1 <=> issue2).to be_positive
     end
 
     it 'compares equal' do
-      issue1 = MockIssue.empty key: 'SP-1'
-      issue2 = MockIssue.empty key: 'SP-1'
+      issue1 = MockIssue.empty board: sample_board, key: 'SP-1'
+      issue2 = MockIssue.empty board: sample_board, key: 'SP-1'
 
       expect(issue1 <=> issue2).to be_zero
     end
@@ -1873,7 +1873,8 @@ describe Issue do
   describe '#done?' do
     it 'returns true for an artificial issue in a done status category' do
       issue = MockIssue.empty board: board
-      # Doing (id: 12) has category_key: 'done'; set directly since MockIssue.empty hardcodes statusCategory
+      # Doing (id: 12) has category_key: 'done'. Set directly rather than through creation_status
+      # because this test wants the status changed after the fact, not at creation.
       issue.status = board.possible_statuses.find_by_id(12)
       expect(issue.done?).to be true
     end

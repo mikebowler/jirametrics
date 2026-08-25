@@ -3,9 +3,9 @@
 require './spec/spec_helper'
 
 describe TreeOrganizer do
-  let(:issue1) { MockIssue.empty key: 'SP-1', created: '2022-01-01' }
-  let(:issue2) { MockIssue.empty key: 'SP-2', created: '2022-01-01' }
-  let(:issue3) { MockIssue.empty key: 'SP-3', created: '2022-01-01' }
+  let(:issue1) { MockIssue.empty board: sample_board, key: 'SP-1', created: '2022-01-01' }
+  let(:issue2) { MockIssue.empty board: sample_board, key: 'SP-2', created: '2022-01-01' }
+  let(:issue3) { MockIssue.empty board: sample_board, key: 'SP-3', created: '2022-01-01' }
 
   context 'when adding issues' do
     it 'accepts no issues' do
@@ -28,8 +28,8 @@ describe TreeOrganizer do
     end
 
     it 'organizes two different issues with the same parent' do
-      issue1.parent = MockIssue.empty key: 'SP-10', created: '2022-01-01'
-      issue2.parent = MockIssue.empty key: 'SP-10', created: '2022-01-02'
+      issue1.parent = MockIssue.empty board: sample_board, key: 'SP-10', created: '2022-01-01'
+      issue2.parent = MockIssue.empty board: sample_board, key: 'SP-10', created: '2022-01-02'
 
       subject = described_class.new issues: [issue2, issue1]
       expect(subject.flattened_issue_keys).to eq([
