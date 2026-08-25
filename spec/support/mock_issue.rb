@@ -18,8 +18,8 @@ class MockIssue < Issue
   DEFAULT_CREATED = '2024-02-29'
 
   class << self
-    # Reset between examples so a generated key never depends on how many issues earlier tests
-    # happened to build. Without this, random ordering makes keys vary by seed.
+    # For the specs that test key generation itself. Nothing else should need this: generated keys
+    # only have to be UNIQUE, and a test that depends on which one it got should be passing a key.
     def reset_generated_keys
       @next_key_number = FIRST_GENERATED_KEY_NUMBER
     end

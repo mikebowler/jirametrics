@@ -32,10 +32,6 @@ Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |file| require file }
 RSpec.configure do |config|
   # Run examples in a random order and seed the global RNG from the same seed so runs
   # are reproducible with --seed. Random ordering surfaces order-dependent test pollution.
-  # Generated issue keys restart for every example. Examples run in a random order, so a counter
-  # shared across them would make a key depend on how many issues earlier tests built.
-  config.before { MockIssue.reset_generated_keys }
-
   config.order = :random
   Kernel.srand config.seed
 

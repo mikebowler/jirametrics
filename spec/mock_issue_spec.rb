@@ -5,6 +5,11 @@ require './spec/spec_helper'
 describe MockIssue do
   let(:board) { sample_board }
 
+  # Only the specs for the generator itself care which key comes out. Every other test either
+  # passes a key or does not care, so there is deliberately no suite-wide reset: a test that
+  # asserted on a generated key would then be flaky, which is how it should find out.
+  before { described_class.reset_generated_keys }
+
   describe '.empty' do
     it 'is a real Issue, so anything taking an Issue will accept it' do
       expect(described_class.empty(board: board)).to be_a Issue
