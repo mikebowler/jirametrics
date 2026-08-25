@@ -6,9 +6,6 @@
 #   board = MockBoard.load statuses: 'target/mine_statuses.json',
 #                          configuration: 'target/mine_board_1_configuration.json'
 #
-# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
-# documented, and not something we announce.
-#
 # Takes filenames rather than packaging a sample board, because a board that resembles yours is
 # worth more than one of ours, and because sample data would have to be carried in the gem forever.
 class MockBoard

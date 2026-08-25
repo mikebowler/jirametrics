@@ -2,9 +2,6 @@
 
 # An Issue you can build without a fixture file and then add history to.
 #
-# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
-# documented, and not something we announce.
-#
 # MockIssue.new keeps Issue's own signature (raw:, board:) so that a MockIssue is substitutable for
 # an Issue everywhere, including MockCycleTimeConfig's is_a?(Issue) check. The friendly constructor
 # is MockIssue.empty, which builds the minimal raw hash for you.
@@ -12,17 +9,12 @@ class MockIssue < Issue
   # Generated keys start well clear of the hand-written SP-1 and SP-2 that fixtures use.
   FIRST_GENERATED_KEY_NUMBER = 1000
 
-  # Most tests do not care when an issue was created, and making them say so is the friction
-  # that pushed people towards load_issue 'SP-1' and its accidental coupling to that fixture.
-  #
   # A leap day on purpose. Anything that does its own date arithmetic, assumes 365-day years, or
   # round-trips through a format that cannot represent Feb 29 will trip over this default rather
   # than sailing past on a date that hides the bug.
   DEFAULT_CREATED = '2024-02-29'
 
   # The change is built and appended in one step, and returned for tests that need to hold on to it.
-  # The old add_mock_change took the issue as an argument, so nothing tied a change to the issue it
-  # belonged to except the caller's care.
   def add_change field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
     artificial: false, field_id: nil
     change = MockChangeItem.new(

@@ -1,11 +1,7 @@
 # frozen_string_literal: true
 
-# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
-# documented, and not something we announce.
-#
 # Stubs are matched by the issue's KEY, not by object identity, so every issue in a test needs its
-# own key. Build four of them as load_issue 'SP-1' and you have one issue wearing four hats. That
-# used to pass quietly against whichever stub came first; it now raises.
+# own key. Building two issues with the same key and stubbing both raises.
 #
 #   board.cycletime = MockCycleTimeConfig.new
 #     .stub(issue1, started: '2021-01-02')

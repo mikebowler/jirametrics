@@ -2,9 +2,6 @@
 
 # Builds a ChangeItem for tests without going through Jira's changelog format.
 #
-# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
-# documented, and not something we announce, but public in the sense that it is here and works.
-#
 # Normalises the arguments a caller is likely to get slightly wrong (a status given as a name when
 # an id is wanted, a time given as a string) and, for status changes with an issue, validates the
 # status against that issue's board so a typo surfaces loudly rather than silently passing.
@@ -25,8 +22,6 @@ class MockChangeItem
     Time.parse format_matched_time(matches)
   end
 
-  # Split out from parse_time only to keep each half simple; the defaulting of every optional part
-  # is what makes this long rather than anything interesting.
   def self.format_matched_time matches
     format(
       '%<year>04d-%<month>02d-%<day>02dT-%<hour>02d:%<minute>02d:%<second>02d%<fraction>s%<offset>s',
