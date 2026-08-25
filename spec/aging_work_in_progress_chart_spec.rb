@@ -17,7 +17,7 @@ describe AgingWorkInProgressChart do
     issues << create_issue_from_aging_data(
       board: board, ages_by_column: [1, 2, 3, 7], today: today.to_s, key: 'SP-100'
     )
-    issues.last.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
+    issues.last.add_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
 
     build_chart board: board, issues: issues, show_all_columns: true
   end
@@ -62,7 +62,7 @@ describe AgingWorkInProgressChart do
         issue = create_issue_from_aging_data(
           board: board, ages_by_column: ages, today: today.to_s, key: "SP-#{100 + index}"
         )
-        issue.changes << mock_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
+        issue.add_change(field: 'resolution', time: to_time(today.to_s), value: 'done')
         issue
       end
     end

@@ -477,6 +477,8 @@ describe ProjectConfig do
         issue = MockIssue.empty created: '2024-01-01'
 
         # Throw in one change that isn't a status to see if we blow up.
+        # These use statuses the board does not have, on purpose. add_change validates against the
+        # board and would raise before the assertion is reached.
         issue.changes << mock_change(field: 'Flagged', time: '2024-01-02', value: 'Flagged')
 
         issue.changes << mock_change(
