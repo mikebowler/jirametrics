@@ -29,6 +29,15 @@ describe HaveChanges do
 
   # ChangeItem#== only compares field, value and time, so an array of ChangeItems compared with eq
   # silently ignores a wrong id. This matcher is the reason to prefer it.
+  # Some subjects expose a filtered subset, like Issue#status_changes, so the matcher takes either
+  # an issue or the changes themselves.
+  it 'accepts a collection of changes rather than an issue' do
+    expect(issue.changes.select(&:status?)).to have_changes [
+      { field: 'status', value: 'Backlog', artificial: true },
+      { field: 'status', value: 'In Progress', value_id: 3 }
+    ]
+  end
+
   it 'notices a value_id that does not agree' do
     matcher = described_class.new [
       { field: 'status' }, { field: 'priority' },

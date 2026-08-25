@@ -1057,23 +1057,13 @@ describe DownloaderForCloud do
           'post_request: relative_url=/rest/api/3/changelog/bulkfetch, ' \
             'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000}'
         ])
-        expect(issue_data1.issue.status_changes).to eq([
-          mock_change(
-            field: 'status',
-            value: 'Ready',
-            value_id: 1,
-            time: '2025-01-01',
-            artificial: true
-          ),
-          mock_change(
-            field: 'status',
-            value: 'Review',
-            value_id: 2,
-            old_value: 'Ready',
-            old_value_id: 1,
-            time: '2025-09-28T17:36:33'
-          )
-       ])
+        expect(issue_data1.issue.status_changes).to have_changes [
+          { field: 'status', value: 'Ready', value_id: 1, time: '2025-01-01', artificial: true },
+          {
+            field: 'status', value: 'Review', value_id: 2,
+            old_value: 'Ready', old_value_id: 1, time: '2025-09-28T17:36:33'
+          }
+        ]
       end
     end
 
@@ -1106,31 +1096,17 @@ describe DownloaderForCloud do
             'payload={"issueIdsOrKeys":["SP-1"],"maxResults":10000,"nextPageToken":"ABC"}'
         ])
 
-        expect(issue_data1.issue.status_changes).to eq([
-          mock_change(
-            field: 'status',
-            value: 'Ready',
-            value_id: 1,
-            time: '2025-01-01',
-            artificial: true
-          ),
-          mock_change(
-            field: 'status',
-            value: 'Review',
-            value_id: 2,
-            old_value: 'Ready',
-            old_value_id: 1,
-            time: '2025-09-20T00:00:00'
-          ),
-          mock_change(
-            field: 'status',
-            value: 'Review',
-            value_id: 2,
-            old_value: 'Ready',
-            old_value_id: 1,
-            time: '2025-09-28T17:36:33'
-          )
-       ])
+        expect(issue_data1.issue.status_changes).to have_changes [
+          { field: 'status', value: 'Ready', value_id: 1, time: '2025-01-01', artificial: true },
+          {
+            field: 'status', value: 'Review', value_id: 2,
+            old_value: 'Ready', old_value_id: 1, time: '2025-09-20T00:00:00'
+          },
+          {
+            field: 'status', value: 'Review', value_id: 2,
+            old_value: 'Ready', old_value_id: 1, time: '2025-09-28T17:36:33'
+          }
+        ]
       end
     end
 
