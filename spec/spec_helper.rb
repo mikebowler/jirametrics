@@ -327,6 +327,10 @@ module SpecHelpers
 
   ######
 
+  def have_changes expected
+    HaveChanges.new expected
+  end
+
   def match_strings expected
     MatchStrings.new(expected)
   end

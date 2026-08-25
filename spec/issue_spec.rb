@@ -289,17 +289,10 @@ describe Issue do
 
   describe '#changes' do
     it 'gets simple history with a single status' do
-      expect(issue2.changes).to eq [
-        mock_change(
-          issue: issue2, field: 'status', value: 'Backlog', value_id: 1, time: '2021-06-18T18:41:37.804'
-        ),
-        mock_change(
-          issue: issue2, field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37.804'
-        ),
-        mock_change(
-          issue: issue2, field: 'status', value: 'Selected for Development', value_id: 3,
-          time: '2021-06-18T18:43:38'
-        )
+      expect(issue2).to have_changes [
+        { field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-06-18T18:41:37' },
+        { field: 'priority', value: 'Medium', time: '2021-06-18T18:41:37' },
+        { field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-06-18T18:43:38' }
       ]
     end
 
