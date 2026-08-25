@@ -1,4 +1,3 @@
-# spec/cfd_data_builder_spec.rb
 # frozen_string_literal: true
 
 require './spec/spec_helper'
