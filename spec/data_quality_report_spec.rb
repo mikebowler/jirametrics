@@ -67,7 +67,7 @@ describe DataQualityReport do
   end
 
   it 'scans and finds no matches for anything' do
-    report.issues = [MockIssue.empty(created: '2024-01-01', board: board)]
+    report.issues = [MockIssue.empty(board: board)]
     expect(report.run).to eq ''
     expect(report.file_system.log_messages).to be_empty
   end
@@ -100,7 +100,7 @@ describe DataQualityReport do
 
   describe '#scan_for_completed_issues_without_a_start_time' do
     it 'identifies items with completed but not started' do
-      issue = MockIssue.empty created: '2021-09-01', key: 'SP-1', board: board
+      issue = MockIssue.empty key: 'SP-1', board: board
       # report.all_boards = { board.id => board }
       add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
       report.initialize_entries
@@ -117,7 +117,7 @@ describe DataQualityReport do
     end
 
     it 'skips items that are not done' do
-      issue = MockIssue.empty created: '2021-09-01', key: 'SP-1', board: board
+      issue = MockIssue.empty key: 'SP-1', board: board
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
@@ -166,7 +166,7 @@ describe DataQualityReport do
     end
 
     it 'skips when not stopped' do
-      issue = MockIssue.empty created: '2021-09-01', key: 'SP-1', board: board
+      issue = MockIssue.empty key: 'SP-1', board: board
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
@@ -433,7 +433,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
     end
 
     it 'reports when issue has never been in a visible column' do
-      issue = MockIssue.empty created: '2021-10-01', board: board
+      issue = MockIssue.empty board: board
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue
       report.scan_for_issue_never_visible_on_board entry: entry
       expect(entry.problems).to eq [
@@ -711,7 +711,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       target_path = 'spec/complete_sample/'
       html_path = File.expand_path('./lib/jirametrics/html/')
 
-      sp1_json = MockIssue.empty(created: '2021-09-15', key: 'SP-1').raw
+      sp1_json = MockIssue.empty(key: 'SP-1').raw
       exporter.file_system.when_loading file: "#{target_path}sample_statuses.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_meta.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_board_1_configuration.json", json: :not_mocked

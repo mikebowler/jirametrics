@@ -28,7 +28,7 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'returns zeros when issue never started' do
-    issue = MockIssue.empty created: '2000-01-01', board: sample_board
+    issue = MockIssue.empty board: sample_board
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, nil, nil]
     ]
@@ -56,7 +56,7 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'becomes blocked but issue does not start before end_time' do
-    issue = MockIssue.empty created: '2000-01-01', board: board
+    issue = MockIssue.empty board: board
     add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, to_time('2000-01-04'), nil]
@@ -87,7 +87,7 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'was created in blocked status' do
-    issue = MockIssue.empty created: '2000-01-01', board: board, creation_status: ['Blocked', 10]
+    issue = MockIssue.empty board: board, creation_status: ['Blocked', 10]
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, to_time('2000-01-01'), nil]
     ]
@@ -96,7 +96,7 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'was created in done status' do
-    issue = MockIssue.empty created: '2000-01-01', board: board, creation_status: ['Done', 1]
+    issue = MockIssue.empty board: board, creation_status: ['Done', 1]
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, to_time('2000-01-01'), to_time('2000-01-01')]
     ]

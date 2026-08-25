@@ -13,7 +13,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'handles no changes' do
-    issue = MockIssue.empty created: '2021-10-01', board: board
+    issue = MockIssue.empty board: board
     actual = by_date(
       issue,
       date_range: to_date('2021-10-02')..to_date('2021-10-04'),

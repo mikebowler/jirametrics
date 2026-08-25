@@ -1135,7 +1135,7 @@ describe DownloaderForCloud do
     end
 
     it 'skips issues returned by Jira with a key not in the request (moved issues)' do
-      moved_raw = MockIssue.empty(created: '2025-01-01').raw
+      moved_raw = MockIssue.empty.raw
       moved_raw['changelog'] = nil
       moved_raw['id'] = '999'
       moved_raw['key'] = 'OTHER-999' # Jira returned a different key than we requested

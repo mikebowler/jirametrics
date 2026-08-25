@@ -77,7 +77,7 @@ describe AgingWorkBarChart do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
-      issue = MockIssue.empty created: '2021-01-01', board: sample_board, creation_status: ['Backlog', 10_000]
+      issue = MockIssue.empty board: sample_board, creation_status: ['Backlog', 10_000]
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
 
       data_sets = chart.bar_chart_range_to_data_set(
@@ -180,7 +180,7 @@ describe AgingWorkBarChart do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
-      MockIssue.empty(created: '2021-01-01', board: board).tap do |issue|
+      MockIssue.empty(board: board).tap do |issue|
         add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
         add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-01-02T02:00:00')
       end
@@ -450,7 +450,7 @@ describe AgingWorkBarChart do
       chart.file_system.when_loading(
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'), json: :not_mocked
       )
-      aging = MockIssue.empty created: '2024-01-15', board: board
+      aging = MockIssue.empty board: board
       done_early = MockIssue.empty key: 'SP-90', created: '2024-01-01', board: board
       done_late = MockIssue.empty key: 'SP-91', created: '2024-01-01', board: board
       board.cycletime = mock_cycletime_config stub_values: [
@@ -560,7 +560,7 @@ describe AgingWorkBarChart do
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
         json: :not_mocked
       )
-      issue = MockIssue.empty created: '2024-01-15', board: board
+      issue = MockIssue.empty board: board
       board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')
@@ -582,7 +582,7 @@ describe AgingWorkBarChart do
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
         json: :not_mocked
       )
-      aging = MockIssue.empty created: '2024-01-15', board: board
+      aging = MockIssue.empty board: board
       done_early = MockIssue.empty key: 'SP-90', created: '2024-01-01', board: board
       done_late = MockIssue.empty key: 'SP-91', created: '2024-01-01', board: board
       board.cycletime = mock_cycletime_config stub_values: [
@@ -613,7 +613,7 @@ describe AgingWorkBarChart do
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
         json: :not_mocked
       )
-      issue = MockIssue.empty created: '2024-01-15', board: board
+      issue = MockIssue.empty board: board
       board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')
@@ -678,12 +678,12 @@ describe AgingWorkBarChart do
     end
 
     it 'returns empty when there are no sprint changes' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       expect(chart.collect_sprint_ranges(issue: issue)).to eq []
     end
 
     it 'returns a range for a closed sprint the issue was in' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
 
       expect(chart.collect_sprint_ranges(issue: issue)).to eq [
@@ -695,7 +695,7 @@ describe AgingWorkBarChart do
     end
 
     it 'uses the sprint start time when the issue was added before the sprint began' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-01')
 
       expect(chart.collect_sprint_ranges(issue: issue)).to eq [
@@ -719,7 +719,7 @@ describe AgingWorkBarChart do
       )
       board.sprints << active_sprint
 
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: active_sprint.name, value_id: active_sprint.id.to_s,
 time: '2021-01-05')
 
@@ -732,7 +732,7 @@ time: '2021-01-05')
     end
 
     it 'ends the range when the issue is removed from the sprint' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '',
@@ -761,7 +761,7 @@ time: '2021-01-05')
       )
       board.sprints << future_sprint
 
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s,
 time: '2021-01-05')
 
@@ -781,7 +781,7 @@ time: '2021-01-05')
       )
       board.sprints << future_sprint
 
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: future_sprint.name, value_id: future_sprint.id.to_s,
@@ -810,7 +810,7 @@ time: '2021-01-05')
       )
       board.sprints << sprint2
 
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       # Added to sprint 1
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: sprint1.id.to_s, time: '2021-01-05')
       # Moved from sprint 1 to sprint 2
@@ -842,7 +842,7 @@ time: '2021-01-05')
 
     it 'keeps a sprint open across a change that adds another' do
       board.sprints << active_sprint(2, 'Sprint 2', '2021-01-08')
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: '1', time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: 'Sprint 1, Sprint 2', value_id: '1, 2',
@@ -858,7 +858,7 @@ time: '2021-01-05')
 
     it 'stops at the removal time when an active sprint (no completion) is left' do
       board.sprints << active_sprint(2, 'Sprint 2', '2021-01-03')
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 2', value_id: '2', time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 2', old_value_id: '2',
@@ -872,7 +872,7 @@ time: '2021-01-05')
     end
 
     it 'ignores a removal for a sprint that was never added' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '', old_value: sprint1.name, old_value_id: '1',
         time: '2021-01-10'
@@ -886,7 +886,7 @@ time: '2021-01-05')
                'startDate' => '2021-02-01T00:00:00+00:00', 'endDate' => '2021-02-14T00:00:00+00:00' },
         timezone_offset: '+0000'
       )
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 3', value_id: '3', time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 3', old_value_id: '3',
@@ -896,14 +896,14 @@ time: '2021-01-05')
     end
 
     it 'ignores a sprint id that is not on the board' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 99', value_id: '99', time: '2021-01-05')
       expect(chart.collect_sprint_ranges(issue: issue)).to eq []
     end
 
     it 'handles several sprints added and removed in single changes' do
       board.sprints << active_sprint(2, 'Sprint 2', '2021-01-03')
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 1, Sprint 2', value_id: '1, 2', time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Sprint 1, Sprint 2', old_value_id: '1, 2',
@@ -913,7 +913,7 @@ time: '2021-01-05')
     end
 
     it 'keeps processing removals after one for an un-added sprint' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: sprint1.name, value_id: '1', time: '2021-01-05')
       add_mock_change(
         issue: issue, field: 'Sprint', value: '', value_id: '', old_value: 'Gone, Sprint 1', old_value_id: '99, 1',
@@ -927,7 +927,7 @@ time: '2021-01-05')
     end
 
     it 'keeps adding sprints after one with an unknown id' do
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Gone, Sprint 1', value_id: '99, 1', time: '2021-01-05')
       expect(chart.collect_sprint_ranges(issue: issue).collect(&:title)).to eq ['Sprint 1']
     end
@@ -938,7 +938,7 @@ time: '2021-01-05')
                'startDate' => '2021-02-01T00:00:00+00:00', 'endDate' => '2021-02-14T00:00:00+00:00' },
         timezone_offset: '+0000'
       )
-      issue = MockIssue.empty created: '2021-01-01', board: board
+      issue = MockIssue.empty board: board
       add_mock_change(issue: issue, field: 'Sprint', value: 'Sprint 3, Sprint 1', value_id: '3, 1', time: '2021-01-05')
       expect(chart.collect_sprint_ranges(issue: issue).collect(&:title)).to eq ['Sprint 1']
     end

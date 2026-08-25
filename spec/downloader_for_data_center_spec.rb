@@ -53,7 +53,7 @@ describe DownloaderForDataCenter do
 
   describe '#download_issues' do
     let(:raw_issue) do
-      raw_issue = MockIssue.empty(created: '2025-01-01').raw
+      raw_issue = MockIssue.empty.raw
       raw_issue['changelog'] = nil
       raw_issue['id'] = '123'
       raw_issue

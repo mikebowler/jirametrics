@@ -564,7 +564,7 @@ describe DailyView do
 
   describe '#make_child_lines' do
     it 'returns empty for no children' do
-      parent = MockIssue.empty created: '2024-01-01', board: board
+      parent = MockIssue.empty board: board
       expect(view.make_child_lines parent).to be_empty
     end
 
@@ -573,7 +573,7 @@ describe DailyView do
         [issue1, '2024-01-01', nil],
         [issue2, '2024-01-01', '2024-01-02']
       ]
-      parent = MockIssue.empty created: '2024-01-01', board: board
+      parent = MockIssue.empty board: board
       parent.subtasks << issue1
       parent.subtasks << issue2
 

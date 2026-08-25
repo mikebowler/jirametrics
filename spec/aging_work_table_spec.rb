@@ -301,7 +301,7 @@ describe AgingWorkTable do
     end
 
     it 'returns text when issue is not in any visible column' do
-      invisible_issue = MockIssue.empty created: '2021-01-01', board: board
+      invisible_issue = MockIssue.empty board: board
       expect(table.not_visible_text(invisible_issue)).to eq(
         "<span style='background: var(--warning-banner)'>Not visible on board: " \
           'Status is not configured for any visible column on the board</span>'
@@ -311,7 +311,7 @@ describe AgingWorkTable do
     it 'returns text when scrum issue is not in an active sprint' do
       board.raw['type'] = 'scrum'
       in_progress = board.possible_statuses.find_by_id(3)
-      scrum_issue = MockIssue.empty created: '2021-01-01', board: board, creation_status: in_progress
+      scrum_issue = MockIssue.empty board: board, creation_status: in_progress
       expect(table.not_visible_text(scrum_issue)).to eq(
         "<span style='background: var(--warning-banner)'>Not visible on board: Not in an active sprint</span>"
       )

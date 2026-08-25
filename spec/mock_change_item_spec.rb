@@ -4,7 +4,7 @@ require './spec/spec_helper'
 
 describe MockChangeItem do
   let(:board) { board_with_blocked_stalled_statuses }
-  let(:issue) { MockIssue.empty created: '2021-01-01', board: board }
+  let(:issue) { MockIssue.empty board: board }
 
   # The validations only run for a status change tied to an issue's board. mock_change builds a
   # MockChangeItem and calls to_change_item, which is where the checks fire. In this board:

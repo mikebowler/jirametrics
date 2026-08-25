@@ -32,7 +32,7 @@ describe BoardMovementCalculator do
   # Visible columns are: Ready(10001), In Progress(3), Review(10011), Done(10002).
   def issue_entering(statuses)
     start_status = board.possible_statuses.find_by_id(10_001)
-    MockIssue.empty(created: '2024-10-01', board: board, creation_status: start_status).tap do |issue|
+    MockIssue.empty(board: board, creation_status: start_status).tap do |issue|
       issue.changes.clear
       statuses.each do |name, id, time|
         add_mock_change(issue: issue, field: 'status', value: name, value_id: id, time: time)
