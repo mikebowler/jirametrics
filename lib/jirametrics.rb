@@ -157,7 +157,10 @@ class JiraMetrics < Thor
         exit 1
       end
 
-      require_rel 'jirametrics'
+      # Everything except the testing surface. testing.rb require_rel's the whole directory itself,
+      # so it has to be excluded too or it pulls the mocks straight back in.
+      require_all(Dir[File.join(__dir__, 'jirametrics', '**', '*.rb')]
+        .reject { |file| file.start_with? File.join(__dir__, 'jirametrics', 'testing') })
       # Set only after the require above, so Exporter is defined. The config file we load below calls
       # Exporter.configure, which opens this log; the MCP server passes its own name so it doesn't
       # truncate jirametrics.log.
