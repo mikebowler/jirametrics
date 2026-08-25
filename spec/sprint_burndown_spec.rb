@@ -182,7 +182,7 @@ describe SprintBurndown do
 
   describe '#gather_change_data_by_sprint' do
     it 'collects and time-sorts each sprint\'s changes across all issues' do
-      issue_a = load_issue('SP-1', board: board).tap { |issue| issue.changes.clear }
+      issue_a = MockIssue.empty(key: 'SP-1', board: board).tap { |issue| issue.changes.clear }
       issue_b = load_issue('SP-2', board: board).tap { |issue| issue.changes.clear }
       board.cycletime = mock_cycletime_config stub_values: [
         [issue_a, '2022-01-01', nil], [issue_b, '2022-01-01', nil]
@@ -476,7 +476,7 @@ describe SprintBurndown do
   end
 
   describe '#data_set_by_story_points' do
-    let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue1) { MockIssue.empty(key: 'SP-1').tap { |issue| issue.changes.clear } }
     let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 
     it 'handles an empty active sprint' do
@@ -772,7 +772,7 @@ describe SprintBurndown do
   end
 
   describe '#data_set_by_story_counts' do
-    let(:issue1) { load_issue('SP-1').tap { |issue| issue.changes.clear } }
+    let(:issue1) { MockIssue.empty(key: 'SP-1').tap { |issue| issue.changes.clear } }
     let(:issue2) { load_issue('SP-2').tap { |issue| issue.changes.clear } }
 
     it 'handles an empty active sprint' do

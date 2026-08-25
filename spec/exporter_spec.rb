@@ -483,7 +483,7 @@ describe Exporter do
       let(:project) do
         instance_double ProjectConfig, name: 'Sampler', issues: collection
       end
-      let(:visible) { load_issue 'SP-1', board: board }
+      let(:visible) { MockIssue.empty key: 'SP-1', board: board }
       let(:excluded) { load_issue 'SP-2', board: board }
       let(:collection) do
         c = IssueCollection[visible, excluded]
@@ -551,7 +551,7 @@ describe Exporter do
 
   describe '#filter_issues' do
     let(:board) { load_complete_sample_board }
-    let(:issue1) { load_issue 'SP-1', board: board }
+    let(:issue1) { MockIssue.empty key: 'SP-1', board: board }
     let(:issue2) { load_issue 'SP-2', board: board }
 
     it 'does not filter when ignore_issues is nil' do

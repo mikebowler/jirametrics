@@ -3,7 +3,7 @@
 require './spec/spec_helper'
 
 describe IssueCollection do
-  let(:issue1) { load_issue 'SP-1' }
+  let(:issue1) { MockIssue.empty(key: 'SP-1') }
   let(:issue2) { load_issue 'SP-2' }
   let(:with_rejected) do
     described_class.new.tap do |collection|
