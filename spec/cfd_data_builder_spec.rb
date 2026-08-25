@@ -26,11 +26,11 @@ describe CfdDataBuilder do
 
     it 'counts cumulative totals per column across all dates' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+      issue1.add_change(field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
 
       issue2 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-2')
-      add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2021-07-03T10:00:00')
+      issue2.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-07-03T10:00:00')
 
       result = build(issues: [issue1, issue2])
 
@@ -54,7 +54,7 @@ describe CfdDataBuilder do
     it 'skips status changes not mapped to any board column' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       # Status ID 10000 is Backlog - not in visible_columns for this kanban board
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
+      issue1.add_change(field: 'status', value: 'Backlog',
         value_id: 10_000, time: '2021-07-02T10:00:00')
 
       result = build(issues: [issue1])
@@ -64,7 +64,7 @@ describe CfdDataBuilder do
 
     it 'counts issues with changes before date_range in the initial snapshot' do
       issue1 = MockIssue.empty(board: board, created: '2021-06-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-06-15T10:00:00')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-06-15T10:00:00')
 
       result = build(issues: [issue1])
 
@@ -83,7 +83,7 @@ describe CfdDataBuilder do
     it 'counts all columns when an issue skips directly to the rightmost column' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       # Jumps straight to Done (col 3), skipping Ready, In Progress, Review
-      add_mock_change(issue: issue1, field: 'status', value: 'Done',
+      issue1.add_change(field: 'status', value: 'Done',
         value_id: 10_002, time: '2021-07-02T10:00:00')
 
       result = build(issues: [issue1])
@@ -96,11 +96,11 @@ describe CfdDataBuilder do
     it 'records a window when an issue moves backwards and recovers' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       # Reaches Review (col 2), drops to In Progress (col 1), recovers to Review (col 2)
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+      issue1.add_change(field: 'status', value: 'In Progress',
         value_id: 3, time: '2021-07-04T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-06T10:00:00')
 
       result = build(issues: [issue1])
@@ -114,9 +114,9 @@ describe CfdDataBuilder do
 
     it 'sets end_date to date_range.end when issue never recovers' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+      issue1.add_change(field: 'status', value: 'In Progress',
         value_id: 3, time: '2021-07-04T10:00:00')
 
       result = build(issues: [issue1])
@@ -131,11 +131,11 @@ describe CfdDataBuilder do
     it 'closes the correction window when the issue moves forward past its high-water mark' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       # Reaches Review (col 2), drops to In Progress (col 1), then jumps forward to Done (col 3)
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+      issue1.add_change(field: 'status', value: 'In Progress',
         value_id: 3, time: '2021-07-04T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Done',
+      issue1.add_change(field: 'status', value: 'Done',
         value_id: 10_002, time: '2021-07-06T10:00:00')
 
       result = build(issues: [issue1])
@@ -149,9 +149,9 @@ describe CfdDataBuilder do
 
     it 'ignores status changes for statuses that are not on a visible column' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog',
+      issue1.add_change(field: 'status', value: 'Backlog',
         value_id: 10_000, time: '2021-07-04T10:00:00') # not on a visible column
 
       result = build(issues: [issue1])
@@ -162,7 +162,7 @@ describe CfdDataBuilder do
 
     it 'produces nothing for an issue that never started' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
       board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
 
@@ -173,11 +173,11 @@ describe CfdDataBuilder do
 
     it 'records one correction window for multiple consecutive backwards moves' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+      issue1.add_change(field: 'status', value: 'In Progress',
         value_id: 3, time: '2021-07-04T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+      issue1.add_change(field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-05T10:00:00')
 
       result = build(issues: [issue1])
@@ -190,9 +190,9 @@ describe CfdDataBuilder do
 
     it 'does not open or close a window when re-entering the high-water column without a backwards move' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-04T10:00:00')
 
       result = build(issues: [issue1])
@@ -202,9 +202,9 @@ describe CfdDataBuilder do
 
     it 'returns empty correction_windows when there are no backwards moves' do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
-      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+      issue1.add_change(field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Done',
+      issue1.add_change(field: 'status', value: 'Done',
         value_id: 10_002, time: '2021-07-05T10:00:00')
 
       result = build(issues: [issue1])
@@ -230,7 +230,7 @@ describe CfdDataBuilder do
 
       issue1 = MockIssue.empty(created: '2021-07-01', key: 'SP-1', board: board)
       # Only reaches Ready - never reaches In Progress, so start_time is nil
-      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+      issue1.add_change(field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
 
       result = build(issues: [issue1])
@@ -254,11 +254,11 @@ describe CfdDataBuilder do
 
       issue1 = MockIssue.empty(created: '2021-07-01', key: 'SP-1', board: board)
       # Enters Ready before starting, then In Progress (start), then Review
-      add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
+      issue1.add_change(field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress',
+      issue1.add_change(field: 'status', value: 'In Progress',
         value_id: 3, time: '2021-07-04T10:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Review',
+      issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-06T10:00:00')
 
       result = build(issues: [issue1])
@@ -284,7 +284,7 @@ describe CfdDataBuilder do
       two_columns = board.visible_columns.first(2) # Ready (10001), In Progress (3)
       issue = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       # Issue goes straight to Review (10011), which is not in the two-column set
-      add_mock_change(issue: issue, field: 'status', value: 'Review',
+      issue.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
       result = build(columns: two_columns, issues: [issue])
       # Issue's status_id 10011 not in column_map → high-water-mark stays nil → not counted

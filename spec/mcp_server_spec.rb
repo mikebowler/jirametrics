@@ -512,7 +512,7 @@ describe McpServer do
     it 'applies the history filter, keeping only issues whose change history matched' do
       unmatched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'unmatched'
       matched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'matched'
-      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      matched.add_change(field: 'priority', value: 'High', time: '2024-01-02')
       wire_cycletime [unmatched, '2024-01-05', nil], [matched, '2024-01-05', nil]
       # The unmatched issue is first, so a break would wrongly drop the matching one behind it.
       context = server_context(projects: { 'SP' => [unmatched, matched] })
@@ -525,9 +525,9 @@ describe McpServer do
     # a stalled issue is one left inactive past the stalled threshold (5 days).
     it 'filters by ever_blocked' do
       blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'blocked'
-      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      blocked.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       clear = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'clear'
-      add_mock_change(issue: clear, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      clear.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
       wire_cycletime [blocked, '2024-01-05', nil], [clear, '2024-01-05', nil]
       text = aging_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[blocked]
@@ -535,10 +535,10 @@ describe McpServer do
 
     it 'filters by currently_blocked' do
       still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'still'
-      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      still.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'cleared'
-      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
-      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      cleared.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared.add_change(field: 'Flagged', value: '', time: '2024-01-08')
       wire_cycletime [still, '2024-01-05', nil], [cleared, '2024-01-05', nil]
       # 'cleared' was blocked earlier but unflagged before the end date, so only 'still' is current.
       text = aging_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
@@ -547,7 +547,7 @@ describe McpServer do
 
     it 'filters by ever_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'In Progress', summary: 'active'
       wire_cycletime [stalled, '2024-01-02', nil], [active, '2024-01-13', nil]
       # 'stalled' sat untouched from 01-02 to the 01-15 end date (>5 days); 'active' was created 01-13.
@@ -557,9 +557,9 @@ describe McpServer do
 
     it 'filters by currently_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'In Progress', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'In Progress', summary: 'revived'
-      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      revived.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
       wire_cycletime [stalled, '2024-01-02', nil], [revived, '2024-01-01', nil]
       # 'revived' stalled early but had activity on 01-14, so it is not stalled as of the 01-15 end date.
       text = aging_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
@@ -640,7 +640,7 @@ describe McpServer do
 
     it 'filters by completed_resolution (matched by value, not identity) and joins status with resolution' do
       resolved = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'resolved'
-      add_mock_change(issue: resolved, field: 'resolution', value: "Won't Do", time: '2024-01-09')
+      resolved.add_change(field: 'resolution', value: "Won't Do", time: '2024-01-09')
       unresolved = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'unresolved'
       wire_cycletime [resolved, '2024-01-05', '2024-01-10'], [unresolved, '2024-01-05', '2024-01-10']
       # The filter value is a distinct string object from the one on the change, so an identity (equal?)
@@ -652,7 +652,7 @@ describe McpServer do
 
     it 'keeps resolved issues (and shows the resolution) when no resolution filter is given' do
       resolved = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'resolved'
-      add_mock_change(issue: resolved, field: 'resolution', value: 'Fixed', time: '2024-01-09')
+      resolved.add_change(field: 'resolution', value: 'Fixed', time: '2024-01-09')
       wire_cycletime [resolved, '2024-01-05', '2024-01-10']
       text = completed_text(server_context(projects: { 'SP' => [resolved] }))
       expect(text).to eq 'SP-1 | SP | Bug | 2024-01-10 | Cycle time: 6d | FE: 100.0% | Done / Fixed | resolved'
@@ -667,7 +667,7 @@ describe McpServer do
 
     it 'applies the history filter' do
       matched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'matched'
-      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      matched.add_change(field: 'priority', value: 'High', time: '2024-01-02')
       unmatched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'unmatched'
       wire_cycletime [matched, '2024-01-05', '2024-01-10'], [unmatched, '2024-01-05', '2024-01-10']
       context = server_context(projects: { 'SP' => [matched, unmatched] })
@@ -679,7 +679,7 @@ describe McpServer do
     # matches_history?. Here the issues are all completed (they carry a stop time).
     it 'filters by ever_blocked' do
       blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'blocked'
-      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      blocked.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       clear = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Done', summary: 'clear'
       wire_cycletime [blocked, '2024-01-05', '2024-01-10'], [clear, '2024-01-13', '2024-01-14']
       text = completed_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
@@ -688,10 +688,10 @@ describe McpServer do
 
     it 'filters by currently_blocked' do
       still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'still'
-      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      still.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'cleared'
-      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
-      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      cleared.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared.add_change(field: 'Flagged', value: '', time: '2024-01-08')
       wire_cycletime [still, '2024-01-05', '2024-01-10'], [cleared, '2024-01-05', '2024-01-10']
       text = completed_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[still]
@@ -699,7 +699,7 @@ describe McpServer do
 
     it 'filters by ever_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Done', summary: 'active'
       wire_cycletime [stalled, '2024-01-02', '2024-01-10'], [active, '2024-01-13', '2024-01-14']
       text = completed_text(server_context(projects: { 'SP' => [stalled, active] }), ever_stalled: true)
@@ -708,9 +708,9 @@ describe McpServer do
 
     it 'filters by currently_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Done', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Done', summary: 'revived'
-      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      revived.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
       wire_cycletime [stalled, '2024-01-02', '2024-01-10'], [revived, '2024-01-01', '2024-01-10']
       text = completed_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]
@@ -800,7 +800,7 @@ describe McpServer do
     it 'applies the history filter, keeping only issues whose change history matched (unmatched first)' do
       unmatched = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'unmatched'
       matched = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'matched'
-      add_mock_change(issue: matched, field: 'priority', value: 'High', time: '2024-01-02')
+      matched.add_change(field: 'priority', value: 'High', time: '2024-01-02')
       wire_cycletime [unmatched, nil, nil], [matched, nil, nil]
       context = server_context(projects: { 'SP' => [unmatched, matched] })
       text = unstarted_text(context, history_field: 'priority', history_value: 'High')
@@ -810,7 +810,7 @@ describe McpServer do
     # Blocked/stalled forwarding, on unstarted issues (their history still records flags and gaps).
     it 'filters by ever_blocked' do
       blocked = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'blocked'
-      add_mock_change(issue: blocked, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      blocked.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       clear = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Backlog', summary: 'clear'
       wire_cycletime [blocked, nil, nil], [clear, nil, nil]
       text = unstarted_text(server_context(projects: { 'SP' => [blocked, clear] }), ever_blocked: true)
@@ -819,10 +819,10 @@ describe McpServer do
 
     it 'filters by currently_blocked' do
       still = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'still'
-      add_mock_change(issue: still, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      still.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
       cleared = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'cleared'
-      add_mock_change(issue: cleared, field: 'Flagged', value: 'Blocked', time: '2024-01-06')
-      add_mock_change(issue: cleared, field: 'Flagged', value: '', time: '2024-01-08')
+      cleared.add_change(field: 'Flagged', value: 'Blocked', time: '2024-01-06')
+      cleared.add_change(field: 'Flagged', value: '', time: '2024-01-08')
       wire_cycletime [still, nil, nil], [cleared, nil, nil]
       text = unstarted_text(server_context(projects: { 'SP' => [still, cleared] }), currently_blocked: true)
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[still]
@@ -830,7 +830,7 @@ describe McpServer do
 
     it 'filters by ever_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       active = handler_issue key: 'SP-2', created: '2024-01-13', status_name: 'Backlog', summary: 'active'
       wire_cycletime [stalled, nil, nil], [active, nil, nil]
       text = unstarted_text(server_context(projects: { 'SP' => [stalled, active] }), ever_stalled: true)
@@ -839,9 +839,9 @@ describe McpServer do
 
     it 'filters by currently_stalled' do
       stalled = handler_issue key: 'SP-1', created: '2024-01-01', status_name: 'Backlog', summary: 'stalled'
-      add_mock_change(issue: stalled, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
+      stalled.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-02')
       revived = handler_issue key: 'SP-2', created: '2024-01-01', status_name: 'Backlog', summary: 'revived'
-      add_mock_change(issue: revived, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
+      revived.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-14')
       wire_cycletime [stalled, nil, nil], [revived, nil, nil]
       text = unstarted_text(server_context(projects: { 'SP' => [stalled, revived] }), currently_stalled: true)
       expect(text.lines.map { |line| line.split(' | ').last.chomp }).to eq %w[stalled]

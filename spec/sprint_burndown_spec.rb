@@ -188,8 +188,8 @@ describe SprintBurndown do
         [issue_a, '2022-01-01', nil], [issue_b, '2022-01-01', nil]
       ]
       # issue_b enters before issue_a even though issue_a is listed first, so the sort matters.
-      add_mock_change(issue: issue_b, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-05')
-      add_mock_change(issue: issue_a, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-10')
+      issue_b.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-05')
+      issue_a.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-10')
       sprint_burndown.issues = [issue_a, issue_b]
 
       result = sprint_burndown.gather_change_data_by_sprint([sprint])
@@ -311,8 +311,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-02-01']
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
-      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
+      issue.add_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: to_time('2022-01-03'), value: 0.0, issue: issue, estimate: 0.0
@@ -327,13 +327,13 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
       sprint.raw['activatedDate'] = '2021-01-03'
-      add_mock_change(issue: issue, field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
+      issue.add_change(field: 'Story Points', value: 4.0, old_value: 2.0, time: '2022-01-04')
       # Issue closes on Jan 5
-      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
-      add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2022-01-06')
+      issue.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+      issue.add_change(field: 'Story Points', value: '6.0', time: '2022-01-06')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
@@ -355,8 +355,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', nil] # started, never stopped -> no completion time
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
@@ -372,8 +372,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', nil]
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-02')
 
       # Only the sprint entry survives; the priority change is not an estimate change.
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)).to eq [:enter_sprint]
@@ -383,9 +383,9 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
-      add_mock_change(issue: issue, field: 'resolution', value: 'Fixed', time: '2022-01-05')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+      issue.add_change(field: 'resolution', value: 'Fixed', time: '2022-01-05')
 
       actions = sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)
       expect(actions).to eq %i[enter_sprint issue_stopped]
@@ -395,8 +395,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', nil]
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action)).to eq [:enter_sprint]
     end
@@ -405,7 +405,7 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      add_mock_change(issue: issue, field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
+      issue.add_change(field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
@@ -415,11 +415,11 @@ describe SprintBurndown do
         [issue, '2022-01-01', nil]
       ]
       # Jira sends change values as strings; the estimate and the delta from the old value are numeric.
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Story Points', value: '2.5', old_value: nil, time: '2022-01-02')
-      add_mock_change(issue: issue, field: 'Story Points', value: '4.0', old_value: '2.5', time: '2022-01-03')
-      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-04')
-      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-05')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'Story Points', value: '2.5', old_value: nil, time: '2022-01-02')
+      issue.add_change(field: 'Story Points', value: '4.0', old_value: '2.5', time: '2022-01-03')
+      issue.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-04')
+      issue.add_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-05')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
@@ -441,9 +441,9 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', '2022-01-05']
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-03')
-      add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-03')
+      issue.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
 
       actions = sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map { |c| [c.action, c.time] }
       expect(actions).to eq [[:enter_sprint, to_time('2022-01-01')], [:issue_stopped, to_time('2022-01-05')]]
@@ -453,8 +453,8 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', nil]
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-01')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map { |c| [c.action, c.time] })
         .to eq [[:enter_sprint, to_time('2022-01-02')]]
@@ -464,9 +464,9 @@ describe SprintBurndown do
       board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2022-01-01', nil]
       ]
-      add_mock_change(issue: issue, field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
-      add_mock_change(issue: issue, field: 'Sprint', value: '', value_id: '', time: '2022-01-02')
-      add_mock_change(issue: issue, field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-03')
+      issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
+      issue.add_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-02')
+      issue.add_change(field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-03')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint).map(&:action))
         .to eq %i[enter_sprint leave_sprint]

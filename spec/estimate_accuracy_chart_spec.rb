@@ -21,7 +21,7 @@ describe EstimateAccuracyChart do
 
     it 'handles a single estimate set' do
       issue = MockIssue.empty created: '2023-01-02'
-      add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
+      issue.add_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
 
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
@@ -29,8 +29,8 @@ describe EstimateAccuracyChart do
 
     it 'handles estimates set before and after' do
       issue = MockIssue.empty created: '2023-01-02'
-      add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
-      add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2023-01-05')
+      issue.add_change(field: 'Story Points', value: '5.0', time: '2023-01-03')
+      issue.add_change(field: 'Story Points', value: '6.0', time: '2023-01-05')
 
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
       expect(estimate).to be '5.0'
@@ -39,7 +39,7 @@ describe EstimateAccuracyChart do
     it 'handles estimates in time' do
       issue = MockIssue.empty created: '2023-01-02'
       two_days = (60 * 60 * 24 * 2).to_s
-      add_mock_change(issue: issue, field: 'timeoriginalestimate', value: two_days, time: '2023-01-03')
+      issue.add_change(field: 'timeoriginalestimate', value: two_days, time: '2023-01-03')
 
       estimate = chart.estimate_at(
         issue: issue,
@@ -136,7 +136,7 @@ describe EstimateAccuracyChart do
     # Distinct keys because cycletime stubs are looked up by key, not by object.
     def estimated_issue key:, estimate:
       MockIssue.empty(created: '2024-01-01', board: board, key: key).tap do |issue|
-        add_mock_change(issue: issue, field: 'Story Points', value: estimate, time: '2024-01-01T02:00:00')
+        issue.add_change(field: 'Story Points', value: estimate, time: '2024-01-01T02:00:00')
       end
     end
 
@@ -225,7 +225,7 @@ describe EstimateAccuracyChart do
       one_issue = MockIssue.empty created: '2024-01-01', board: board, key: 'SP-5'
 
       (four_issues + [one_issue]).each do |issue|
-        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01T02:00:00')
+        issue.add_change(field: 'Story Points', value: 5, time: '2024-01-01T02:00:00')
       end
 
       board.cycletime = mock_cycletime_config stub_values:
@@ -246,7 +246,7 @@ describe EstimateAccuracyChart do
       aging = load_issue 'SP-2', board: board
 
       [completed, aging].each do |issue|
-        add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01')
+        issue.add_change(field: 'Story Points', value: 5, time: '2024-01-01')
       end
 
       board.cycletime = mock_cycletime_config stub_values: [
@@ -270,10 +270,10 @@ describe EstimateAccuracyChart do
       board = sample_board
       chart.all_boards = { board.id => board }
       issue1 = load_issue 'SP-1', board: board
-      add_mock_change(issue: issue1, field: 'Story Points', value: 5, time: '2024-01-01')
+      issue1.add_change(field: 'Story Points', value: 5, time: '2024-01-01')
 
       issue2 = load_issue 'SP-2', board: board
-      add_mock_change(issue: issue2, field: 'Story Points', value: 5, time: '2024-01-01')
+      issue2.add_change(field: 'Story Points', value: 5, time: '2024-01-01')
 
       # Loaded as SP-1 for the known JSON, then renamed. Cycletime stubs are looked up by key, so
       # leaving three issues called SP-1 would give them all issue1's stub.

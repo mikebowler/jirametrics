@@ -17,6 +17,19 @@ class MockIssue < Issue
   # than sailing past on a date that hides the bug.
   DEFAULT_CREATED = '2024-02-29'
 
+  # The change is built and appended in one step, and returned for tests that need to hold on to it.
+  # The old add_mock_change took the issue as an argument, so nothing tied a change to the issue it
+  # belonged to except the caller's care.
+  def add_change field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
+    artificial: false, field_id: nil
+    change = SpecHelpers.mock_change(
+      issue: self, field: field, time: time, value: value, value_id: value_id,
+      old_value: old_value, old_value_id: old_value_id, artificial: artificial, field_id: field_id
+    )
+    changes << change
+    change
+  end
+
   class << self
     def empty created: DEFAULT_CREATED, board: SpecHelpers.sample_board, key: nil, creation_status: nil,
       current_sprint_ids: nil

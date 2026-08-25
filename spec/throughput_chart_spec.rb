@@ -49,10 +49,10 @@ describe ThroughputChart do
   describe '#throughput_dataset' do
     it 'returns correct data' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       issue2.changes.clear
-      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-13T01:00:00')
+      issue2.add_change(field: 'resolution', value: 'done', time: '2021-10-13T01:00:00')
 
       issue10.changes.clear
 
@@ -79,7 +79,7 @@ describe ThroughputChart do
 
     it 'includes label_hint in title when set' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1]
@@ -95,7 +95,7 @@ describe ThroughputChart do
 
     it 'appends issue_hint to each issue line when set' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1]
@@ -112,10 +112,10 @@ describe ThroughputChart do
     context 'when in custom mode (@issue_periods set)' do
       it 'groups issues by last_day_of_period instead of stop date range' do
         issue1.changes.clear
-        add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+        issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
         issue2.changes.clear
-        add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-11-05T01:00:00')
+        issue2.add_change(field: 'resolution', value: 'done', time: '2021-11-05T01:00:00')
 
         subject = described_class.new empty_config_block
         subject.issues = [issue1, issue2]
@@ -140,7 +140,7 @@ describe ThroughputChart do
 
     it 'labels a single-day period with "on" rather than "between"' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1]
@@ -156,7 +156,7 @@ describe ThroughputChart do
     it 'skips issues with no stop date without dropping later ones in the same period' do
       issue1.changes.clear # never completed -> no stop date
       issue2.changes.clear
-      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue2.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1, issue2]
@@ -174,7 +174,7 @@ describe ThroughputChart do
 
     it 'excludes issues whose stop date falls outside the period' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-20T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-20T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1]
@@ -189,9 +189,9 @@ describe ThroughputChart do
 
     it 'excludes a completed issue that is not in issue_periods (custom mode)' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue1.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
       issue2.changes.clear
-      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue2.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1, issue2]
@@ -210,7 +210,7 @@ describe ThroughputChart do
     it 'skips an issue with no stop date even in custom mode' do
       issue1.changes.clear # no stop date
       issue2.changes.clear
-      add_mock_change(issue: issue2, field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
+      issue2.add_change(field: 'resolution', value: 'done', time: '2021-10-12T01:00:00')
 
       subject = described_class.new empty_config_block
       subject.issues = [issue1, issue2]

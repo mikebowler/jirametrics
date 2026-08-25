@@ -5,6 +5,22 @@ require './spec/spec_helper'
 describe MockIssue do
   let(:board) { sample_board }
 
+  describe '#add_change' do
+    # ....add_change() took the issue as an argument, so nothing tied a change to the
+    # issue it belonged to except the caller's care. On the mock itself that cannot go wrong.
+    it 'appends the change to the issue' do
+      issue = described_class.empty board: board
+      issue.add_change field: 'status', value: 'In Progress', value_id: 3, time: '2024-03-01'
+      expect(issue.changes.collect(&:value)).to include 'In Progress'
+    end
+
+    it 'returns the change, for tests that need to hold on to it' do
+      issue = described_class.empty board: board
+      change = issue.add_change field: 'status', value: 'In Progress', value_id: 3, time: '2024-03-01'
+      expect(change.value).to eq 'In Progress'
+    end
+  end
+
   describe '.empty' do
     it 'is a real Issue, so anything taking an Issue will accept it' do
       expect(described_class.empty(board: board)).to be_a Issue

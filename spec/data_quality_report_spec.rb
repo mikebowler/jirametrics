@@ -102,7 +102,7 @@ describe DataQualityReport do
     it 'identifies items with completed but not started' do
       issue = MockIssue.empty created: '2021-09-01', key: 'SP-1', board: board
       # report.all_boards = { board.id => board }
-      add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      issue.add_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new started: nil, stopped: Time.parse('2021-12-25'), issue: issue
@@ -134,21 +134,17 @@ describe DataQualityReport do
       # Issue 10 has a resolution with a status afterwards.
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-      add_mock_change(
-        issue: issue1, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
-      )
+      issue1.add_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      issue1.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00')
 
       report.issues << issue2
 
       issue10.changes.clear
-      add_mock_change(issue: issue10, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
-      done_change = add_mock_change(
-        issue: issue10, field: 'status', value: 'Done', value_id: 10_002, time: '2021-09-06T04:34:26+00:00'
-      )
-      in_progress_change = add_mock_change(
-        issue: issue10, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-07T04:34:26+00:00'
-      )
+      issue10.add_change(field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
+      done_change = issue10.add_change(field: 'status', value: 'Done', value_id: 10_002,
+time: '2021-09-06T04:34:26+00:00')
+      in_progress_change = issue10.add_change(field: 'status', value: 'In Progress', value_id: 3,
+time: '2021-09-07T04:34:26+00:00')
       report.initialize_entries
 
       entry = DataQualityReport::Entry.new(
@@ -184,15 +180,11 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      change1 = add_mock_change(
-        issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05'
-      )
-      change2 = add_mock_change(
-        issue: issue1, field: 'status',
+      change1 = issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05')
+      change2 = issue1.add_change(field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         old_value: 'In Progress', old_value_id: 3,
-        time: '2021-09-06'
-      )
+        time: '2021-09-06')
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -214,14 +206,12 @@ describe DataQualityReport do
 
       issue1.changes.clear
       # Rank is there just to ensure that it gets skipped appropriately
-      add_mock_change(issue: issue1, field: 'rank', value: 'more', time: '2021-09-04', value_id: 10_002)
-      add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
-      add_mock_change(
-        issue: issue1, field: 'status',
+      issue1.add_change(field: 'rank', value: 'more', time: '2021-09-04', value_id: 10_002)
+      issue1.add_change(field: 'status', value: 'Done', time: '2021-09-05', value_id: 10_002)
+      issue1.add_change(field: 'status',
         value: 'In Progress', value_id: 3,
         old_value: 'Done', old_value_id: 10_002,
-        time: '2021-09-06'
-      )
+        time: '2021-09-06')
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -247,9 +237,8 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      fake_backlog_status = add_mock_change(
-        issue: issue1, field: 'status', value: 'FakeBacklog', time: '2021-09-05', value_id: 10_012
-      )
+      fake_backlog_status = issue1.add_change(field: 'status', value: 'FakeBacklog', time: '2021-09-05',
+value_id: 10_012)
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
       expect(entry.problems).to eq [
@@ -285,12 +274,11 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(
-        issue: issue1,
+      issue1.add_change(
         field: 'status', value: 'Selected for Development', old_value: 'In Progress',
-        time: '2021-09-05', value_id: 10_001, old_value_id: 3
+          time: '2021-09-05', value_id: 10_001, old_value_id: 3
       )
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
+      issue1.add_change(field: 'status', value: 'In Progress', time: '2021-09-06', value_id: 3)
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -303,7 +291,7 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-05')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-05')
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -317,7 +305,7 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      issue1.add_change(field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
       fake_backlog = board.possible_statuses.find_by_id(10_012)
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: [fake_backlog]
@@ -332,11 +320,9 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
-      add_mock_change(
-        issue: issue1, field: 'status', value: 'Selected for Development', value_id: 10_001,
-        old_value: 'FakeBacklog', old_value_id: 10_012, time: '2021-09-06'
-      )
+      issue1.add_change(field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      issue1.add_change(field: 'status', value: 'Selected for Development', value_id: 10_001,
+        old_value: 'FakeBacklog', old_value_id: 10_012, time: '2021-09-06')
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -356,7 +342,7 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
+      issue1.add_change(field: 'status', value: 'FakeBacklog', value_id: 10_012, time: '2021-09-05')
       other_backlog = board.possible_statuses.find_by_id(10_000) # 'Backlog', a different name
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: [other_backlog]
@@ -376,10 +362,8 @@ describe DataQualityReport do
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05')
-      add_mock_change(
-        issue: issue1, field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-09-06'
-      )
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-05')
+      issue1.add_change(field: 'status', value: 'Selected for Development', value_id: 10_001, time: '2021-09-06')
 
       report.scan_for_backwards_movement entry: entry, backlog_statuses: []
 
@@ -401,7 +385,7 @@ describe DataQualityReport do
       board.raw['type'] = 'scrum'
       board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
+      issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry
       expect(entry.problems).to be_empty
@@ -411,7 +395,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       board.raw['type'] = 'scrum'
       board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
+      issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-09-05'
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
       report.scan_for_issue_not_in_active_sprint entry: entry
       expect(entry.problems).to eq [[:issue_not_visible_on_board, 'Issue is not in an active sprint']]
@@ -450,7 +434,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      done_change = add_mock_change(issue: issue1, field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
+      done_change = issue1.add_change(field: 'status', value: 'Done', time: '2021-09-06', value_id: 10_002)
 
       report.scan_for_issues_not_created_in_a_backlog_status(
         entry: entry, backlog_statuses: board.backlog_statuses
@@ -474,7 +458,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       entry = DataQualityReport::Entry.new started: nil, stopped: nil, issue: issue1
 
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', time: '2021-09-06', value_id: 10_000)
+      issue1.add_change(field: 'status', value: 'Backlog', time: '2021-09-06', value_id: 10_000)
       board.backlog_statuses << Status.new(
         name: 'foo', id: 10_000, category_name: 'bar', category_id: 2, category_key: 'new'
       )
@@ -739,14 +723,15 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
             end
           end
 
-          # Force SP-1 back to the backlog. Qualified because this block is instance_eval'd against a
-          # ProjectConfig, so unqualified helper names do not resolve here.
+          # Force SP-1 back to the backlog. These are real Issues that ProjectConfig loaded, not
+          # MockIssues, so there is no add_change on them and the change is built separately.
+          # SpecHelpers is qualified because this block is instance_eval'd against a ProjectConfig.
           issues.find { |issue| issue.key == 'SP-1' }.tap do |issue|
-            SpecHelpers.add_mock_change(
-              issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16'
+            issue.changes << SpecHelpers.mock_change(
+              field: 'status', value: 'In Progress', value_id: 3, time: '2021-09-16'
             )
-            SpecHelpers.add_mock_change(
-              issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17'
+            issue.changes << SpecHelpers.mock_change(
+              field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-09-17'
             )
           end
 

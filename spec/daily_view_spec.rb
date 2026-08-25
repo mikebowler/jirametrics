@@ -365,14 +365,14 @@ describe DailyView do
       issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
       # A status change on the final day keeps it active (not stalled) and it is not blocked.
-      add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-20', value_id: 10_011
+      issue.add_change field: 'status', value: 'Review', time: '2024-01-20', value_id: 10_011
       expect(view.make_blocked_stalled_lines(issue)).to eq []
     end
 
     it 'renders blocked by flag' do
       issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
-      add_mock_change issue: issue, field: 'Flagged', value: 'Blocked', time: '2024-01-03'
+      issue.add_change field: 'Flagged', value: 'Blocked', time: '2024-01-03'
 
       expect(view.make_blocked_stalled_lines(issue)).to eq [
         ["#{view.color_block '--blocked-color'} Blocked by flag"]
@@ -397,7 +397,7 @@ describe DailyView do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
+      issue.add_change field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
         [
@@ -412,7 +412,7 @@ describe DailyView do
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
-      add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
+      issue.add_change field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
         [
@@ -428,9 +428,7 @@ describe DailyView do
         [issue, '2024-01-01', nil]
       ]
       view.issues = IssueCollection[issue, issue2]
-      add_mock_change(
-        issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
-      )
+      issue.add_change(field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011)
 
       marker = view.color_block '--blocked-color'
       expect(view.make_blocked_stalled_lines issue).to eq [
@@ -451,9 +449,7 @@ describe DailyView do
       collection = IssueCollection[issue, issue2]
       collection.reject! { |candidate| candidate.key == 'SP-2' } # move SP-2 into the hidden set
       view.issues = collection
-      add_mock_change(
-        issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
-      )
+      issue.add_change(field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011)
 
       # Found via include_hidden, so we get the folded section (which embeds the issue) rather than
       # the "(no description found)" fallback.
@@ -467,9 +463,7 @@ describe DailyView do
         [issue, '2024-01-01', nil]
       ]
       view.issues = IssueCollection[issue]
-      add_mock_change(
-        issue: issue, field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011
-      )
+      issue.add_change(field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011)
 
       expect(view.make_blocked_stalled_lines issue).to eq [
         ["#{view.color_block '--blocked-color'} Blocked by issue: SP-2 (no description found)"]
@@ -614,7 +608,7 @@ describe DailyView do
       board.raw['type'] = 'scrum'
       board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       expect(view.make_not_visible_line(issue1)).to be_nil
     end
 
@@ -622,7 +616,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       board.raw['type'] = 'scrum'
       board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       result = view.make_not_visible_line(issue1)
       expect(result).to eq(
         "<span style='background: var(--warning-banner)'>Not visible on board: Not in an active sprint</span>"
@@ -633,7 +627,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       board.raw['type'] = 'scrum'
       board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
+      issue1.add_change field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2024-01-01'
       status = board.possible_statuses.find_all_by_name('Backlog').first
       issue1.raw['fields']['status'] = {
         'name' => status.name,
@@ -677,7 +671,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
         'state' => 'active',
         'name' => 'Sprint 2'
       })
-      add_mock_change issue: issue1, field: 'Sprint', value: 'Scrum Sprint 1', value_id: '1,2', time: '2024-01-01'
+      issue1.add_change field: 'Sprint', value: 'Scrum Sprint 1', value_id: '1,2', time: '2024-01-01'
       expect(view.make_sprints_lines issue1).to eq [
         ["Sprints: <span class='label'><s>Sprint 1</s></span> <span class='label'>Sprint 2</span>"]
       ]

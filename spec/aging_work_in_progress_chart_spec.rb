@@ -71,10 +71,8 @@ describe AgingWorkInProgressChart do
     def aging_issue
       MockIssue.empty(board: board, key: 'SP-300').tap do |issue|
         issue.status = board.possible_statuses.find_by_id board.visible_columns[1].status_ids.min
-        add_mock_change(
-          issue: issue, field: 'status', value: issue.status.name, value_id: issue.status.id,
-          time: to_time('2021-06-18')
-        )
+        issue.add_change(field: 'status', value: issue.status.name, value_id: issue.status.id,
+          time: to_time('2021-06-18'))
       end
     end
 

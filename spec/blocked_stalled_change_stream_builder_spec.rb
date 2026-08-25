@@ -36,9 +36,9 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles flagged and unflagged' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-05'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(flagged: 'Blocked', time: to_time('2021-10-03T00:01:00')),
@@ -49,10 +49,10 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'sets flag_reason from comment at the same timestamp as the flag' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Waiting on external team', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Waiting on external team', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
     # The comment change at the same timestamp generates a second blocked entry (comment iteration also
     # produces a BlockedStalledChange since flag is still set when the comment is processed in the loop)
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-05'))).to eq [
@@ -70,10 +70,10 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'sets flag_reason from comment within 30 seconds after the flag' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Waiting on vendor', time: '2021-10-03T00:01:15')
-    add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Waiting on vendor', time: '2021-10-03T00:01:15')
+    issue.add_change(field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-05'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(
@@ -89,42 +89,40 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'converts ADF comment body to html for flag_reason' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
     adf_body = {
       'type' => 'doc', 'version' => 1,
       'content' => [{ 'type' => 'paragraph', 'content' => [{ 'type' => 'text', 'text' => 'Waiting on vendor' }] }]
     }
-    add_mock_change(issue: issue, field: 'comment', value: adf_body, time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: adf_body, time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to eq 'Waiting on vendor'
   end
 
   it 'strips the Jira-generated flag preamble leaving the real reason' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-    add_mock_change(
-      issue: issue, field: 'comment', value: ":flag_on: Flag added\nWaiting on vendor", time: '2021-10-03T00:01:00'
-    )
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: ":flag_on: Flag added\nWaiting on vendor", time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to eq 'Waiting on vendor'
   end
 
   it 'sets flag_reason to nil when comment is only the Jira-generated flag preamble' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: ':flag_on: Flag added', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: ':flag_on: Flag added', time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to be_nil
   end
 
   it 'leaves flag_reason nil when no comment matches the flag timestamp' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Unrelated comment', time: '2021-10-04T00:00:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Unrelated comment', time: '2021-10-04T00:00:00')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-05'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(flagged: 'Blocked', flag_reason: nil, time: to_time('2021-10-03T00:01:00')),
@@ -136,9 +134,9 @@ describe BlockedStalledChangeStreamBuilder do
   it 'ignores flagged when "flagged_means_blocked" is false' do
     settings['flagged_means_blocked'] = false
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-05'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(time: to_time('2021-10-05'))
@@ -147,10 +145,10 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles contiguous blocked status' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-03')
-    add_mock_change(issue: issue, field: 'status', value: 'Blocked2', value_id: 15, time: '2021-10-04')
-    add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-05')
+    issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-03')
+    issue.add_change(field: 'status', value: 'Blocked2', value_id: 15, time: '2021-10-04')
+    issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-05')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-06'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
@@ -162,9 +160,9 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles blocked statuses' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status',  value: 'Blocked', value_id: 10, time: '2021-10-03')
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'status',  value: 'Blocked', value_id: 10, time: '2021-10-03')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-06'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-03')),
@@ -175,12 +173,8 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles blocked on issues' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(
-      issue: issue, field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02'
-    )
-    add_mock_change(
-      issue: issue, field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03'
-    )
+    issue.add_change(field: 'Link', value: 'This issue is blocked by SP-10', time: '2021-10-02')
+    issue.add_change(field: 'Link', value: nil, old_value: 'This issue is blocked by SP-10', time: '2021-10-03')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-04'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(blocking_issue_keys: ['SP-10'], time: to_time('2021-10-02')),
@@ -191,8 +185,8 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles stalled for inactivity' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-10'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
@@ -207,10 +201,10 @@ describe BlockedStalledChangeStreamBuilder do
   describe 'stalled_ignored_fields' do
     it 'does not let an ignored field reset the inactivity clock' do
       issue = MockIssue.empty created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
       # Lands in the middle of what would otherwise be one long gap.
-      add_mock_change(issue: issue, field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
-      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+      issue.add_change(field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
+      issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
       expect(stream(issue, settings: settings, end_time: to_time('2021-10-10'))).to eq [
         BlockedStalledChange.new(time: to_time('2021-10-01')),
         BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
@@ -221,9 +215,9 @@ describe BlockedStalledChangeStreamBuilder do
 
     it 'lets the same change reset the clock when the field is not ignored' do
       issue = MockIssue.empty created: '2021-10-01', board: board
-      add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
-      add_mock_change(issue: issue, field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
-      add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+      issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+      issue.add_change(field: 'RemoteIssueLink', value: 'linked to a page', time: '2021-10-05')
+      issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
       not_ignored = settings.merge 'stalled_ignored_fields' => []
       # Two gaps of three days each, so nothing is stalled at a five day threshold.
       expect(stream(issue, settings: not_ignored, end_time: to_time('2021-10-10'))).to eq [
@@ -235,10 +229,10 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles contiguous stalled status' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
-    add_mock_change(issue: issue, field: 'status',  value: 'Stalled2', value_id: 14, time: '2021-10-04')
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-05')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
+    issue.add_change(field: 'status',  value: 'Stalled2', value_id: 14, time: '2021-10-04')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-05')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-06'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
@@ -250,9 +244,9 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'handles stalled statuses' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
-    add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
+    issue.add_change(field: 'status',  value: 'Stalled', value_id: 11, time: '2021-10-03')
+    issue.add_change(field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-04')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-06'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(status: 'Stalled', status_is_blocking: false, time: to_time('2021-10-03')),
@@ -267,11 +261,11 @@ describe BlockedStalledChangeStreamBuilder do
     # should consider subtasks, it should show nothing stalled through the period.
 
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
 
     subtask = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
+    subtask.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
     issue.subtasks << subtask
 
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-10'))).to eq [
@@ -284,11 +278,11 @@ describe BlockedStalledChangeStreamBuilder do
     # The full range is 1st to 12th with subtask activity on the 5th. The only
     # stalled section in here is 5-12.
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-12')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-12')
 
     subtask = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
+    subtask.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
     issue.subtasks << subtask
 
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-13'))).to eq [
@@ -301,7 +295,7 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'ignores the final artificial change for the purposes of stalled' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-08'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(stalled_days: 6, time: to_time('2021-10-02T01:00:00')),
@@ -311,8 +305,8 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'shows blocked even when there has been a big enough gap to be stalled' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-10')
+    issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-10')
     expect(stream(issue, settings: settings, end_time: to_time('2021-10-10'))).to eq [
       BlockedStalledChange.new(time: to_time('2021-10-01')),
       BlockedStalledChange.new(status: 'Blocked', time: to_time('2021-10-02')),
@@ -323,7 +317,7 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'warns, naming the issue, when a link cannot be parsed' do
     issue = MockIssue.empty created: '2021-10-01', board: board, key: 'SP-1'
-    add_mock_change(issue: issue, field: 'Link', value: 'gibberish that does not match', time: '2021-10-02')
+    issue.add_change(field: 'Link', value: 'gibberish that does not match', time: '2021-10-02')
     expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
       include("Issue(SP-1) Can't parse link text: gibberish that does not match")
     ).to_stdout
@@ -331,7 +325,7 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'parses "work item" link phrasing as well as "issue"' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Link', value: 'This work item is blocked by SP-99', time: '2021-10-02')
+    issue.add_change(field: 'Link', value: 'This work item is blocked by SP-99', time: '2021-10-02')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
     expect(result).to include(
       BlockedStalledChange.new(blocking_issue_keys: ['SP-99'], time: to_time('2021-10-02'))
@@ -340,14 +334,14 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'ignores a parseable link whose phrasing is not in blocked_link_text' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Link', value: 'This issue relates to SP-5', time: '2021-10-02')
+    issue.add_change(field: 'Link', value: 'This issue relates to SP-5', time: '2021-10-02')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
     expect(result.flat_map { |change| change.blocking_issue_keys || [] }).to be_empty
   end
 
   it 'falls back to old_value when naming the unparseable link in the warning' do
     issue = MockIssue.empty created: '2021-10-01', board: board, key: 'SP-1'
-    add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'unparseable link', time: '2021-10-02')
+    issue.add_change(field: 'Link', value: nil, old_value: 'unparseable link', time: '2021-10-02')
     expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
       include("Issue(SP-1) Can't parse link text: unparseable link")
     ).to_stdout
@@ -355,33 +349,33 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'links a comment posted exactly 30 seconds after the flag' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:30')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Reason', time: '2021-10-03T00:01:30')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to eq 'Reason'
   end
 
   it 'does not link a comment posted 31 seconds after the flag' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:31')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Reason', time: '2021-10-03T00:01:31')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to be_nil
   end
 
   it 'ignores a comment that predates the flag' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'comment', value: 'Earlier note', time: '2021-10-03T00:00:50')
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: 'Earlier note', time: '2021-10-03T00:00:50')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result.find(&:flag).flag_reason).to be_nil
   end
 
   it 'does not compute a flag_reason when the flag is being cleared' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
-    add_mock_change(issue: issue, field: 'comment', value: 'Late note', time: '2021-10-03T00:02:10')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
+    issue.add_change(field: 'comment', value: 'Late note', time: '2021-10-03T00:02:10')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     unflag = result.find { |change| change.time == to_time('2021-10-03T00:02:00') }
     expect(unflag.flag_reason).to be_nil
@@ -389,16 +383,16 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'trims whitespace from both ends of a flag_reason' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
-    add_mock_change(issue: issue, field: 'comment', value: '  spaced reason  ', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
+    issue.add_change(field: 'comment', value: '  spaced reason  ', time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
     expect(result[1].flag_reason).to eq 'spaced reason'
   end
 
   it 'reports stalled when the gap is exactly the threshold' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
-    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-07')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
+    issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-07')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))
     expect(result).to include(
       BlockedStalledChange.new(stalled_days: 5, time: to_time('2021-10-02T01:00:00'))
@@ -407,8 +401,8 @@ describe BlockedStalledChangeStreamBuilder do
 
   it 'does not report stalled when the gap is just under the threshold' do
     issue = MockIssue.empty created: '2021-10-01', board: board
-    add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02T00:00:00')
-    add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-06T23:00:00')
+    issue.add_change(field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02T00:00:00')
+    issue.add_change(field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-06T23:00:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))
     expect(result.filter_map(&:stalled_days)).to be_empty
   end

@@ -200,9 +200,9 @@ describe ProjectConfig do
   describe '#discard_changes_before' do
     it 'discards for date provided' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -224,8 +224,8 @@ describe ProjectConfig do
 
     it 'does not record a discard whose cutoff predates the issue start' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-06')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-06')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -241,11 +241,11 @@ describe ProjectConfig do
 
     it 'processes every issue, skipping ones with no matching status' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
       issue2 = MockIssue.empty created: '2022-01-01', board: board, key: 'SP-2'
       issue2.changes.clear
-      add_mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
-      add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
+      issue2.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      issue2.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -262,8 +262,8 @@ describe ProjectConfig do
 
     it 'uses the named status, not the backlog statuses, for a non-backlog status name' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-01')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-01')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -279,9 +279,9 @@ describe ProjectConfig do
 
     it 'discards for block provided' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T07:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02T08:00:00')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T09:00:00')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T07:00:00')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02T08:00:00')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-02T09:00:00')
 
       project_config.file_prefix 'sample'
       project_config.load_status_category_mappings
@@ -325,9 +325,9 @@ describe ProjectConfig do
         }
       ]
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
-      add_mock_change(issue: issue1, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
-      add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
+      issue1.add_change(field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
+      issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
 
       # Verify that Backlog is the only status in backlog statuses. Otherwise the test is meaningless.
       expect(issue1.board.backlog_statuses.collect { |s| "#{s.name.inspect}:#{s.id}" }).to eq ['"Backlog":10000']

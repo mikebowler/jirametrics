@@ -77,7 +77,7 @@ module SpecHelpers
 
   # A board whose statuses are replaced with a fixed, known set (ids 1-15) so blocked/stalled tests
   # can reference them by name (in the blocked_statuses/stalled_statuses settings) and by id (in
-  # add_mock_change value_ids). Pass a project_config when the surrounding spec needs to share it;
+  # add_change value_ids). Pass a project_config when the surrounding spec needs to share it;
   # otherwise a MockFileSystem-backed one is built.
   # A flat block of fixture setup; splitting it into helpers wouldn't make the test data any clearer.
   def board_with_blocked_stalled_statuses project_config: nil # rubocop:disable Metrics/MethodLength
@@ -130,7 +130,7 @@ module SpecHelpers
 
   def load_issue key, board: nil
     board = sample_board if board.nil?
-    issue = Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
+    issue = MockIssue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
     issue.raw['exporter'] = 1 # Make it look like this issue was actually loaded from Jira. Ie not artificial.
     issue
   end
@@ -177,22 +177,6 @@ module SpecHelpers
       statuses << Status.from_raw(status_config)
     end
     statuses
-  end
-
-  def add_mock_change(
-    issue:, field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
-    artificial: false, field_id: nil
-  )
-    change = mock_change(
-      issue: issue,
-      field: field, time: time,
-      value: value, value_id: value_id,
-      old_value: old_value, old_value_id: old_value_id,
-      artificial: artificial,
-      field_id: field_id
-    )
-    issue.changes << change
-    change
   end
 
   # If either value or old_value are statuses then the name and id will be pulled from that object
@@ -311,11 +295,9 @@ module SpecHelpers
       # We only care about the last one but if we keep overwriting it, the one that sticks will be the last.
       issue.status = status
 
-      add_mock_change(
-        issue: issue, field: 'status',
+      issue.add_change(field: 'status',
         value: status.name, value_id: status.id,
-        time: to_time("#{change_date}T0#{hour}:00:00")
-      )
+        time: to_time("#{change_date}T0#{hour}:00:00"))
       hour += 1
     end
 

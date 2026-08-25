@@ -103,8 +103,8 @@ describe IssuePrinter do
   describe '#change_entries' do
     it 'builds an entry per change, flagging artificial vs real' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
-      add_mock_change(issue: issue1, field: 'priority', value: 'Low', time: '2021-01-02', artificial: false)
+      issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      issue1.add_change(field: 'priority', value: 'Low', time: '2021-01-02', artificial: false)
       entries = printer.change_entries
       aggregate_failures do
         expect(entries.first).to eq [to_time('2021-01-01'), 'priority', '"High" (Artificial entry)', true]
@@ -114,7 +114,7 @@ describe IssuePrinter do
 
     it 'appends discarded changes after the normal ones' do
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
       discarded = mock_change(field: 'priority', value: 'Old', time: '2021-01-03', artificial: true)
       allow(issue1).to receive(:discarded_changes).and_return([discarded])
       expect(printer.change_entries.map { |entry| entry[0] }).to eq [to_time('2021-01-01'), to_time('2021-01-03')]
@@ -125,7 +125,7 @@ describe IssuePrinter do
     it 'combines start/stop, discarded, and change entries in that order' do
       issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2021-01-01'), nil]]
       issue1.changes.clear
-      add_mock_change(issue: issue1, field: 'priority', value: 'High', time: '2021-01-05', artificial: true)
+      issue1.add_change(field: 'priority', value: 'High', time: '2021-01-05', artificial: true)
       allow(issue1).to receive(:discarded_change_times).and_return([to_time('2021-01-03')])
       expect(printer.build_history.map { |entry| entry[0] }).to eq [
         to_time('2021-01-01'), to_time('2021-01-03'), to_time('2021-01-05')

@@ -34,7 +34,7 @@ describe WipByColumnChart do
   # resolution, so default_cycletime_config considers them in WIP throughout the window.
   def issue_in_ready key:
     issue = MockIssue.empty created: '2021-05-31', board: board, key: key
-    add_mock_change issue: issue, field: 'status',
+    issue.add_change field: 'status',
       value: 'Selected for Development', value_id: 10_001,
       time: to_time('2021-05-31T12:00:00')
     issue
@@ -64,7 +64,7 @@ describe WipByColumnChart do
     it 'tracks time spent at each WIP level as issues move between columns' do
       # Issue A: in Ready at start, moves to In Progress halfway through
       issue_a = issue_in_ready key: 'SP-1'
-      add_mock_change issue: issue_a, field: 'status',
+      issue_a.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-06-01T00:08:20') # 500s into the window
 
@@ -90,7 +90,7 @@ describe WipByColumnChart do
       other_board.cycletime = default_cycletime_config
 
       issue_other = MockIssue.empty created: '2021-05-31', board: other_board, key: 'SP-99'
-      add_mock_change issue: issue_other, field: 'status',
+      issue_other.add_change field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         time: to_time('2021-05-31T12:00:00')
 
@@ -103,7 +103,7 @@ describe WipByColumnChart do
     it 'handles an issue that first appears within the time range' do
       # Issue with no status change before the window starts
       issue = MockIssue.empty created: '2021-06-01', board: board, key: 'SP-1'
-      add_mock_change issue: issue, field: 'status',
+      issue.add_change field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         time: to_time('2021-06-01T00:08:20') # 500s in
 
@@ -116,12 +116,12 @@ describe WipByColumnChart do
 
     it 'handles simultaneous status changes correctly' do
       issue_a = issue_in_ready key: 'SP-1'
-      add_mock_change issue: issue_a, field: 'status',
+      issue_a.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-06-01T00:08:20')
 
       issue_b = issue_in_ready key: 'SP-2'
-      add_mock_change issue: issue_b, field: 'status',
+      issue_b.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-06-01T00:08:20') # same time as issue_a
 
@@ -455,7 +455,7 @@ describe WipByColumnChart do
 
     it 'reports fractional percentages when a column sits at more than one WIP level' do
       issue_b = issue_in_ready key: 'SP-2'
-      add_mock_change issue: issue_b, field: 'status',
+      issue_b.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-06-01T00:06:40') # moves out of Ready at the 400s mark
       chart.issues = [issue_in_ready(key: 'SP-1'), issue_b]
@@ -497,7 +497,7 @@ describe WipByColumnChart do
         issue_a = issue_in_ready key: 'SP-1' # stays in Ready all 1000s
 
         issue_b = issue_in_ready key: 'SP-2'
-        add_mock_change issue: issue_b, field: 'status',
+        issue_b.add_change field: 'status',
           value: 'In Progress', value_id: 3,
           time: to_time('2021-06-01T00:06:40') # 400s in
         chart.issues = [issue_a, issue_b]
@@ -551,7 +551,7 @@ describe WipByColumnChart do
       # Issue passes through In Progress briefly (100s) but Ready is empty for 900s
       # Ready: WIP=0 for 900s (90%), WIP=1 for 100s (10%) → 85th pct at WIP=0
       issue = issue_in_ready key: 'SP-1'
-      add_mock_change issue: issue, field: 'status',
+      issue.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-06-01T00:15:20') # 920s into the 1000s window
 
@@ -569,7 +569,7 @@ describe WipByColumnChart do
     it 'suggests adding a limit when there is no existing limit' do
       # Done has min=nil, max=nil - use mock cycletime so the issue counts as in-WIP
       issue = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-1'
-      add_mock_change issue: issue, field: 'status',
+      issue.add_change field: 'status',
         value: 'Done', value_id: 10_002,
         time: to_time('2021-05-31T12:00:00')
       board.cycletime = mock_cycletime_config stub_values: [
@@ -588,7 +588,7 @@ describe WipByColumnChart do
     it 'removes a leading all-zero column' do
       # Issue is only in In Progress - Ready (index 0) stays at WIP=0 the whole window
       issue = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-1'
-      add_mock_change issue: issue, field: 'status',
+      issue.add_change field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-05-31T12:00:00')
 
@@ -619,7 +619,7 @@ describe WipByColumnChart do
       issue_a = issue_in_ready key: 'SP-1'
 
       issue_b = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-2'
-      add_mock_change issue: issue_b, field: 'status',
+      issue_b.add_change field: 'status',
         value: 'Review', value_id: 10_011,
         time: to_time('2021-05-31T12:00:00')
 

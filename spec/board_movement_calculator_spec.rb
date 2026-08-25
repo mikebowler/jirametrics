@@ -35,7 +35,7 @@ describe BoardMovementCalculator do
     MockIssue.empty(board: board, creation_status: start_status).tap do |issue|
       issue.changes.clear
       statuses.each do |name, id, time|
-        add_mock_change(issue: issue, field: 'status', value: name, value_id: id, time: time)
+        issue.add_change(field: 'status', value: name, value_id: id, time: time)
       end
       # done? reads the current status (raw field), not the changes, so mark it Done to survive the
       # constructor's `issue.done?` filter. The cycletime stub still drives start/stop for the method.

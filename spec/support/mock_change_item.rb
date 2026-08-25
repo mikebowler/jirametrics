@@ -2,8 +2,8 @@
 
 # Builds a real ChangeItem for tests. It normalises Status arguments (pulling the name/id off the
 # object) and, for status changes, validates the value/id against the board so a typo'd status or a
-# missing id surfaces loudly rather than silently passing. Returned by the mock_change and
-# add_mock_change spec helpers.
+# missing id surfaces loudly rather than silently passing. Returned by MockIssue#add_change and by
+# the standalone mock_change helper.
 class MockChangeItem
   def initialize(
     field:, value:, time:, value_id: nil, old_value: nil, old_value_id: nil,
