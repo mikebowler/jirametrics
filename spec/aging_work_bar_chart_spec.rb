@@ -77,7 +77,8 @@ describe AgingWorkBarChart do
     it 'starts on creation and has no further status changes' do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.timezone_offset = '+0000'
-      issue = MockIssue.empty board: sample_board, creation_status: ['Backlog', 10_000]
+      board = sample_board
+      issue = MockIssue.empty board: board, creation_status: board.possible_statuses.find_by_id!(10_000)
       issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
 
       data_sets = chart.bar_chart_range_to_data_set(

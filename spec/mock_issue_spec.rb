@@ -48,6 +48,20 @@ describe MockIssue do
       ]
     end
 
+    # The status block used to hardcode a To Do category whatever status was asked for, so an issue
+    # could claim to be Done while sitting in To Do. Everything now comes from the Status itself.
+    it 'takes the whole status, category included, from the Status it is given' do
+      status = board.possible_statuses.find_all_by_name('Done').first
+      issue = described_class.empty board: board, creation_status: status
+      expect(issue.raw['fields']['status']).to eq(
+        'name' => status.name,
+        'id' => status.id.to_s,
+        'statusCategory' => {
+          'name' => status.category.name, 'id' => status.category.id, 'key' => status.category.key
+        }
+      )
+    end
+
     it 'uses the created date it was given' do
       issue = described_class.empty(board: board, created: '2024-03-04')
       expect(issue.created.to_date.to_s).to eq '2024-03-04'

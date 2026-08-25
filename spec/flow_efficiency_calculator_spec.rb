@@ -87,7 +87,8 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'was created in blocked status' do
-    issue = MockIssue.empty board: board, creation_status: ['Blocked', 10]
+    issue = MockIssue.empty created: '2000-01-01', board: board,
+      creation_status: board.possible_statuses.find_all_by_name('Blocked').first
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, to_time('2000-01-01'), nil]
     ]
@@ -96,7 +97,8 @@ describe FlowEfficiencyCalculator do
   end
 
   it 'was created in done status' do
-    issue = MockIssue.empty board: board, creation_status: ['Done', 1]
+    issue = MockIssue.empty created: '2000-01-01', board: board,
+      creation_status: board.possible_statuses.find_all_by_name('Done').first
     issue.board.cycletime = mock_cycletime_config stub_values: [
       [issue, to_time('2000-01-01'), to_time('2000-01-01')]
     ]

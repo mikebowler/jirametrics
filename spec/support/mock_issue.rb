@@ -39,14 +39,18 @@ class MockIssue < Issue
       "SP-#{@next_key_number}".tap { @next_key_number += 1 }
     end
 
+    # A Status carries its category, so the issue cannot end up claiming to be Done while sitting in
+    # To Do. Specs that need a status the board does not have can build one with Status.new, which
+    # is explicit about being artificial rather than being smuggled in as a name and id.
     def resolve_creation_status creation_status, board
-      return [creation_status.name, creation_status.id] if creation_status.is_a? Status
-      return creation_status unless creation_status.nil?
+      return creation_status if creation_status.is_a? Status
+
+      raise "creation_status must be a Status, got #{creation_status.class}" unless creation_status.nil?
 
       backlog_statuses = board.possible_statuses.find_all_by_name('Backlog')
       raise 'No Backlog status found' if backlog_statuses.empty?
 
-      [backlog_statuses.first.name, backlog_statuses.first.id]
+      backlog_statuses.first
     end
 
     # Mimics an issue created directly inside a sprint: that membership lives only in the current
@@ -70,9 +74,13 @@ class MockIssue < Issue
           'created' => created_time,
           'updated' => created_time,
           'status' => {
-            'name' => creation_status[0],
-            'id' => creation_status[1].to_s,
-            'statusCategory' => { 'name' => 'To Do', 'id' => 100, 'key' => 'new' }
+            'name' => creation_status.name,
+            'id' => creation_status.id.to_s,
+            'statusCategory' => {
+              'name' => creation_status.category.name,
+              'id' => creation_status.category.id,
+              'key' => creation_status.category.key
+            }
           },
           'priority' => { 'name' => 'Medium', 'id' => '3' },
           'issuetype' => { 'name' => 'Bug' },
