@@ -18,12 +18,6 @@ class MockIssue < Issue
   DEFAULT_CREATED = '2024-02-29'
 
   class << self
-    # For the specs that test key generation itself. Nothing else should need this: generated keys
-    # only have to be UNIQUE, and a test that depends on which one it got should be passing a key.
-    def reset_generated_keys
-      @next_key_number = FIRST_GENERATED_KEY_NUMBER
-    end
-
     def next_generated_key
       @next_key_number ||= FIRST_GENERATED_KEY_NUMBER
       "SP-#{@next_key_number}".tap { @next_key_number += 1 }

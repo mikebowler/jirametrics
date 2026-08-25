@@ -5,25 +5,26 @@ require './spec/spec_helper'
 describe MockIssue do
   let(:board) { sample_board }
 
-  # Only the specs for the generator itself care which key comes out. Every other test either
-  # passes a key or does not care, so there is deliberately no suite-wide reset: a test that
-  # asserted on a generated key would then be flaky, which is how it should find out.
-  before { described_class.reset_generated_keys }
-
   describe '.empty' do
     it 'is a real Issue, so anything taking an Issue will accept it' do
       expect(described_class.empty(board: board)).to be_a Issue
     end
 
     # A defaulted key was the trap: several issues sharing one key silently share one cycletime
-    # stub, because MockCycleTimeConfig matches stubs by key.
+    # stub, because MockCycleTimeConfig matches stubs by key. Uniqueness is the whole requirement,
+    # so these assert that and not which particular key came out.
     it 'generates a key when none is given' do
-      expect(described_class.empty(board: board).key).to eq 'SP-1000'
+      expect(described_class.empty(board: board).key).to match(/\ASP-\d+\z/)
     end
 
     it 'generates a different key for each issue' do
       keys = Array.new(3) { described_class.empty(board: board).key }
-      expect(keys).to eq %w[SP-1000 SP-1001 SP-1002]
+      expect(keys.uniq.size).to eq 3
+    end
+
+    it 'generates keys clear of the hand-written ones that fixtures use' do
+      number = described_class.empty(board: board).key.delete_prefix('SP-').to_i
+      expect(number).to be >= described_class::FIRST_GENERATED_KEY_NUMBER
     end
 
     it 'uses the key it was given' do
@@ -37,16 +38,6 @@ describe MockIssue do
     it 'uses the created date it was given' do
       issue = described_class.empty(board: board, created: '2024-03-04')
       expect(issue.created.to_date.to_s).to eq '2024-03-04'
-    end
-  end
-
-  # Random ordering means a process-global counter would make keys depend on how many issues
-  # earlier examples built, so the same test would see different keys on different seeds.
-  describe '.reset_generated_keys' do
-    it 'starts again from the first key' do
-      described_class.empty board: board
-      described_class.reset_generated_keys
-      expect(described_class.empty(board: board).key).to eq 'SP-1000'
     end
   end
 end
