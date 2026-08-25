@@ -18,11 +18,6 @@ class MockIssue < Issue
   DEFAULT_CREATED = '2024-02-29'
 
   class << self
-    def next_generated_key
-      @next_key_number ||= FIRST_GENERATED_KEY_NUMBER
-      "SP-#{@next_key_number}".tap { @next_key_number += 1 }
-    end
-
     def empty created: DEFAULT_CREATED, board: SpecHelpers.sample_board, key: nil, creation_status: nil,
       current_sprints: nil, changelog_histories: []
       new(
@@ -35,6 +30,13 @@ class MockIssue < Issue
         ),
         board: board
       )
+    end
+
+    private
+
+    def next_generated_key
+      @next_key_number ||= FIRST_GENERATED_KEY_NUMBER
+      "SP-#{@next_key_number}".tap { @next_key_number += 1 }
     end
 
     def resolve_creation_status creation_status, board
