@@ -37,6 +37,17 @@ describe MockIssue do
       expect(described_class.empty(board: board).created).not_to be_nil
     end
 
+    # Only two keys of that custom field are ever read: id, and boardId which exists solely so
+    # Issue#sprint_field_id can recognise which custom field is the sprint one. Names and states
+    # written there before were never read and could contradict the board's own Sprint objects.
+    it 'records sprint membership in the custom field Jira uses' do
+      issue = described_class.empty board: board, current_sprint_ids: [10, 11]
+      expect(issue.raw['fields']['customfield_10020']).to eq [
+        { 'id' => 10, 'boardId' => board.id },
+        { 'id' => 11, 'boardId' => board.id }
+      ]
+    end
+
     it 'uses the created date it was given' do
       issue = described_class.empty(board: board, created: '2024-03-04')
       expect(issue.created.to_date.to_s).to eq '2024-03-04'

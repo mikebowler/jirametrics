@@ -19,13 +19,14 @@ class MockIssue < Issue
 
   class << self
     def empty created: DEFAULT_CREATED, board: SpecHelpers.sample_board, key: nil, creation_status: nil,
-      current_sprints: nil
+      current_sprint_ids: nil
       new(
         raw: raw_for(
           created: created,
           key: key || next_generated_key,
           creation_status: resolve_creation_status(creation_status, board),
-          current_sprints: current_sprints
+          current_sprint_ids: current_sprint_ids,
+          board_id: board.id
         ),
         board: board
       )
@@ -48,10 +49,19 @@ class MockIssue < Issue
       [backlog_statuses.first.name, backlog_statuses.first.id]
     end
 
-    # current_sprints mimics an issue created directly inside a sprint: that membership lives only in
-    # the current Sprint custom field and never appears as a changelog transition.
-    def raw_for created:, key:, creation_status:, current_sprints:
-      sprint_field = current_sprints ? { 'customfield_10020' => current_sprints } : {}
+    # Mimics an issue created directly inside a sprint: that membership lives only in the current
+    # Sprint custom field and never appears as a changelog transition.
+    #
+    # Only two keys are ever read back. Issue#current_sprint_ids takes the ids, and
+    # Issue#sprint_field_id finds the sprint field by looking for an array of hashes carrying a
+    # boardId. Anything else written here would be decoration that could contradict the board.
+    def raw_for created:, key:, creation_status:, current_sprint_ids:, board_id:
+      sprint_field =
+        if current_sprint_ids
+          { 'customfield_10020' => current_sprint_ids.collect { |id| { 'id' => id, 'boardId' => board_id } } }
+        else
+          {}
+        end
       created_time = SpecHelpers.to_time(created).to_s
       {
         'key' => key,

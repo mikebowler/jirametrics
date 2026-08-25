@@ -766,9 +766,7 @@ time: '2021-10-02')
         'completeDate' => '2021-10-23T00:00:00.000Z',
         'originBoardId' => 2
       }, timezone_offset: '+00:00')
-      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprints: [
-        { 'id' => 10, 'name' => 'Scrum Sprint 1', 'state' => 'active', 'boardId' => scrum_board.id }
-      ]
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprint_ids: [10]
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-02')
     end
 
@@ -2300,9 +2298,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       # This is the LS-821/LS-825 case: the issue was created directly in the sprint and never moved,
       # so its membership lives only in the current Sprint field and never as a changelog transition.
       add_board_sprint id: 10
-      issue = MockIssue.empty board: scrum_board, current_sprints: [
-        { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id }
-      ]
+      issue = MockIssue.empty board: scrum_board, current_sprint_ids: [10]
       expect(issue.sprints.map(&:id)).to eq [10]
     end
 
@@ -2353,10 +2349,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'captures the full change for an issue created inside sprints with no changelog entry' do
       # Two sprints so the 'to' separator (join(', ')) actually matters.
-      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprints: [
-        { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id },
-        { 'id' => 20, 'name' => 'Sprint 20', 'state' => 'active', 'boardId' => scrum_board.id }
-      ]
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprint_ids: [10, 20]
       change = fabricated_change(issue)
       aggregate_failures do
         expect(change.time).to eq to_time('2021-10-02')
