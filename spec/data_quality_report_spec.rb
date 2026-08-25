@@ -100,7 +100,7 @@ describe DataQualityReport do
 
   describe '#scan_for_completed_issues_without_a_start_time' do
     it 'identifies items with completed but not started' do
-      issue = MockIssue.empty key: 'SP-1', board: board
+      issue = MockIssue.empty created: '2021-09-01', key: 'SP-1', board: board
       # report.all_boards = { board.id => board }
       add_mock_change(issue: issue, field: 'resolution', value: 'Done', time: '2021-09-06T04:34:26+00:00')
       report.initialize_entries
@@ -711,7 +711,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
       target_path = 'spec/complete_sample/'
       html_path = File.expand_path('./lib/jirametrics/html/')
 
-      sp1_json = MockIssue.empty(key: 'SP-1').raw
+      sp1_json = MockIssue.empty(created: '2021-09-15', key: 'SP-1').raw
       exporter.file_system.when_loading file: "#{target_path}sample_statuses.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_meta.json", json: :not_mocked
       exporter.file_system.when_loading file: "#{target_path}sample_board_1_configuration.json", json: :not_mocked

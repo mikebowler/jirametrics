@@ -242,7 +242,7 @@ describe ProjectConfig do
     it 'processes every issue, skipping ones with no matching status' do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
-      issue2 = MockIssue.empty board: board, key: 'SP-2'
+      issue2 = MockIssue.empty created: '2022-01-01', board: board, key: 'SP-2'
       issue2.changes.clear
       add_mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
       add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')

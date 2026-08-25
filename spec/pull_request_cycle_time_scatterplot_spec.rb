@@ -24,7 +24,7 @@ describe PullRequestCycleTimeScatterplot do
     # removed stays invisible until a report is generated. Running the chart for real catches it.
     it 'renders the description' do
       board = sample_board
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2024-01-01', board: board
       issue.github_prs = [pull_request]
 
       chart.file_system = MockFileSystem.new

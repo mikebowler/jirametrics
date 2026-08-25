@@ -88,7 +88,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'converts ADF comment body to html for flag_reason' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
     adf_body = {
@@ -101,7 +101,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'strips the Jira-generated flag preamble leaving the real reason' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
     add_mock_change(
@@ -112,7 +112,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'sets flag_reason to nil when comment is only the Jira-generated flag preamble' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'comment', value: ':flag_on: Flag added', time: '2021-10-03T00:01:00')
@@ -270,7 +270,7 @@ describe BlockedStalledChangeStreamBuilder do
     add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-08')
 
-    subtask = MockIssue.empty board: board
+    subtask = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
     issue.subtasks << subtask
 
@@ -287,7 +287,7 @@ describe BlockedStalledChangeStreamBuilder do
     add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-12')
 
-    subtask = MockIssue.empty board: board
+    subtask = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: subtask, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-05')
     issue.subtasks << subtask
 
@@ -322,7 +322,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'warns, naming the issue, when a link cannot be parsed' do
-    issue = MockIssue.empty board: board, key: 'SP-1'
+    issue = MockIssue.empty created: '2021-10-01', board: board, key: 'SP-1'
     add_mock_change(issue: issue, field: 'Link', value: 'gibberish that does not match', time: '2021-10-02')
     expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
       include("Issue(SP-1) Can't parse link text: gibberish that does not match")
@@ -330,7 +330,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'parses "work item" link phrasing as well as "issue"' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Link', value: 'This work item is blocked by SP-99', time: '2021-10-02')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
     expect(result).to include(
@@ -339,14 +339,14 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'ignores a parseable link whose phrasing is not in blocked_link_text' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Link', value: 'This issue relates to SP-5', time: '2021-10-02')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-03'))
     expect(result.flat_map { |change| change.blocking_issue_keys || [] }).to be_empty
   end
 
   it 'falls back to old_value when naming the unparseable link in the warning' do
-    issue = MockIssue.empty board: board, key: 'SP-1'
+    issue = MockIssue.empty created: '2021-10-01', board: board, key: 'SP-1'
     add_mock_change(issue: issue, field: 'Link', value: nil, old_value: 'unparseable link', time: '2021-10-02')
     expect { stream(issue, settings: settings, end_time: to_time('2021-10-03')) }.to output(
       include("Issue(SP-1) Can't parse link text: unparseable link")
@@ -354,7 +354,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'links a comment posted exactly 30 seconds after the flag' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:30')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
@@ -362,7 +362,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'does not link a comment posted 31 seconds after the flag' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'comment', value: 'Reason', time: '2021-10-03T00:01:31')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
@@ -370,7 +370,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'ignores a comment that predates the flag' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'comment', value: 'Earlier note', time: '2021-10-03T00:00:50')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
@@ -378,7 +378,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'does not compute a flag_reason when the flag is being cleared' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-10-03T00:02:00')
     add_mock_change(issue: issue, field: 'comment', value: 'Late note', time: '2021-10-03T00:02:10')
@@ -388,7 +388,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'trims whitespace from both ends of a flag_reason' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'comment', value: '  spaced reason  ', time: '2021-10-03T00:01:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-05'))
@@ -396,7 +396,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'reports stalled when the gap is exactly the threshold' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-07')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))
@@ -406,7 +406,7 @@ describe BlockedStalledChangeStreamBuilder do
   end
 
   it 'does not report stalled when the gap is just under the threshold' do
-    issue = MockIssue.empty board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status', value: 'Doing', value_id: 12, time: '2021-10-02T00:00:00')
     add_mock_change(issue: issue, field: 'status', value: 'Doing2', value_id: 13, time: '2021-10-06T23:00:00')
     result = stream(issue, settings: settings, end_time: to_time('2021-10-08'))

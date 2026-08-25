@@ -45,7 +45,7 @@ describe CycleTimeConfig do
 
     it 'returns the same value twice in a row when cached, but issue changes' do
       settings['cache_cycletime_calculations'] = true
-      issue = MockIssue.empty board: sample_board
+      issue = MockIssue.empty created: '2025-01-01', board: sample_board
       issue.changes.clear
       change1 = add_mock_change(
         issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2025-01-03'
@@ -63,7 +63,7 @@ describe CycleTimeConfig do
 
     it 'returns different values when not cached, and issue changes' do
       settings['cache_cycletime_calculations'] = false
-      issue = MockIssue.empty board: sample_board, key: 'SP-1'
+      issue = MockIssue.empty created: '2025-01-01', board: sample_board, key: 'SP-1'
       issue.changes.clear
       change1 = add_mock_change(
         issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2025-01-03'
@@ -91,7 +91,7 @@ describe CycleTimeConfig do
 
     it 'returns same values when not cached, and nothing changes' do
       settings['cache_cycletime_calculations'] = false
-      issue = MockIssue.empty board: sample_board
+      issue = MockIssue.empty created: '2025-01-01', board: sample_board
       issue.changes.clear
       change1 = add_mock_change(
         issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2025-01-03'
@@ -155,11 +155,11 @@ describe CycleTimeConfig do
 
     it 'caches each issue separately, so a second issue does not return the first issue result' do
       settings['cache_cycletime_calculations'] = true
-      issue_a = MockIssue.empty board: sample_board, key: 'SP-1'
+      issue_a = MockIssue.empty created: '2025-01-01', board: sample_board, key: 'SP-1'
       issue_a.changes.clear
       a_start = add_mock_change(issue: issue_a, field: 'status', value: 'In Progress', value_id: 3, time: '2025-01-03')
       a_stop = add_mock_change(issue: issue_a, field: 'status', value: 'Done', value_id: 10_002, time: '2025-01-05')
-      issue_b = MockIssue.empty board: sample_board, key: 'SP-2'
+      issue_b = MockIssue.empty created: '2025-01-01', board: sample_board, key: 'SP-2'
       issue_b.changes.clear
       b_start = add_mock_change(issue: issue_b, field: 'status', value: 'In Progress', value_id: 3, time: '2025-02-03')
       b_stop = add_mock_change(issue: issue_b, field: 'status', value: 'Done', value_id: 10_002, time: '2025-02-05')
@@ -175,13 +175,13 @@ describe CycleTimeConfig do
       settings['cache_cycletime_calculations'] = true
       board_a = sample_board
       board_a.raw['id'] = 2
-      issue_a = MockIssue.empty board: board_a, key: 'SP-1'
+      issue_a = MockIssue.empty created: '2025-01-01', board: board_a, key: 'SP-1'
       issue_a.changes.clear
       a_start = add_mock_change(issue: issue_a, field: 'status', value: 'In Progress', value_id: 3, time: '2025-01-03')
       a_stop = add_mock_change(issue: issue_a, field: 'status', value: 'Done', value_id: 10_002, time: '2025-01-05')
       board_b = sample_board
       board_b.raw['id'] = 3
-      issue_b = MockIssue.empty board: board_b, key: 'SP-1'
+      issue_b = MockIssue.empty created: '2025-01-01', board: board_b, key: 'SP-1'
       issue_b.changes.clear
       b_start = add_mock_change(issue: issue_b, field: 'status', value: 'In Progress', value_id: 3, time: '2025-02-03')
       b_stop = add_mock_change(issue: issue_b, field: 'status', value: 'Done', value_id: 10_002, time: '2025-02-05')

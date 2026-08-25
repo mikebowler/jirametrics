@@ -228,7 +228,7 @@ describe CfdDataBuilder do
       )
       board.cycletime = never_started_config
 
-      issue1 = MockIssue.empty(key: 'SP-1', board: board)
+      issue1 = MockIssue.empty(created: '2021-07-01', key: 'SP-1', board: board)
       # Only reaches Ready - never reaches In Progress, so start_time is nil
       add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')
@@ -252,7 +252,7 @@ describe CfdDataBuilder do
       )
       board.cycletime = in_progress_config
 
-      issue1 = MockIssue.empty(key: 'SP-1', board: board)
+      issue1 = MockIssue.empty(created: '2021-07-01', key: 'SP-1', board: board)
       # Enters Ready before starting, then In Progress (start), then Review
       add_mock_change(issue: issue1, field: 'status', value: 'Selected for Development',
         value_id: 10_001, time: '2021-07-02T10:00:00')

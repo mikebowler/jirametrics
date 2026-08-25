@@ -89,7 +89,7 @@ describe WipByColumnChart do
       other_board = Board.new(raw: json, possible_statuses: load_complete_sample_statuses)
       other_board.cycletime = default_cycletime_config
 
-      issue_other = MockIssue.empty board: other_board, key: 'SP-99'
+      issue_other = MockIssue.empty created: '2021-05-31', board: other_board, key: 'SP-99'
       add_mock_change issue: issue_other, field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         time: to_time('2021-05-31T12:00:00')
@@ -568,7 +568,7 @@ describe WipByColumnChart do
 
     it 'suggests adding a limit when there is no existing limit' do
       # Done has min=nil, max=nil - use mock cycletime so the issue counts as in-WIP
-      issue = MockIssue.empty board: board, key: 'SP-1'
+      issue = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'Done', value_id: 10_002,
         time: to_time('2021-05-31T12:00:00')

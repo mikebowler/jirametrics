@@ -181,7 +181,7 @@ describe AgingWorkBarChart do
       chart.date_range = to_date('2021-01-01')..to_date('2021-01-05')
       chart.time_range = chart.date_range.begin.to_time..chart.date_range.end.to_time
       chart.timezone_offset = '+0000'
-      MockIssue.empty(board: board).tap do |issue|
+      MockIssue.empty(created: '2021-01-01', board: board).tap do |issue|
         add_mock_change(issue: issue, field: 'Flagged', value: 'Flagged', time: '2021-01-02T01:00:00')
         add_mock_change(issue: issue, field: 'Flagged', value: '', time: '2021-01-02T02:00:00')
       end
@@ -561,7 +561,7 @@ describe AgingWorkBarChart do
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
         json: :not_mocked
       )
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2024-01-15', board: board
       board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')
@@ -614,7 +614,7 @@ describe AgingWorkBarChart do
         file: File.expand_path('./lib/jirametrics/html/aging_work_bar_chart.erb'),
         json: :not_mocked
       )
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2024-01-15', board: board
       board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       add_mock_change(issue: issue, field: 'priority', value: 'Medium', time: '2024-01-15')

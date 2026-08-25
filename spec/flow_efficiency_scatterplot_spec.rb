@@ -25,7 +25,7 @@ describe FlowEfficiencyScatterplot do
     # description_text is expanded at render time, so a reference in it to something that has been
     # removed stays invisible until a report is generated. Running the chart for real catches it.
     it 'renders the description' do
-      issue = MockIssue.empty board: sample_board
+      issue = MockIssue.empty created: '2020-01-01', board: sample_board
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2020-01-02', '2020-01-20']]
       settings['stalled_threshold_days'] = 50
 

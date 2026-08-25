@@ -168,7 +168,7 @@ describe AgingWorkInProgressChart do
   context 'with an extra column for unmapped statuses' do
     it 'shows the column when an issue is present with that status' do
       chart.time_range = to_time('2021-10-01')..to_time('2021-10-30')
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.raw['fields']['status'] = {
         'name' => 'FakeBacklog',
         'id' => '10012',
@@ -221,7 +221,7 @@ describe AgingWorkInProgressChart do
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
-      active = MockIssue.empty board: board, key: 'SP-201'
+      active = MockIssue.empty created: '2021-06-20', board: board, key: 'SP-201'
       active.raw['fields']['status'] = {
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
@@ -252,7 +252,7 @@ describe AgingWorkInProgressChart do
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
-      active = MockIssue.empty board: board, key: 'SP-201'
+      active = MockIssue.empty created: '2021-06-20', board: board, key: 'SP-201'
       active.raw['fields']['status'] = {
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }

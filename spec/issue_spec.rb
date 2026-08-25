@@ -342,7 +342,7 @@ describe Issue do
   end
 
   describe '#first_time_in_status' do
-    let(:issue) { MockIssue.empty board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'first time in status' do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
@@ -356,7 +356,7 @@ describe Issue do
   end
 
   describe '#first_time_not_in_status' do
-    let(:issue) { MockIssue.empty board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'first time not in status' do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
@@ -389,7 +389,7 @@ describe Issue do
   end
 
   describe '#first_time_in_or_right_of_column' do
-    let(:issue) { MockIssue.empty board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'fails for invalid column name' do
       expect { issue.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
@@ -415,7 +415,7 @@ describe Issue do
   end
 
   describe '#still_in_or_right_of_column' do
-    let(:issue) { MockIssue.empty board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
@@ -430,7 +430,7 @@ describe Issue do
   end
 
   describe '#first_time_in_status_category' do
-    let(:issue) { MockIssue.empty board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'matches first time in status category' do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-06-02')
@@ -704,7 +704,7 @@ time: '2021-10-02')
 
   describe '#first_time_added_to_active_sprint' do
     let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
-    let(:issue) { MockIssue.empty board: scrum_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: scrum_board }
 
     it 'raises error when used on kanban board' do
       issue = MockIssue.empty board: board, key: 'SP-1'
@@ -1007,7 +1007,7 @@ time: '2021-10-02')
   describe '#reasons_not_visible_on_board' do
     let(:kanban_board) { sample_board }
     let(:in_progress) { kanban_board.possible_statuses.find_by_id(3) }
-    let(:issue) { MockIssue.empty board: kanban_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: kanban_board }
 
     it 'returns empty when kanban issue is in a visible column' do
       visible_issue = MockIssue.empty board: kanban_board, creation_status: in_progress
@@ -1121,7 +1121,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe 'resolutions' do
     it 'finds resolutions when they are present' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01T00:00:00+00:00', board: board
       add_mock_change(
         issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02T00:00:00+00:00'
       )
@@ -1251,11 +1251,11 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles multiple subtasks, each with changes' do
-      subtask1 = MockIssue.empty board: board
+      subtask1 = MockIssue.empty created: '2020-01-02', board: board
       add_mock_change(issue: subtask1, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-03')
       issue.subtasks << subtask1
 
-      subtask2 = MockIssue.empty board: board
+      subtask2 = MockIssue.empty created: '2020-01-02', board: board
       add_mock_change(issue: subtask2, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-04')
       issue.subtasks << subtask2
 
@@ -1263,7 +1263,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles no activity on the subtask but activity on the main issue' do
-      subtask = MockIssue.empty board: board
+      subtask = MockIssue.empty created: '2020-01-01', board: board
       issue.subtasks << subtask
 
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-02')
@@ -1405,7 +1405,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#expedited_on_date?' do
     it 'works when expedited turns on and off on same day' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
@@ -1420,7 +1420,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'works when one expedite follows another' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
@@ -1437,7 +1437,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'works when still expedited at end of data' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
@@ -1450,7 +1450,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'stays expedited for dates well after the start when it never turns off' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
 
@@ -1458,7 +1458,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'ignores non-priority changes between expedite events' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
@@ -1467,13 +1467,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'returns false when the board has no project config' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config = nil
       expect(issue.expedited_on_date?(to_date('2021-10-03'))).to be false
     end
 
     it 'is expedited on a date inside any one of several expedite windows' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       add_mock_change(issue: issue, field: 'priority', value: '',     time: '2021-10-03T00:01:00')
@@ -1689,14 +1689,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'returns zeros when the issue never started' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [0.0, 0.0]
     end
 
     it 'returns zeros when the issue started after the window ends' do
-      issue = MockIssue.empty board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-10'), nil]]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [0.0, 0.0]
