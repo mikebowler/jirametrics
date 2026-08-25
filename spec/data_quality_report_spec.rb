@@ -17,7 +17,7 @@ describe DataQualityReport do
     end
   end
   let(:issue1) { load_issue('SP-1', board: board) }
-  let(:issue2) { load_issue('SP-2', board: board) }
+  let(:issue2) { MockIssue.empty(key: 'SP-2', board: board) }
   let(:issue10) { load_issue('SP-10', board: board) }
 
   let(:report) do
@@ -511,7 +511,7 @@ raw: { 'id' => 1, 'state' => 'closed', 'name' => 'Sprint 1' })
 
   describe '#scan_for_issues_not_started_with_subtasks_that_have' do
     let(:subtask) do
-      subtask = load_issue('SP-2', board: board)
+      subtask = MockIssue.empty(board: board)
       subtask.raw['fields']['issuetype']['name'] = 'Sub-task'
       subtask.changes.clear
       subtask

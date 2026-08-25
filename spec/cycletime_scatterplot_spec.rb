@@ -250,7 +250,7 @@ describe CycletimeScatterplot do
 
   describe '#trend_line_description' do
     let(:board) { load_complete_sample_board }
-    let(:issue) { load_issue('SP-10', board: board) }
+    let(:issue) { MockIssue.empty(board: board) }
 
     before do
       board.cycletime = default_cycletime_config

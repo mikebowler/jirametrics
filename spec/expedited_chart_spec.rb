@@ -14,7 +14,7 @@ describe ExpeditedChart do
     end
   end
   let(:issue1) { load_issue('SP-1', board: board).tap { |issue| issue.changes.clear } }
-  let(:issue2) { load_issue('SP-2', board: board).tap { |issue| issue.changes.clear } }
+  let(:issue2) { MockIssue.empty(board: board).tap { |issue| issue.changes.clear } }
 
   describe '#run' do
     it 'sets x-axis max to one day past date_range.end' do

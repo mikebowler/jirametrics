@@ -21,7 +21,7 @@ describe HierarchyTable do
   it 'identifies cyclical dependencies' do
     board = load_complete_sample_board
     issue1 = MockIssue.empty(key: 'SP-1', board: board)
-    issue2 = load_issue('SP-2', board: board)
+    issue2 = MockIssue.empty(key: 'SP-2', board: board)
 
     board.cycletime = mock_cycletime_config stub_values: [
       [issue1, nil, nil],

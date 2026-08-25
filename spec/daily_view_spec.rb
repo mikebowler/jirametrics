@@ -19,7 +19,7 @@ describe DailyView do
   let(:board) { sample_board }
   let(:issue1) { load_issue('SP-1', board: board) }
   let(:issue2) { load_issue('SP-2', board: board) }
-  let(:issue10) { load_issue('SP-10', board: board) }
+  let(:issue10) { MockIssue.empty(board: board) }
 
   describe '#run' do
     # description_text is expanded at render time against the binding inside run, and this one reads

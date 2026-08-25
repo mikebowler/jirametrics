@@ -5,7 +5,7 @@ require './spec/spec_helper'
 describe CycletimeHistogram do
   let(:board) { load_complete_sample_board }
   let(:issue1) { MockIssue.empty key: 'SP-1', board: board }
-  let(:issue2) { load_issue 'SP-2', board: board }
+  let(:issue2) { MockIssue.empty key: 'SP-2', board: board }
   let(:issue10) { load_issue 'SP-10', board: board }
   let(:chart) { described_class.new(empty_config_block) }
 

@@ -7,7 +7,7 @@ describe ThroughputChart do
   let(:board) { load_complete_sample_board }
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
-  let(:issue10) { load_issue 'SP-10', board: board }
+  let(:issue10) { MockIssue.empty board: board }
 
   describe '#calculate_time_periods' do
     # October 11 is a Monday

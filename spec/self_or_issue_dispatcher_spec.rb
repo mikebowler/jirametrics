@@ -6,7 +6,7 @@ describe SelfOrIssueDispatcher do
   describe 'method_missing and responds_to_missing?' do
     # Note that the way we test responds_to_missing? is by calling respond_to? Non-intuitive.
 
-    let(:issue) { load_issue 'SP-2' }
+    let(:issue) { MockIssue.empty }
     let(:file) do
       exporter = Exporter.new
       project_config = ProjectConfig.new exporter: exporter, target_path: 'spec/testdata/', jira_config: nil, block: nil

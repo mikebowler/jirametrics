@@ -13,7 +13,7 @@ describe AgingWorkBarChart do
     end
   end
   let(:issue1) { MockIssue.empty(board: board) }
-  let(:issue2) { load_issue('SP-2', board: board) }
+  let(:issue2) { MockIssue.empty(board: board) }
 
   describe '#description_text' do
     it 'mentions four bars and includes sprints item for scrum board' do
