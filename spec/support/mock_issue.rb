@@ -19,14 +19,13 @@ class MockIssue < Issue
 
   class << self
     def empty created: DEFAULT_CREATED, board: SpecHelpers.sample_board, key: nil, creation_status: nil,
-      current_sprints: nil, changelog_histories: []
+      current_sprints: nil
       new(
         raw: raw_for(
           created: created,
           key: key || next_generated_key,
           creation_status: resolve_creation_status(creation_status, board),
-          current_sprints: current_sprints,
-          changelog_histories: changelog_histories
+          current_sprints: current_sprints
         ),
         board: board
       )
@@ -51,12 +50,12 @@ class MockIssue < Issue
 
     # current_sprints mimics an issue created directly inside a sprint: that membership lives only in
     # the current Sprint custom field and never appears as a changelog transition.
-    def raw_for created:, key:, creation_status:, current_sprints:, changelog_histories:
+    def raw_for created:, key:, creation_status:, current_sprints:
       sprint_field = current_sprints ? { 'customfield_10020' => current_sprints } : {}
       created_time = SpecHelpers.to_time(created).to_s
       {
         'key' => key,
-        'changelog' => { 'histories' => changelog_histories },
+        'changelog' => { 'histories' => [] },
         'fields' => sprint_field.merge(
           'created' => created_time,
           'updated' => created_time,

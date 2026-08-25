@@ -1556,15 +1556,41 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it "reads the first prior change's old value when one exists" do
       # Non-status changes on either side, so we pin that we find the first *status* change, not just
-      # the first or last change.
-      issue = MockIssue.empty board: board, changelog_histories: [
-        { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
-        { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [
-          { 'field' => 'status', 'from' => '1', 'fromString' => 'Backlog', 'to' => '5', 'toString' => 'In Progress' }
-        ] },
-        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'y' }] }
-      ]
-      change = fabricated_status_change(issue)
+      # the first or last change. Written as the raw payload Jira sends, because what this method
+      # does with that payload is the whole subject.
+      raw = JSON.parse <<~JSON
+        {
+          "key": "SP-1",
+          "changelog": {
+            "histories": [
+              {
+                "created": "2021-10-03T00:00:00.000Z",
+                "items": [{ "field": "assignee", "to": "x" }]
+              },
+              {
+                "created": "2021-10-04T00:00:00.000Z",
+                "items": [
+                  {
+                    "field": "status",
+                    "from": "1", "fromString": "Backlog",
+                    "to": "5", "toString": "In Progress"
+                  }
+                ]
+              },
+              {
+                "created": "2021-10-05T00:00:00.000Z",
+                "items": [{ "field": "assignee", "to": "y" }]
+              }
+            ]
+          },
+          "fields": {
+            "created": "2021-10-02T00:00:00.000Z",
+            "status": { "name": "In Progress", "id": "5" },
+            "creator": { "displayName": "Tolkien" }
+          }
+        }
+      JSON
+      change = fabricated_status_change described_class.new(raw: raw, board: board)
       aggregate_failures do
         expect(change.value).to eq 'Backlog' # old_value of the first status change
         expect(change.value_id).to eq 1 # old_value_id of the first status change
@@ -1572,11 +1598,28 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'falls back to id 0 when the first change has no from id (seen in prod)' do
-      issue = MockIssue.empty board: board, changelog_histories: [
-        { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [
-          { 'field' => 'status', 'to' => '5', 'toString' => 'In Progress' } # no from / fromString
-        ] }
-      ]
+      raw = JSON.parse <<~JSON
+        {
+          "key": "SP-1",
+          "changelog": {
+            "histories": [
+              {
+                "created": "2021-10-03T00:00:00.000Z",
+                "items": [
+                  { "field": "status", "to": "5", "toString": "In Progress" }
+                ]
+              }
+            ]
+          },
+          "fields": {
+            "created": "2021-10-02T00:00:00.000Z",
+            "status": { "name": "In Progress", "id": "5" },
+            "creator": { "displayName": "Tolkien" }
+          }
+        }
+      JSON
+      # The status change above carries no "from" or "fromString", which is the malformed shape.
+      issue = described_class.new raw: raw, board: board
       expect(fabricated_status_change(issue).value_id).to eq 0
     end
 
@@ -2268,11 +2311,30 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       # the change's 'from', never a 'to'), so without reconstructing the initial membership the issue
       # would look like it was never in the sprint at all.
       add_board_sprint id: 10
-      issue = MockIssue.empty board: scrum_board, changelog_histories: [
-        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
-          { 'field' => 'Sprint', 'fieldId' => 'customfield_10020', 'from' => '10', 'to' => '' }
-        ] }
-      ]
+      raw = JSON.parse <<~JSON
+        {
+          "key": "SP-1",
+          "changelog": {
+            "histories": [
+              {
+                "created": "2021-10-05T00:00:00.000Z",
+                "items": [
+                  {
+                    "field": "Sprint", "fieldId": "customfield_10020",
+                    "from": "10", "to": ""
+                  }
+                ]
+              }
+            ]
+          },
+          "fields": {
+            "created": "2021-10-02T00:00:00.000Z",
+            "status": { "name": "Backlog", "id": "1" },
+            "creator": { "displayName": "Tolkien" }
+          }
+        }
+      JSON
+      issue = described_class.new raw: raw, board: scrum_board
       expect(issue.sprints.map(&:id)).to eq [10]
     end
 
@@ -2310,14 +2372,38 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     it 'seeds membership and field id from the first recorded sprint change when there is a changelog' do
       # Non-sprint changes on either side, so we're pinning that we find the sprint change, not just
       # take the first or last change in the list.
-      issue = MockIssue.empty board: scrum_board, changelog_histories: [
-        { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
-        { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
-          { 'field' => 'Sprint', 'fieldId' => 'customfield_99', 'from' => '10', 'to' => '' }
-        ] },
-        { 'created' => '2021-10-06T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'y' }] }
-      ]
-      change = fabricated_change(issue)
+      raw = JSON.parse <<~JSON
+        {
+          "key": "SP-1",
+          "changelog": {
+            "histories": [
+              {
+                "created": "2021-10-04T00:00:00.000Z",
+                "items": [{ "field": "assignee", "to": "x" }]
+              },
+              {
+                "created": "2021-10-05T00:00:00.000Z",
+                "items": [
+                  {
+                    "field": "Sprint", "fieldId": "customfield_99",
+                    "from": "10", "to": ""
+                  }
+                ]
+              },
+              {
+                "created": "2021-10-06T00:00:00.000Z",
+                "items": [{ "field": "assignee", "to": "y" }]
+              }
+            ]
+          },
+          "fields": {
+            "created": "2021-10-02T00:00:00.000Z",
+            "status": { "name": "Backlog", "id": "1" },
+            "creator": { "displayName": "Tolkien" }
+          }
+        }
+      JSON
+      change = fabricated_change described_class.new(raw: raw, board: scrum_board)
       aggregate_failures do
         expect(change.value_id).to eq [10] # from the sprint change's old_value_id
         expect(change.field_id).to eq 'customfield_99' # from first_sprint_change.field_id, not sprint_field_id
