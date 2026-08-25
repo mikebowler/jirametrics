@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-# Asserts the changes on an issue, or on a collection of changes, one hash per change, using the
-# same keys add_change takes.
+# Asserts the changes on an issue, one hash per change, using the same keys add_change takes.
 #
 #   expect(issue).to have_changes [
 #     { field: 'status', value: 'In Progress', value_id: 3, time: '2024-03-01' },
@@ -24,10 +23,8 @@ class HaveChanges
     @errors = []
   end
 
-  # Takes an issue, or the changes themselves for subjects that expose a filtered subset such as
-  # Issue#status_changes.
-  def matches? issue_or_changes
-    actual = issue_or_changes.respond_to?(:changes) ? issue_or_changes.changes : issue_or_changes
+  def matches? issue
+    actual = issue.changes
     if actual.size != @expected.size
       @errors << "Different number of changes. Actual: #{actual.size}, expected: #{@expected.size}"
     end
