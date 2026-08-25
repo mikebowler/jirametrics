@@ -190,21 +190,21 @@ describe ChartBase do
 
     it 'returns empty when no issues match' do
       chart_base.issues = [issue1]
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       expect(chart_base.completed_issues_in_range include_unstarted: true).to be_empty
     end
 
     it 'returns empty when one issue finished but outside the range' do
       chart_base.issues = [issue1]
       chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2000-01-02']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: '2000-01-02')
       expect(chart_base.completed_issues_in_range include_unstarted: true).to be_empty
     end
 
     it 'returns one when issue finished' do
       chart_base.issues = [issue1]
       chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-02-02')
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, '2022-01-02']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: '2022-01-02')
       expect(chart_base.completed_issues_in_range include_unstarted: true).to eq [issue1]
     end
   end

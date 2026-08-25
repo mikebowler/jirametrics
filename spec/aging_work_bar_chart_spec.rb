@@ -42,7 +42,7 @@ describe AgingWorkBarChart do
       board = sample_board
       backlog_status = board.possible_statuses.find_by_id!(10_000)
       issue = MockIssue.empty created: '2021-01-01', board: sample_board, creation_status: backlog_status
-      issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2021-01-01')
 
       expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
         BarChartRange.new(start: to_time('2021-01-01'), stop: to_time('2021-01-05'),
@@ -59,7 +59,7 @@ describe AgingWorkBarChart do
       issue = MockIssue.empty created: '2021-01-01', board: sample_board, creation_status: backlog_status
 
       # We want the start time to be in between status changes
-      issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-02', nil]])
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2021-01-02')
       issue.add_change(field: 'status', value: inprogress_status.name, value_id: inprogress_status.id,
         time: '2021-01-03')
       expect(chart.collect_status_ranges issue: issue, now: to_time('2021-01-05')).to eq [
@@ -77,7 +77,7 @@ describe AgingWorkBarChart do
       chart.timezone_offset = '+0000'
       board = sample_board
       issue = MockIssue.empty board: board, creation_status: board.possible_statuses.find_by_id!(10_000)
-      issue.board.cycletime = mock_cycletime_config(stub_values: [[issue, '2021-01-01', nil]])
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2021-01-01')
 
       data_sets = chart.bar_chart_range_to_data_set(
         y_value: 'story 1', stack: 'status', issue_start_time: to_time('2021-01-01'), ranges: [
@@ -243,20 +243,18 @@ describe AgingWorkBarChart do
 
   describe '#sort_by_age!' do
     it 'leaves an already sorted list alone' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', nil],
-        [issue2, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-01')
+        .stub(issue2, started: '2024-01-02')
       expect(chart.sort_by_age! issues: [issue1, issue2], today: to_date('2024-01-05')).to eq [
         issue1, issue2
       ]
     end
 
     it 'sorts the list' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', nil],
-        [issue2, '2024-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-02')
+        .stub(issue2, started: '2024-01-01')
       expect(chart.sort_by_age! issues: [issue1, issue2], today: to_date('2024-01-05')).to eq [
         issue2, issue1
       ]
@@ -271,21 +269,19 @@ describe AgingWorkBarChart do
     it 'selects only aging' do
       issue3 = MockIssue.empty board: board
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil],                  # not started
-        [issue2, '2024-01-01', nil],         # started
-        [issue3, '2024-01-01', '2024-01-05'] # completed
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1)  # not started
+        .stub(issue2, started: '2024-01-01')  # started
+        .stub(issue3, started: '2024-01-01', stopped: '2024-01-05')  # completed
       expect(chart.select_aging_issues issues: [issue1, issue2, issue3]).to eq [issue2]
     end
 
     it 'excludes any that were ignored in the grouping rules' do
       chart = described_class.new ->(_) { age_cutoff 3 }
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', nil],
-        [issue2, '2024-01-05', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-01')
+        .stub(issue2, started: '2024-01-05')
       expect(chart.select_aging_issues issues: [issue1, issue2]).to eq [issue1]
     end
   end
@@ -375,11 +371,10 @@ describe AgingWorkBarChart do
       issue2 = MockIssue.empty key: 'SP-2', created: '2024-01-01', board: board
       issue3 = MockIssue.empty key: 'SP-3', created: '2024-01-01', board: board
 
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', '2024-01-10'], # age 10
-        [issue2, '2024-01-01', '2024-01-20'], # age 20
-        [issue3, '2024-01-01', '2024-01-30']  # age 30
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-01', stopped: '2024-01-10')  # age 10
+        .stub(issue2, started: '2024-01-01', stopped: '2024-01-20')  # age 20
+        .stub(issue3, started: '2024-01-01', stopped: '2024-01-30')  # age 30
       chart.issues = [issue1, issue2, issue3]
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
 
@@ -396,10 +391,9 @@ describe AgingWorkBarChart do
       issue1 = MockIssue.empty key: 'SP-1', created: '2024-01-01', board: board
       issue2 = MockIssue.empty key: 'SP-2', created: '2024-01-01', board: board
 
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', '2024-01-10'], # age 10
-        [issue2, '2024-01-01', '2024-01-20']  # age 20
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-01', stopped: '2024-01-10')  # age 10
+        .stub(issue2, started: '2024-01-01', stopped: '2024-01-20')  # age 20
       chart.issues = [issue1, issue2]
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
 
@@ -446,11 +440,10 @@ describe AgingWorkBarChart do
       aging = MockIssue.empty board: board
       done_early = MockIssue.empty key: 'SP-90', created: '2024-01-01', board: board
       done_late = MockIssue.empty key: 'SP-91', created: '2024-01-01', board: board
-      board.cycletime = mock_cycletime_config stub_values: [
-        [aging, to_time('2024-01-15'), nil],
-        [done_early, to_time('2024-01-01'), to_time('2024-01-05')],
-        [done_late, to_time('2024-01-01'), to_time('2024-01-20')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(aging, started: to_time('2024-01-15'))
+        .stub(done_early, started: to_time('2024-01-01'), stopped: to_time('2024-01-05'))
+        .stub(done_late, started: to_time('2024-01-01'), stopped: to_time('2024-01-20'))
       aging.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       aging.add_change(field: 'priority', value: 'Medium', time: '2024-01-15')
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-31')
@@ -554,7 +547,7 @@ describe AgingWorkBarChart do
         json: :not_mocked
       )
       issue = MockIssue.empty created: '2024-01-15', board: board
-      board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2024-01-15'))
       issue.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       issue.add_change(field: 'priority', value: 'Medium', time: '2024-01-15')
 
@@ -578,11 +571,10 @@ describe AgingWorkBarChart do
       aging = MockIssue.empty board: board
       done_early = MockIssue.empty key: 'SP-90', created: '2024-01-01', board: board
       done_late = MockIssue.empty key: 'SP-91', created: '2024-01-01', board: board
-      board.cycletime = mock_cycletime_config stub_values: [
-        [aging, to_time('2024-01-15'), nil],
-        [done_early, to_time('2024-01-01'), to_time('2024-01-05')],
-        [done_late, to_time('2024-01-01'), to_time('2024-01-20')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(aging, started: to_time('2024-01-15'))
+        .stub(done_early, started: to_time('2024-01-01'), stopped: to_time('2024-01-05'))
+        .stub(done_late, started: to_time('2024-01-01'), stopped: to_time('2024-01-20'))
       aging.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       aging.add_change(field: 'priority', value: 'Medium', time: '2024-01-15')
 
@@ -607,7 +599,7 @@ describe AgingWorkBarChart do
         json: :not_mocked
       )
       issue = MockIssue.empty created: '2024-01-15', board: board
-      board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2024-01-15'), nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2024-01-15'))
       issue.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2024-01-15')
       issue.add_change(field: 'priority', value: 'Medium', time: '2024-01-15')
 
@@ -626,9 +618,7 @@ describe AgingWorkBarChart do
     it 'doesn\'t do anything when the earliest is already inside the normal range' do
       chart.time_range = to_time('2021-03-01')..to_time('2021-05-30') # 90 days
       chart.date_range = to_date('2021-03-01')..to_date('2021-05-30') # 90 days
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2021-03-02'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2021-03-02'))
       chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
       aggregate_failures do
         expect(chart.time_range).to eq(to_time('2021-03-01')..to_time('2021-05-30'))
@@ -639,9 +629,7 @@ describe AgingWorkBarChart do
     it 'adjusts time and date' do
       chart.time_range = to_time('2021-03-01')..to_time('2021-05-30') # 90 days
       chart.date_range = to_date('2021-03-01')..to_date('2021-05-30') # 90 days
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2021-02-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2021-02-01'))
       chart.adjust_time_date_ranges_to_start_from_earliest_issue_start([issue1])
       aggregate_failures do
         expect(chart.time_range).to eq(to_time('2021-02-01')..to_time('2021-05-30'))

@@ -209,9 +209,7 @@ describe ProjectConfig do
       project_config.load_all_boards
       project_config.issues << issue1
 
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-01-01'), nil]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2022-01-01'))
 
       project_config.discard_changes_before status_becomes: 'Backlog'
       aggregate_failures do
@@ -231,9 +229,7 @@ describe ProjectConfig do
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-01-05'), nil]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2022-01-05'))
 
       project_config.discard_changes_before status_becomes: 'Backlog'
       expect(project_config.discarded_changes_data).to be_nil
@@ -251,10 +247,9 @@ describe ProjectConfig do
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1 << issue2
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-01-01'), nil],
-        [issue2, to_time('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-01-01'))
+        .stub(issue2, started: to_time('2022-01-01'))
 
       project_config.discard_changes_before status_becomes: 'Backlog'
       expect(project_config.discarded_changes_data.map { |entry| entry[:issue] }).to eq [issue2]
@@ -269,9 +264,7 @@ describe ProjectConfig do
       project_config.load_status_category_mappings
       project_config.load_all_boards
       project_config.issues << issue1
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-01-01'), nil]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2022-01-01'))
 
       project_config.discard_changes_before status_becomes: 'In Progress'
       expect(project_config.discarded_changes_data.first[:cutoff_time]).to eq to_time('2022-01-02')

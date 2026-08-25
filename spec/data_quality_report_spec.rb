@@ -43,10 +43,9 @@ describe DataQualityReport do
   end
 
   it 'ignores entries that finished before the range' do
-    board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, nil, to_time('2021-05-01')],
-      [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
-    ]
+    board.cycletime = MockCycleTimeConfig.new
+      .stub(issue1, stopped: to_time('2021-05-01'))
+      .stub(issue10, started: to_time('2021-08-29'), stopped: to_time('2021-09-06'))
     report.initialize_entries
 
     expect(report.testable_entries).to eq [
@@ -55,10 +54,9 @@ describe DataQualityReport do
   end
 
   it 'ignores entries that started after the range' do
-    board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, to_time('2022-01-01'), nil],
-      [issue10, to_time('2021-08-29'), to_time('2021-09-06')]
-    ]
+    board.cycletime = MockCycleTimeConfig.new
+      .stub(issue1, started: to_time('2022-01-01'))
+      .stub(issue10, started: to_time('2021-08-29'), stopped: to_time('2021-09-06'))
     report.initialize_entries
 
     expect(report.testable_entries).to eq [
@@ -522,9 +520,7 @@ describe DataQualityReport do
     end
 
     it 'flags subtasks that are started when main issue is not' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, to_time('2022-01-03'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, started: to_time('2022-01-03'))
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: nil, issue: issue1
       )
@@ -541,9 +537,7 @@ describe DataQualityReport do
     end
 
     it 'catches subtasks that are not started when main issue is closed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask)
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: to_time('2024-01-01'), issue: issue1
       )
@@ -560,9 +554,7 @@ describe DataQualityReport do
     end
 
     it 'catches subtasks that are closed after the main issue' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, nil, to_time('2024-01-10')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, stopped: to_time('2024-01-10'))
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: to_time('2024-01-01'), issue: issue1
       )
@@ -579,9 +571,7 @@ describe DataQualityReport do
     end
 
     it 'catches subtasks that still are not closed after the main issue was closed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, to_time('2024-01-02'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, started: to_time('2024-01-02'))
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: to_time('2024-01-01'), issue: issue1
       )
@@ -598,9 +588,7 @@ describe DataQualityReport do
     end
 
     it 'ignores subtasks that did close before the main issue was closed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, nil, to_time('2024-01-01')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, stopped: to_time('2024-01-01'))
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: to_time('2024-01-02'), issue: issue1
       )
@@ -612,9 +600,7 @@ describe DataQualityReport do
     end
 
     it 'ignores issues that are not closed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, nil, to_time('2024-01-01')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, stopped: to_time('2024-01-01'))
       entry = DataQualityReport::Entry.new(
         started: nil, stopped: nil, issue: issue1
       )
@@ -626,9 +612,7 @@ describe DataQualityReport do
     end
 
     it 'ignores subtasks that are started when the main issue is also started' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [subtask, to_time('2022-01-03'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(subtask, started: to_time('2022-01-03'))
       entry = DataQualityReport::Entry.new(
         started: to_time('2022-01-04'), stopped: nil, issue: issue1
       )
@@ -866,9 +850,7 @@ describe DataQualityReport do
       }
       link.other_issue = issue2
       issue1.issue_links << link
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue2, nil, to_time('2024-01-01')]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue2, stopped: to_time('2024-01-01'))
 
       report.scan_for_items_blocked_on_closed_tickets entry: entry1
       expect(entry1.problems).to eq [
@@ -924,9 +906,7 @@ describe DataQualityReport do
       }
       link.other_issue = issue2
       issue1.issue_links << link
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue2, nil, to_time('2024-01-01')]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue2, stopped: to_time('2024-01-01'))
 
       report.scan_for_items_blocked_on_closed_tickets entry: entry1
       expect(entry1.problems).to be_empty

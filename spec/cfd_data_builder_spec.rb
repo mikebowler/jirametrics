@@ -164,7 +164,7 @@ describe CfdDataBuilder do
       issue1 = MockIssue.empty(board: board, created: '2021-07-01', key: 'SP-1')
       issue1.add_change(field: 'status', value: 'Review',
         value_id: 10_011, time: '2021-07-02T10:00:00')
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
 
       result = build(issues: [issue1])
 

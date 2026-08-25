@@ -15,9 +15,7 @@ describe DailyWipByBlockedStalledChart do
 
     it 'handles active items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-02-02').to_s
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, to_date('2022-01-05')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: to_date('2022-01-05'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -29,9 +27,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is active' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       issue1.add_change(field: 'Status', value: 'Doing', time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
@@ -46,9 +42,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is blocked and not stalled' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
       issue1.add_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
@@ -64,9 +58,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is stalled and not blocked' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-13')
 
@@ -81,9 +73,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is both stalled and blocked' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: to_time('2022-01-01'))
       issue1.add_change(field: 'Flagged', value: 'Blocked', time: to_time('2022-01-01'))
 
@@ -98,9 +88,8 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is completed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), to_date('2022-01-02')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_date('2022-01-01'), stopped: to_date('2022-01-02'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new
@@ -114,9 +103,7 @@ describe DailyWipByBlockedStalledChart do
     end
 
     it 'is completed, without being started' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, to_date('2022-01-02')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: to_date('2022-01-02'))
       chart.time_range = to_time('2022-01-01')..to_time('2022-01-03')
 
       rules = DailyGroupingRules.new

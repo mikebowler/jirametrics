@@ -14,9 +14,7 @@ describe DailyWipByAgeChart do
 
     it 'handles active items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-01-01').to_s
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, to_date('2022-01-05')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: to_date('2022-01-05'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-03')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -29,9 +27,7 @@ describe DailyWipByAgeChart do
 
     it 'handles completed items with no start' do
       issue1.raw['fields']['created'] = to_time('2022-02-02').to_s
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, to_date('2022-01-05')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: to_date('2022-01-05'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -45,9 +41,8 @@ describe DailyWipByAgeChart do
     end
 
     it 'completed today' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), to_date('2022-01-05')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_date('2022-01-01'), stopped: to_date('2022-01-05'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-05')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -59,9 +54,7 @@ describe DailyWipByAgeChart do
     end
 
     it 'active less than a day' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-01')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -73,9 +66,7 @@ describe DailyWipByAgeChart do
     end
 
     it 'active less than a week' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-07')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -87,9 +78,7 @@ describe DailyWipByAgeChart do
     end
 
     it 'active less than two weeks' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-14')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -102,9 +91,7 @@ false]
     end
 
     it 'active less than four weeks' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-28')
       chart.default_grouping_rules issue: issue1, rules: rules
@@ -117,9 +104,7 @@ false]
     end
 
     it 'active more than four weeks' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_date('2022-01-01'), nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_date('2022-01-01'))
       rules = DailyGroupingRules.new
       rules.current_date = Date.parse('2022-01-29')
       chart.default_grouping_rules issue: issue1, rules: rules

@@ -18,7 +18,7 @@ describe ExpeditedChart do
 
   describe '#run' do
     it 'sets x-axis max to one day past date_range.end' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2022-01-01'), nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2022-01-01'))
       issue1.add_change(field: 'priority', value: 'expedite', time: '2022-01-05')
 
       render_chart = described_class.new(empty_config_block)
@@ -164,7 +164,7 @@ describe ExpeditedChart do
 
     it 'handles one of everything' do
       base_date = Date.parse('2022-01-01')
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: base_date, stopped: base_date + 3)
 
       expedite_data = [
         [base_date + 1, :expedite_start],
@@ -196,7 +196,7 @@ describe ExpeditedChart do
 
     it 'handles an expedite that starts but doesnt end' do
       base_date = Date.parse('2022-01-01')
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: base_date)
 
       expedite_data = [
         [base_date + 1, :expedite_start]
@@ -225,14 +225,14 @@ describe ExpeditedChart do
 
     it 'returns nil when all of the data is before the date range' do
       base_date = Date.parse('2020-01-01') # well before the 2022 date range
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 3]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: base_date, stopped: base_date + 3)
       expedite_data = [[base_date + 1, :expedite_start], [base_date + 2, :expedite_stop]]
       expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).to be_nil
     end
 
     it 'marks the completion point as expedited when the issue finishes while still expedited' do
       base_date = Date.parse('2022-01-01')
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, base_date + 5]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: base_date, stopped: base_date + 5)
       expedite_data = [[base_date + 2, :expedite_start]] # expedite starts and never stops
 
       result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
@@ -242,7 +242,7 @@ describe ExpeditedChart do
 
     it 'does not add a still-ongoing point when the last change is after the date range' do
       base_date = Date.parse('2022-01-01')
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, base_date, nil]] # never stopped
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: base_date) # never stopped
       expedite_data = [[base_date + 4, :expedite_start], [Date.parse('2022-02-15'), :expedite_stop]]
 
       result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
@@ -250,13 +250,13 @@ describe ExpeditedChart do
     end
 
     it 'keeps data whose only point falls exactly on the range start' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       expedite_data = [[Date.parse('2022-01-01'), :expedite_start]] # exactly on date_range.begin
       expect(chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)).not_to be_nil
     end
 
     it 'marks the start point as expedited when the expedite began before the issue started' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, Date.parse('2022-01-10'), nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: Date.parse('2022-01-10'))
       expedite_data = [[Date.parse('2022-01-05'), :expedite_start]] # expedite before the started date
 
       result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
@@ -265,7 +265,7 @@ describe ExpeditedChart do
     end
 
     it 'adds a still-ongoing point when the last change is exactly on the range end' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, Date.parse('2022-01-01'), nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: Date.parse('2022-01-01'))
       expedite_data = [[Date.parse('2022-01-30'), :expedite_start]] # exactly on date_range.end
 
       result = chart.make_expedite_lines_data_set(issue: issue1, expedite_data: expedite_data)
@@ -273,7 +273,7 @@ describe ExpeditedChart do
     end
 
     it 'raises an exception for unexpected expedite data' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1)
 
       expedite_data = [
         [Date.today, :invalid_state]

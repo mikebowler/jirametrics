@@ -58,9 +58,8 @@ describe DailyWipChart do
     end
 
     it 'assembles the data sets, prepending trend lines, and hands them to the renderer' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-01-02T11:00:00'), to_time('2022-01-05T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-01-02T11:00:00'), stopped: to_time('2022-01-05T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -86,9 +85,8 @@ describe DailyWipChart do
     end
 
     it 'returns raise exception when no grouping rules set' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-02T14:00:00'))
       chart.issues = [issue1]
       expect { chart.group_issues_by_active_dates }.to raise_error(
         'If you use this class directly then you must provide grouping_rules'
@@ -96,9 +94,8 @@ describe DailyWipChart do
     end
 
     it 'returns nothing when grouping rules ignore everything' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-02T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.ignore
@@ -107,9 +104,8 @@ describe DailyWipChart do
     end
 
     it 'makes a single group for one issue' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-02T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -122,9 +118,7 @@ describe DailyWipChart do
     end
 
     it 'skips an issue that neither started nor stopped' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -135,9 +129,7 @@ describe DailyWipChart do
     end
 
     it 'includes an issue that stopped but never started' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, to_time('2022-01-03T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, stopped: to_time('2022-01-03T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -152,9 +144,8 @@ describe DailyWipChart do
     end
 
     it 'runs an issue that started but never stopped through to the end of the range' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-04-01T11:00:00'), nil] # started near the end, never stopped
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-04-01T11:00:00'))  # started near the end, never stopped
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -168,10 +159,9 @@ describe DailyWipChart do
     end
 
     it 'keeps processing later issues after skipping one that never started or stopped' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil], # skipped
-        [issue2, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1)
+        .stub(issue2, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-02T14:00:00'))
       chart.issues = [issue1, issue2]
       chart.grouping_rules do |_issue, rules|
         rules.label = 'foo'
@@ -184,9 +174,8 @@ describe DailyWipChart do
     end
 
     it 'passes the issue to the grouping rules' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-02T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-02T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |issue, rules|
         rules.label = issue.key
@@ -199,9 +188,8 @@ describe DailyWipChart do
     end
 
     it 'passes each active date to the grouping rules as current_date' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2022-02-02T11:00:00'), to_time('2022-02-03T14:00:00')]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2022-02-02T11:00:00'), stopped: to_time('2022-02-03T14:00:00'))
       chart.issues = [issue1]
       chart.grouping_rules do |_issue, rules|
         rules.label = rules.current_date.to_s

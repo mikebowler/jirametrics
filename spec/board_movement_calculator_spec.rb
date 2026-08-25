@@ -71,7 +71,7 @@ describe BoardMovementCalculator do
     it 'is false when the issue never started' do
       # Review(col 2) then In Progress(col 1) would be backwards, but with no start time we cannot judge.
       issue = issue_entering([['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03']])
-      board.cycletime = mock_cycletime_config stub_values: [[issue, nil, '2024-10-04']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, stopped: '2024-10-04')
       expect(calculator.moves_backwards?(issue)).to be false
     end
 
@@ -79,14 +79,14 @@ describe BoardMovementCalculator do
       issue = issue_entering(
         [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-03'], ['Done', 10_002, '2024-10-04']]
       )
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-04']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-01', stopped: '2024-10-04')
       expect(calculator.moves_backwards?(issue)).to be false
     end
 
     it 'is true when the issue moves to an earlier column' do
       # Review(col 2) back to In Progress(col 1).
       issue = issue_entering([['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03']])
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-04']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-01', stopped: '2024-10-04')
       expect(calculator.moves_backwards?(issue)).to be true
     end
 
@@ -95,7 +95,7 @@ describe BoardMovementCalculator do
       issue = issue_entering(
         [['Review', 10_011, '2024-10-02'], ['In Progress', 3, '2024-10-03'], ['Review', 10_011, '2024-10-06']]
       )
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-05', '2024-10-07']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-05', stopped: '2024-10-07')
       expect(calculator.moves_backwards?(issue)).to be false
     end
 
@@ -105,7 +105,7 @@ describe BoardMovementCalculator do
       issue = issue_entering(
         [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-04'], ['In Progress', 3, '2024-10-05']]
       )
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-03', '2024-10-06']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-03', stopped: '2024-10-06')
       expect(calculator.moves_backwards?(issue)).to be true
     end
 
@@ -113,7 +113,7 @@ describe BoardMovementCalculator do
       # Review enters right at the start; it still marks the issue's position, so the following move back
       # to In Progress reads as backwards.
       issue = issue_entering([['Review', 10_011, '2024-10-03'], ['In Progress', 3, '2024-10-04']])
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-03', '2024-10-05']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-03', stopped: '2024-10-05')
       expect(calculator.moves_backwards?(issue)).to be true
     end
 
@@ -123,7 +123,7 @@ describe BoardMovementCalculator do
       issue = issue_entering(
         [['Review', 10_011, '2024-10-02'], ['FakeBacklog', 10_012, '2024-10-03'], ['In Progress', 3, '2024-10-04']]
       )
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-05']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-01', stopped: '2024-10-05')
       expect(calculator.moves_backwards?(issue)).to be true
     end
   end
@@ -154,10 +154,11 @@ describe BoardMovementCalculator do
     end
 
     it 'handles the case where the issue completes on column transition' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, issue1.created, issue1.first_time_in_status('Done')],  # should age out normally from review
-        [issue2, issue2.created, issue2.first_time_in_status('Review')] # should complete in Review
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        # should age out normally from review
+        .stub(issue1, started: issue1.created, stopped: issue1.first_time_in_status('Done'))
+        # should complete in Review
+        .stub(issue2, started: issue2.created, stopped: issue2.first_time_in_status('Review'))
       calculator = described_class.new board: board, issues: [issue1, issue2], today: today
       # puts "column 1"
       # actual = calculator.ages_of_issues_when_leaving_column column_index: 1, today: today
@@ -170,7 +171,7 @@ describe BoardMovementCalculator do
 
     it 'skips a done issue when we cannot tell it started' do
       issue = issue_entering([['In Progress', 3, '2024-10-05'], ['Done', 10_002, '2024-10-06']])
-      board.cycletime = mock_cycletime_config stub_values: [[issue, nil, '2024-10-06']] # done, never started
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, stopped: '2024-10-06') # done, never started
       calculator = described_class.new board: board, issues: [issue], today: today
       expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq []
     end
@@ -180,14 +181,15 @@ describe BoardMovementCalculator do
         [['In Progress', 3, '2024-10-02'], ['Review', 10_011, '2024-10-03'], ['Done', 10_002, '2024-10-04']]
       )
       # Started (per the cycletime) only after it had already reached Review.
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-05', '2024-10-06']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-10-05', stopped: '2024-10-06')
       calculator = described_class.new board: board, issues: [issue], today: today
       expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq [0]
     end
 
     it 'skips an issue that was already done by the time it reached this column' do
       issue = issue_entering([['In Progress', 3, '2024-10-10'], ['Done', 10_002, '2024-10-11']])
-      board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-10-01', '2024-10-05']] # done before 10-10
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: '2024-10-01', stopped: '2024-10-05') # done before 10-10
       calculator = described_class.new board: board, issues: [issue], today: today
       expect(calculator.ages_of_issues_when_leaving_column(column_index: 1, today: today)).to eq []
     end

@@ -23,10 +23,9 @@ describe HierarchyTable do
     issue1 = MockIssue.empty(key: 'SP-1', board: board)
     issue2 = MockIssue.empty(key: 'SP-2', board: board)
 
-    board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, nil, nil],
-      [issue2, nil, nil]
-    ]
+    board.cycletime = MockCycleTimeConfig.new
+      .stub(issue1)
+      .stub(issue2)
 
     issue1.parent = issue2
     issue2.parent = issue1

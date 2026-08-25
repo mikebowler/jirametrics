@@ -21,7 +21,9 @@ describe McpServer do
   end
 
   def wire_cycletime(*tuples)
-    board.cycletime = mock_cycletime_config stub_values: tuples
+    board.cycletime = tuples.inject(MockCycleTimeConfig.new) do |config, (issue, started, stopped)|
+      config.stub(issue, started: started, stopped: stopped)
+    end
   end
 
   # Each project shares the same today/end_time here - enough for these characterizations.

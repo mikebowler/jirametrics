@@ -1620,32 +1620,29 @@ describe Issue do
     it 'delegates to FlowEfficiencyCalculator' do
       issue = MockIssue.empty created: '2000-01-01', board: board
       issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-01'))
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [seconds_per_day, seconds_per_day]
     end
 
     it 'returns zeros when the issue never started' do
       issue = MockIssue.empty created: '2000-01-01', board: board
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue)
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [0.0, 0.0]
     end
 
     it 'returns zeros when the issue started after the window ends' do
       issue = MockIssue.empty created: '2000-01-01', board: board
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-10'), nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-10'))
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [0.0, 0.0]
     end
 
     it 'caps the window at the issue stop time, ignoring anything after it' do
       issue = MockIssue.empty created: '2000-01-01', board: board
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), to_time('2000-01-03')]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: to_time('2000-01-01'), stopped: to_time('2000-01-03'))
       # Stopped on the 3rd but asked about the 5th: only the two active days up to the stop count.
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [2 * seconds_per_day, 2 * seconds_per_day]
@@ -1653,9 +1650,8 @@ describe Issue do
 
     it 'leaves the window uncapped when the issue stopped after it ends' do
       issue = MockIssue.empty created: '2000-01-01', board: board
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, to_time('2000-01-01'), to_time('2000-01-10')]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: to_time('2000-01-01'), stopped: to_time('2000-01-10'))
       # Stopped on the 10th but asked about the 5th: the window stays at four days, not stretched to the stop.
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [4 * seconds_per_day, 4 * seconds_per_day]
@@ -1664,7 +1660,7 @@ describe Issue do
     it 'defaults settings to the board project config settings when none are passed' do
       issue = MockIssue.empty created: '2000-01-01', board: board
       issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-01'), nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-01'))
       allow(board.project_config).to receive(:settings).and_return(settings)
       # The defaulted settings must classify 'Blocked' as blocked, so across the two-day window only the
       # first (pre-Blocked) day counts as active. Nil/wrong settings would miss it and count both days.
@@ -1811,14 +1807,15 @@ describe Issue do
     let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'returns [nil, nil] when issue is not done' do
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue)
       expect(issue.status_resolution_at_done).to eq [nil, nil]
     end
 
     it 'returns status and nil resolution when no resolution change exists' do
       issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       issue.add_change(field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      issue.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: to_time('2021-10-02'), stopped: to_time('2021-10-03'))
       status, resolution = issue.status_resolution_at_done
       aggregate_failures do
         expect(status.name).to eq 'Done'
@@ -1830,7 +1827,8 @@ describe Issue do
       issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
       issue.add_change(field: 'status', value: 'Done', value_id: 9, time: '2021-10-03')
       issue.add_change(field: 'resolution', value: 'Fixed', time: '2021-10-03')
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      issue.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: to_time('2021-10-02'), stopped: to_time('2021-10-03'))
       status, resolution = issue.status_resolution_at_done
       aggregate_failures do
         expect(status.name).to eq 'Done'
@@ -1844,7 +1842,8 @@ describe Issue do
       issue.add_change(field: 'resolution', value: 'Fixed', time: '2021-10-03')
       issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-04')
       issue.add_change(field: 'resolution', value: nil, time: '2021-10-04')
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2021-10-02'), to_time('2021-10-03')]]
+      issue.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: to_time('2021-10-02'), stopped: to_time('2021-10-03'))
       status, resolution = issue.status_resolution_at_done
       aggregate_failures do
         expect(status.name).to eq 'Done'
@@ -1891,12 +1890,12 @@ describe Issue do
     end
 
     it 'delegates to cycletime when set and issue is stopped' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', '2021-12-01']]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-01', stopped: '2021-12-01')
       expect(issue1).to be_done
     end
 
     it 'delegates to cycletime when set and issue is not stopped' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-01')
       expect(issue1).not_to be_done
     end
   end

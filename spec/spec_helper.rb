@@ -173,10 +173,6 @@ module SpecHelpers
     end
   end
 
-  def mock_cycletime_config stub_values: []
-    MockCycleTimeConfig.new stub_values: stub_values
-  end
-
   # return a cycletime config that always uses creation and last_resolution
   def default_cycletime_config
     today = Date.parse('2021-12-17')

@@ -29,18 +29,14 @@ describe FlowEfficiencyCalculator do
 
   it 'returns zeros when issue never started' do
     issue = MockIssue.empty created: '2000-01-01', board: sample_board
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, nil, nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue)
     expect(flow_efficiency(issue, end_time: to_time('2000-01-02'), settings: settings))
       .to eq [0, 0]
   end
 
   it 'is created in active status and never changed' do
     issue = MockIssue.empty created: '2000-01-01', board: sample_board
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, issue.created, nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: issue.created)
     expect(flow_efficiency(issue, end_time: to_time('2000-01-02'), settings: settings))
       .to eq [seconds_per_day, seconds_per_day]
   end
@@ -48,9 +44,7 @@ describe FlowEfficiencyCalculator do
   it 'becomes blocked before issue starts and stays that way' do
     issue = MockIssue.empty created: '2000-01-01', board: board
     issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-02'), nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-02'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-03'), settings: settings))
       .to eq [seconds_per_day, seconds_per_day]
   end
@@ -58,9 +52,7 @@ describe FlowEfficiencyCalculator do
   it 'becomes blocked but issue does not start before end_time' do
     issue = MockIssue.empty created: '2000-01-01', board: board
     issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-01T00:01:00')
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-04'), nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-04'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-03'), settings: settings))
       .to eq [0.0, 0.0]
   end
@@ -68,9 +60,8 @@ describe FlowEfficiencyCalculator do
   it 'becomes blocked after done' do
     issue = MockIssue.empty created: '2000-01-01', board: board
     issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-03')
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-01'), to_time('2000-01-02')]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new
+      .stub(issue, started: to_time('2000-01-01'), stopped: to_time('2000-01-02'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-04'), settings: settings))
       .to eq [seconds_per_day, seconds_per_day]
   end
@@ -79,9 +70,7 @@ describe FlowEfficiencyCalculator do
     issue = MockIssue.empty created: '2000-01-01', board: board
     issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
     issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-03')
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-04'), nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-04'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-05'), settings: settings))
       .to eq [seconds_per_day, seconds_per_day]
   end
@@ -89,9 +78,7 @@ describe FlowEfficiencyCalculator do
   it 'was created in blocked status' do
     issue = MockIssue.empty created: '2000-01-01', board: board,
       creation_status: board.possible_statuses.find_all_by_name('Blocked').first
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-01'), nil]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: to_time('2000-01-01'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-02'), settings: settings))
       .to eq [0.0, seconds_per_day]
   end
@@ -99,9 +86,8 @@ describe FlowEfficiencyCalculator do
   it 'was created in done status' do
     issue = MockIssue.empty created: '2000-01-01', board: board,
       creation_status: board.possible_statuses.find_all_by_name('Done').first
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-01'), to_time('2000-01-01')]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new
+      .stub(issue, started: to_time('2000-01-01'), stopped: to_time('2000-01-01'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-02'), settings: settings))
       .to eq [0.0, 0.0]
   end
@@ -119,9 +105,8 @@ describe FlowEfficiencyCalculator do
     issue.add_change(field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-09')
     issue.add_change(field: 'status', value: 'In Progress', value_id: 5, time: '2000-01-10')
 
-    issue.board.cycletime = mock_cycletime_config stub_values: [
-      [issue, to_time('2000-01-01'), to_time('2000-01-08')]
-    ]
+    issue.board.cycletime = MockCycleTimeConfig.new
+      .stub(issue, started: to_time('2000-01-01'), stopped: to_time('2000-01-08'))
     expect(flow_efficiency(issue, end_time: to_time('2000-01-07'), settings: settings))
       .to eq [seconds_per_day * 3, seconds_per_day * 6]
   end

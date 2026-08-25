@@ -581,18 +581,14 @@ describe DependencyChart do
   describe '#default_issue_rules' do
     it 'handles done' do
       rules = DependencyChart::IssueRules.new
-      issue13.board.cycletime = mock_cycletime_config stub_values: [
-        [issue13, '2024-01-01', '2024-01-02']
-      ]
+      issue13.board.cycletime = MockCycleTimeConfig.new.stub(issue13, started: '2024-01-01', stopped: '2024-01-02')
       chart.default_issue_rules.call issue13, rules
       expect(rules.label).to eq '<<S>SP-13 </S>  [Story]<BR/>Done<BR/>Report of people checked in at an event>'
     end
 
     it 'Handles in progress' do
       rules = DependencyChart::IssueRules.new
-      issue13.board.cycletime = mock_cycletime_config stub_values: [
-        [issue13, '2024-01-01', nil]
-      ]
+      issue13.board.cycletime = MockCycleTimeConfig.new.stub(issue13, started: '2024-01-01')
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
       chart.default_issue_rules.call issue13, rules
       expect(rules.label).to eq '<SP-13 [Story]<BR/>Age: 5 days<BR/>Report of people checked in at an event>'
@@ -600,9 +596,7 @@ describe DependencyChart do
 
     it 'handles in not started' do
       rules = DependencyChart::IssueRules.new
-      issue13.board.cycletime = mock_cycletime_config stub_values: [
-        [issue13, nil, nil]
-      ]
+      issue13.board.cycletime = MockCycleTimeConfig.new.stub(issue13)
       chart.default_issue_rules.call issue13, rules
       expect(rules.label).to eq '<SP-13 [Story]<BR/>Not started<BR/>Report of people checked in at an event>'
     end
@@ -610,9 +604,7 @@ describe DependencyChart do
     it 'handles artificial issue' do
       rules = DependencyChart::IssueRules.new
       issue13.raw['exporter'] = nil
-      issue13.board.cycletime = mock_cycletime_config stub_values: [
-        [issue13, nil, nil]
-      ]
+      issue13.board.cycletime = MockCycleTimeConfig.new.stub(issue13)
       chart.default_issue_rules.call issue13, rules
       expect(rules.label).to eq(
         '<<S>SP-13 </S>  [Story]<BR/>(unknown state)<BR/>Report of people checked in at an event>'

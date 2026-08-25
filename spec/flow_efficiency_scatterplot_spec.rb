@@ -26,7 +26,7 @@ describe FlowEfficiencyScatterplot do
     # removed stays invisible until a report is generated. Running the chart for real catches it.
     it 'renders the description' do
       issue = MockIssue.empty created: '2020-01-01', board: sample_board
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2020-01-02', '2020-01-20']]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2020-01-02', stopped: '2020-01-20')
       settings['stalled_threshold_days'] = 50
 
       chart.file_system.when_loading(
@@ -48,9 +48,7 @@ describe FlowEfficiencyScatterplot do
 
     it 'handles one issue' do
       issue = MockIssue.empty created: '2020-01-01', board: sample_board, key: 'SP-1'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, issue.created, nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: issue.created)
       settings['stalled_threshold_days'] = 50 # effectively turn off the stalled check.
 
       expect(chart.create_dataset issues: [issue], label: 'label', color: 'color').to eq({
@@ -71,9 +69,7 @@ describe FlowEfficiencyScatterplot do
     it 'handles case where total time is zero' do
       # Shouldn't be possible with a well configured board but we've seen it in production.
       issue = MockIssue.empty board: sample_board, key: 'SP-1'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, issue.created, issue.created]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: issue.created, stopped: issue.created)
       expect(chart.create_dataset issues: [issue], label: 'label', color: 'color').to eq({
         backgroundColor: 'color',
         data: [

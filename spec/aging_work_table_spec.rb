@@ -92,7 +92,7 @@ describe AgingWorkTable do
 
   describe '#blocked_text' do
     it 'handles flagged' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2020-10-02', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2020-10-02')
       issue1.add_change(field: 'Flagged', value: 'Blocked', time: '2020-10-03')
       expect(table.blocked_text issue1).to eq(
         "<div class='color_block' style='background: var(--blocked-color);' title=\"Blocked by flag\"></div>"
@@ -100,7 +100,7 @@ describe AgingWorkTable do
     end
 
     it 'handles blocked status' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2022-10-04')
       review_status = issue1.board.possible_statuses.find_by_id 10_011
       expect(review_status.name).to eq 'Review' # Sanity check to ensure test data is correct.
 
@@ -117,7 +117,7 @@ describe AgingWorkTable do
     end
 
     it 'handles stalled' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2022-10-04')
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-10-15')
 
@@ -128,7 +128,7 @@ describe AgingWorkTable do
     end
 
     it 'handles dead' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2022-10-04', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2022-10-04')
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2022-10-04')
       table.time_range = table.time_range.begin..to_time('2022-12-01')
 
@@ -140,13 +140,13 @@ describe AgingWorkTable do
 
     it 'handles started but neither blocked nor stalled' do
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: (today - 1).to_time)
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-01', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-01')
       expect(table.blocked_text issue1).to be_nil
     end
 
     it 'handles not started and also neither blocked nor stalled' do
       issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: (today - 1).to_time)
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       expect(table.blocked_text issue1).to be_nil
     end
   end
@@ -158,22 +158,21 @@ describe AgingWorkTable do
     end
 
     it 'handles a single aging issue' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-02')
       table.issues = [issue1]
       expect(table.select_aging_issues).to eq [issue1]
     end
 
     it 'handles a mix of aging and completed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2021-01-02', nil],
-        [issue2, '2021-01-02', '2021-10-04']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2021-01-02')
+        .stub(issue2, started: '2021-01-02', stopped: '2021-10-04')
       table.issues = [issue1, issue2]
       expect(table.select_aging_issues).to eq [issue1]
     end
 
     it 'ignores issues younger than the cutoff' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-02')
       table.age_cutoff 5
       table.today = to_date '2021-01-03'
       table.issues = [issue1]
@@ -184,13 +183,13 @@ describe AgingWorkTable do
     end
 
     it 'ignores an issue that has not started' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       table.issues = [issue1]
       expect(table.select_aging_issues).to be_empty
     end
 
     it 'includes a blocked issue even when it is younger than the cutoff' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-30', nil]] # age 2
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-30') # age 2
       table.age_cutoff 5
       allow(issue1).to receive(:blocked_on_date?).and_return(true)
       table.issues = [issue1]
@@ -198,7 +197,7 @@ describe AgingWorkTable do
     end
 
     it 'includes an expedited issue even when it is younger than the cutoff' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-30', nil]] # age 2
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-30') # age 2
       table.age_cutoff 5
       allow(issue1).to receive(:expedited?).and_return(true)
       table.issues = [issue1]
@@ -206,26 +205,26 @@ describe AgingWorkTable do
     end
 
     it 'excludes an issue exactly at the cutoff but includes one past it' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2021-01-27', nil], # age 5, equal to the cutoff
-        [issue2, '2021-01-26', nil]  # age 6, past the cutoff
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2021-01-27')  # age 5, equal to the cutoff
+        .stub(issue2, started: '2021-01-26')  # age 6, past the cutoff
       table.age_cutoff 5
       table.issues = [issue1, issue2]
       expect(table.select_aging_issues).to eq [issue2]
     end
 
     it 'sorts the aging issues oldest first' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2021-01-20', nil], # age 12
-        [issue2, '2021-01-10', nil]  # age 22, older
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2021-01-20')  # age 12
+        .stub(issue2, started: '2021-01-10')  # age 22, older
       table.issues = [issue1, issue2]
       expect(table.select_aging_issues).to eq [issue2, issue1]
     end
 
     it 'flags scrum when at least one aging issue is on a scrum board' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil], [issue2, '2021-01-02', nil]]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2021-01-02')
+        .stub(issue2, started: '2021-01-02')
       allow(board).to receive(:scrum?).and_return(true, false) # first issue scrum, second not
       table.issues = [issue1, issue2]
       table.select_aging_issues
@@ -233,7 +232,7 @@ describe AgingWorkTable do
     end
 
     it 'does not flag scrum when no aging issue is on a scrum board' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, '2021-01-02', nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-01-02')
       allow(board).to receive(:scrum?).and_return(false)
       table.issues = [issue1]
       table.select_aging_issues
@@ -336,11 +335,10 @@ describe AgingWorkTable do
     # issue3.add_change(field: 'Priority', value: 'Highest', time: '2024-01-02')
     issue3.raw['fields']['priority'] = { 'name' => 'Highest' }
 
-    board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, nil, nil],
-      [issue2, nil, nil],
-      [issue3, nil, nil]
-    ]
+    board.cycletime = MockCycleTimeConfig.new
+      .stub(issue1)
+      .stub(issue2)
+      .stub(issue3)
     board.project_config.settings['expedited_priority_names'] = ['Highest']
     table.issues = [issue1, issue2, issue3]
 

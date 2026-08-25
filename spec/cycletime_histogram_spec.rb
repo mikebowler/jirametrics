@@ -73,10 +73,9 @@ describe CycletimeHistogram do
     end
 
     let(:rendered) do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2021-10-10', '2021-10-08'],
-        [issue2, '2021-10-01', '2021-10-04']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2021-10-10', stopped: '2021-10-08')
+        .stub(issue2, started: '2021-10-01', stopped: '2021-10-04')
       render_with [issue1, issue2]
     end
 
@@ -112,9 +111,7 @@ describe CycletimeHistogram do
     end
 
     it 'drops the footnote when every group has data' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue2, '2021-10-01', '2021-10-04']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue2, started: '2021-10-01', stopped: '2021-10-04')
       expect(render_with([issue2])).not_to include 'no usable data for that group'
     end
   end
@@ -125,11 +122,10 @@ describe CycletimeHistogram do
     end
 
     it 'handles a mix of issues' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2022-01-01', '2022-01-04'],
-        [issue2, '2022-01-01', '2022-01-04'],
-        [issue10, '2022-01-01', '2022-01-01T01:00:00']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2022-01-01', stopped: '2022-01-04')
+        .stub(issue2, started: '2022-01-01', stopped: '2022-01-04')
+        .stub(issue10, started: '2022-01-01', stopped: '2022-01-01T01:00:00')
       expect(chart.histogram_data_for items: [issue1, issue2, issue10]).to eq({ 4 => [issue1, issue2], 1 => [issue10] })
     end
   end

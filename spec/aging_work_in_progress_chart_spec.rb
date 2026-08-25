@@ -176,9 +176,7 @@ describe AgingWorkInProgressChart do
           'key' => 'new'
         }
       }
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2021-10-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2021-10-02')
       chart.issues << issue
       chart.run
 
@@ -224,10 +222,9 @@ describe AgingWorkInProgressChart do
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
       }
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed, '2021-06-15', '2021-06-26'],
-        [active,    '2021-06-20', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed, started: '2021-06-15', stopped: '2021-06-26')
+        .stub(active, started: '2021-06-20')
 
       chart = build_chart board: board, issues: [completed, active]
       chart.run
@@ -255,10 +252,9 @@ describe AgingWorkInProgressChart do
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
       }
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed, '2021-06-15', '2021-06-27'],
-        [active,    '2021-06-20', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed, started: '2021-06-15', stopped: '2021-06-27')
+        .stub(active, started: '2021-06-20')
 
       chart = build_chart board: board, issues: [completed, active]
       chart.run
@@ -282,10 +278,9 @@ describe AgingWorkInProgressChart do
       active_issue = create_issue_from_aging_data(
         board: board, ages_by_column: [5], today: today.to_s, key: 'SP-201'
       )
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed_issue, '2021-06-15', '2021-06-26'],
-        [active_issue, '2021-06-23', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed_issue, started: '2021-06-15', stopped: '2021-06-26')
+        .stub(active_issue, started: '2021-06-23')
 
       # show_all_columns defaults to false, so leading/trailing zero trimming is active
       chart = build_chart board: board, issues: [completed_issue, active_issue]

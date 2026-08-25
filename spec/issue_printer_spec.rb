@@ -46,7 +46,7 @@ describe IssuePrinter do
 
   describe '#cycletime_warning' do
     it 'is empty when the board has a cycletime' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       expect(printer.cycletime_warning).to eq ''
     end
 
@@ -64,9 +64,8 @@ describe IssuePrinter do
     end
 
     it 'marks both the start and finish when both are known' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2021-01-01'), to_time('2021-01-05')]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: to_time('2021-01-01'), stopped: to_time('2021-01-05'))
       expect(printer.start_stop_entries).to eq [
         [to_time('2021-01-01'), nil, 'vvvv Started here vvvv', true],
         [to_time('2021-01-05'), nil, '^^^^ Finished here ^^^^', true]
@@ -74,16 +73,14 @@ describe IssuePrinter do
     end
 
     it 'omits the finish marker when there is no stop time' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, to_time('2021-01-01'), nil]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2021-01-01'))
       expect(printer.start_stop_entries).to eq [
         [to_time('2021-01-01'), nil, 'vvvv Started here vvvv', true]
       ]
     end
 
     it 'is empty when the cycletime has neither a start nor a stop time' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       expect(printer.start_stop_entries).to eq []
     end
   end
@@ -130,7 +127,7 @@ describe IssuePrinter do
 
   describe '#build_history' do
     it 'combines start/stop, discarded, and change entries in that order' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [[issue1, to_time('2021-01-01'), nil]]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: to_time('2021-01-01'))
       issue1.changes.clear
       issue1.add_change(field: 'priority', value: 'High', time: '2021-01-05', artificial: true)
       allow(issue1).to receive(:discarded_change_times).and_return([to_time('2021-01-03')])
@@ -299,9 +296,7 @@ describe IssuePrinter do
     let(:issue1) { load_issue 'SP-1', board: board }
 
     it 'prints assignee and issue links' do
-      issue1.board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2021-06-18T18:44:21', nil]
-      ]
+      issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-06-18T18:44:21')
       fields = issue1.raw['fields']
       fields['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
       fields['issuelinks'] = [

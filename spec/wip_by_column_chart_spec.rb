@@ -572,9 +572,7 @@ describe WipByColumnChart do
       issue.add_change field: 'status',
         value: 'Done', value_id: 10_002,
         time: to_time('2021-05-31T12:00:00')
-      board.cycletime = mock_cycletime_config stub_values: [
-        ['SP-1', '2021-05-31T12:00:00', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub('SP-1', started: '2021-05-31T12:00:00')
 
       chart.issues = [issue]
       chart.show_recommendations
@@ -638,9 +636,8 @@ describe WipByColumnChart do
   context 'with started and stopped times from the cycletime config' do
     it 'excludes an issue that has not yet started at the window boundary' do
       issue = issue_in_ready key: 'SP-1'
-      board.cycletime = mock_cycletime_config stub_values: [
-        ['SP-1', '2021-06-01T00:08:20', nil] # starts 500s into the window
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub('SP-1', started: '2021-06-01T00:08:20')  # starts 500s into the window
 
       chart.issues = [issue]
       stats = chart.column_stats
@@ -651,9 +648,8 @@ describe WipByColumnChart do
 
     it 'removes an issue from WIP when it stops within the window' do
       issue = issue_in_ready key: 'SP-1'
-      board.cycletime = mock_cycletime_config stub_values: [
-        ['SP-1', '2021-05-31T12:00:00', '2021-06-01T00:08:20'] # stops 500s into the window
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub('SP-1', started: '2021-05-31T12:00:00', stopped: '2021-06-01T00:08:20')  # stops 500s into the window
 
       chart.issues = [issue]
       stats = chart.column_stats
@@ -664,9 +660,8 @@ describe WipByColumnChart do
 
     it 'excludes an issue that was already done before the window opened' do
       issue = issue_in_ready key: 'SP-1'
-      board.cycletime = mock_cycletime_config stub_values: [
-        ['SP-1', '2021-05-31T10:00:00', '2021-05-31T23:00:00'] # done before window
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub('SP-1', started: '2021-05-31T10:00:00', stopped: '2021-05-31T23:00:00')  # done before window
 
       chart.issues = [issue]
       stats = chart.column_stats

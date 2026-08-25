@@ -27,7 +27,7 @@ describe DailyView do
     # while leaving every other test green, so the count is asserted here on purpose.
     it 'shows the header and an explanation when nothing is in progress' do
       view.file_system = MockFileSystem.new
-      board.cycletime = mock_cycletime_config stub_values: []
+      board.cycletime = MockCycleTimeConfig.new
       view.issues = []
 
       expect(view.run).to eq(
@@ -37,10 +37,9 @@ describe DailyView do
 
     it 'renders the description, including the count of aging issues' do
       view.file_system = MockFileSystem.new
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', nil],
-        [issue2, '2024-01-03', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-02')
+        .stub(issue2, started: '2024-01-03')
       view.issues = [issue1, issue2]
 
       output = view.run
@@ -51,11 +50,10 @@ describe DailyView do
   describe '#select_aging_issues' do
     it 'selects only aging issues' do
       view.issues = [issue1, issue2, issue10]
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, '2024-01-01'],
-        [issue2, nil, nil],
-        [issue10, '2024-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, stopped: '2024-01-01')
+        .stub(issue2)
+        .stub(issue10, started: '2024-01-01')
       expect(view.select_aging_issues).to eq [issue10]
     end
   end
@@ -113,9 +111,7 @@ describe DailyView do
   describe '#make_title_line' do
     it 'is not expedited' do
       issue = load_issue('SP-1', board: board)
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-02')
 
       expect(view.make_title_line issue: issue, done: false).to eq(
         "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
@@ -130,9 +126,7 @@ describe DailyView do
         'name' => 'Highest',
         'id' => '1'
       }
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-02')
       expect(view.make_title_line issue: issue, done: false).to eq(
         "#{view.color_block('--expedited-color', title: 'Expedited')}" \
         "<img src='#{issue.type_icon_url}' title='Story' class='icon' /> " \
@@ -170,9 +164,7 @@ describe DailyView do
 
   describe '#make_stats_lines' do
     it 'returns happy path' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2024-01-02')
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
       expect(view.make_stats_lines issue: issue1, done: false).to eq [
@@ -186,9 +178,7 @@ describe DailyView do
     end
 
     it 'returns not-started when appropriate' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
       expect(view.make_stats_lines issue: issue1, done: false).to eq [
@@ -202,9 +192,7 @@ describe DailyView do
     end
 
     it 'has labels' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['labels'] = ['foo']
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
@@ -220,9 +208,7 @@ describe DailyView do
     end
 
     it 'has an assignee' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['assignee'] = {
         'displayName' => 'Fred Flintstone',
         'avatarUrls' => {
@@ -243,9 +229,7 @@ describe DailyView do
     end
 
     it 'is in a status that is not on the board' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2024-01-01')
       status = board.possible_statuses.find_all_by_name('Backlog').first
       issue1.raw['fields']['status'] = {
         'name' => status.name,
@@ -268,9 +252,7 @@ describe DailyView do
     end
 
     it 'has a due date in the past' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['duedate'] = '2024-01-10'
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
@@ -286,9 +268,7 @@ describe DailyView do
     end
 
     it 'has a due date today' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['duedate'] = '2024-01-20'
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
@@ -304,9 +284,7 @@ describe DailyView do
     end
 
     it 'has a due date in the future' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, nil, nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['duedate'] = '2024-01-25'
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
@@ -322,9 +300,7 @@ describe DailyView do
     end
 
     it 'shows cycletime instead of age when the issue is done' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', '2024-01-05']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2024-01-02', stopped: '2024-01-05')
 
       status = board.possible_statuses.find_all_by_name('In Progress').first
       expect(view.make_stats_lines issue: issue1, done: true).to eq [
@@ -338,7 +314,7 @@ describe DailyView do
     end
 
     it 'joins multiple labels with a space' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['labels'] = %w[foo bar]
 
       line = view.make_stats_lines(issue: issue1, done: false).first
@@ -346,7 +322,7 @@ describe DailyView do
     end
 
     it 'lists the component names' do
-      board.cycletime = mock_cycletime_config stub_values: [[issue1, nil, nil]]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue1)
       issue1.raw['fields']['components'] = [{ 'name' => 'Backend' }, { 'name' => 'Frontend' }]
 
       line = view.make_stats_lines(issue: issue1, done: false).first
@@ -357,13 +333,13 @@ describe DailyView do
   describe '#make_blocked_stalled_lines' do
     it 'returns nothing when the issue has not started' do
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue)
       expect(view.make_blocked_stalled_lines(issue)).to eq []
     end
 
     it 'returns nothing when the issue is active on the day' do
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       # A status change on the final day keeps it active (not stalled) and it is not blocked.
       issue.add_change field: 'status', value: 'Review', time: '2024-01-20', value_id: 10_011
       expect(view.make_blocked_stalled_lines(issue)).to eq []
@@ -371,7 +347,7 @@ describe DailyView do
 
     it 'renders blocked by flag' do
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       issue.add_change field: 'Flagged', value: 'Blocked', time: '2024-01-03'
 
       expect(view.make_blocked_stalled_lines(issue)).to eq [
@@ -381,9 +357,7 @@ describe DailyView do
 
     it 'renders stalled by inactivity' do
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       expect(view.make_blocked_stalled_lines issue).to eq [
         [
           "#{view.color_block '--stalled-color'} Stalled by inactivity: 19 days"
@@ -394,9 +368,7 @@ describe DailyView do
     it 'renders stalled by status' do
       view.settings['stalled_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       issue.add_change field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
@@ -409,9 +381,7 @@ describe DailyView do
     it 'renders blocked by status' do
       view.settings['blocked_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       issue.add_change field: 'status', value: 'Review', time: '2024-01-03', value_id: 10_011
 
       expect(view.make_blocked_stalled_lines issue).to eq [
@@ -424,9 +394,7 @@ describe DailyView do
     it 'renders blocked by issue' do
       view.settings['blocked_link_text'] = ['is blocked by']
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       view.issues = IssueCollection[issue, issue2]
       issue.add_change(field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011)
 
@@ -445,7 +413,7 @@ describe DailyView do
     it 'finds a blocking issue even when it has been hidden from the board' do
       view.settings['blocked_link_text'] = ['is blocked by']
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       collection = IssueCollection[issue, issue2]
       collection.reject! { |candidate| candidate.key == 'SP-2' } # move SP-2 into the hidden set
       view.issues = collection
@@ -459,9 +427,7 @@ describe DailyView do
     it 'renders blocked by issue when blocker cannot be found' do
       view.settings['blocked_link_text'] = ['is blocked by']
       issue = MockIssue.empty board: sample_board, created: '2024-01-01'
-      issue.board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2024-01-01', nil]
-      ]
+      issue.board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2024-01-01')
       view.issues = IssueCollection[issue]
       issue.add_change(field: 'Link', value: 'This issue is blocked by SP-2', time: '2024-01-03', value_id: 10_011)
 
@@ -565,10 +531,9 @@ describe DailyView do
     end
 
     it 'makes child lines' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-01', nil],
-        [issue2, '2024-01-01', '2024-01-02']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-01')
+        .stub(issue2, started: '2024-01-01', stopped: '2024-01-02')
       parent = MockIssue.empty board: board
       parent.subtasks << issue1
       parent.subtasks << issue2

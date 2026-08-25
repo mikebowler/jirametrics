@@ -149,10 +149,9 @@ describe EstimateAccuracyChart do
     end
 
     def complete_two
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed_one, '2024-01-02', '2024-01-04'],
-        [completed_two, '2024-01-02', '2024-01-08']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed_one, started: '2024-01-02', stopped: '2024-01-04')
+        .stub(completed_two, started: '2024-01-02', stopped: '2024-01-08')
       chart.issues = [completed_one, completed_two]
     end
 
@@ -174,11 +173,10 @@ describe EstimateAccuracyChart do
     end
 
     it 'explains the arrows when something is still in progress' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed_one, '2024-01-02', '2024-01-04'],
-        [completed_two, '2024-01-02', '2024-01-08'],
-        [aging, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed_one, started: '2024-01-02', stopped: '2024-01-04')
+        .stub(completed_two, started: '2024-01-02', stopped: '2024-01-08')
+        .stub(aging, started: '2024-01-02')
       chart.issues = [completed_one, completed_two, aging]
 
       expect(rendered(chart)).to include 'aging arrows'
@@ -188,10 +186,9 @@ describe EstimateAccuracyChart do
     # there is no defined gap between M and L, and summing them raised a TypeError that took the
     # whole export down.
     it 'explains itself rather than crashing when the estimates are categories' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed_one, '2024-01-02', '2024-01-04'],
-        [completed_two, '2024-01-02', '2024-01-08']
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed_one, started: '2024-01-02', stopped: '2024-01-04')
+        .stub(completed_two, started: '2024-01-02', stopped: '2024-01-08')
       chart.issues = [completed_one, completed_two]
       sizes = { completed_one => 'M', completed_two => 'L' }
       chart.y_axis(label: 'Size', sort_order: %w[XS S M L XL]) { |issue, _start| sizes[issue] }
@@ -209,7 +206,7 @@ describe EstimateAccuracyChart do
     end
 
     it 'omits the correlation sentence when there is only one completed item' do
-      board.cycletime = mock_cycletime_config stub_values: [[completed_one, '2024-01-02', '2024-01-04']]
+      board.cycletime = MockCycleTimeConfig.new.stub(completed_one, started: '2024-01-02', stopped: '2024-01-04')
       chart.issues = [completed_one]
 
       expect(rendered(chart)).not_to include 'correlation coefficient'
@@ -228,9 +225,10 @@ describe EstimateAccuracyChart do
         issue.add_change(field: 'Story Points', value: 5, time: '2024-01-01T02:00:00')
       end
 
-      board.cycletime = mock_cycletime_config stub_values:
-        four_issues.collect { |issue| [issue, '2024-01-02', '2024-01-02T01:00:00'] } +
-        [[one_issue, '2024-01-02', '2024-01-03T01:00:00']]
+      config = MockCycleTimeConfig.new
+      four_issues.each { |issue| config.stub(issue, started: '2024-01-02', stopped: '2024-01-02T01:00:00') }
+      config.stub(one_issue, started: '2024-01-02', stopped: '2024-01-03T01:00:00')
+      board.cycletime = config
 
       chart.issues = four_issues + [one_issue]
       radiuses = chart.scan_issues.first['data'].collect { |datum| datum['r'] }
@@ -249,10 +247,9 @@ describe EstimateAccuracyChart do
         issue.add_change(field: 'Story Points', value: 5, time: '2024-01-01')
       end
 
-      board.cycletime = mock_cycletime_config stub_values: [
-        [completed, '2024-01-02', '2024-01-03T01:00:00'],
-        [aging, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(completed, started: '2024-01-02', stopped: '2024-01-03T01:00:00')
+        .stub(aging, started: '2024-01-02')
 
       chart.issues = [completed, aging]
       actual = chart.scan_issues.collect { |data_set| [data_set['label'], data_set['still_in_progress']] }
@@ -280,11 +277,10 @@ describe EstimateAccuracyChart do
       issue_with_no_estimate = MockIssue.empty(board: board).tap { |issue| issue.raw['key'] = 'SP-3' }
       issue_not_started = MockIssue.empty(board: board).tap { |issue| issue.raw['key'] = 'SP-4' }
 
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue1, '2024-01-02', '2024-01-02T01:00:00'],
-        [issue2, '2024-01-02', nil],
-        [issue_with_no_estimate, '2024-01-02', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue1, started: '2024-01-02', stopped: '2024-01-02T01:00:00')
+        .stub(issue2, started: '2024-01-02')
+        .stub(issue_with_no_estimate, started: '2024-01-02')
 
       issues = [issue1, issue2, issue_not_started, issue_with_no_estimate]
       expect(chart.split_into_completed_and_aging issues: issues).to eq [

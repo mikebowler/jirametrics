@@ -184,9 +184,9 @@ describe SprintBurndown do
     it 'collects and time-sorts each sprint\'s changes across all issues' do
       issue_a = MockIssue.empty(key: 'SP-1', board: board).tap { |issue| issue.changes.clear }
       issue_b = MockIssue.empty(key: 'SP-2', board: board).tap { |issue| issue.changes.clear }
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue_a, '2022-01-01', nil], [issue_b, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue_a, started: '2022-01-01')
+        .stub(issue_b, started: '2022-01-01')
       # issue_b enters before issue_a even though issue_a is listed first, so the sort matters.
       issue_b.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-05')
       issue_a.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-03-10')
@@ -291,15 +291,13 @@ describe SprintBurndown do
     let(:issue) { MockIssue.empty(board: board).tap { |issue| issue.changes.clear } }
 
     it 'returns empty list for no changes' do
-      board.cycletime = mock_cycletime_config stub_values: []
+      board.cycletime = MockCycleTimeConfig.new
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
     it 'treats an issue created inside the sprint as entering at creation, with no Sprint changelog entry' do
       created_inside = MockIssue.empty created: '2022-03-20', board: board, key: 'SP-99', current_sprint_ids: [1]
-      board.cycletime = mock_cycletime_config stub_values: [
-        [created_inside, '2022-03-20', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(created_inside, started: '2022-03-20')
       expect(sprint_burndown.changes_for_one_issue(issue: created_inside, sprint: sprint)).to eql [
         SprintIssueChangeData.new(
           action: :enter_sprint, time: to_time('2022-03-20'), value: 0.0, issue: created_inside, estimate: 0.0
@@ -308,9 +306,7 @@ describe SprintBurndown do
     end
 
     it 'returns start and end only' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', '2022-02-01']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01', stopped: '2022-02-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-03')
       issue.add_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-04')
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to eql [
@@ -324,9 +320,7 @@ describe SprintBurndown do
     end
 
     it 'changes points at various times for item that was in sprint from the beginning' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', '2022-01-05']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01', stopped: '2022-01-05')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'Story Points', value: 2.0, old_value: nil, time: '2022-01-02')
       sprint.raw['activatedDate'] = '2021-01-03'
@@ -352,9 +346,8 @@ describe SprintBurndown do
     end
 
     it 'counts estimate changes for an issue that never completed' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil] # started, never stopped -> no completion time
-      ]
+      board.cycletime = MockCycleTimeConfig.new
+        .stub(issue, started: '2022-01-01')  # started, never stopped -> no completion time
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
 
@@ -369,9 +362,7 @@ describe SprintBurndown do
     end
 
     it 'ignores field changes that are neither the sprint nor the estimate' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-02')
 
@@ -380,9 +371,7 @@ describe SprintBurndown do
     end
 
     it 'records issue_stopped only once when several changes land on the completion time' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', '2022-01-05']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01', stopped: '2022-01-05')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
       issue.add_change(field: 'resolution', value: 'Fixed', time: '2022-01-05')
@@ -392,9 +381,7 @@ describe SprintBurndown do
     end
 
     it 'does not re-enter the sprint when a redundant sprint change repeats it' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
 
@@ -402,18 +389,14 @@ describe SprintBurndown do
     end
 
     it 'returns empty when the issue is never in the sprint, even if it has other changes' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', '2022-01-05']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01', stopped: '2022-01-05')
       issue.add_change(field: 'Story Points', value: 3.0, old_value: nil, time: '2022-01-02')
 
       expect(sprint_burndown.changes_for_one_issue(issue: issue, sprint: sprint)).to be_empty
     end
 
     it 'tracks fractional points (from string values), skips irrelevant changes, and leaves with a negative value' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01')
       # Jira sends change values as strings; the estimate and the delta from the old value are numeric.
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'Story Points', value: '2.5', old_value: nil, time: '2022-01-02')
@@ -438,9 +421,7 @@ describe SprintBurndown do
     end
 
     it 'marks issue_stopped only at the completion time, not at an earlier change' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', '2022-01-05']
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01', stopped: '2022-01-05')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2022-01-03')
       issue.add_change(field: 'status', value: 'Done', value_id: 10_002, time: '2022-01-05')
@@ -450,9 +431,7 @@ describe SprintBurndown do
     end
 
     it 'only enters when the sprint change is actually for this sprint' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01')
       issue.add_change(field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-02')
 
@@ -461,9 +440,7 @@ describe SprintBurndown do
     end
 
     it 'does not leave again once it is already out of the sprint' do
-      board.cycletime = mock_cycletime_config stub_values: [
-        [issue, '2022-01-01', nil]
-      ]
+      board.cycletime = MockCycleTimeConfig.new.stub(issue, started: '2022-01-01')
       issue.add_change(field: 'Sprint', value: sprint.name, value_id: sprint.id.to_s, time: '2022-01-01')
       issue.add_change(field: 'Sprint', value: '', value_id: '', time: '2022-01-02')
       issue.add_change(field: 'Sprint', value: 'Other', value_id: '999', time: '2022-01-03')
