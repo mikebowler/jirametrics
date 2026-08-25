@@ -6,6 +6,30 @@ class Exporter
   attr_reader :project_configs
   attr_accessor :file_system
 
+  # Nothing in examples/ is loaded with the rest of the library, because an example is something you
+  # opt into rather than something the product provides. Each file there defines the method named
+  # after it. Derived from the directory rather than listed, so a new example is covered by existing.
+  EXAMPLE_NAMES = Dir[File.join(__dir__, 'examples', '*.rb')]
+    .collect { |file| File.basename(file, '.rb').to_sym }
+    .freeze
+
+  # Deliberately method_missing rather than stub methods that the real ones overwrite. Stubs depend
+  # on this file loading before the example, which require_all does not guarantee, and when it lost
+  # that race the stub replaced the working method.
+  def method_missing name, *args, **keywords, &block
+    return super unless EXAMPLE_NAMES.include? name
+
+    raise "#{name} is an example rather than part of jirametrics, so your config has to ask for " \
+      "it. Add this line to the top of your config file:\n\n" \
+      "  require 'jirametrics/examples/#{name}'\n"
+  end
+
+  # These are not things we respond to. Calling one raises, so respond_to? should say false and the
+  # message above should be the only way anyone learns they exist.
+  def respond_to_missing? name, include_private = false
+    super
+  end
+
   def self.logfile_name
     @logfile_name ||= 'jirametrics.log'
   end

@@ -583,4 +583,58 @@ describe Exporter do
       expect(received).to eq [issue1, issue2]
     end
   end
+
+  # The real methods exist here, because spec_helper loads the whole of lib including examples/, so
+  # these call method_missing directly. The end-to-end behaviour, where the method genuinely is not
+  # defined, is covered by the subprocess test below.
+  describe 'calling an example that has not been required' do
+    let(:exporter) { described_class.new file_system: MockFileSystem.new }
+
+    it 'derives the list from the examples directory rather than a hardcoded pair' do
+      expect(described_class::EXAMPLE_NAMES).to include(:standard_project, :aggregated_project)
+    end
+
+    it 'names the exact require line to add' do
+      expect { exporter.send(:method_missing, :standard_project) }.to raise_error(
+        %r{require 'jirametrics/examples/standard_project'}
+      )
+    end
+
+    it 'says why, so the fix does not look arbitrary' do
+      expect { exporter.send(:method_missing, :aggregated_project) }.to raise_error(
+        /aggregated_project is an example rather than part of jirametrics/
+      )
+    end
+
+    it 'leaves anything else as an ordinary NoMethodError' do
+      expect { exporter.not_an_example }.to raise_error NoMethodError, /not_an_example/
+    end
+  end
+
+  describe 'a config that uses an example without requiring it' do
+    it 'fails with the require line, and does not claim to respond to the method' do
+      Dir.mktmpdir do |dir|
+        config = File.join(dir, 'config.rb')
+        File.write config, <<~RUBY
+          Exporter.configure do
+            puts "responds_to: \#{respond_to?(:standard_project)}"
+            standard_project name: 'Example', file_prefix: 'example'
+          end
+        RUBY
+
+        out, = Open3.capture2e(
+          RbConfig.ruby, '-e', <<~RUBY
+            $LOAD_PATH.unshift #{File.expand_path('lib').inspect}
+            require 'jirametrics'
+            JiraMetrics.new.load_config #{config.inspect}
+          RUBY
+        )
+
+        aggregate_failures do
+          expect(out).to include "require 'jirametrics/examples/standard_project'"
+          expect(out).to include 'responds_to: false'
+        end
+      end
+    end
+  end
 end
