@@ -13,7 +13,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'handles no changes' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     actual = by_date(
       issue,
       date_range: to_date('2021-10-02')..to_date('2021-10-04'),
@@ -27,7 +27,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'tracks blocked over multiple days' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
 
@@ -44,7 +44,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'tracks blocked then unblocked' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-02')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-03T00:01:00')
     add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-03T00:02:00')
@@ -62,7 +62,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'handles a date range that covers time before the issue starts and after it finishes' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-02')
 
     actual = by_date(
@@ -79,7 +79,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'extrapolates the first change backward and the last change forward across the range' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-02')
 
     actual = by_date(
@@ -99,7 +99,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'picks the most-blocking change when several land on the same day' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'status',  value: 'In Progress', value_id: 5, time: '2021-10-01T06:00:00')
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-01T12:00:00')
 
@@ -143,7 +143,7 @@ describe BlockedStalledByDateBuilder do
   end
 
   it 'handles complex case' do
-    issue = empty_issue created: '2021-10-01', board: board
+    issue = MockIssue.empty created: '2021-10-01', board: board
     add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked',     time: '2021-10-07T00:01:00')
     add_mock_change(issue: issue, field: 'Flagged', value: '',            time: '2021-10-07T00:02:00')
 

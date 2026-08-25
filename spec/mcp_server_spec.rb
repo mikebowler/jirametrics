@@ -15,7 +15,7 @@ describe McpServer do
     status = board.possible_statuses.find_all_by_name(status_name).first
     raise "No status named #{status_name}" unless status
 
-    issue = empty_issue created: created, board: board, key: key, creation_status: status
+    issue = MockIssue.empty created: created, board: board, key: key, creation_status: status
     issue.raw['fields']['summary'] = summary
     issue
   end

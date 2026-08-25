@@ -14,13 +14,13 @@ describe EstimateAccuracyChart do
 
   describe '#estimate_at' do
     it 'handles no story points' do
-      issue = empty_issue created: '2023-01-02'
+      issue = MockIssue.empty created: '2023-01-02'
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-03')
       expect(estimate).to be_nil
     end
 
     it 'handles a single estimate set' do
-      issue = empty_issue created: '2023-01-02'
+      issue = MockIssue.empty created: '2023-01-02'
       add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
 
       estimate = chart.estimate_at issue: issue, start_time: to_time('2023-01-04')
@@ -28,7 +28,7 @@ describe EstimateAccuracyChart do
     end
 
     it 'handles estimates set before and after' do
-      issue = empty_issue created: '2023-01-02'
+      issue = MockIssue.empty created: '2023-01-02'
       add_mock_change(issue: issue, field: 'Story Points', value: '5.0', time: '2023-01-03')
       add_mock_change(issue: issue, field: 'Story Points', value: '6.0', time: '2023-01-05')
 
@@ -37,7 +37,7 @@ describe EstimateAccuracyChart do
     end
 
     it 'handles estimates in time' do
-      issue = empty_issue created: '2023-01-02'
+      issue = MockIssue.empty created: '2023-01-02'
       two_days = (60 * 60 * 24 * 2).to_s
       add_mock_change(issue: issue, field: 'timeoriginalestimate', value: two_days, time: '2023-01-03')
 
@@ -135,7 +135,7 @@ describe EstimateAccuracyChart do
 
     # Distinct keys because cycletime stubs are looked up by key, not by object.
     def estimated_issue key:, estimate:
-      empty_issue(created: '2024-01-01', board: board, key: key).tap do |issue|
+      MockIssue.empty(created: '2024-01-01', board: board, key: key).tap do |issue|
         add_mock_change(issue: issue, field: 'Story Points', value: estimate, time: '2024-01-01T02:00:00')
       end
     end
@@ -221,8 +221,8 @@ describe EstimateAccuracyChart do
     # has to go as the square root of the issue count.
     it 'sizes bubbles so that area is proportional to the issue count' do
       chart.date_range = to_date('2024-01-01')..to_date('2024-01-05')
-      four_issues = (1..4).collect { |number| empty_issue created: '2024-01-01', board: board, key: "SP-#{number}" }
-      one_issue = empty_issue created: '2024-01-01', board: board, key: 'SP-5'
+      four_issues = (1..4).collect { |number| MockIssue.empty created: '2024-01-01', board: board, key: "SP-#{number}" }
+      one_issue = MockIssue.empty created: '2024-01-01', board: board, key: 'SP-5'
 
       (four_issues + [one_issue]).each do |issue|
         add_mock_change(issue: issue, field: 'Story Points', value: 5, time: '2024-01-01T02:00:00')

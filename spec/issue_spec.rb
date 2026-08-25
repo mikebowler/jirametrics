@@ -76,7 +76,7 @@ describe Issue do
   end
 
   describe '#guess_status_id' do
-    let(:issue) { empty_issue created: '2021-10-01', board: sample_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: sample_board }
 
     def status name:, id:
       Status.new(name: name, id: id, category_name: 'ToDo', category_key: 'new', category_id: 2)
@@ -329,7 +329,7 @@ describe Issue do
     end
 
     it "defaults the first status if there really hasn't been any yet" do
-      issue = empty_issue created: '2021-08-29T18:00:00+00:00'
+      issue = MockIssue.empty created: '2021-08-29T18:00:00+00:00'
       expect(issue.changes).to eq [
         mock_change(
           issue: issue, field: 'status', value: 'Backlog', value_id: 10_000, time: '2021-08-29T18:00:00+00:00'
@@ -342,7 +342,7 @@ describe Issue do
   end
 
   describe '#first_time_in_status' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'first time in status' do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
@@ -356,7 +356,7 @@ describe Issue do
   end
 
   describe '#first_time_not_in_status' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'first time not in status' do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
@@ -389,7 +389,7 @@ describe Issue do
   end
 
   describe '#first_time_in_or_right_of_column' do
-    let(:issue) { empty_issue created: '2021-06-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'fails for invalid column name' do
       expect { issue.first_time_in_or_right_of_column 'NoSuchColumn' }.to raise_error(
@@ -415,7 +415,7 @@ describe Issue do
   end
 
   describe '#still_in_or_right_of_column' do
-    let(:issue) { empty_issue created: '2021-06-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'works for happy path' do
       # The second column is called "In Progress" and it's only mapped to status 3
@@ -430,7 +430,7 @@ describe Issue do
   end
 
   describe '#first_time_in_status_category' do
-    let(:issue) { empty_issue created: '2021-06-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-06-01', board: board }
 
     it 'matches first time in status category' do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-06-02')
@@ -443,7 +443,7 @@ describe Issue do
   end
 
   describe '#first_status_change_after_created' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it "finds first time for any status change - created doesn't count as status change" do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02')
@@ -477,7 +477,7 @@ describe Issue do
   end
 
   describe '#currently_in_status' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-01')
@@ -498,7 +498,7 @@ describe Issue do
   end
 
   describe '#still_in_status' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
@@ -526,7 +526,7 @@ describe Issue do
   end
 
   describe '#currently_in_status_category' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
@@ -548,7 +548,7 @@ describe Issue do
   end
 
   describe '#still_in_status_category' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'item moved to done and then back to in progress' do
       add_mock_change(issue: issue, field: 'status', value: 'Done', value_id: 9, time: '2021-10-02')
@@ -572,7 +572,7 @@ describe Issue do
   end
 
   describe '#first_time_label_added' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'does not match when no labels' do
       expect(issue.first_time_label_added('refined')).to be_nil
@@ -605,7 +605,7 @@ describe Issue do
   end
 
   describe '#first_time_visible_on_board' do
-    let(:issue) { empty_issue created: '2021-10-01', board: sample_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: sample_board }
 
     it 'does not match when not visible' do
       expect(issue.first_time_visible_on_board).to be_nil
@@ -618,7 +618,7 @@ describe Issue do
 
     context 'with a scrum board' do
       let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
-      let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
+      let(:issue) { MockIssue.empty created: '2021-10-01', board: scrum_board }
 
       def add_active_sprint id:, start_date:
         issue.board.sprints << Sprint.new(raw: {
@@ -704,10 +704,10 @@ time: '2021-10-02')
 
   describe '#first_time_added_to_active_sprint' do
     let(:scrum_board) { board.tap { |b| b.raw['type'] = 'scrum' } }
-    let(:issue) { empty_issue created: '2021-10-01', board: scrum_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: scrum_board }
 
     it 'raises error when used on kanban board' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board, key: 'SP-1'
       expect { issue.first_time_added_to_active_sprint }.to raise_error(
         'first_time_added_to_active_sprint() can only be used with Scrum boards: ' \
         'issue=SP-1, board=Board(id: 1, name: "SP board", board_type: "kanban")'
@@ -766,7 +766,7 @@ time: '2021-10-02')
         'completeDate' => '2021-10-23T00:00:00.000Z',
         'originBoardId' => 2
       }, timezone_offset: '+00:00')
-      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprints: [
         { 'id' => 10, 'name' => 'Scrum Sprint 1', 'state' => 'active', 'boardId' => scrum_board.id }
       ]
       expect(issue.first_time_added_to_active_sprint&.time).to eq to_time('2021-10-02')
@@ -1009,10 +1009,10 @@ time: '2021-10-02')
   describe '#reasons_not_visible_on_board' do
     let(:kanban_board) { sample_board }
     let(:in_progress) { kanban_board.possible_statuses.find_by_id(3) }
-    let(:issue) { empty_issue created: '2021-10-01', board: kanban_board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: kanban_board }
 
     it 'returns empty when kanban issue is in a visible column' do
-      visible_issue = empty_issue created: '2021-10-01', board: kanban_board, creation_status: in_progress
+      visible_issue = MockIssue.empty created: '2021-10-01', board: kanban_board, creation_status: in_progress
       expect(visible_issue.reasons_not_visible_on_board).to be_empty
     end
 
@@ -1022,14 +1022,14 @@ time: '2021-10-02')
 
     it 'returns reason when scrum board issue is not in an active sprint' do
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
-      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board,
+      scrum_issue = MockIssue.empty created: '2021-10-01', board: scrum_board,
         creation_status: scrum_board.possible_statuses.find_by_id(3)
       expect(scrum_issue.reasons_not_visible_on_board).to eq ['Not in an active sprint']
     end
 
     it 'returns both reasons when scrum board issue has invisible status and no active sprint' do
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
-      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board
+      scrum_issue = MockIssue.empty created: '2021-10-01', board: scrum_board
       expect(scrum_issue.reasons_not_visible_on_board).to contain_exactly('Not in an active sprint',
 'Status is not configured for any visible column on the board')
     end
@@ -1038,7 +1038,7 @@ time: '2021-10-02')
       scrum_board = sample_board.tap { |b| b.raw['type'] = 'scrum' }
       scrum_board.sprints << Sprint.new(timezone_offset: '00:00',
 raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
-      scrum_issue = empty_issue created: '2021-10-01', board: scrum_board,
+      scrum_issue = MockIssue.empty created: '2021-10-01', board: scrum_board,
         creation_status: scrum_board.possible_statuses.find_by_id(3)
       add_mock_change(issue: scrum_issue, field: 'Sprint', value: 'Sprint 1', value_id: '1', time: '2021-10-03')
       expect(scrum_issue.reasons_not_visible_on_board).to be_empty
@@ -1049,13 +1049,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     let(:kanban_board) { sample_board }
 
     it 'returns false when issue is not visible' do
-      issue = empty_issue created: '2021-10-01', board: kanban_board
+      issue = MockIssue.empty created: '2021-10-01', board: kanban_board
       expect(issue.visible_on_board?).to be false
     end
 
     it 'returns true when issue is visible' do
       in_progress = kanban_board.possible_statuses.find_by_id(3)
-      issue = empty_issue created: '2021-10-01', board: kanban_board, creation_status: in_progress
+      issue = MockIssue.empty created: '2021-10-01', board: kanban_board, creation_status: in_progress
       expect(issue.visible_on_board?).to be true
     end
   end
@@ -1064,7 +1064,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     # Behaviour is covered in blocked_stalled_change_stream_builder_spec. Here we only confirm that
     # Issue delegates and resolves the builder's inputs (settings, subtask activity, ADF).
     it 'delegates to BlockedStalledChangeStreamBuilder' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       settings = {
         'blocked_statuses' => status_collection_for(board: board, names: %w[Blocked]),
         'stalled_statuses' => status_collection_for(board: board, names: %w[Stalled]),
@@ -1083,7 +1083,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     # Behaviour is covered in blocked_stalled_by_date_builder_spec. Here we only confirm that
     # Issue delegates and resolves the builder's inputs (the stream and the date range).
     it 'delegates to BlockedStalledByDateBuilder' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
       actual = issue.blocked_stalled_by_date(
         date_range: to_date('2021-10-02')..to_date('2021-10-04'),
@@ -1100,7 +1100,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   describe '#blocked_on_date?' do
     # Flagged 'Blocked' on 10-03, so the issue is blocked from 10-03 onward and active before it.
     let(:issue) do
-      empty_issue(created: '2021-10-01', board: board).tap do |issue|
+      MockIssue.empty(created: '2021-10-01', board: board).tap do |issue|
         add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
       end
     end
@@ -1117,13 +1117,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#inspect' do
     it 'returns a simplified representation' do
-      expect(empty_issue(created: '2021-10-01T00:00:00+00:00').inspect).to eql 'Issue("SP-1")'
+      expect(MockIssue.empty(created: '2021-10-01T00:00:00+00:00', key: 'SP-1').inspect).to eql 'Issue("SP-1")'
     end
   end
 
   describe 'resolutions' do
     it 'finds resolutions when they are present' do
-      issue = empty_issue created: '2021-10-01T00:00:00+00:00', board: board
+      issue = MockIssue.empty created: '2021-10-01T00:00:00+00:00', board: board
       add_mock_change(
         issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2021-10-02T00:00:00+00:00'
       )
@@ -1148,19 +1148,19 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles the case where there are no resolutions' do
-      issue = empty_issue created: '2021-10-01'
+      issue = MockIssue.empty created: '2021-10-01'
       expect([issue.first_resolution, issue.last_resolution]).to eq [nil, nil]
     end
   end
 
   describe '#resolution' do
     it 'returns nil when not resolved' do
-      issue = empty_issue created: '2021-10-01'
+      issue = MockIssue.empty created: '2021-10-01'
       expect(issue.resolution).to be_nil
     end
 
     it 'returns resolution' do
-      issue = empty_issue created: '2021-10-01'
+      issue = MockIssue.empty created: '2021-10-01'
       issue.raw['fields']['resolution'] = { 'name' => 'Done' }
       expect(issue.resolution).to eq 'Done'
     end
@@ -1234,7 +1234,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#last_activity' do
-    let(:issue) { empty_issue created: '2020-01-01', board: board }
+    let(:issue) { MockIssue.empty created: '2020-01-01', board: board }
 
     it 'handles no activity, ever' do
       expect(issue.last_activity now: to_time('2001-01-01')).to be_nil
@@ -1247,17 +1247,17 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles subtask with no changes' do
-      subtask = empty_issue created: '2020-01-02', board: board
+      subtask = MockIssue.empty created: '2020-01-02', board: board
       issue.subtasks << subtask
       expect(issue.last_activity now: to_time('2021-02-01')).to eq to_time('2020-01-02')
     end
 
     it 'handles multiple subtasks, each with changes' do
-      subtask1 = empty_issue created: '2020-01-02', board: board
+      subtask1 = MockIssue.empty created: '2020-01-02', board: board
       add_mock_change(issue: subtask1, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-03')
       issue.subtasks << subtask1
 
-      subtask2 = empty_issue created: '2020-01-02', board: board
+      subtask2 = MockIssue.empty created: '2020-01-02', board: board
       add_mock_change(issue: subtask2, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-04')
       issue.subtasks << subtask2
 
@@ -1265,7 +1265,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles no activity on the subtask but activity on the main issue' do
-      subtask = empty_issue created: '2020-01-01', board: board
+      subtask = MockIssue.empty created: '2020-01-01', board: board
       issue.subtasks << subtask
 
       add_mock_change(issue: issue, field: 'status', value: 'In Progress', value_id: 5, time: '2020-01-02')
@@ -1275,7 +1275,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#parent_key' do
-    let(:issue) { empty_issue created: '2020-01-01' }
+    let(:issue) { MockIssue.empty created: '2020-01-01' }
 
     it 'returns nil when no parent found' do
       expect(issue.parent_key).to be_nil
@@ -1351,7 +1351,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#looks_like_issue_key?' do
-    let(:issue) { empty_issue created: '2020-01-01' }
+    let(:issue) { MockIssue.empty created: '2020-01-01' }
 
     it 'returns true for valid key' do
       expect(issue.looks_like_issue_key? 'ABC-123').to be true
@@ -1367,7 +1367,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#expedited?' do
-    let(:issue) { empty_issue created: '2020-01-01', board: board }
+    let(:issue) { MockIssue.empty created: '2020-01-01', board: board }
 
     it 'no priority set' do
       expect(issue).not_to be_expedited
@@ -1386,7 +1386,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe 'priority_name and priority_url' do
-    let(:issue) { empty_issue created: '2020-01-01', board: board }
+    let(:issue) { MockIssue.empty created: '2020-01-01', board: board }
 
     it 'returns nil when priority field is absent' do
       issue.raw['fields']['priority'] = nil
@@ -1407,7 +1407,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#expedited_on_date?' do
     it 'works when expedited turns on and off on same day' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-03T00:01:00')
@@ -1422,7 +1422,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'works when one expedite follows another' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
@@ -1439,7 +1439,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'works when still expedited at end of data' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = %w[high higher]
 
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
@@ -1452,7 +1452,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'stays expedited for dates well after the start when it never turns off' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
 
@@ -1460,7 +1460,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'ignores non-priority changes between expedite events' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       add_mock_change(issue: issue, field: 'Flagged', value: 'Blocked', time: '2021-10-03T00:01:00')
@@ -1469,13 +1469,13 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'returns false when the board has no project config' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config = nil
       expect(issue.expedited_on_date?(to_date('2021-10-03'))).to be false
     end
 
     it 'is expedited on a date inside any one of several expedite windows' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.board.project_config.settings['expedited_priority_names'] = ['high']
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02T00:01:00')
       add_mock_change(issue: issue, field: 'priority', value: '',     time: '2021-10-03T00:01:00')
@@ -1489,14 +1489,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe 'sorting' do
     it 'sorts when project key is the same and the numbers are different' do
-      a = empty_issue(key: 'SP-1', created: '2022-01-01')
-      b = empty_issue(key: 'SP-2', created: '2022-01-01')
+      a = MockIssue.empty(key: 'SP-1', created: '2022-01-01')
+      b = MockIssue.empty(key: 'SP-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SP-1 SP-2]
     end
 
     it 'sorts when project keys are different and the numbers are same' do
-      a = empty_issue(key: 'SPA-1', created: '2022-01-01')
-      b = empty_issue(key: 'SPB-2', created: '2022-01-01')
+      a = MockIssue.empty(key: 'SPA-1', created: '2022-01-01')
+      b = MockIssue.empty(key: 'SPB-2', created: '2022-01-01')
       expect([b, a].sort.collect(&:key)).to eq %w[SPA-1 SPB-2]
     end
   end
@@ -1542,7 +1542,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'reads the current field value when there is no prior change of that type' do
-      issue = empty_issue created: '2021-10-02', board: board # created in Backlog (id 1)
+      issue = MockIssue.empty created: '2021-10-02', board: board # created in Backlog (id 1)
       change = fabricated_status_change(issue)
       aggregate_failures do
         expect(change.time).to eq to_time('2021-10-02')
@@ -1557,7 +1557,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     it "reads the first prior change's old value when one exists" do
       # Non-status changes on either side, so we pin that we find the first *status* change, not just
       # the first or last change.
-      issue = empty_issue created: '2021-10-02', board: board, changelog_histories: [
+      issue = MockIssue.empty created: '2021-10-02', board: board, changelog_histories: [
         { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
         { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [
           { 'field' => 'status', 'from' => '1', 'fromString' => 'Backlog', 'to' => '5', 'toString' => 'In Progress' }
@@ -1572,7 +1572,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'falls back to id 0 when the first change has no from id (seen in prod)' do
-      issue = empty_issue created: '2021-10-02', board: board, changelog_histories: [
+      issue = MockIssue.empty created: '2021-10-02', board: board, changelog_histories: [
         { 'created' => '2021-10-03T00:00:00.000Z', 'items' => [
           { 'field' => 'status', 'to' => '5', 'toString' => 'In Progress' } # no from / fromString
         ] }
@@ -1638,7 +1638,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     let(:seconds_per_day) { (60 * 60 * 24).to_f }
 
     it 'delegates to FlowEfficiencyCalculator' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), nil]
@@ -1648,21 +1648,21 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'returns zeros when the issue never started' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-02'), settings: settings))
         .to eq [0.0, 0.0]
     end
 
     it 'returns zeros when the issue started after the window ends' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-10'), nil]]
       expect(issue.flow_efficiency_numbers(end_time: to_time('2000-01-05'), settings: settings))
         .to eq [0.0, 0.0]
     end
 
     it 'caps the window at the issue stop time, ignoring anything after it' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-03')]
       ]
@@ -1672,7 +1672,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'leaves the window uncapped when the issue stopped after it ends' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, to_time('2000-01-01'), to_time('2000-01-10')]
       ]
@@ -1682,7 +1682,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'defaults settings to the board project config settings when none are passed' do
-      issue = empty_issue created: '2000-01-01', board: board
+      issue = MockIssue.empty created: '2000-01-01', board: board
       add_mock_change(issue: issue, field: 'status', value: 'Blocked', value_id: 10, time: '2000-01-02')
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, to_time('2000-01-01'), nil]]
       allow(board.project_config).to receive(:settings).and_return(settings)
@@ -1731,22 +1731,22 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#<=>' do
     it 'compares numerically when projects are the same' do
-      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
-      issue2 = empty_issue created: '2024-01-01', key: 'SP-2'
+      issue1 = MockIssue.empty created: '2024-01-01', key: 'SP-1'
+      issue2 = MockIssue.empty created: '2024-01-01', key: 'SP-2'
 
       expect(issue1 <=> issue2).to be_negative
     end
 
     it 'compares alphametically by project name when projects are different' do
-      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
-      issue2 = empty_issue created: '2024-01-01', key: 'ABC-2'
+      issue1 = MockIssue.empty created: '2024-01-01', key: 'SP-1'
+      issue2 = MockIssue.empty created: '2024-01-01', key: 'ABC-2'
 
       expect(issue1 <=> issue2).to be_positive
     end
 
     it 'compares equal' do
-      issue1 = empty_issue created: '2024-01-01', key: 'SP-1'
-      issue2 = empty_issue created: '2024-01-01', key: 'SP-1'
+      issue1 = MockIssue.empty created: '2024-01-01', key: 'SP-1'
+      issue2 = MockIssue.empty created: '2024-01-01', key: 'SP-1'
 
       expect(issue1 <=> issue2).to be_zero
     end
@@ -1828,7 +1828,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#status_resolution_at_done' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     it 'returns [nil, nil] when issue is not done' do
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
@@ -1875,7 +1875,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#in_initial_query?' do
     it 'returns true when exporter is nil (artificial issue)' do
-      issue = empty_issue created: '2021-01-01', board: board
+      issue = MockIssue.empty created: '2021-01-01', board: board
       expect(issue.in_initial_query?).to be true
     end
 
@@ -1892,14 +1892,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
   describe '#done?' do
     it 'returns true for an artificial issue in a done status category' do
-      issue = empty_issue created: '2021-01-01', board: board
-      # Doing (id: 12) has category_key: 'done'; set directly since empty_issue hardcodes statusCategory
+      issue = MockIssue.empty created: '2021-01-01', board: board
+      # Doing (id: 12) has category_key: 'done'; set directly since MockIssue.empty hardcodes statusCategory
       issue.status = board.possible_statuses.find_by_id(12)
       expect(issue.done?).to be true
     end
 
     it 'returns false for an artificial issue not in a done status category' do
-      issue = empty_issue created: '2021-01-01', board: board
+      issue = MockIssue.empty created: '2021-01-01', board: board
       expect(issue.done?).to be false
     end
 
@@ -1962,7 +1962,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'keeps a non-status change even when it is before the cutoff' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       add_mock_change(issue: issue, field: 'priority', value: 'high', time: '2021-10-02')
       add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-05')
       issue.discard_changes_before(to_time('2021-10-03'))
@@ -1970,7 +1970,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'removes a real status change strictly before the cutoff' do
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       add_mock_change(issue: issue, field: 'status', value: 'Selected for Development', value_id: 3, time: '2021-10-02')
       issue.discard_changes_before(to_time('2021-10-05'))
       expect(issue.changes.map(&:value)).not_to include('Selected for Development')
@@ -1978,7 +1978,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#sprint_entry_events' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     def add_board_sprint id:, state:, start: nil
       raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}" }
@@ -2117,7 +2117,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#in_active_sprint_at?' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
 
     def add_board_sprint id:, state:, start: nil
       raw = { 'id' => id, 'state' => state, 'name' => "Sprint #{id}" }
@@ -2185,7 +2185,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
   end
 
   describe '#find_sprint_start_end' do
-    let(:issue) { empty_issue created: '2021-10-01', board: board }
+    let(:issue) { MockIssue.empty created: '2021-10-01', board: board }
     # The issue's own sprint membership references sprint 7, never the sprints we look up below, so a
     # lookup against the issue's sprints (rather than the board's) would come up empty.
     let(:change) do
@@ -2257,7 +2257,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       # This is the LS-821/LS-825 case: the issue was created directly in the sprint and never moved,
       # so its membership lives only in the current Sprint field and never as a changelog transition.
       add_board_sprint id: 10
-      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprints: [
         { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id }
       ]
       expect(issue.sprints.map(&:id)).to eq [10]
@@ -2268,7 +2268,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
       # the change's 'from', never a 'to'), so without reconstructing the initial membership the issue
       # would look like it was never in the sprint at all.
       add_board_sprint id: 10
-      issue = empty_issue created: '2021-10-02', board: scrum_board, changelog_histories: [
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, changelog_histories: [
         { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
           { 'field' => 'Sprint', 'fieldId' => 'customfield_10020', 'from' => '10', 'to' => '' }
         ] }
@@ -2277,7 +2277,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'reports no sprints for an issue that was never in one' do
-      issue = empty_issue created: '2021-10-02', board: scrum_board
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board
       expect(issue.sprints).to be_empty
     end
   end
@@ -2291,7 +2291,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
 
     it 'captures the full change for an issue created inside sprints with no changelog entry' do
       # Two sprints so the 'to' separator (join(', ')) actually matters.
-      issue = empty_issue created: '2021-10-02', board: scrum_board, current_sprints: [
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, current_sprints: [
         { 'id' => 10, 'name' => 'Sprint 10', 'state' => 'active', 'boardId' => scrum_board.id },
         { 'id' => 20, 'name' => 'Sprint 20', 'state' => 'active', 'boardId' => scrum_board.id }
       ]
@@ -2310,7 +2310,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     it 'seeds membership and field id from the first recorded sprint change when there is a changelog' do
       # Non-sprint changes on either side, so we're pinning that we find the sprint change, not just
       # take the first or last change in the list.
-      issue = empty_issue created: '2021-10-02', board: scrum_board, changelog_histories: [
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board, changelog_histories: [
         { 'created' => '2021-10-04T00:00:00.000Z', 'items' => [{ 'field' => 'assignee', 'to' => 'x' }] },
         { 'created' => '2021-10-05T00:00:00.000Z', 'items' => [
           { 'field' => 'Sprint', 'fieldId' => 'customfield_99', 'from' => '10', 'to' => '' }
@@ -2325,14 +2325,14 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'fabricates nothing when the issue was never in a sprint' do
-      issue = empty_issue created: '2021-10-02', board: scrum_board
+      issue = MockIssue.empty created: '2021-10-02', board: scrum_board
       expect(fabricated_change(issue)).to be_nil
     end
 
     it 'fabricates nothing, and does not blow up, when the created timestamp is missing' do
       # The guard exists because a nil created would make the fabricated change's time nil, which
       # ChangeItem rejects. 'created' is present-but-nil (not merely absent) so it also pins that we
-      # check the value, not just the key. Built by hand since empty_issue always supplies a created.
+      # check the value, not just the key. Built by hand since MockIssue.empty always supplies a created.
       issue = described_class.new(board: scrum_board, raw: {
         'key' => 'SP-1',
         'changelog' => { 'histories' => [] },
@@ -2400,7 +2400,7 @@ raw: { 'id' => 1, 'state' => 'active', 'name' => 'Sprint 1' })
     end
 
     it 'handles an issue with no comments gracefully' do
-      issue = empty_issue created: '2021-01-01', board: board
+      issue = MockIssue.empty created: '2021-01-01', board: board
       expect(issue.changes.select(&:comment?)).to be_empty
     end
   end

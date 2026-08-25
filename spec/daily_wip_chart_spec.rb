@@ -16,7 +16,7 @@ describe DailyWipChart do
   let(:board) { load_complete_sample_board }
   let(:issue1) { load_issue 'SP-1', board: board }
   let(:issue2) { load_issue 'SP-2', board: board }
-  let(:issue3) { empty_issue created: '2022-01-01', board: board, key: 'SP-9' }
+  let(:issue3) { MockIssue.empty created: '2022-01-01', board: board, key: 'SP-9' }
 
   let(:chart) do
     chart = described_class.new empty_config_block

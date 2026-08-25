@@ -32,6 +32,10 @@ Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |file| require file }
 RSpec.configure do |config|
   # Run examples in a random order and seed the global RNG from the same seed so runs
   # are reproducible with --seed. Random ordering surfaces order-dependent test pollution.
+  # Generated issue keys restart for every example. Examples run in a random order, so a counter
+  # shared across them would make a key depend on how many issues earlier tests built.
+  config.before { MockIssue.reset_generated_keys }
+
   config.order = :random
   Kernel.srand config.seed
 
@@ -133,54 +137,6 @@ module SpecHelpers
     issue = Issue.new(raw: JSON.parse(file_read("spec/testdata/#{key}.json")), board: board)
     issue.raw['exporter'] = 1 # Make it look like this issue was actually loaded from Jira. Ie not artificial.
     issue
-  end
-
-  def empty_issue created:, board: sample_board, key: 'SP-1', creation_status: nil, current_sprints: nil,
-    changelog_histories: []
-    if creation_status.nil?
-      backlog_statuses = board.possible_statuses.find_all_by_name('Backlog')
-      raise 'No Backlog status found' if backlog_statuses.empty?
-
-      creation_status = [backlog_statuses.first.name, backlog_statuses.first.id]
-    elsif creation_status.is_a? Status
-      creation_status = [creation_status.name, creation_status.id]
-    end
-
-    # current_sprints mimics an issue created directly inside a sprint: that membership lives only in the
-    # current Sprint custom field and never appears as a changelog transition.
-    sprint_field = current_sprints ? { 'customfield_10020' => current_sprints } : {}
-
-    Issue.new(
-      raw: {
-        'key' => key,
-        'changelog' => { 'histories' => changelog_histories },
-        'fields' => sprint_field.merge({
-          'created' => to_time(created).to_s,
-          'updated' => to_time(created).to_s,
-          'status' => {
-            'name' => creation_status[0],
-            'id' => creation_status[1].to_s,
-            'statusCategory' => {
-              'name' => 'To Do',
-              'id' => 100,
-              'key' => 'new'
-            }
-          },
-          'priority' => {
-            'name' => 'Medium',
-            'id' => '3'
-          },
-          'issuetype' => {
-            'name' => 'Bug'
-          },
-          'creator' => {
-            'displayName' => 'Tolkien'
-          },
-          'summary' => 'Do the thing'
-        })
-      },
-      board: board
-    )
   end
 
   def load_complete_sample_issues board:
@@ -348,7 +304,7 @@ module SpecHelpers
       status_changes << [columns[index], date]
     end
 
-    issue = empty_issue created: date.to_s, board: board, key: key
+    issue = MockIssue.empty created: date.to_s, board: board, key: key
 
     # The incrementing hour is required because we can otherwise generate multiple changes with exactly the same
     # timestamp which becomes ambiguous. Which one was actually first?

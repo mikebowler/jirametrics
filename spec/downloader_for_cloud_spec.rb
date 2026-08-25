@@ -655,7 +655,7 @@ describe DownloaderForCloud do
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
 
-      issue = empty_issue(
+      issue = MockIssue.empty(
         key: 'ABC-123', created: '2025-01-01', board: board
       )
       allow(downloader).to receive(:search_for_issues) do
@@ -695,12 +695,12 @@ describe DownloaderForCloud do
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
 
-      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue = MockIssue.empty(key: 'ABC-123', created: '2025-01-01', board: board)
       primary_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } },
         { 'type' => { 'name' => 'Cloners' }, 'outwardIssue' => { 'key' => 'ABC-CLONE' } }
       ]
-      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+      linked_issue = MockIssue.empty(key: 'ABC-LINKED', created: '2025-01-01', board: board)
 
       allow(downloader).to receive(:search_for_issues).and_return(
         'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc123.json')
@@ -740,11 +740,11 @@ describe DownloaderForCloud do
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
 
-      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue = MockIssue.empty(key: 'ABC-123', created: '2025-01-01', board: board)
       primary_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
       ]
-      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-02', board: board)
+      linked_issue = MockIssue.empty(key: 'ABC-LINKED', created: '2025-01-02', board: board)
 
       allow(downloader).to receive(:search_for_issues).and_return(
         'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc123.json')
@@ -842,7 +842,7 @@ describe DownloaderForCloud do
       board = sample_board
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
-      second_issue = empty_issue(key: 'ABC-2', created: '2025-01-01', board: board)
+      second_issue = MockIssue.empty(key: 'ABC-2', created: '2025-01-01', board: board)
       allow(downloader).to receive(:search_for_issues).and_return(
         'ABC-1' => DownloadIssueData.new(key: 'ABC-1', up_to_date: false, cache_path: 'abc1.json'),
         'ABC-2' => DownloadIssueData.new(key: 'ABC-2', up_to_date: false, cache_path: 'abc2.json')
@@ -880,11 +880,11 @@ describe DownloaderForCloud do
       board = sample_board
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
-      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue = MockIssue.empty(key: 'ABC-123', created: '2025-01-01', board: board)
       primary_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
       ]
-      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-02', board: board)
+      linked_issue = MockIssue.empty(key: 'ABC-LINKED', created: '2025-01-02', board: board)
       linked_cache = 'spec/testdata/sample_issues/ABC-LINKED-2.json'
       allow(downloader).to receive(:search_for_issues).and_return(
         'ABC-123' => DownloadIssueData.new(key: 'ABC-123', up_to_date: false, cache_path: 'abc.json'),
@@ -926,11 +926,11 @@ describe DownloaderForCloud do
       downloader.board_id_to_filter_id[2] = 123
 
       # ABC-123 (primary) -> ABC-LINKED (one hop, followed) -> ABC-SECOND (second hop, NOT followed)
-      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue = MockIssue.empty(key: 'ABC-123', created: '2025-01-01', board: board)
       primary_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
       ]
-      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+      linked_issue = MockIssue.empty(key: 'ABC-LINKED', created: '2025-01-01', board: board)
       linked_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-SECOND' } }
       ]
@@ -966,7 +966,7 @@ describe DownloaderForCloud do
       board.raw['id'] = 2
       downloader.board_id_to_filter_id[2] = 123
 
-      primary_issue = empty_issue(key: 'ABC-123', created: '2025-01-01', board: board)
+      primary_issue = MockIssue.empty(key: 'ABC-123', created: '2025-01-01', board: board)
       primary_issue.raw['fields']['issuelinks'] = [
         { 'type' => { 'name' => 'Blocks' }, 'inwardIssue' => { 'key' => 'ABC-LINKED' } }
       ]
@@ -977,7 +977,7 @@ describe DownloaderForCloud do
       )
       file_system.when_loading file: cache_path, json: primary_issue.raw
 
-      linked_issue = empty_issue(key: 'ABC-LINKED', created: '2025-01-01', board: board)
+      linked_issue = MockIssue.empty(key: 'ABC-LINKED', created: '2025-01-01', board: board)
       allow(downloader).to receive(:bulk_fetch_issues) do |issue_datas:, **|
         issue_datas.each do |d|
           d.up_to_date = true
@@ -996,7 +996,7 @@ describe DownloaderForCloud do
 
   describe '#bulk_fetch_issues' do
     let(:raw_issue) do
-      raw_issue = empty_issue(created: '2025-01-01').raw
+      raw_issue = MockIssue.empty(created: '2025-01-01', key: 'SP-1').raw
       raw_issue['changelog'] = nil
       raw_issue['id'] = '123'
       raw_issue
@@ -1036,7 +1036,7 @@ describe DownloaderForCloud do
     end
 
     it 'fetches' do
-      raw_issue = empty_issue(created: '2025-01-01').raw
+      raw_issue = MockIssue.empty(created: '2025-01-01', key: 'SP-1').raw
       raw_issue['changelog'] = nil
       raw_issue['id'] = '123'
 
@@ -1135,7 +1135,7 @@ describe DownloaderForCloud do
     end
 
     it 'skips issues returned by Jira with a key not in the request (moved issues)' do
-      moved_raw = empty_issue(created: '2025-01-01').raw
+      moved_raw = MockIssue.empty(created: '2025-01-01').raw
       moved_raw['changelog'] = nil
       moved_raw['id'] = '999'
       moved_raw['key'] = 'OTHER-999' # Jira returned a different key than we requested

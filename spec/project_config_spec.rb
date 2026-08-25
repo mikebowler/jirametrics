@@ -43,7 +43,7 @@ describe ProjectConfig do
 
   describe '#resolve_all_status_changes' do
     it 'fabricates statuses that appear in an issue history but are gone from Jira' do
-      issue = empty_issue created: '2024-01-01', board: board
+      issue = MockIssue.empty created: '2024-01-01', board: board
       # A real deleted-status change references an id no longer in possible_statuses, which the mock
       # change builder refuses to create, so feed it as plain input and let the real fabrication run.
       allow(issue).to receive(:status_changes).and_return([double(value_id: 99_999, value: 'Ghost')])
@@ -242,7 +242,7 @@ describe ProjectConfig do
     it 'processes every issue, skipping ones with no matching status' do
       issue1.changes.clear
       add_mock_change(issue: issue1, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-01')
-      issue2 = empty_issue created: '2022-01-01', board: board, key: 'SP-2'
+      issue2 = MockIssue.empty created: '2022-01-01', board: board, key: 'SP-2'
       issue2.changes.clear
       add_mock_change(issue: issue2, field: 'status', value: 'Backlog', value_id: 10_000, time: '2022-01-02')
       add_mock_change(issue: issue2, field: 'status', value: 'In Progress', value_id: 3, time: '2022-01-03')
@@ -452,7 +452,7 @@ describe ProjectConfig do
       raw['id'] = 2
       board2 = Board.new(raw: raw, possible_statuses: load_statuses('./spec/testdata/sample_statuses.json'))
       board2.project_config = project_config
-      issue2 = empty_issue created: '2021-01-01', board: board2, key: 'SP-999'
+      issue2 = MockIssue.empty created: '2021-01-01', board: board2, key: 'SP-999'
 
       project_config.add_issues([issue1])
       project_config.add_issues([issue2])
@@ -474,7 +474,7 @@ describe ProjectConfig do
 
         subject.file_prefix 'sample'
         subject.load_status_category_mappings
-        issue = empty_issue created: '2024-01-01'
+        issue = MockIssue.empty created: '2024-01-01'
 
         # Throw in one change that isn't a status to see if we blow up.
         issue.changes << mock_change(field: 'Flagged', time: '2024-01-02', value: 'Flagged')

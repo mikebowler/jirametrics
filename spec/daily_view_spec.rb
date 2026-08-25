@@ -356,13 +356,13 @@ describe DailyView do
 
   describe '#make_blocked_stalled_lines' do
     it 'returns nothing when the issue has not started' do
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, nil, nil]]
       expect(view.make_blocked_stalled_lines(issue)).to eq []
     end
 
     it 'returns nothing when the issue is active on the day' do
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
       # A status change on the final day keeps it active (not stalled) and it is not blocked.
       add_mock_change issue: issue, field: 'status', value: 'Review', time: '2024-01-20', value_id: 10_011
@@ -370,7 +370,7 @@ describe DailyView do
     end
 
     it 'renders blocked by flag' do
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
       add_mock_change issue: issue, field: 'Flagged', value: 'Blocked', time: '2024-01-03'
 
@@ -380,7 +380,7 @@ describe DailyView do
     end
 
     it 'renders stalled by inactivity' do
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
@@ -393,7 +393,7 @@ describe DailyView do
 
     it 'renders stalled by status' do
       view.settings['stalled_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
@@ -408,7 +408,7 @@ describe DailyView do
 
     it 'renders blocked by status' do
       view.settings['blocked_statuses'] = status_collection_for(board: sample_board, names: ['Review'])
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
@@ -423,7 +423,7 @@ describe DailyView do
 
     it 'renders blocked by issue' do
       view.settings['blocked_link_text'] = ['is blocked by']
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
@@ -446,7 +446,7 @@ describe DailyView do
 
     it 'finds a blocking issue even when it has been hidden from the board' do
       view.settings['blocked_link_text'] = ['is blocked by']
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [[issue, '2024-01-01', nil]]
       collection = IssueCollection[issue, issue2]
       collection.reject! { |candidate| candidate.key == 'SP-2' } # move SP-2 into the hidden set
@@ -462,7 +462,7 @@ describe DailyView do
 
     it 'renders blocked by issue when blocker cannot be found' do
       view.settings['blocked_link_text'] = ['is blocked by']
-      issue = empty_issue created: '2024-01-01'
+      issue = MockIssue.empty created: '2024-01-01'
       issue.board.cycletime = mock_cycletime_config stub_values: [
         [issue, '2024-01-01', nil]
       ]
@@ -564,7 +564,7 @@ describe DailyView do
 
   describe '#make_child_lines' do
     it 'returns empty for no children' do
-      parent = empty_issue created: '2024-01-01', board: board
+      parent = MockIssue.empty created: '2024-01-01', board: board
       expect(view.make_child_lines parent).to be_empty
     end
 
@@ -573,7 +573,7 @@ describe DailyView do
         [issue1, '2024-01-01', nil],
         [issue2, '2024-01-01', '2024-01-02']
       ]
-      parent = empty_issue created: '2024-01-01', board: board
+      parent = MockIssue.empty created: '2024-01-01', board: board
       parent.subtasks << issue1
       parent.subtasks << issue2
 

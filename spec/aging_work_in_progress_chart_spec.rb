@@ -69,7 +69,7 @@ describe AgingWorkInProgressChart do
 
     # One item still in flight, sitting in In Progress, 11 days old on the day we render.
     def aging_issue
-      empty_issue(created: '2021-06-18', board: board, key: 'SP-300').tap do |issue|
+      MockIssue.empty(created: '2021-06-18', board: board, key: 'SP-300').tap do |issue|
         issue.status = board.possible_statuses.find_by_id board.visible_columns[1].status_ids.min
         add_mock_change(
           issue: issue, field: 'status', value: issue.status.name, value_id: issue.status.id,
@@ -168,7 +168,7 @@ describe AgingWorkInProgressChart do
   context 'with an extra column for unmapped statuses' do
     it 'shows the column when an issue is present with that status' do
       chart.time_range = to_time('2021-10-01')..to_time('2021-10-30')
-      issue = empty_issue created: '2021-10-01', board: board
+      issue = MockIssue.empty created: '2021-10-01', board: board
       issue.raw['fields']['status'] = {
         'name' => 'FakeBacklog',
         'id' => '10012',
@@ -221,7 +221,7 @@ describe AgingWorkInProgressChart do
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
-      active = empty_issue created: '2021-06-20', board: board, key: 'SP-201'
+      active = MockIssue.empty created: '2021-06-20', board: board, key: 'SP-201'
       active.raw['fields']['status'] = {
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }
@@ -252,7 +252,7 @@ describe AgingWorkInProgressChart do
       completed = create_issue_from_aging_data(
         board: board, ages_by_column: [0, 2, 3, 7], today: '2021-06-28', key: 'SP-200'
       )
-      active = empty_issue created: '2021-06-20', board: board, key: 'SP-201'
+      active = MockIssue.empty created: '2021-06-20', board: board, key: 'SP-201'
       active.raw['fields']['status'] = {
         'name' => 'FakeBacklog', 'id' => '10012',
         'statusCategory' => { 'name' => 'To Do', 'id' => '2', 'key' => 'new' }

@@ -33,7 +33,7 @@ describe WipByColumnChart do
   # Build a pair of issues that are in "Selected for Development" before the window and have no
   # resolution, so default_cycletime_config considers them in WIP throughout the window.
   def issue_in_ready key:
-    issue = empty_issue created: '2021-05-31', board: board, key: key
+    issue = MockIssue.empty created: '2021-05-31', board: board, key: key
     add_mock_change issue: issue, field: 'status',
       value: 'Selected for Development', value_id: 10_001,
       time: to_time('2021-05-31T12:00:00')
@@ -89,7 +89,7 @@ describe WipByColumnChart do
       other_board = Board.new(raw: json, possible_statuses: load_complete_sample_statuses)
       other_board.cycletime = default_cycletime_config
 
-      issue_other = empty_issue created: '2021-05-31', board: other_board, key: 'SP-99'
+      issue_other = MockIssue.empty created: '2021-05-31', board: other_board, key: 'SP-99'
       add_mock_change issue: issue_other, field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         time: to_time('2021-05-31T12:00:00')
@@ -102,7 +102,7 @@ describe WipByColumnChart do
 
     it 'handles an issue that first appears within the time range' do
       # Issue with no status change before the window starts
-      issue = empty_issue created: '2021-06-01', board: board, key: 'SP-1'
+      issue = MockIssue.empty created: '2021-06-01', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'Selected for Development', value_id: 10_001,
         time: to_time('2021-06-01T00:08:20') # 500s in
@@ -568,7 +568,7 @@ describe WipByColumnChart do
 
     it 'suggests adding a limit when there is no existing limit' do
       # Done has min=nil, max=nil - use mock cycletime so the issue counts as in-WIP
-      issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+      issue = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'Done', value_id: 10_002,
         time: to_time('2021-05-31T12:00:00')
@@ -587,7 +587,7 @@ describe WipByColumnChart do
   describe '#trim_zero_end_columns' do
     it 'removes a leading all-zero column' do
       # Issue is only in In Progress - Ready (index 0) stays at WIP=0 the whole window
-      issue = empty_issue created: '2021-05-31', board: board, key: 'SP-1'
+      issue = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-1'
       add_mock_change issue: issue, field: 'status',
         value: 'In Progress', value_id: 3,
         time: to_time('2021-05-31T12:00:00')
@@ -618,7 +618,7 @@ describe WipByColumnChart do
       # Issues in Ready and Review but nothing in In Progress (index 1)
       issue_a = issue_in_ready key: 'SP-1'
 
-      issue_b = empty_issue created: '2021-05-31', board: board, key: 'SP-2'
+      issue_b = MockIssue.empty created: '2021-05-31', board: board, key: 'SP-2'
       add_mock_change issue: issue_b, field: 'status',
         value: 'Review', value_id: 10_011,
         time: to_time('2021-05-31T12:00:00')

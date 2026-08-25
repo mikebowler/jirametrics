@@ -296,7 +296,7 @@ describe SprintBurndown do
     end
 
     it 'treats an issue created inside the sprint as entering at creation, with no Sprint changelog entry' do
-      created_inside = empty_issue created: '2022-03-20', board: board, key: 'SP-99', current_sprints: [
+      created_inside = MockIssue.empty created: '2022-03-20', board: board, key: 'SP-99', current_sprints: [
         { 'id' => 1, 'name' => sprint.name, 'state' => 'active', 'boardId' => board.id }
       ]
       board.cycletime = mock_cycletime_config stub_values: [

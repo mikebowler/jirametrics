@@ -184,7 +184,7 @@ describe HtmlReportConfig do
       end
 
       it 'creates one chart per board when no board_id is given' do
-        issue = empty_issue created: '2022-01-01', board: board
+        issue = MockIssue.empty created: '2022-01-01', board: board
         config = described_class.new file_config: file_config, block: nil
         allow(config).to receive(:issues).and_return([issue])
 
@@ -202,13 +202,13 @@ describe HtmlReportConfig do
         raw['id'] = 2
         raw['name'] = 'Aardvark Board' # sorts before "SP board"
         Board.new(raw: raw, possible_statuses: load_complete_sample_statuses).tap do |b|
-          project_config.add_issues([empty_issue(created: '2022-01-01', board: b, key: 'SP-99')])
+          project_config.add_issues([MockIssue.empty(created: '2022-01-01', board: b, key: 'SP-99')])
         end
       end
       let(:two_board_issues) do
         [
-          empty_issue(created: '2022-01-01', board: board),
-          empty_issue(created: '2022-01-01', board: board2, key: 'SP-99')
+          MockIssue.empty(created: '2022-01-01', board: board),
+          MockIssue.empty(created: '2022-01-01', board: board2, key: 'SP-99')
         ]
       end
 
