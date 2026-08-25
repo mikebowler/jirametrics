@@ -4,10 +4,13 @@ require './spec/spec_helper'
 
 describe IssuePrinter do
   let(:board) { sample_board }
-  let(:issue1) { load_issue 'SP-1', board: board }
+  let(:issue1) { MockIssue.empty board: board }
   let(:printer) { described_class.new(issue1) }
 
   describe '#header_line' do
+    # Reads the key, type and summary straight off the issue, so this one genuinely wants a fixture.
+    let(:issue1) { load_issue 'SP-1', board: board }
+
     it 'shows the key, type, and compacted summary' do
       expect(printer.header_line).to eq "SP-1 (Story): Create new draft event\n"
     end
@@ -115,6 +118,8 @@ describe IssuePrinter do
     it 'appends discarded changes after the normal ones' do
       issue1.changes.clear
       issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      # Deliberately not added to the issue: the point is that it is discarded, reaching the printer
+      # only through discarded_changes below.
       discarded = mock_change(field: 'priority', value: 'Old', time: '2021-01-03', artificial: true)
       allow(issue1).to receive(:discarded_changes).and_return([discarded])
       expect(printer.change_entries.map { |entry| entry[0] }).to eq [to_time('2021-01-01'), to_time('2021-01-03')]
@@ -152,52 +157,50 @@ describe IssuePrinter do
     let(:printer) { described_class.new(issue1) }
 
     it 'formats a non-status change with no prior value' do
-      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
+      change = issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: true)
       expect(printer.create_change_message(change: change, issue: issue1)).to eq '"High" (Artificial entry)'
     end
 
     it 'formats a non-status change with a prior value' do
-      change = mock_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01', artificial: true)
+      change = issue1.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01',
+artificial: true)
       expect(printer.create_change_message(change: change, issue: issue1)).to eq '"Low" -> "High" (Artificial entry)'
     end
 
     it 'formats a status change with value ids' do
-      change = mock_change(field: 'status', value: 'In Progress', value_id: 3,
+      change = issue1.add_change(field: 'status', value: 'In Progress', value_id: 3,
                            old_value: 'Backlog', old_value_id: 10_000, time: '2021-01-01', artificial: true)
       expect(printer.create_change_message(change: change, issue: issue1)).to eq \
         '"Backlog":10000 -> "In Progress":3 (Artificial entry)'
     end
 
     it 'includes the author for non-artificial changes' do
-      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false,
-                           issue: issue1)
+      change = issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false)
       expect(printer.create_change_message(change: change, issue: issue1)).to include('(Author: ')
     end
 
     it 'names the author of a non-artificial change' do
-      change = mock_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false)
+      change = issue1.add_change(field: 'priority', value: 'High', time: '2021-01-01', artificial: false)
       allow(change).to receive(:author).and_return('Mike Bowler')
       expect(printer.create_change_message(change: change, issue: issue1)).to eq '"High" (Author: Mike Bowler)'
     end
 
     context 'with sprint changes' do
       it 'shows added sprint id when added to a new sprint' do
-        change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
-                             old_value: '', old_value_id: '', time: '2021-01-01', artificial: false, issue: issue1)
+        change = issue1.add_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+                             old_value: '', old_value_id: '', time: '2021-01-01', artificial: false)
         expect(printer.create_change_message(change: change, issue: issue1)).to include('(added: [10])')
       end
 
       it 'shows removed sprint id when removed from a sprint' do
-        change = mock_change(field: 'Sprint', value: '', value_id: '',
-                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
-                             issue: issue1)
+        change = issue1.add_change(field: 'Sprint', value: '', value_id: '',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false)
         expect(printer.create_change_message(change: change, issue: issue1)).to include('(removed: [10])')
       end
 
       it 'shows both added and removed when moved between sprints' do
-        change = mock_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
-                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
-                             issue: issue1)
+        change = issue1.add_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false)
         message = printer.create_change_message(change: change, issue: issue1)
         aggregate_failures do
           expect(message).to include('(added: [20])')
@@ -206,9 +209,8 @@ describe IssuePrinter do
       end
 
       it 'shows no added or removed when sprint list is unchanged' do
-        change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
-                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false,
-                             issue: issue1)
+        change = issue1.add_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+                             old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: false)
         message = printer.create_change_message(change: change, issue: issue1)
         aggregate_failures do
           expect(message).not_to include('added:')
@@ -220,29 +222,31 @@ describe IssuePrinter do
 
   describe '#format_change_values' do
     it 'formats a status change with value and old ids' do
-      change = mock_change(field: 'status', value: 'In Progress', value_id: 3,
+      change = issue1.add_change(field: 'status', value: 'In Progress', value_id: 3,
                            old_value: 'Backlog', old_value_id: 10_000, time: '2021-01-01', artificial: true)
       expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"In Progress":3', '"Backlog":10000']
     end
 
     it 'has a nil old value for a status change with no prior status' do
-      change = mock_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-01', artificial: true)
+      change = issue1.add_change(field: 'status', value: 'In Progress', value_id: 3, time: '2021-01-01',
+artificial: true)
       expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"In Progress":3', nil]
     end
 
     it 'formats a sprint change with the sprint name, ids, and additions' do
-      change = mock_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
+      change = issue1.add_change(field: 'Sprint', value: 'Sprint 1', value_id: '10',
                            old_value: '', old_value_id: '', time: '2021-01-01', artificial: true)
       expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"Sprint 1" [10] (added: [10])', nil]
     end
 
     it 'formats a plain change through compact_text' do
-      change = mock_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01', artificial: true)
+      change = issue1.add_change(field: 'priority', value: 'High', old_value: 'Low', time: '2021-01-01',
+artificial: true)
       expect(printer.format_change_values(change: change, issue: issue1)).to eq ['"High"', '"Low"']
     end
 
     it 'shows both additions and removals for a sprint moved between sprints' do
-      change = mock_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
+      change = issue1.add_change(field: 'Sprint', value: 'Sprint 2', value_id: '20',
                            old_value: 'Sprint 1', old_value_id: '10', time: '2021-01-01', artificial: true)
       expect(printer.format_change_values(change: change, issue: issue1))
         .to eq ['"Sprint 2" [20] (added: [20]) (removed: [10])', nil]
@@ -285,35 +289,40 @@ describe IssuePrinter do
     end
   end
 
-  it 'prints assignee and issue links' do
-    issue1.board.cycletime = mock_cycletime_config stub_values: [
-      [issue1, '2021-06-18T18:44:21', nil]
-    ]
-    fields = issue1.raw['fields']
-    fields['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
-    fields['issuelinks'] = [
-      {
-        'type' => { 'inward' => 'Clones' },
-        'inwardIssue' => { 'key' => 'ABC123' }
-      },
-      {
-        'type' => { 'outward' => 'Cloned by' },
-        'outwardIssue' => { 'key' => 'ABC456' }
-      }
-    ]
+  # Renders the whole issue, including the assignee and links that only the fixture carries.
+  context 'with a fully populated issue' do
+    let(:issue1) { load_issue 'SP-1', board: board }
 
-    expect(described_class.new(issue1).to_s).to eq <<~TEXT
-      SP-1 (Story): Create new draft event
-        [assignee] "Barney Rubble" <barney@rubble.com>
-        [link] Clones ABC123
-        [link] Cloned by ABC456
-        History:
-          2021-06-18 18:41:29 +0000 [priority] "Medium" (Artificial entry)
-          2021-06-18 18:41:29 +0000 [  status] "Backlog":10000 (Artificial entry)
-          2021-06-18 18:43:34 +0000 [  status] "Backlog":10000 -> "Selected for Development":10001 (Author: Mike Bowler)
-          2021-06-18 18:44:21 +0000 [--------] vvvv Started here vvvv
-          2021-06-18 18:44:21 +0000 [  status] "Selected for Development":10001 -> "In Progress":3 (Author: Mike Bowler)
-          2021-08-29 18:04:39 +0000 [ Flagged] "Impediment" (Author: Mike Bowler)
-    TEXT
+    it 'prints assignee and issue links' do
+      issue1.board.cycletime = mock_cycletime_config stub_values: [
+        [issue1, '2021-06-18T18:44:21', nil]
+      ]
+      fields = issue1.raw['fields']
+      fields['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
+      fields['issuelinks'] = [
+        {
+          'type' => { 'inward' => 'Clones' },
+          'inwardIssue' => { 'key' => 'ABC123' }
+        },
+        {
+          'type' => { 'outward' => 'Cloned by' },
+          'outwardIssue' => { 'key' => 'ABC456' }
+        }
+      ]
+
+      expect(described_class.new(issue1).to_s).to eq <<~TEXT
+        SP-1 (Story): Create new draft event
+          [assignee] "Barney Rubble" <barney@rubble.com>
+          [link] Clones ABC123
+          [link] Cloned by ABC456
+          History:
+            2021-06-18 18:41:29 +0000 [priority] "Medium" (Artificial entry)
+            2021-06-18 18:41:29 +0000 [  status] "Backlog":10000 (Artificial entry)
+            2021-06-18 18:43:34 +0000 [  status] "Backlog":10000 -> "Selected for Development":10001 (Author: Mike Bowler)
+            2021-06-18 18:44:21 +0000 [--------] vvvv Started here vvvv
+            2021-06-18 18:44:21 +0000 [  status] "Selected for Development":10001 -> "In Progress":3 (Author: Mike Bowler)
+            2021-08-29 18:04:39 +0000 [ Flagged] "Impediment" (Author: Mike Bowler)
+      TEXT
+    end
   end
 end
