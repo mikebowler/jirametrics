@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Shipped rather than kept in spec/ so that anyone writing their own charts can test them. Not
+# documented, and not something we announce.
+#
 # Stubs are matched by the issue's KEY, not by object identity, so every issue in a test needs its
 # own key. Build four of them as load_issue 'SP-1' and you have one issue wearing four hats. That
 # used to pass quietly against whichever stub came first; it now raises.
@@ -12,8 +15,18 @@
 # distinguished from one you forgot.
 class MockCycleTimeConfig < CycleTimeConfig
   def initialize
-    super(possible_statuses: nil, label: nil, block: nil, settings: SpecHelpers.load_settings)
+    super(possible_statuses: nil, label: nil, block: nil, settings: self.class.default_settings)
     @stubs = []
+  end
+
+  # The same file ProjectConfig reads, found the same way, so this resolves from wherever the
+  # caller happens to be rather than only from a checkout of this repo.
+  def self.default_settings
+    JSON.parse(File.read(File.join(__dir__, 'settings.json'), encoding: 'UTF-8')).tap do |settings|
+      # A cached cycle time would outlive the stub that produced it, so a second stub for the same
+      # issue would appear to have no effect.
+      settings['cache_cycletime_calculations'] = false
+    end
   end
 
   # Returns self so that calls cascade.
@@ -34,7 +47,7 @@ class MockCycleTimeConfig < CycleTimeConfig
   private
 
   def normalize_time value
-    value.is_a?(String) ? SpecHelpers.to_time(value) : value
+    value.is_a?(String) ? MockChangeItem.parse_time(value) : value
   end
 
   # Only the first stub for a key is reachable, so a second one always means the test is asserting
