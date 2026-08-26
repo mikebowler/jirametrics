@@ -13,8 +13,7 @@ describe AtlassianDocumentFormat do
     it 'finds a match in users' do
       format.users << mock_user(
         display_name: 'Fred Flintstone',
-        account_id: '557058:aaccdddd-0be8-432f-959a-13d34c55315f',
-        avatar_url: 'https://example.com/fred.png'
+        account_id: '557058:aaccdddd-0be8-432f-959a-13d34c55315f'
       )
       expect(format.expand_account_id '557058:aaccdddd-0be8-432f-959a-13d34c55315f').to eq(
         "<span class='account_id'>@Fred Flintstone</span>"
@@ -216,9 +215,7 @@ describe AtlassianDocumentFormat do
     end
 
     it 'escapes a display name when expanding an account id' do
-      format.users << mock_user(
-        display_name: '<script>x</script>', account_id: 'abc', avatar_url: 'https://example.com/x.png'
-      )
+      format.users << mock_user(display_name: '<script>x</script>', account_id: 'abc')
       expect(format.expand_account_id('abc')).to eq(
         "<span class='account_id'>@&lt;script&gt;x&lt;/script&gt;</span>"
       )

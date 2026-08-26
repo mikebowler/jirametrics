@@ -246,20 +246,16 @@ module SpecHelpers
     issue
   end
 
-  def mock_user display_name:, account_id:, avatar_url:, active: true
+  # Only the two fields anything reads are parameters. The avatar is hardcoded rather than dropped
+  # because User#avatar_url digs into the avatarUrls hash and would blow up on nil, so a User
+  # without one isn't simpler, it's broken. 16x16 because that's the size the report uses
+  # everywhere (Issue#assigned_to_icon_url, ChangeItem#author_icon_url).
+  def mock_user display_name:, account_id:
     User.new(raw: {
-        'self' => "https://improvingflow.atlassian.net/rest/api/2/user?accountId=#{account_id}",
         'accountId' => account_id,
-        'accountType' => 'atlassian',
-        'avatarUrls' => {
-          '48x48' => avatar_url,
-          '24x24' => avatar_url,
-          '16x16' => avatar_url,
-          '32x32' => avatar_url
-        },
+        'avatarUrls' => { '16x16' => 'https://example.com/avatar.png' },
         'displayName' => display_name,
-        'active' => active,
-        'locale' => 'en_US'
+        'active' => true
       })
   end
 
