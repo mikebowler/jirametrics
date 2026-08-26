@@ -200,16 +200,6 @@ module SpecHelpers
     )
   end
 
-  # Duplicated from ChartBase. Should this be in a module?
-  def chart_format object
-    if object.is_a? Time
-      # "2022-04-09T11:38:30-07:00"
-      object.strftime '%Y-%m-%dT%H:%M:%S%z'
-    else
-      object.to_s
-    end
-  end
-
   def create_issue_from_aging_data board:, ages_by_column:, today:, key: 'SP-1'
     today = to_date(today)
 
@@ -277,4 +267,5 @@ end
 RSpec.configure do |config|
   config.include SpecHelpers
   config.include JiraMetrics::Testing
+  config.include ChartFormat
 end

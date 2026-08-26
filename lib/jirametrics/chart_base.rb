@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
+# require_all cannot resolve an include the way it resolves a superclass, and chart_format.rb
+# sorts after this file, so name it explicitly.
+require_relative 'chart_format'
+
 class ChartBase
+  include ChartFormat
+
   # Okabe-Ito palette - perceptually distinct under the most common forms of colour blindness.
   # Ordered from most- to least-commonly useful for chart series.
   OKABE_ITO_PALETTE = %w[
@@ -264,15 +270,6 @@ class ChartBase
       stopped_time &&
         date_range.include?(stopped_time.to_date) && # Remove outside range
         (include_unstarted || (started_time && (stopped_time >= started_time)))
-    end
-  end
-
-  def chart_format object
-    if object.is_a? Time
-      # "2022-04-09T11:38:30-07:00"
-      object.strftime '%Y-%m-%dT%H:%M:%S%z'
-    else
-      object.to_s
     end
   end
 
