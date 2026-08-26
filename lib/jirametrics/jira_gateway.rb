@@ -109,20 +109,12 @@ class JiraGateway
 
   VerifyResult = Data.define(:ok, :url, :message)
 
-  # Confirm that our credentials actually authenticate against Jira. We deliberately hit /myself,
-  # which requires authentication on every Jira edition (anonymous callers get a 401). An endpoint
-  # that also answers anonymously would happily "succeed" with bad credentials, which defeats the
-  # whole point. Cloud speaks v3, Server/Data Center speaks v2. Returns a VerifyResult rather than
-  # raising so the caller can report on every configured connection and set its own exit status.
   def verify_connection
+    # We use /myself because the only reason it can fail is if we aren't authenticated.
     json = call_url relative_url: "/rest/api/#{cloud? ? 3 : 2}/myself"
-    # The point is to say WHICH account authenticated, so it works down to whatever the response
-    # carries. Falling back as far as the email is deliberate here and would be wrong in a report.
-    # See ChangeItem#author on the 'name' leg, which no Jira has been observed to send.
-    # from_raw isn't used here: /myself either describes a user or the call raises, so unlike an
-    # issue's assignee there is no absent-user case to guard against.
+
     user = User.new raw: json
-    who = user.display_name || json['name'] || user.email_address || 'unknown user'
+    who = user.display_name || user.email_address || 'unknown user'
     VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} (authenticated as #{who})")
   rescue StandardError => e
     VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url}: #{e.message}")
