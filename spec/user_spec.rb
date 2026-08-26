@@ -37,6 +37,16 @@ describe User do
     expect(user.avatar_url).to be_nil
   end
 
+  # The shape older Jira sent, taken from target/: no accountId and no displayName, just the login
+  # name and an email. 15,571 user objects in that data look exactly like this.
+  it 'reads the older name field, for data downloaded before accountId existed' do
+    user = described_class.new(raw: { 'name' => 'fflintstone', 'emailAddress' => 'fred@example.com' })
+    aggregate_failures do
+      expect(user.name).to eq 'fflintstone'
+      expect(user.display_name).to be_nil
+    end
+  end
+
   describe '.from_raw' do
     # Jira leaves the whole user out when there isn't one, so every caller reading an embedded
     # user has to handle its absence. They get nil to check rather than a User that raises on

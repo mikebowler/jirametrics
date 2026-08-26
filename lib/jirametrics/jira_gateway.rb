@@ -114,7 +114,7 @@ class JiraGateway
     json = call_url relative_url: "/rest/api/#{cloud? ? 3 : 2}/myself"
 
     user = User.new raw: json
-    who = user.display_name || user.email_address || 'unknown user'
+    who = user.display_name || user.name || user.email_address || 'unknown user'
     VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} (authenticated as #{who})")
   rescue StandardError => e
     VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url}: #{e.message}")

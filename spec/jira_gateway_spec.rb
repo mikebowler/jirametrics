@@ -322,8 +322,13 @@ describe JiraGateway do
     end
 
     # The point of this message is to tell you WHICH account you just authenticated as, so it works
-    # down to whatever identifier the response carries.
-    it 'falls back to emailAddress when there is no displayName' do
+    # down to whatever identifier the response carries. Each step down is a separate leg.
+    it 'falls back to name when displayName is absent' do
+      allow(cloud_gateway).to receive(:call_url).and_return({ 'name' => 'bbunny' })
+      expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bbunny)'
+    end
+
+    it 'falls back to emailAddress when there is neither displayName nor name' do
       allow(cloud_gateway).to receive(:call_url).and_return({ 'emailAddress' => 'bugs@example.com' })
       expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bugs@example.com)'
     end

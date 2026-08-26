@@ -18,6 +18,10 @@ class User
   # sends it when the account's privacy settings allow it.
   def email_address = @raw['emailAddress']
 
+  # The identifier older Jira used, alongside 'key', before Cloud replaced both with accountId.
+  # Nothing current sends it, so expect nil from anything downloaded recently.
+  def name = @raw['name']
+
   # The honest answer, including nil. Callers each want something different when there is no name
   # to show: Issue#author wants '', ChangeItem#author wants 'Unknown author', and Issue#assigned_to
   # wants the nil so it can tell unassigned from unnameable. So the default belongs at the call
