@@ -37,13 +37,8 @@ class ChangeItem
     raw_value.to_s.split(', ').collect(&:to_i)
   end
 
-  # Jira's data integrity is weak enough that defending against a missing name is reasonable, though
-  # this particular fallback may be over-cautious: across 553k user objects from three Cloud
-  # instances, not one carried 'name' and not one lacked 'displayName' (checked 2026-08-26).
-  #
-  # 'Unknown author' is a different matter and stays. It should be impossible to have no author at
-  # all, but we've seen it in production.
-  def author = User.from_raw(@author_raw)&.display_name || @author_raw&.[]('name') || 'Unknown author'
+  # It should be impossible to have no author at all, but we've seen it in production.
+  def author = User.from_raw(@author_raw)&.display_name || 'Unknown author'
 
   def author_icon_url = User.from_raw(@author_raw)&.avatar_url
 

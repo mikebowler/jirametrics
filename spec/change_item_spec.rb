@@ -186,11 +186,6 @@ describe ChangeItem do
       expect(change.author).to eq 'Alice'
     end
 
-    it 'returns name when displayName is absent' do
-      change = described_class.new time: time, author_raw: { 'name' => 'alice' }, raw: status_raw
-      expect(change.author).to eq 'alice'
-    end
-
     it 'returns "Unknown author" when author_raw is nil' do
       expect(status_change.author).to eq 'Unknown author'
     end
