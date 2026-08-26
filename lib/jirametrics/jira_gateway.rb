@@ -116,8 +116,14 @@ class JiraGateway
   # raising so the caller can report on every configured connection and set its own exit status.
   def verify_connection
     json = call_url relative_url: "/rest/api/#{cloud? ? 3 : 2}/myself"
-    user = json['displayName'] || json['name'] || json['emailAddress'] || 'unknown user'
-    VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} (authenticated as #{user})")
+    # The point is to say WHICH account authenticated, so it works down to whatever the response
+    # carries. Falling back as far as the email is deliberate here and would be wrong in a report.
+    # See ChangeItem#author on the 'name' leg, which no Jira has been observed to send.
+    # from_raw isn't used here: /myself either describes a user or the call raises, so unlike an
+    # issue's assignee there is no absent-user case to guard against.
+    user = User.new raw: json
+    who = user.display_name || json['name'] || user.email_address || 'unknown user'
+    VerifyResult.new(ok: true, url: @jira_url, message: "Verified #{@jira_url} (authenticated as #{who})")
   rescue StandardError => e
     VerifyResult.new(ok: false, url: @jira_url, message: "Could not authenticate to #{@jira_url}: #{e.message}")
   end
