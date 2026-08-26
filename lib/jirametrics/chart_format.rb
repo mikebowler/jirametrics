@@ -4,9 +4,7 @@
 # strings to assert against.
 module ChartFormat
   def chart_format object
-    # MRI and JRuby once returned different strings from Time#to_s, which is why the format is
-    # spelled out rather than left to to_s. They agree now (see jirametrics-uda), but the
-    # assertions depend on this exact string and to_s promises nothing, so it stays.
+    # Not all ruby versions return the same string for to_s so we force to a known format.
 
     if object.is_a? Time
       object.strftime '%Y-%m-%dT%H:%M:%S%z' # => 2022-04-09T11:38:30-0700

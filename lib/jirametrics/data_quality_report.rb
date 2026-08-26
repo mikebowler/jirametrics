@@ -110,6 +110,7 @@ class DataQualityReport < ChartBase
 
   # Return a format that's easier to assert against
   def testable_entries
+    # Not all ruby versions return the same string for to_s so we force to a known format.
     formatter = ->(time) { time&.strftime('%Y-%m-%d %H:%M:%S %z') || '' }
     @entries.collect do |entry|
       [

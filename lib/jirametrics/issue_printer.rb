@@ -79,6 +79,7 @@ class IssuePrinter
   def render_history history
     type_width = history.collect { |_time, type, _detail, _artificial| type&.length || 0 }.max
     sort_history!(history)
+    # Not all ruby versions return the same string for to_s so we force to a known format.
     history.map do |time, type, detail, _artificial|
       type = type.nil? ? '-' * type_width : type.rjust(type_width)
       "    #{time.strftime '%Y-%m-%d %H:%M:%S %z'} [#{type}] #{detail}\n"
