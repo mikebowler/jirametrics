@@ -1810,6 +1810,13 @@ describe Issue do
     it 'is not assigned' do
       expect(issue1.assigned_to_icon_url).to be_nil
     end
+
+    # Anonymized data reaches us this way: Anonymizer#anonymize_author deletes avatarUrls outright,
+    # so there is an assignee but no avatar to show for them.
+    it 'is nil when the assignee has no avatarUrls at all' do
+      issue1.raw['fields']['assignee'] = { 'displayName' => 'Fred' }
+      expect(issue1.assigned_to_icon_url).to be_nil
+    end
   end
 
   describe '#time_created' do

@@ -63,7 +63,7 @@ class Issue
 
   def labels = raw_fields['labels'] || []
 
-  def author = raw_fields['creator']&.[]('displayName') || ''
+  def author = User.from_raw(raw_fields['creator'])&.display_name || ''
 
   def resolution = raw_fields['resolution']&.[]('name')
 
@@ -374,13 +374,11 @@ class Issue
     @changes.reverse.find(&:resolution?)
   end
 
-  def assigned_to
-    raw_fields['assignee']&.[]('displayName')
-  end
+  # nil rather than '' when there's no assignee, and daily_view relies on it to decide whether to
+  # render an assignee line at all.
+  def assigned_to = User.from_raw(raw_fields['assignee'])&.display_name
 
-  def assigned_to_icon_url
-    raw_fields['assignee']&.[]('avatarUrls')&.[]('16x16')
-  end
+  def assigned_to_icon_url = User.from_raw(raw_fields['assignee'])&.avatar_url
 
   # Many test failures are simply unreadable because the default inspect on this class goes
   # on for pages. Shorten it up.

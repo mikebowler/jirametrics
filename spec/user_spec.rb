@@ -27,4 +27,24 @@ describe User do
       expect(user.display_name).to eq 'Fred Flintstone'
     end
   end
+
+  # Not a theoretical case. Anonymizer#anonymize_author deletes avatarUrls outright
+  # (anonymizer.rb:205), so any user read back from anonymized data arrives without the key.
+  it 'has no avatar rather than blowing up when avatarUrls is absent' do
+    user = described_class.new(raw: { 'displayName' => 'Fred Flintstone' })
+    expect(user.avatar_url).to be_nil
+  end
+
+  describe '.from_raw' do
+    # Jira leaves the whole user out when there isn't one, so every caller reading an embedded
+    # user has to handle its absence. They get nil to check rather than a User that raises on
+    # every question, and they each decide what an absent person should look like.
+    it 'is nil when there is no user to wrap' do
+      expect(described_class.from_raw(nil)).to be_nil
+    end
+
+    it 'wraps a raw user that is there' do
+      expect(described_class.from_raw({ 'displayName' => 'Fred' }).display_name).to eq 'Fred'
+    end
+  end
 end
