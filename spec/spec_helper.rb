@@ -246,10 +246,7 @@ module SpecHelpers
     issue
   end
 
-  # Only the two fields anything reads are parameters. The avatar is hardcoded rather than dropped
-  # because User#avatar_url digs into the avatarUrls hash and would blow up on nil, so a User
-  # without one isn't simpler, it's broken. 16x16 because that's the size the report uses
-  # everywhere (Issue#assigned_to_icon_url, ChangeItem#author_icon_url).
+  # avatarUrls is here because User#avatar_url would blow up without it, and no test would notice.
   def mock_user display_name:, account_id:
     User.new(raw: {
         'accountId' => account_id,
