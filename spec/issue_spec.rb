@@ -1444,6 +1444,13 @@ describe Issue do
       expect(issue1.author).to eq ''
     end
 
+    # Jira has sent us a creator, just not a name we can use. Distinct from the nil case above,
+    # and it lands in the same place by a different route through the || chain.
+    it 'returns empty string when the creator carries no displayName' do
+      issue1.raw['fields']['creator'] = { 'accountId' => '557058:aaccdddd' }
+      expect(issue1.author).to eq ''
+    end
+
     it 'returns author' do
       expect(issue1.author).to eq 'Mike Bowler'
     end
@@ -1782,6 +1789,14 @@ describe Issue do
     end
 
     it 'is not assigned' do
+      expect(issue1.assigned_to).to be_nil
+    end
+
+    # nil rather than '' is load bearing, not an oversight. daily_view.rb:151 does
+    # `if issue.assigned_to` to decide whether to render an assignee line at all, and an empty
+    # string is truthy, so it would print "Assignee:" with a blank name beside the icon.
+    it 'is nil, not empty, when an assignee carries no displayName' do
+      issue1.raw['fields']['assignee'] = { 'accountId' => '557058:aaccdddd' }
       expect(issue1.assigned_to).to be_nil
     end
   end

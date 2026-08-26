@@ -321,6 +321,27 @@ describe JiraGateway do
       end
     end
 
+    # The point of this message is to tell you WHICH account you just authenticated as, so it works
+    # down to whatever identifier the response carries. Each step down is a separate leg.
+    it 'falls back to name when displayName is absent' do
+      allow(cloud_gateway).to receive(:call_url).and_return({ 'name' => 'bbunny' })
+      expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bbunny)'
+    end
+
+    it 'falls back to emailAddress when neither displayName nor name is present' do
+      allow(cloud_gateway).to receive(:call_url).and_return({ 'emailAddress' => 'bugs@example.com' })
+      expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bugs@example.com)'
+    end
+
+    it 'still reports success when the response identifies nobody at all' do
+      allow(cloud_gateway).to receive(:call_url).and_return({})
+      result = cloud_gateway.verify_connection
+      aggregate_failures do
+        expect(result.ok).to be true
+        expect(result.message).to end_with '(authenticated as unknown user)'
+      end
+    end
+
     it 'returns a failing result carrying the reason authentication failed' do
       allow(cloud_gateway).to receive(:call_url).and_raise(
         "The request was not authorized. Verify that your authentication token hasn't expired"

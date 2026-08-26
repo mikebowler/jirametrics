@@ -194,6 +194,12 @@ describe ChangeItem do
     it 'returns "Unknown author" when author_raw is nil' do
       expect(status_change.author).to eq 'Unknown author'
     end
+
+    # An author who arrived with neither field, which is not the same as no author arriving at all.
+    it 'returns "Unknown author" when the author carries neither displayName nor name' do
+      change = described_class.new time: time, author_raw: { 'accountId' => 'abc' }, raw: status_raw
+      expect(change.author).to eq 'Unknown author'
+    end
   end
 
   describe '#author_icon_url' do
