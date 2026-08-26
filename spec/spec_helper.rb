@@ -246,8 +246,9 @@ module SpecHelpers
     issue
   end
 
-  # avatarUrls is here because User#avatar_url would blow up without it, and no test would notice.
   def mock_user display_name:, account_id:
+    # avatarUrls is here because User#avatar_url would blow up without it, and no test would notice.
+
     User.new(raw: {
         'accountId' => account_id,
         'avatarUrls' => { '16x16' => 'https://example.com/avatar.png' },
