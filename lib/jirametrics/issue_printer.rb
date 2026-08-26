@@ -19,10 +19,11 @@ class IssuePrinter
   end
 
   def assignee_line
-    assignee = @issue.raw['fields']['assignee']
-    return '' if assignee.nil?
+    user = User.from_raw @issue.raw['fields']['assignee']
+    return '' if user.nil?
 
-    "  [assignee] #{assignee['name'].inspect} <#{assignee['emailAddress']}>\n"
+    email = user.email_address
+    "  [assignee] #{user.display_name.inspect}#{" <#{email}>" if email}\n"
   end
 
   def links_section

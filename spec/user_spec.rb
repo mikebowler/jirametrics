@@ -17,11 +17,13 @@ describe User do
         '32x32' => 'https://example.com/fred-32.png'
       },
       'displayName' => 'Fred Flintstone',
+      'emailAddress' => 'fred@example.com',
       'active' => true,
       'locale' => 'en_US'
     })
     aggregate_failures do
       expect(user.account_id).to eq '712020:d3b13c86-3b58-4fb3-807f-e6129eb85d83'
+      expect(user.email_address).to eq 'fred@example.com'
       expect(user.avatar_url).to eq 'https://example.com/fred-16.png'
       expect(user).to be_active
       expect(user.display_name).to eq 'Fred Flintstone'

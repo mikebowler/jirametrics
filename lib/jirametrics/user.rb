@@ -14,6 +14,10 @@ class User
   def account_id = @raw['accountId']
   def active? = @raw['active']
 
+  # Present on roughly 2% of the user objects we've seen, so callers must expect nil. Jira only
+  # sends it when the account's privacy settings allow it.
+  def email_address = @raw['emailAddress']
+
   # The honest answer, including nil. Callers each want something different when there is no name
   # to show: Issue#author wants '', ChangeItem#author wants 'Unknown author', and Issue#assigned_to
   # wants the nil so it can tell unassigned from unnameable. So the default belongs at the call

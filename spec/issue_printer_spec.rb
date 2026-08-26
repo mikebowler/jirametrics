@@ -22,9 +22,21 @@ describe IssuePrinter do
       expect(printer.assignee_line).to eq ''
     end
 
-    it 'shows the assignee name and email' do
-      issue1.raw['fields']['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
+    # These two fixtures carry the key set real Jira sends. A survey of 553k user objects across
+    # three instances found displayName on every one of them, 'name' on none, and emailAddress on
+    # roughly 2%. The old fixture here used 'name', which no Jira has ever sent, so this line
+    # printed "nil" against real data while its test stayed green.
+    it 'shows the assignee name, and the email when there is one' do
+      issue1.raw['fields']['assignee'] = {
+        'accountId' => '557058:0000', 'displayName' => 'Barney Rubble',
+        'emailAddress' => 'barney@rubble.com'
+      }
       expect(printer.assignee_line).to eq %(  [assignee] "Barney Rubble" <barney@rubble.com>\n)
+    end
+
+    it 'omits the empty brackets when the assignee has no email, which is the common case' do
+      issue1.raw['fields']['assignee'] = { 'accountId' => '557058:0000', 'displayName' => 'Barney Rubble' }
+      expect(printer.assignee_line).to eq %(  [assignee] "Barney Rubble"\n)
     end
   end
 
@@ -298,7 +310,10 @@ describe IssuePrinter do
     it 'prints assignee and issue links' do
       issue1.board.cycletime = MockCycleTimeConfig.new.stub(issue1, started: '2021-06-18T18:44:21')
       fields = issue1.raw['fields']
-      fields['assignee'] = { 'name' => 'Barney Rubble', 'emailAddress' => 'barney@rubble.com' }
+      fields['assignee'] = {
+        'accountId' => '557058:0000', 'displayName' => 'Barney Rubble',
+        'emailAddress' => 'barney@rubble.com'
+      }
       fields['issuelinks'] = [
         {
           'type' => { 'inward' => 'Clones' },
