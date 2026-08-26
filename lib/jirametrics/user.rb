@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class User
-  # Jira omits the whole user object when there isn't one, so callers reading an embedded user get
-  # nil to check rather than a User that raises on every question.
+  # Jira omits the user entirely when there isn't one, so callers get nil rather than a User that
+  # raises on every question.
   def self.from_raw raw
     raw && new(raw: raw)
   end
@@ -13,22 +13,15 @@ class User
 
   def account_id = @raw['accountId']
   def active? = @raw['active']
-
-  # Present on roughly 2% of the user objects we've seen, so callers must expect nil. Jira only
-  # sends it when the account's privacy settings allow it.
   def email_address = @raw['emailAddress']
 
-  # The identifier older Jira used, alongside 'key', before Cloud replaced both with accountId.
-  # Nothing current sends it, so expect nil from anything downloaded recently.
+  # What older Jira called displayName. Newer versions of Cloud don't return it.
   def name = @raw['name']
 
-  # The honest answer, including nil. Callers each want something different when there is no name
-  # to show: Issue#author wants '', ChangeItem#author wants 'Unknown author', and Issue#assigned_to
-  # wants the nil so it can tell unassigned from unnameable. So the default belongs at the call
-  # site, where you can see which one you're getting.
+  # Nil when there's no name to show. Callers want different things in that case, so the default
+  # belongs at the call site.
   def display_name = @raw['displayName']
 
-  # 16x16 because that is the size the report renders these at, sized to 1em by the .icon rule.
-  # avatarUrls can be absent entirely: Anonymizer#anonymize_author deletes it.
+  # 16x16 is the size the report renders avatars at.
   def avatar_url = @raw['avatarUrls']&.[]('16x16')
 end
