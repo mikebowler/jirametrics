@@ -1454,6 +1454,11 @@ describe Issue do
     it 'returns author' do
       expect(issue1.author).to eq 'Mike Bowler'
     end
+
+    it 'falls back to the older name field' do
+      issue1.raw['fields']['creator'] = { 'name' => 'mbowler', 'emailAddress' => 'mike@example.com' }
+      expect(issue1.author).to eq 'mbowler'
+    end
   end
 
   describe '#raw_fields' do
@@ -1798,6 +1803,11 @@ describe Issue do
     it 'is nil, not empty, when an assignee carries no displayName' do
       issue1.raw['fields']['assignee'] = { 'accountId' => '557058:aaccdddd' }
       expect(issue1.assigned_to).to be_nil
+    end
+
+    it 'falls back to the older name field' do
+      issue1.raw['fields']['assignee'] = { 'name' => 'frubble', 'emailAddress' => 'fred@example.com' }
+      expect(issue1.assigned_to).to eq 'frubble'
     end
   end
 

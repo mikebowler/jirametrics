@@ -17,12 +17,10 @@ class User
   def active? = @raw['active']
   def email_address = @raw['emailAddress']
 
-  # What older Jira called displayName. Newer versions of Cloud don't return it.
-  def name = @raw['name']
-
-  # Nil when there's no name to show. Callers want different things in that case, so the default
-  # belongs at the call site.
-  def display_name = @raw['displayName']
+  # Nil when there's no name to show, in either spelling. Callers want different things in that
+  # case, so the default belongs at the call site. 'name' is what older Jira called displayName,
+  # and newer versions of Cloud don't return it.
+  def display_name = @raw['displayName'] || @raw['name']
 
   def avatar_url = @raw['avatarUrls']&.[](RENDERED_AVATAR_SIZE)
 end

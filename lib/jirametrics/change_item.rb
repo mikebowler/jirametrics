@@ -38,10 +38,7 @@ class ChangeItem
   end
 
   # It should be impossible to have no author at all, but we've seen it in production.
-  def author
-    user = User.from_raw @author_raw
-    user&.display_name || user&.name || 'Unknown author'
-  end
+  def author = User.from_raw(@author_raw)&.display_name || 'Unknown author'
 
   def author_icon_url = User.from_raw(@author_raw)&.avatar_url
 

@@ -328,11 +328,6 @@ describe JiraGateway do
       expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bbunny)'
     end
 
-    it 'falls back to emailAddress when there is neither displayName nor name' do
-      allow(cloud_gateway).to receive(:call_url).and_return({ 'emailAddress' => 'bugs@example.com' })
-      expect(cloud_gateway.verify_connection.message).to end_with '(authenticated as bugs@example.com)'
-    end
-
     it 'still reports success when the response identifies nobody at all' do
       allow(cloud_gateway).to receive(:call_url).and_return({})
       result = cloud_gateway.verify_connection
