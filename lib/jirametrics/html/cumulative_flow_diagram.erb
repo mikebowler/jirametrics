@@ -323,9 +323,9 @@ if (!Chart.Tooltip.positioners.legendItem) {
 
         // The triangle is drawn on a separate overlay canvas using native DOM
         // events, completely bypassing Chart.js's render/event cycle (which
-        // behaves unreliably in Safari). The triangle is hidden immediately on
-        // mouse move and redrawn after a short pause (debounce), preventing the
-        // browser from being overwhelmed by rapid redraws.
+        // behaves unreliably in Safari). Redraws are coalesced into a single
+        // requestAnimationFrame (see scheduleOverlayRedraw) so a fast mouse move
+        // cannot queue up more redraws than the browser can paint.
         const dpr     = window.devicePixelRatio || 1;
         const parent = canvas.parentNode;
         if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
@@ -359,6 +359,12 @@ if (!Chart.Tooltip.positioners.legendItem) {
         // disabled entirely so its internal hover/tooltip logic cannot interfere
         // with the overlay canvas rAF (which hangs Safari at certain positions).
         // Our native canvas mousemove handler is unaffected by this setting.
+        //
+        // Switching events off wholesale looks heavy handed, and it is. We never found
+        // the root cause of the Safari hang. Other fixes we tried worked in some
+        // browsers but not all; this is the only one that was reliable across Safari,
+        // Chrome, Edge and Firefox. Treat it as load bearing: anything that re-enables
+        // events here has to be retested in all four.
         const defaultEvents = ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'];
 
         function setTriangleMode(enabled) {
