@@ -365,6 +365,29 @@ describe ChartBase do
       expect(chart_base.date_annotation).to include("drawTime: 'afterDraw'")
     end
 
+    it 'shows nothing until hovered when there is a description but no label' do
+      chart_base.settings = {
+        'date_annotations' => [{ 'date' => '2022-06-01', 'description' => 'Waiting on the test system' }]
+      }
+      result = chart_base.date_annotation
+      aggregate_failures do
+        expect(result).to include('display: false')
+        expect(result).to include('content: ["Waiting on the test system"]')
+        expect(result).to include('ctx.element.label.options.display = true')
+        expect(result).not_to include('null')
+      end
+    end
+
+    it 'draws a bare line when the annotation has neither label nor description' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01' }] }
+      result = chart_base.date_annotation
+      aggregate_failures do
+        expect(result).to include('dateAnnotation0:')
+        expect(result).not_to include('label:')
+        expect(result).not_to include('null')
+      end
+    end
+
     it 'omits the hover callbacks when the chart reveals descriptions itself' do
       chart_base.settings = {
         'date_annotations' => [

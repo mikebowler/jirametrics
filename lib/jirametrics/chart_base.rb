@@ -226,15 +226,7 @@ class ChartBase
           xMin: #{normalized.to_json},
           xMax: #{normalized.to_json},
           borderColor: 'rgba(0,0,0,0.7)',
-          borderWidth: 1,#{annotation_hit_tolerance(a) if hover}
-          label: {
-            display: true,
-            content: #{annotation_content(a).to_json},
-            position: #{positions[index].to_json},
-            // The CFD hatches its correction windows over the chart, and the scatterplot draws
-            // dots and percentile lines. Drawing the label last keeps it readable on both.
-            drawTime: 'afterDraw'
-          }#{annotation_hover_callbacks(a, index) if hover}
+          borderWidth: 1#{annotation_hit_tolerance(a) if hover}#{annotation_label a, positions[index]}#{annotation_hover_callbacks(a, index) if hover}
         },
       TEXT
     end.join
@@ -247,16 +239,39 @@ class ChartBase
       .sort_by { |(_, dt)| dt }
   end
 
-  # Without a description the label stays a plain string, exactly as it always was. With one it
-  # becomes a single element array so that hovering can append the description lines below it.
+  # The label block for one annotation, or nothing at all when there is neither a label nor a
+  # description to put in it.
+  def annotation_label annotation, position
+    # drawTime: the CFD hatches its correction windows over the chart and the scatterplot draws
+    # dots and percentile lines. Drawing the label last keeps it readable on both.
+
+    label = annotation['label']
+    description = annotation['description']
+    return '' if label.nil? && description.nil?
+
+    ",\n" \
+      "  label: {\n" \
+      "    display: #{!label.nil?},\n" \
+      "    content: #{annotation_content(annotation).to_json},\n" \
+      "    position: #{position.to_json},\n" \
+      "    drawTime: 'afterDraw'\n" \
+      '  }'
+  end
+
+  # A label on its own stays a plain string, exactly as it always was. Paired with a description it
+  # becomes a single element array so that hovering can append the description lines below it. With
+  # no label at all the description is the whole content, hidden until the line is hovered.
   def annotation_content annotation
-    annotation['description'] ? [annotation['label']] : annotation['label']
+    label = annotation['label']
+    return wrap_annotation_description annotation['description'] if label.nil?
+
+    annotation['description'] ? [label] : label
   end
 
   # The line is a single pixel wide, so without widening the hit target there is nothing the
   # mouse can realistically land on. Only annotations that react to hovering need it.
   def annotation_hit_tolerance annotation
-    annotation['description'] ? "\n  hitTolerance: 6," : ''
+    annotation['description'] ? ",\n  hitTolerance: 6" : ''
   end
 
   def wrap_annotation_description description
@@ -281,12 +296,22 @@ class ChartBase
   def annotation_hover_callbacks annotation, index
     description = annotation['description']
     return '' unless description
+    return annotation_reveal_callbacks if annotation['label'].nil?
 
     expanded = [annotation['label'], *wrap_annotation_description(description)]
     target = "ctx.chart.options.plugins.annotation.annotations.dateAnnotation#{index}.label.content"
     ",\n" \
       "  enter(ctx) { #{target} = #{expanded.to_json}; ctx.chart.update('none'); },\n" \
       "  leave(ctx) { #{target} = #{annotation_content(annotation).to_json}; ctx.chart.update('none'); }"
+  end
+
+  # With no label there is nothing on screen at rest, so hovering only has to switch the hidden
+  # label on. The content never changes, so its box is already measured and draw() is enough.
+  # That avoids the update() dance the case above needs, and the element can be written directly.
+  def annotation_reveal_callbacks
+    ",\n" \
+      '  enter(ctx) { ctx.element.label.options.display = true; ctx.chart.draw(); },' \
+      "\n  leave(ctx) { ctx.element.label.options.display = false; ctx.chart.draw(); }"
   end
 
   def stagger_label_positions datetimes

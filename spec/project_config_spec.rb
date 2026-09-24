@@ -1037,6 +1037,42 @@ describe ProjectConfig do
     end
   end
 
+  describe '#report_unusable_date_annotations' do
+    it 'stays quiet when every annotation carries a label or a description' do
+      project_config.settings['date_annotations'] = [
+        { 'date' => '2022-06-01', 'label' => 'Board change' },
+        { 'date' => '2022-07-01', 'description' => 'Test system down' }
+      ]
+      project_config.report_unusable_date_annotations
+      expect(exporter.file_system.log_messages).to be_empty
+    end
+
+    it 'emits a single consolidated warning naming every annotation that has neither' do
+      project_config.settings['date_annotations'] = [
+        { 'date' => '2022-06-01' },
+        { 'date' => '2022-07-01', 'label' => 'Fine' },
+        { 'date' => '2022-08-01' }
+      ]
+
+      project_config.report_unusable_date_annotations
+
+      messages = exporter.file_system.log_messages
+      aggregate_failures do
+        expect(messages.size).to eq 1
+        expect(messages.first).to include('2022-06-01')
+        expect(messages.first).to include('2022-08-01')
+        expect(messages.first).not_to include('2022-07-01')
+      end
+    end
+
+    it 'does not repeat the warning when called a second time' do
+      project_config.settings['date_annotations'] = [{ 'date' => '2022-06-01' }]
+      project_config.report_unusable_date_annotations
+      project_config.report_unusable_date_annotations
+      expect(exporter.file_system.log_messages.size).to eq 1
+    end
+  end
+
   describe '#resolve_blocked_stalled_status_settings' do
     before do
       project_config.file_prefix 'sample'

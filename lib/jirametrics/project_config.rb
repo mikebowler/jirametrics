@@ -44,6 +44,7 @@ class ProjectConfig
     load_fix_versions
     load_users
     resolve_blocked_stalled_status_settings
+    report_unusable_date_annotations
   end
 
   def run load_only: false
@@ -79,6 +80,29 @@ class ProjectConfig
   # passed through but that no longer exists in Jira). It fires often -- any workflow rework leaves
   # these behind -- so we say the explanation once and hand over a single ready-to-paste block of
   # mappings rather than one repetitive paragraph per status.
+  # Print one consolidated warning covering every date annotation that has neither a label nor a
+  # description. Such an annotation draws a bare line with nothing to say what it marks, which is
+  # almost always a typo in the config rather than a choice. One warning per project, because the
+  # same settings hash is usually shared across several projects and every chart re-reads it.
+  def report_unusable_date_annotations
+    return if @unusable_date_annotations_reported
+
+    @unusable_date_annotations_reported = true
+
+    unusable = (settings['date_annotations'] || []).reject do |annotation|
+      annotation['label'] || annotation['description']
+    end
+    return if unusable.empty?
+
+    dates = unusable.map { |annotation| annotation['date'].inspect }.join(', ')
+    file_system.warning(
+      "These date annotations have neither a label nor a description: #{dates}. Each will draw " \
+      'a bare line with nothing to say what it marks, which is almost certainly a mistake. Give ' \
+      'each one a label, a description, or both. If a bare line really is what you wanted, they ' \
+      'will work as they are.'
+    )
+  end
+
   def report_fabricated_statuses
     statuses = possible_statuses.fabricated_statuses
     return if statuses.empty? || @fabricated_statuses_reported
