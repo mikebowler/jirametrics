@@ -198,6 +198,10 @@ class ChartBase
 
   LABEL_POSITIONS = %w[5% 25% 45% 65%].freeze
 
+  # chartjs-plugin-annotation renders each array element as its own line and does no wrapping of
+  # its own, so anything long has to arrive already split.
+  ANNOTATION_DESCRIPTION_WIDTH = 60
+
   def date_annotation
     annotations = settings['date_annotations'] || []
     in_range = annotations
@@ -214,15 +218,57 @@ class ChartBase
           xMin: #{normalized.to_json},
           xMax: #{normalized.to_json},
           borderColor: 'rgba(0,0,0,0.7)',
-          borderWidth: 1,
+          borderWidth: 1,#{annotation_hit_tolerance a}
           label: {
             display: true,
-            content: #{a['label'].to_json},
+            content: #{annotation_content(a).to_json},
             position: #{positions[index].to_json}
-          }
+          }#{annotation_hover_callbacks a, index}
         },
       TEXT
     end.join
+  end
+
+  # Without a description the label stays a plain string, exactly as it always was. With one it
+  # becomes a single element array so that hovering can append the description lines below it.
+  def annotation_content annotation
+    annotation['description'] ? [annotation['label']] : annotation['label']
+  end
+
+  # The line is a single pixel wide, so without widening the hit target there is nothing the
+  # mouse can realistically land on. Only annotations that react to hovering need it.
+  def annotation_hit_tolerance annotation
+    annotation['description'] ? "\n  hitTolerance: 6," : ''
+  end
+
+  def wrap_annotation_description description
+    description.split.each_with_object([]) do |word, lines|
+      if lines.empty? || "#{lines.last} #{word}".length > ANNOTATION_DESCRIPTION_WIDTH
+        lines << word
+      else
+        lines[-1] = "#{lines.last} #{word}"
+      end
+    end
+  end
+
+  # Two things here are easy to get wrong, and both were, so they are worth spelling out.
+  #
+  # update('none') rather than draw(): the label's box is measured during the update, so a plain
+  # redraw paints the new lines at the old box size and they spill across the chart as white text
+  # on nothing. 'none' skips the animation.
+  #
+  # Writing to the chart config rather than to ctx.element: update() re-resolves every annotation
+  # from the config, so anything written to the element is discarded before it can be drawn. The
+  # percentile lines elsewhere can write to the element because they call draw(), not update().
+  def annotation_hover_callbacks annotation, index
+    description = annotation['description']
+    return '' unless description
+
+    expanded = [annotation['label'], *wrap_annotation_description(description)]
+    target = "ctx.chart.options.plugins.annotation.annotations.dateAnnotation#{index}.label.content"
+    ",\n" \
+      "  enter(ctx) { #{target} = #{expanded.to_json}; ctx.chart.update('none'); },\n" \
+      "  leave(ctx) { #{target} = #{annotation_content(annotation).to_json}; ctx.chart.update('none'); }"
   end
 
   def stagger_label_positions datetimes

@@ -302,6 +302,64 @@ describe ChartBase do
       end
     end
 
+    it 'reveals the description on hover when one is given' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'Board change', 'description' => 'Added two columns' }
+        ]
+      }
+      result = chart_base.date_annotation
+      aggregate_failures do
+        expect(result).to include('enter(ctx)')
+        expect(result).to include('leave(ctx)')
+        expect(result).to include('["Board change","Added two columns"]')
+        expect(result).to include('["Board change"]')
+      end
+    end
+
+    it 'wraps a long description rather than running it off the edge of the chart' do
+      chart_base.settings = {
+        'date_annotations' => [
+          {
+            'date' => '2022-06-01', 'label' => 'Blocked',
+            'description' => 'one two three four five six seven eight nine ten eleven twelve'
+          }
+        ]
+      }
+      hovered = JSON.parse(chart_base.date_annotation[/enter\(ctx\).*?content = (\[.*?\]);/, 1])
+      expect(hovered).to eq [
+        'Blocked',
+        'one two three four five six seven eight nine ten eleven',
+        'twelve'
+      ]
+    end
+
+    it 'widens the hit target so a one pixel line can be hovered at all' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'Blocked', 'description' => 'Waiting on the test system' }
+        ]
+      }
+      expect(chart_base.date_annotation).to include('hitTolerance: 6')
+    end
+
+    it 'updates rather than redraws, so the label box grows to fit the description' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'Blocked', 'description' => 'Waiting on the test system' }
+        ]
+      }
+      result = chart_base.date_annotation
+      aggregate_failures do
+        expect(result).to include("ctx.chart.update('none')")
+        expect(result).not_to include('ctx.chart.draw()')
+        # update() re-resolves each annotation from the chart config, so a change written to the
+        # element is thrown away. The callback has to write to the config it reads back.
+        expect(result).to include('ctx.chart.options.plugins.annotation.annotations.dateAnnotation0.label.content')
+        expect(result).not_to include('ctx.element.label.options.content')
+      end
+    end
+
     it 'staggers labels for close annotations' do
       chart_base.settings = {
         'date_annotations' => [
