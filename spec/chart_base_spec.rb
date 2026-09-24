@@ -360,6 +360,25 @@ describe ChartBase do
       end
     end
 
+    it 'draws the label last so chart content cannot paint over it' do
+      chart_base.settings = { 'date_annotations' => [{ 'date' => '2022-06-01', 'label' => 'Feb' }] }
+      expect(chart_base.date_annotation).to include("drawTime: 'afterDraw'")
+    end
+
+    it 'omits the hover callbacks when the chart reveals descriptions itself' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'Board change', 'description' => 'Added two columns' }
+        ]
+      }
+      result = chart_base.date_annotation hover: false
+      aggregate_failures do
+        expect(result).to include('content: ["Board change"]')
+        expect(result).not_to include('enter(ctx)')
+        expect(result).not_to include('hitTolerance')
+      end
+    end
+
     it 'staggers labels for close annotations' do
       chart_base.settings = {
         'date_annotations' => [
@@ -422,6 +441,34 @@ describe ChartBase do
         expect(result).to include('"In range"')
         expect(result).not_to include('"Too early"')
       end
+    end
+  end
+
+  describe '#date_annotation_hover_data' do
+    before do
+      chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31')
+      chart_base.timezone_offset = '+00:00'
+    end
+
+    it 'is empty when nothing is configured' do
+      chart_base.settings = {}
+      expect(JSON.parse(chart_base.date_annotation_hover_data)).to eq []
+    end
+
+    it 'carries only in-range annotations that actually have a description, already wrapped' do
+      chart_base.settings = {
+        'date_annotations' => [
+          { 'date' => '2022-06-01', 'label' => 'Label but no description' },
+          { 'date' => '2022-07-01', 'description' => 'one two three four five six seven eight nine ten eleven twelve' },
+          { 'date' => '2021-01-01', 'description' => 'Out of range' }
+        ]
+      }
+      expect(JSON.parse(chart_base.date_annotation_hover_data)).to eq [
+        {
+          'date' => '2022-07-01T00:00:00+00:00',
+          'lines' => ['one two three four five six seven eight nine ten eleven', 'twelve']
+        }
+      ]
     end
   end
 

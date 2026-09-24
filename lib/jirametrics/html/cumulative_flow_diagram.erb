@@ -14,6 +14,8 @@ if (!Chart.Tooltip.positioners.legendItem) {
 }
 (function() {
   const hatchWindows = <%= hatch_windows.to_json %>;
+  const annotationDescriptions = <%= date_annotation_hover_data %>;
+  const ANNOTATION_HOVER_TOLERANCE = 6;
 
   // Custom plugin: draws diagonal hatching over correction windows in the affected band.
   // Uses createDiagonalPattern() defined in index.js.
@@ -23,7 +25,7 @@ if (!Chart.Tooltip.positioners.legendItem) {
       // Redraw each correction-window border line so that the gaps between
       // dashes show the band fill colour rather than being transparent.
       // Strategy: draw a solid line in the fill colour first, then the dashed
-      // border line on top. afterDraw (hatching) fires after this, so the
+      // border line on top. The hatching runs straight after this, so the
       // hatch pattern still appears over both lines.
       const ctx = chart.ctx;
       const ca  = chart.chartArea;
@@ -55,8 +57,15 @@ if (!Chart.Tooltip.positioners.legendItem) {
         drawSegment(win.fill_color, []);      // solid fill colour fills the gaps
         drawSegment(win.color,      [6, 4]);  // dashed border colour on top
       });
+
+      // The hatching used to run in afterDraw, which put it above the annotation labels no
+      // matter what drawTime those asked for. Running it here, immediately after the borders,
+      // lets a label drawn at afterDraw land on top of it. The trend lines still draw over the
+      // hatching, since cfdFlowMetricsPlugin.afterDraw runs later than this either way.
+      cfdHatchPlugin.drawHatching(chart);
     },
-    afterDraw: function(chart) {
+    // Not a Chart.js hook. Called explicitly from afterDatasetsDraw above.
+    drawHatching: function(chart) {
       const ctx = chart.ctx;
       const ca  = chart.chartArea;
       hatchWindows.forEach(function(win) {
@@ -203,6 +212,44 @@ if (!Chart.Tooltip.positioners.legendItem) {
       ctx.restore();
     }
 
+    // The description box for whichever annotation the cursor is near. This lives on the overlay
+    // rather than going through chartjs-plugin-annotation's own enter/leave, because those need
+    // Chart.js events and triangle mode switches those off.
+    function drawAnnotationDescription(ctx, chart, fm) {
+      const lines = fm._hoveredAnnotation.lines;
+      if (!lines.length) return;
+
+      const ca = chart.chartArea;
+      ctx.save();
+      ctx.font = '11px sans-serif';
+      const pad = 6, lineHeight = 14;
+      const w = Math.max.apply(null, lines.map(function (l) { return ctx.measureText(l).width; })) + pad * 2;
+      const h = lines.length * lineHeight + pad * 2;
+      // Sit below and right of the cursor, flipping when that would cross the edge of the plot.
+      let x = fm.mouseX + 12;
+      let y = fm.mouseY + 12;
+      if (x + w > ca.right)  x = fm.mouseX - 12 - w;
+      if (y + h > ca.bottom) y = fm.mouseY - 12 - h;
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      lines.forEach(function (line, i) { ctx.fillText(line, x + pad, y + pad + i * lineHeight); });
+      ctx.restore();
+    }
+
+    function annotationNear(chart, x) {
+      if (x === null) return null;
+
+      let best = null, bestDistance = ANNOTATION_HOVER_TOLERANCE;
+      annotationDescriptions.forEach(function (a) {
+        const distance = Math.abs(chart.scales.x.getPixelForValue(new Date(a.date).getTime()) - x);
+        if (distance <= bestDistance) { bestDistance = distance; best = a; }
+      });
+      return best;
+    }
+
     function drawTriangle(ctx, chart, fm) {
       const ca    = chart.chartArea;
       const ds    = chart.data.datasets;
@@ -312,6 +359,8 @@ if (!Chart.Tooltip.positioners.legendItem) {
         const dates = chart.data.datasets[0].data.map(d => new Date(d.x).getTime());
         chart._flowMetrics = {
           mouseX:      null,
+          mouseY:      null,
+          _hoveredAnnotation: null,
           arrivals,
           departures,
           dates,
@@ -392,10 +441,9 @@ if (!Chart.Tooltip.positioners.legendItem) {
           if (fm._rafId !== null) return;
           fm._rafId = requestAnimationFrame(function () {
             fm._rafId = null;
-            if (fm._triangleEnabled) {
-              octx.clearRect(0, 0, cssW, cssH);
-              if (fm.mouseX !== null) drawTriangle(octx, chart, fm);
-            }
+            octx.clearRect(0, 0, cssW, cssH);
+            if (fm._triangleEnabled && fm.mouseX !== null) drawTriangle(octx, chart, fm);
+            if (fm._hoveredAnnotation) drawAnnotationDescription(octx, chart, fm);
           });
         }
 
@@ -405,12 +453,17 @@ if (!Chart.Tooltip.positioners.legendItem) {
           const y = e.clientY - rect.top;
           const ca = chart.chartArea;
           if (!ca) return;
-          fm.mouseX = (x >= ca.left && x <= ca.right && y >= ca.top && y <= ca.bottom) ? x : null;
+          const inside = x >= ca.left && x <= ca.right && y >= ca.top && y <= ca.bottom;
+          fm.mouseX = inside ? x : null;
+          fm.mouseY = inside ? y : null;
+          fm._hoveredAnnotation = annotationNear(chart, fm.mouseX);
           scheduleOverlayRedraw();
         }
 
         function onMouseLeave() {
           fm.mouseX = null;
+          fm.mouseY = null;
+          fm._hoveredAnnotation = null;
           scheduleOverlayRedraw();
         }
 
@@ -464,6 +517,15 @@ if (!Chart.Tooltip.positioners.legendItem) {
         point: { radius: 0 }
       },
       plugins: {
+        // The plugin draws the lines and their static labels. It does NOT get the hover callbacks,
+        // because triangle mode switches Chart.js events off and they would fire only when the
+        // triangle was hidden. The overlay canvas reveals descriptions instead, from the native
+        // mousemove handler, so it behaves the same in both modes.
+        annotation: {
+          annotations: {
+            <%= date_annotation hover: false %>
+          }
+        },
         tooltip: {
           enabled: false,
           position: 'legendItem',

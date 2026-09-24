@@ -18,6 +18,7 @@ describe CumulativeFlowDiagram do
     chart.all_boards = { 1 => board }
     chart.issues = issues
     chart.date_range = Date.parse('2021-06-01')..Date.parse('2021-09-01')
+    chart.settings = {}
     chart
   end
 
@@ -33,6 +34,7 @@ describe CumulativeFlowDiagram do
     c.all_boards = { 1 => board }
     c.issues = issues
     c.date_range = Date.parse('2021-06-01')..Date.parse('2021-09-01')
+    c.settings = {}
     c
   end
 
@@ -48,6 +50,32 @@ describe CumulativeFlowDiagram do
         expect(output).to include('Ready')
         expect(output).to include('In Progress')
         expect(output).to include('Done')
+      end
+    end
+
+    it 'renders date annotations so board changes can be read against the pile-ups' do
+      chart.settings = { 'date_annotations' => [{ 'date' => '2021-07-01', 'label' => 'Added Review column' }] }
+      output = chart.run
+      aggregate_failures do
+        expect(output).to include('dateAnnotation0:')
+        expect(output).to include('"Added Review column"')
+      end
+    end
+
+    it 'draws its own description reveal rather than relying on the annotation plugin hover' do
+      chart.settings = {
+        'date_annotations' => [
+          { 'date' => '2021-07-01', 'label' => 'Added Review column', 'description' => 'Two new columns' }
+        ]
+      }
+      output = chart.run
+      aggregate_failures do
+        # the plugin still draws the line and its static label
+        expect(output).to include('dateAnnotation0:')
+        expect(output).to include('"Added Review column"')
+        # but the hover belongs to the overlay, which works whether or not the triangle is on
+        expect(output).not_to include('enter(ctx)')
+        expect(output).to include('"lines":["Two new columns"]')
       end
     end
 

@@ -202,12 +202,20 @@ class ChartBase
   # its own, so anything long has to arrive already split.
   ANNOTATION_DESCRIPTION_WIDTH = 60
 
-  def date_annotation
-    annotations = settings['date_annotations'] || []
-    in_range = annotations
-      .map { |a| [a, normalize_annotation_datetime(a['date'])] }
-      .select { |(_, dt)| date_range.cover?(Date.parse(dt)) }
-      .sort_by { |(_, dt)| dt }
+  # The descriptions a chart needs to draw its own hover reveal, with the dates already normalized
+  # and the text already wrapped, so the JavaScript only has to decide when to show them.
+  def date_annotation_hover_data
+    annotations_in_range
+      .select { |(a, _)| a['description'] }
+      .map { |(a, normalized)| { 'date' => normalized, 'lines' => wrap_annotation_description(a['description']) } }
+      .to_json
+  end
+
+  # hover: false leaves out the reveal callbacks and the widened hit target, for a chart that
+  # draws its own hover reveal. The CFD does, because its flow metrics triangle switches Chart.js
+  # events off and the plugin's hover cannot fire while that is on.
+  def date_annotation hover: true
+    in_range = annotations_in_range
 
     positions = stagger_label_positions(in_range.map { |(_, dt)| dt })
 
@@ -218,15 +226,25 @@ class ChartBase
           xMin: #{normalized.to_json},
           xMax: #{normalized.to_json},
           borderColor: 'rgba(0,0,0,0.7)',
-          borderWidth: 1,#{annotation_hit_tolerance a}
+          borderWidth: 1,#{annotation_hit_tolerance(a) if hover}
           label: {
             display: true,
             content: #{annotation_content(a).to_json},
-            position: #{positions[index].to_json}
-          }#{annotation_hover_callbacks a, index}
+            position: #{positions[index].to_json},
+            // The CFD hatches its correction windows over the chart, and the scatterplot draws
+            // dots and percentile lines. Drawing the label last keeps it readable on both.
+            drawTime: 'afterDraw'
+          }#{annotation_hover_callbacks(a, index) if hover}
         },
       TEXT
     end.join
+  end
+
+  def annotations_in_range
+    (settings['date_annotations'] || [])
+      .map { |a| [a, normalize_annotation_datetime(a['date'])] }
+      .select { |(_, dt)| date_range.cover?(Date.parse(dt)) }
+      .sort_by { |(_, dt)| dt }
   end
 
   # Without a description the label stays a plain string, exactly as it always was. With one it
