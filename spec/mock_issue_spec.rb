@@ -56,6 +56,14 @@ describe MockIssue do
     # Only two keys of that custom field are ever read: id, and boardId which exists solely so
     # Issue#sprint_field_id can recognise which custom field is the sprint one. Names and states
     # written there before were never read and could contradict the board's own Sprint objects.
+    it 'takes an issue type' do
+      expect(described_class.empty(board: board, type: 'Story').type).to eq 'Story'
+    end
+
+    it 'defaults to the type it always used, so existing tests keep working' do
+      expect(described_class.empty(board: board).type).to eq 'Bug'
+    end
+
     it 'records sprint membership in the custom field Jira uses' do
       issue = described_class.empty board: board, current_sprint_ids: [10, 11]
       expect(issue.raw['fields']['customfield_10020']).to eq [
