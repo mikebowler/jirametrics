@@ -24,7 +24,9 @@ coverage/js/.superpowers/
 # Superpowers brainstorming session artifacts
 .superpowers/
 
-# Beads issue tracker (local dev only; not part of the published gem)
-.beads/
+# Beads issue tracker (local dev only; not part of the published gem). The glob rather than
+# .beads/ alone because beads also drops sibling files at the repo root, such as .beads.gate.lock
+# from its migration gate, and those must not reach this public repo either.
+.beads*
 .dolt/
 *.db
