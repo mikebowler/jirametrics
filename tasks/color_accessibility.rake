@@ -13,6 +13,9 @@ CSS_FILE = 'lib/jirametrics/html/index.css'
 # ever seen on its own, where separation does not arise.
 MEASURED_GROUPS = {
   'fallback palette' => /--palette-color-\d+/,
+  # These went unmeasured until a pie chart put two of them side by side and they turned out to be
+  # the same colour. A chart legend shows several types at once, so they have to be told apart.
+  'issue type colours' => /--type-\w+-color/,
   'dependency chart fills' => /--dependency-chart-(?:story|task|bug|epic|spike)-color/,
   # Only the fills. The borders on this chart are deliberately the page colour rather than a hue,
   # so there is nothing to tell apart there.

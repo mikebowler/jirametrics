@@ -32,6 +32,11 @@
   --type-task-color: #0072B2;        /* Okabe-Ito blue */
   --type-bug-color: #D55E00;         /* Okabe-Ito vermilion */
   --type-spike-color: #CC79A7;       /* Okabe-Ito reddish purple */
+  /* Sub-tasks get the most legible colour on the page because teams that use them use them
+     heavily. Epic takes the weakest, the same yellow the dependency chart already gives it.
+     Neither costs anything in separation: the closest pair is still Task and Spike. */
+  --type-subtask-color: #000000;
+  --type-epic-color: #F0E442;        /* Okabe-Ito yellow */
 
   /* The dependency chart is drawn by graphviz, which sets the label text inside the node rather
      than beside it, so unlike --type-*-color above these are judged against the text and not
@@ -296,6 +301,7 @@ html[data-theme="dark"] {
   --type-story-color: #2DCB9A;       /* lighter bluish green for dark bg */
   --type-task-color: #56B4E9;        /* sky blue for dark bg */
   --type-bug-color: #E69F00;         /* orange instead of vermilion for dark bg */
+  --type-subtask-color: #FFFFFF;     /* white instead of black for dark bg */
   --body-background: #343434;
   --default-text-color: #aaa;
   --grid-line-color: #424242;
@@ -362,6 +368,7 @@ html[data-theme="light"] {
   --type-story-color: #009E73;       /* Okabe-Ito bluish green */
   --type-task-color: #0072B2;        /* Okabe-Ito blue */
   --type-bug-color: #D55E00;         /* Okabe-Ito vermilion */
+  --type-subtask-color: #000000;
   --body-background: white;
   --default-text-color: black;
   --grid-line-color: lightgray;
@@ -452,6 +459,7 @@ html[data-theme="light"] {
     --type-story-color: #2DCB9A;       /* lighter bluish green for dark bg */
     --type-task-color: #56B4E9;        /* sky blue for dark bg */
     --type-bug-color: #E69F00;         /* orange instead of vermilion for dark bg */
+    --type-subtask-color: #FFFFFF;     /* white instead of black for dark bg */
 
     --body-background: #343434;
     --default-text-color: #aaa;

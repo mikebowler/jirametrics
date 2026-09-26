@@ -27,12 +27,18 @@ class ChartBase
   @@chart_counter = 0
 
   def initialize
+    # The types common enough to be worth a colour of their own. Anything else falls through to the
+    # palette, and anyone with their own types can configure colours for them. Jira spells the same
+    # type both ways depending on how the project was created, so both spellings map to one colour.
     @chart_colors = {
-      'Story'  => CssVariable['--type-story-color'],
-      'Task'   => CssVariable['--type-task-color'],
-      'Bug'    => CssVariable['--type-bug-color'],
-      'Defect' => CssVariable['--type-bug-color'],
-      'Spike'  => CssVariable['--type-spike-color']
+      'Story'    => CssVariable['--type-story-color'],
+      'Task'     => CssVariable['--type-task-color'],
+      'Bug'      => CssVariable['--type-bug-color'],
+      'Defect'   => CssVariable['--type-bug-color'],
+      'Spike'    => CssVariable['--type-spike-color'],
+      'Epic'     => CssVariable['--type-epic-color'],
+      'Sub-task' => CssVariable['--type-subtask-color'],
+      'Subtask'  => CssVariable['--type-subtask-color']
     }
     @canvas_width = 800
     @canvas_height = 200

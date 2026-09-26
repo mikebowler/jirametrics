@@ -275,6 +275,25 @@ describe ChartBase do
     end
   end
 
+  describe '#color_for' do
+    it 'gives each common issue type its own colour' do
+      colors = %w[Story Task Bug Defect Spike Epic Sub-task Subtask].to_h do |type|
+        [type, chart_base.color_for(type: type)]
+      end
+      aggregate_failures do
+        expect(colors['Epic']).to eq CssVariable['--type-epic-color']
+        # Jira writes it both ways depending on how the project was set up
+        expect(colors['Sub-task']).to eq CssVariable['--type-subtask-color']
+        expect(colors['Subtask']).to eq colors['Sub-task']
+        expect(colors['Defect']).to eq colors['Bug']
+      end
+    end
+
+    it 'falls back to the palette for anything it has no colour for' do
+      expect(chart_base.color_for(type: 'Improvement')).not_to be_nil
+    end
+  end
+
   describe '#date_annotation' do
     before do
       chart_base.date_range = Date.parse('2022-01-01')..Date.parse('2022-12-31')
