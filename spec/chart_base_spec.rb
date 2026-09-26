@@ -275,6 +275,47 @@ describe ChartBase do
     end
   end
 
+  describe 'finding a template' do
+    # A chart that lives outside this gem, with its template beside it rather than in the gem's
+    # own html directory. This is what someone writing their own chart has.
+    def chart_in dir, template_subdir: nil, body: 'rendered'
+      FileUtils.mkdir_p File.join(dir, template_subdir.to_s)
+      File.write File.join(dir, 'demo_chart.rb'), "class DemoChart < ChartBase; end\n"
+      File.write File.join(dir, template_subdir.to_s, 'demo_chart.erb'), body
+      File.join(dir, 'demo_chart.rb')
+    end
+
+    let(:tmp_dir) { 'spec/tmp/custom_chart' }
+
+    before do
+      FileUtils.rm_rf tmp_dir
+      chart_base.file_system = FileSystem.new
+    end
+
+    after { FileUtils.rm_rf tmp_dir }
+
+    it 'finds a template sitting beside the chart that asked for it' do
+      file = chart_in tmp_dir, body: 'from beside the rb'
+      expect(chart_base.render(binding, file)).to eq 'from beside the rb'
+    end
+
+    it 'prefers an erb subdirectory, for anyone who would rather keep them separate' do
+      chart_in tmp_dir, body: 'from beside the rb'
+      file = chart_in tmp_dir, template_subdir: 'erb', body: 'from the erb directory'
+      expect(chart_base.render(binding, file)).to eq 'from the erb directory'
+    end
+
+    it 'still finds the templates that ship with jirametrics, which live in an html subdirectory' do
+      expect(chart_base.template_for('lib/jirametrics', 'hierarchy_table'))
+        .to eq 'lib/jirametrics/html/hierarchy_table.erb'
+    end
+
+    it 'names the shipped location when the template is nowhere, so the error says where it looked' do
+      expect(chart_base.template_for('lib/jirametrics', 'no_such_chart'))
+        .to eq 'lib/jirametrics/html/no_such_chart.erb'
+    end
+  end
+
   describe '#color_for' do
     it 'gives each common issue type its own colour' do
       colors = %w[Story Task Bug Defect Spike Epic Sub-task Subtask].to_h do |type|

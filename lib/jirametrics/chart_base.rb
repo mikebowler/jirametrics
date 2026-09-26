@@ -71,8 +71,25 @@ class ChartBase
     # Insert a incrementing chart_id so that all the chart names on the page are unique
     caller_binding.eval "chart_id='chart#{next_id}'" # chart_id=chart3
 
-    erb = ERB.new file_system.load "#{html_directory}/#{match[:template_name]}.erb"
+    erb = ERB.new file_system.load(template_for(pathname.dirname, match[:template_name]))
     erb.result(caller_binding)
+  end
+
+  # Where a chart's own template lives, searched relative to the chart that asked for it rather
+  # than to this file. A chart that ships with jirametrics keeps its template in the html directory
+  # beside it, which is the last rung; a chart of your own can put it in an erb directory or simply
+  # beside the .rb, and neither needs any configuration.
+  #
+  # Deliberately not html_directory. That names where JIRAMETRICS' OWN assets live, and is read for
+  # the shared collapsible_issues_panel template and for index.css, so a chart that redirected it to
+  # find its own template would break both of those for itself.
+  def template_for directory, name
+    candidates = [
+      File.join(directory, 'erb', "#{name}.erb"),
+      File.join(directory, "#{name}.erb"),
+      File.join(directory, 'html', "#{name}.erb")
+    ]
+    candidates.find { |candidate| File.exist? candidate } || candidates.last
   end
 
   # A fresh scope for every template expansion. self is still the chart, so instance variables and
